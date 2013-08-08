@@ -1,5 +1,5 @@
-rival-chess-android-engine
-==========================
+Rival Chess Java Engine
+=======================
 
 The Rival chess Java engine as used in the Rival Chess Android App
 
@@ -8,3 +8,5 @@ Written in collaboration with Russ Newman (the graphics creator on the DOS and W
 Russ again developed the graphics and this time also built the Android GUI with the C++ UCI engine being coverted to Java and plugged into Russ's code.
 
 In reality, this was an almost complete rewrite of the C++ engine and plays about 200-300 ECO higher than the old C++ engine when compared on the same hardware.
+
+![Rival Chess for Android screenshots](http://www.rivalchess.com/wp-content/themes/thesis_18/custom/rotator/screens.jpg)
