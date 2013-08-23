@@ -5,10 +5,19 @@ import java.util.EventObject;
 import java.util.Vector;
 import java.util.Iterator;
 
+import android.util.Log;
+
 import com.netadapt.rivalchess.AppConstants;
-import com.netadapt.rivalchess.model.BoardModel;
-import com.netadapt.rivalchess.model.BoardRef;
-import com.netadapt.rivalchess.model.MoveRef;
+import com.netadapt.rivalchess.engine.core.Bitboards;
+import com.netadapt.rivalchess.engine.core.EngineChessBoard;
+import com.netadapt.rivalchess.engine.core.RivalConstants;
+import com.netadapt.rivalchess.engine.core.RivalSearch;
+import com.netadapt.rivalchess.engine.core.SearchPath;
+import com.netadapt.rivalchess.model.MoveHistoryContainer;
+import com.netadapt.rivalchess.model.MoveHistoryItem;
+import com.netadapt.rivalchess.model.board.BoardModel;
+import com.netadapt.rivalchess.model.board.BoardRef;
+import com.netadapt.rivalchess.model.board.MoveRef;
 import com.netadapt.rivalchess.util.ChessBoardConversion;
 
 public class EngineStub implements EngineServiceInterface
@@ -20,88 +29,93 @@ public class EngineStub implements EngineServiceInterface
 	protected int m_searchType = RivalConstants.SEARCH_TYPE_TIME;
 	private int m_engineDifficulty = 4000;
 	private int m_hashSizeMB = RivalConstants.DEFAULT_HASHTABLE_SIZE_MB;
+	private int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
 	
 	public EngineStub(  )
-	{				
-		this.m_bitboards = new Bitboards();
-		this.m_rivalSearch = new RivalSearch();
-		this.m_engineBoard = new EngineChessBoard(m_bitboards);
+	{							
+		this.initStub( new Bitboards() );
 	}
 
 	public EngineStub( Bitboards bitboards )
 	{
-		this.m_bitboards = bitboards;
-		this.m_rivalSearch = new RivalSearch();
-		this.m_engineBoard = new EngineChessBoard(m_bitboards);
+		this.initStub( bitboards );
 	}
 	
-	public int numLegalMoves( BoardModel board )
+	private void initStub( Bitboards bitboards )
+	{
+		this.m_bitboards = bitboards;
+		this.m_rivalSearch = new RivalSearch();
+		this.m_rivalSearch.startEngineTimer(false);
+		this.m_engineBoard = new EngineChessBoard(m_bitboards);
+		
+		ChessBoardConversion.getBoardRefFromBitRef( 0 ); //Force static initialisation of BitBoards.
+	}
+	
+	
+	public void newGame()
+	{
+		this.cancelThink( );
+		// prepare the engine for a new game so that it can reset its opening books and clear its hash tables
+		m_rivalSearch.newGame();
+	}
+	
+	synchronized public int numLegalMoves(EngineChessBoard engineBoard)
 	{
 		int numMoves = 0;
 		int i = 0;
-		
-		m_engineBoard.setBoard(board);
-		
+
 		int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
-		int legalMoves2[] = new int[RivalConstants.MAX_LEGAL_MOVES];
-		m_engineBoard.setLegalMoves(legalMoves);
+		engineBoard.setLegalMoves(legalMoves);
 		while (legalMoves[i] != 0)
 		{
-			m_engineBoard.makeMove(legalMoves[i]);
-			if (!m_engineBoard.isNonMoverInCheck(legalMoves2))
+			if (engineBoard.makeMove(legalMoves[i]))
 			{
-				numMoves ++;
+				numMoves++;
+				engineBoard.unMakeMove();
 			}
 			i++;
-			m_engineBoard.unMakeMove();
+
 		}
 		return numMoves;
 	}
+
+	synchronized public int numLegalMoves(BoardModel board)
+	{
+		m_engineBoard.setBoard(board);
+		return numLegalMoves(m_engineBoard);
+
+	}
 	
-	public boolean isMoveAvailable(BoardModel boardModel)
+	synchronized public boolean isMoveAvailable(BoardModel boardModel)
 	{
 		return this.numLegalMoves( boardModel ) > 0;
 	}
 	
 	@Override
-	public BoardRef[] getLegalMoves(BoardModel board, BoardRef boardRef)
+	synchronized public BoardRef[] getLegalMoves(BoardModel board, BoardRef boardRef)
 	{
+		//Log.i("getLegalMoves", "Selected square = " + ChessBoardConversion.getSimpleAlgebraicFromBitRef(ChessBoardConversion.getBitRefFromBoardRef(boardRef)));
+
 		m_engineBoard.setBoard(board);
-		
-		int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
-		int legalMoves2[] = new int[RivalConstants.MAX_LEGAL_MOVES];
 		
 		m_engineBoard.setLegalMoves(legalMoves);
 		
 		Vector<BoardRef> boardRefVector = new Vector<BoardRef>();
 		
 		int moveNum = 0;
-		BoardRef boardRefFrom, boardRefTo;
+		BoardRef boardRefFrom;
 		while (legalMoves[moveNum] != 0)
 		{
-			m_engineBoard.makeMove(legalMoves[moveNum]);
-			if (!m_engineBoard.isNonMoverInCheck(legalMoves2))
+			boardRefFrom = ChessBoardConversion.getBoardRefFromBitRef((legalMoves[moveNum] >>> 16) & 63);
+			
+			if (boardRefFrom.equals(boardRef))
 			{
-				boardRefFrom = ChessBoardConversion.getBoardRefFromBitRef(legalMoves[moveNum] >>> 16);
-				boardRefTo = ChessBoardConversion.getBoardRefFromBitRef(legalMoves[moveNum] & 63); 
-				int promotionPieceCode = legalMoves[moveNum] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
-				switch (promotionPieceCode)
+				if (m_engineBoard.makeMove(legalMoves[moveNum]))
 				{
-					case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN : 
-						break;
-					case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK : 
-						break;
-					case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT : 
-						break;
-					case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP : 
-						break;
-				}
-				if (boardRefFrom.equals(boardRef))
-				{
-					boardRefVector.add(boardRefTo);
+					boardRefVector.add(ChessBoardConversion.getBoardRefFromBitRef(legalMoves[moveNum] & 63));
+					m_engineBoard.unMakeMove();
 				}
 			}
-			m_engineBoard.unMakeMove();
 			moveNum ++;
 		}
 		
@@ -111,8 +125,10 @@ public class EngineStub implements EngineServiceInterface
 		while (i.hasNext())
 		{
 			boardRefArray[moveNum] = i.next();
+			//Log.i("Piece Can Move To", ChessBoardConversion.getSimpleAlgebraicFromBitRef(ChessBoardConversion.getBitRefFromBoardRef(boardRefArray[moveNum])));
 			moveNum ++;
 		}
+		
 		return boardRefArray;
 	}
 	
@@ -120,24 +136,24 @@ public class EngineStub implements EngineServiceInterface
 	{
 		m_rivalSearch.clearHash();
 	}
+	
 	@Override
-	public boolean isSearchComplete()
+	synchronized public boolean isSearchComplete()
 	{
-		return this.m_rivalSearch.isSearchComplete();
+		return !this.m_rivalSearch.isSearching();
 	}	
 	
-	@Override
-	public void startEngine( BoardModel board )
+	synchronized public void startEngine( BoardModel board, MoveHistoryContainer moveHistory )
 	{
-		this.getEngineMove( board, this.m_engineDifficulty );
+		this.getEngineMove( board, moveHistory, this.m_engineDifficulty );
 	}
 	
-	public SearchPath getCurrentPath()
+	synchronized public SearchPath getCurrentPath()
 	{
 		return this.m_rivalSearch.m_currentPath;
 	}
 	
-	public boolean isSquareAttacked( BoardModel board, BoardRef boardRef, boolean isWhiteAttacking )
+	synchronized public boolean isSquareAttacked( BoardModel board, BoardRef boardRef, boolean isWhiteAttacking )
 	{
 		m_engineBoard.setBoard(board);
 		
@@ -147,7 +163,7 @@ public class EngineStub implements EngineServiceInterface
 	}
 	
 	@Override
-	public MoveRef getCurrentEngineMove()
+	synchronized public MoveRef getCurrentEngineMove()
 	{
 		return ChessBoardConversion.getMoveRefFromEngineMove(this.m_rivalSearch.getCurrentMove());
 	}
@@ -186,6 +202,11 @@ public class EngineStub implements EngineServiceInterface
 		{
 			return this.m_rivalSearch.getSearchDuration();
 		}
+	}
+	
+	public double getSearchPercentComplete()
+	{
+		return this.m_rivalSearch.getSearchPercentComplete();
 	}
 	
 	public int getCurrentDepthIteration()
@@ -229,9 +250,88 @@ public class EngineStub implements EngineServiceInterface
 		this.m_hashSizeMB = size;
 	}
 	
-	private void getEngineMove( BoardModel board, int difficulty )
+	synchronized private void getEngineMove( BoardModel board, MoveHistoryContainer moveHistoryContainer, int difficulty )
 	{
 		m_engineBoard.setBoard(board);
+		//Log.i("BOARD [call " + (s_engineMoveCounter++) + "]", "moveHistoryContainer.size( ) = " + moveHistoryContainer.size( ));
+		if (moveHistoryContainer != null)
+		{
+			MoveHistoryItem[] moveArray = moveHistoryContainer.GetArray();
+			for (int i=0; i<moveArray.length; i++)
+			{
+				String algebraicMove = moveArray[i].getAlgebraicMove().replaceAll("-", "");
+				int compactMove = ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(algebraicMove);
+				//Log.i(algebraicMove, "" + compactMove);
+									
+				try 
+				{
+					m_engineBoard.makeMove(compactMove);
+				}
+				catch( Exception e1 )
+				{
+					Log.i("EXcEPTION", " " + algebraicMove + "][" + compactMove + "]\n" +  m_engineBoard + "\n" + e1.toString( ) );
+					System.exit( 0 );
+				}								    	 
+			}
+		}
+		getEngineMove( difficulty );
+	}
+	
+	
+	synchronized public int calcGameStateId( BoardModel board, MoveHistoryContainer moveHistoryContainer )
+	{
+		m_engineBoard.setBoard(board);
+		int gameStateId = AppConstants.GAMESTATE_NOTINCHECK; 
+		
+		MoveHistoryItem[] moveArray = moveHistoryContainer.GetArray();
+		for (int i=0; i<moveArray.length; i++)
+		{
+			String algebraicMove = moveArray[i].getAlgebraicMove().replaceAll("-", "");
+			int compactMove = ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(algebraicMove);
+			m_engineBoard.makeMove(compactMove);		
+		}		
+		
+		if (m_engineBoard.previousOccurrencesOfThisPosition() == 2)
+		{
+			gameStateId = AppConstants.GAMESTATE_THREEFOLD;
+		}
+		else
+		{
+			if (this.numLegalMoves(m_engineBoard) == 0)
+			{
+				if (m_engineBoard.isCheck())
+				{
+					gameStateId = AppConstants.GAMESTATE_CHECKMATE;
+				}
+				else
+				{
+					gameStateId = AppConstants.GAMESTATE_STALEMATE;
+				}
+			}
+			else
+			{
+				if (m_engineBoard.m_halfMoveCount == 100)
+				{
+					gameStateId = AppConstants.GAMESTATE_50MOVERULE;
+				}
+				else
+				{
+					if (m_engineBoard.isCheck())
+					{			
+						gameStateId = AppConstants.GAMESTATE_INCHECK;		
+					}
+					else
+					{
+						gameStateId = AppConstants.GAMESTATE_NOTINCHECK;
+					}
+				}
+			}
+		}				
+		return gameStateId;		
+	}
+	
+	synchronized private void getEngineMove( int difficulty )
+	{
 		m_rivalSearch.setHashSizeMB(m_hashSizeMB);
 		this.m_rivalSearch.setBoard(m_engineBoard);
 		
@@ -245,24 +345,29 @@ public class EngineStub implements EngineServiceInterface
 			this.m_rivalSearch.setSearchDepth(difficulty);
 			this.m_rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
 		}
-		m_rivalSearch.go();
+		m_rivalSearch.go();			
 	}
 
-	@Override
-	public boolean handleCancelThink(EventObject e)
+	public boolean cancelThink( )
 	{
 		// Ignore this for now
 		// this.m_rivalEngine.CancelThink( );
-		return false;
+		m_rivalSearch.stopSearch( );
+		return true;
 	}
 
-	public void setEngineMode(int mode)
+	synchronized public void setEngineMode(int mode)
 	{
 		this.m_searchType = mode;
 	}
+	
+	public boolean wasSearchCancelled( )
+	{
+		return m_rivalSearch.wasSearchCancelled( );
+	}	
 
 	@Override
-	public void setEngineDifficulty(int engineDifficulty)
+	synchronized public void setEngineDifficulty(int engineDifficulty)
 	{
 		this.m_engineDifficulty  = engineDifficulty;
 	}
@@ -271,23 +376,6 @@ public class EngineStub implements EngineServiceInterface
 	public int getGetEngineDifficulty()
 	{
 		return this.m_engineDifficulty;
-	}
-
-	public void setCheckState(BoardModel boardModel)
-	{
-		BoardRef kingBoardRef = boardModel.getKingBoardRef( boardModel.isWhiteToMove( ) );						
-		boolean isKingAttacked = this.isSquareAttacked(  boardModel, kingBoardRef, ! boardModel.isWhiteToMove( ) );
-		
-		//boardModel.setPath(this.getCurrentPath());
-				
-		if ( ! this.isMoveAvailable( boardModel ))
-		{		
-			boardModel.setCheckState( isKingAttacked?AppConstants.CHECK_STATE_CHECKMATE:AppConstants.CHECK_STATE_STALEMATE );			
-		}
-		else
-		{
-			boardModel.setCheckState( isKingAttacked?AppConstants.CHECK_STATE_IN_CHECK:AppConstants.CHECK_STATE_OUT_CHECK );			
-		}		
 	}
 
 	public int getAlwaysHashValuesStored() 
@@ -320,6 +408,11 @@ public class EngineStub implements EngineServiceInterface
 		return this.m_rivalSearch.m_pawnHashValuesRetrieved;
 	}
 
+	public int getPawnQuickValuesRetrieved() 
+	{
+		return this.m_rivalSearch.m_pawnQuickValuesRetrieved;
+	}
+	
 	public int getEvalHashValuesStored() 
 	{
 		return this.m_rivalSearch.m_evalHashValuesStored;

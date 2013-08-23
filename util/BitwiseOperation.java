@@ -70,10 +70,7 @@ public class BitwiseOperation
 	
 	public static long rotateBitboard90Clockwise(long b)
 	{
-		for (int i=0; i<3; i++)
-		{
-			b = BitwiseOperation.rotateBitboard90AntiClockwise(b);
-		}
+		for (int i=0; i<3; i++) b = BitwiseOperation.rotateBitboard90AntiClockwise(b);
 		return b;
 	}
 	
