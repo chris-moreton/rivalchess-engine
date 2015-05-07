@@ -1,12 +1,12 @@
-package com.netadapt.rivalchess.uci;
+package com.netsensia.rivalchess.uci;
 
 import java.io.PrintWriter;
 import java.util.TimerTask;
 
-import com.netadapt.rivalchess.engine.core.RivalConstants;
-import com.netadapt.rivalchess.engine.core.RivalSearch;
-import com.netadapt.rivalchess.util.ChessBoardConversion;
-import com.netadapt.rivalchess.util.Logger;
+import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.util.ChessBoardConversion;
+import com.netsensia.rivalchess.util.Logger;
 
 public class EngineMonitor extends TimerTask
 {

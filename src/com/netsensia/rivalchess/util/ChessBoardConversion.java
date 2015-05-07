@@ -1,11 +1,11 @@
-package com.netadapt.rivalchess.util;
+package com.netsensia.rivalchess.util;
 
-import com.netadapt.rivalchess.engine.core.Bitboards;
-import com.netadapt.rivalchess.engine.core.EngineChessBoard;
-import com.netadapt.rivalchess.engine.core.RivalConstants;
-import com.netadapt.rivalchess.model.board.BoardModel;
-import com.netadapt.rivalchess.model.board.BoardRef;
-import com.netadapt.rivalchess.model.board.MoveRef;
+import com.netsensia.rivalchess.engine.core.Bitboards;
+import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.model.board.BoardModel;
+import com.netsensia.rivalchess.model.board.BoardRef;
+import com.netsensia.rivalchess.model.board.MoveRef;
 
 public class ChessBoardConversion 
 {

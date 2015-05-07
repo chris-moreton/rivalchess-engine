@@ -1,5 +1,4 @@
-package com.netadapt.rivalchess.uci;
-
+package com.netsensia.rivalchess.uci;
 
 import java.io.BufferedReader;
 import java.io.FileWriter;
@@ -13,16 +12,15 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.netadapt.rivalchess.AppConstants;
-import com.netadapt.rivalchess.engine.core.Bitboards;
-import com.netadapt.rivalchess.engine.core.EngineChessBoard;
-import com.netadapt.rivalchess.engine.core.RivalConstants;
-import com.netadapt.rivalchess.engine.core.RivalSearch;
-import com.netadapt.rivalchess.engine.test.epd.EPDRunner;
-import com.netadapt.rivalchess.model.board.BoardModel;
-import com.netadapt.rivalchess.model.board.FenChess;
-import com.netadapt.rivalchess.util.ChessBoardConversion;
-import com.netadapt.rivalchess.util.Logger;
+import com.netsensia.rivalchess.engine.core.Bitboards;
+import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.engine.test.epd.EPDRunner;
+import com.netsensia.rivalchess.model.board.BoardModel;
+import com.netsensia.rivalchess.model.board.FenChess;
+import com.netsensia.rivalchess.util.ChessBoardConversion;
+import com.netsensia.rivalchess.util.Logger;
 
 public class UCIController implements Runnable {
 
@@ -130,7 +128,7 @@ public class UCIController implements Runnable {
 							waitForSearchToComplete();
 							if (parts[1].equals("startpos"))
 							{
-								m_fenChess.setFromStr( AppConstants.FEN_START_CHESS );
+								m_fenChess.setFromStr( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
 							}
 							else
 							{
@@ -440,7 +438,7 @@ public class UCIController implements Runnable {
 		 
 		totalNodes += verifyPerftScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", 4, 20541);
 		totalNodes += verifyPerftScore("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", 6, 38633283);
-		totalNodes += verifyPerftScore(AppConstants.FEN_START_CHESS, 5, 4865609);
+		totalNodes += verifyPerftScore("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 5, 4865609);
 		totalNodes += verifyPerftScore("8/3K4/2p5/p2b2r1/5k2/8/8/1q6 b - 1 67", 2, 279);
 		totalNodes += verifyPerftScore("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 5, 11139762);
 		totalNodes += verifyPerftScore("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", 7, 178633661);
@@ -484,7 +482,7 @@ public class UCIController implements Runnable {
 	{
 		try
 		{
-		    Class<?> c = Class.forName("com.netadapt.rivalchess.engine.core.RivalConstants");
+		    Class<?> c = Class.forName("com.netsensia.rivalchess.engine.core.RivalConstants");
 		    Field field = c.getDeclaredField(varName);
 		    
 		    System.out.println("Class: " + c.getName());

@@ -1,10 +1,10 @@
-package com.netadapt.rivalchess.util;
+package com.netsensia.rivalchess.util;
 
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.netadapt.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.engine.core.RivalConstants;
 
 public class Logger {
 	

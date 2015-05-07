@@ -1,6 +1,6 @@
-package com.netadapt.rivalchess.util;
+package com.netsensia.rivalchess.util;
 
-import com.netadapt.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.engine.core.RivalConstants;
 
 
 import android.content.Context;
