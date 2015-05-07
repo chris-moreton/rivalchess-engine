@@ -6,6 +6,8 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public final class EngineChessBoard 
 {
+	public static final String START_POS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	
 	public static final int GAMESTATE_INPLAY = 0;
 	public static final int GAMESTATE_CHECKMATE = 1;
 	public static final int GAMESTATE_STALEMATE = 2;
