@@ -2,8 +2,10 @@ package com.netsensia.rivalchess.model;
 
 import java.util.Vector;
 
-public class MoveHistoryContainer extends Vector implements Cloneable 
+public class MoveHistoryContainer extends Vector<MoveHistoryItem> implements Cloneable 
 {
+	static final long serialVersionUID = 1;
+	
 	synchronized public MoveHistoryItem[] GetArray( )
 	{		
 		MoveHistoryItem[] moveHistoryArray = new MoveHistoryItem[ this.size( )];						

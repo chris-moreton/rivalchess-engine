@@ -149,8 +149,8 @@ public class EPDRunner
 	                doPosition(epdPosition);
 				}
 			}
-		} catch (IOException e) 
-		{
+			br.close();
+	    } catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		

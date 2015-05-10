@@ -398,9 +398,6 @@ public final class RivalTester
 			searcherWhite.setMillisToThink(40);
 			searcherBlack.setMillisToThink(40);
 			
-			//new Thread(searcherWhite).start();
-			//new Thread(searcherBlack).start();
-			
 			int gameState;
 			int move;
 			
@@ -410,7 +407,6 @@ public final class RivalTester
 			
 			do
 			{
-				//System.out.println("White's move " + (engineBoard.m_numBackups / 2 + 1));
 				setBoardState(engineBoard, gameMoves, moveNum);
 				searcherWhite.go();
 				move = searcherWhite.getCurrentMove();
@@ -457,7 +453,7 @@ public final class RivalTester
 				case EngineChessBoard.GAMESTATE_CHECKMATE :
 					if (engineBoard.m_isWhiteToMove) blackWins++; else whiteWins++;
 					break;
-				case EngineChessBoard.GAMESTATE_STALEMATE : stalemate ++; break;
+				case EngineChessBoard.GAMESTATE_STALEMATE : stalemate++; break;
 				case EngineChessBoard.GAMESTATE_THREEFOLD_DRAW : draw3++; break;
 				case EngineChessBoard.GAMESTATE_FIFTYMOVE_DRAW : draw50++; break;
 				case EngineChessBoard.GAMESTATE_GAMETOOLONG_DRAW : tooLong++; break;
@@ -470,6 +466,7 @@ public final class RivalTester
 			engineBoard.printPreviousMoves();
 			System.out.println(whiteWins + "/" + blackWins + "/" + stalemate + "/" + draw3 + "/" + draw50);
 			System.out.println("Duplicates = " + duplicates);
+			System.out.println("Game too long draws = " + tooLong);
 		}
 		System.exit(0);
 	}

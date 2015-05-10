@@ -198,7 +198,6 @@ public class ChessBoardConversion
 		int fromBitRef = getBitRefFromBoardRef(new BoardRef(fromX, fromY));
 		int toBitRef = getBitRefFromBoardRef(new BoardRef(toX, toY));
 		
-		int[] move = new int[2];
 		int l = s.length();
 		char promotionPiece;
 		if (l == 5)

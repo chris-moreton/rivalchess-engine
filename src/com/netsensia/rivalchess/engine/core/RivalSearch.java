@@ -2436,7 +2436,6 @@ public final class RivalSearch implements Runnable
 		return null;
 	}
 
-	@SuppressWarnings("unused")
 	public SearchPath searchZero(EngineChessBoard board, byte depth, int ply, int low, int high)
 	{
 		if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) m_nodes++;

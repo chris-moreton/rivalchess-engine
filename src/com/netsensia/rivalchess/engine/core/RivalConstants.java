@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.engine.core;
 
 public final class RivalConstants 
 {
-	public static final String VERSION = "0099";
+	public static final String VERSION = "v1.0.0";
 
 	public static final boolean IS_ANDROID_VERSION = true;
 	public static final boolean BUILDING_ENDGAME_BASES = false;

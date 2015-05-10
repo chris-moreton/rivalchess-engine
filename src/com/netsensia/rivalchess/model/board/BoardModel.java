@@ -322,9 +322,9 @@ public class BoardModel implements Cloneable
 		return (isWhite?whitePieceCount:blackPieceCount);		
 	}
 	
-	public Hashtable getPieceCodeStatusReport( )
+	public Hashtable<Character, Integer> getPieceCodeStatusReport( )
 	{
-		Hashtable map = new Hashtable();
+		Hashtable<Character, Integer> map = new Hashtable<Character, Integer>();
 		for (char pc : this.m_boardArray) 
 		{ 
 			if ( pc != VACANT_TILE)

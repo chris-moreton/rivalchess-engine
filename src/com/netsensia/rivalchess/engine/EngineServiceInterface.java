@@ -1,5 +1,4 @@
 package com.netsensia.rivalchess.engine;
-import java.util.EventObject;
 
 import com.netsensia.rivalchess.engine.core.SearchPath;
 import com.netsensia.rivalchess.model.board.BoardModel;
