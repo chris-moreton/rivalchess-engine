@@ -7,7 +7,6 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.netsensia.rivalchess.AppConstants;
 import com.netsensia.rivalchess.engine.EngineStub;
 import com.netsensia.rivalchess.engine.core.Bitboards;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
@@ -35,8 +34,9 @@ public final class RivalTester
 	private static int SUITE_DEPTH_ADDITION = 1;
 	
 	// Time:  40.14 Nodes:  40,287,926 NPS: 1,003,635
-	
 	// Time:  16.06 Nodes:  13,651,026 NPS: 849,842
+	
+	// MacPro: Time:  10.05 Nodes:  14,786,928 NPS: 1,470,604
 	
 	private static int totalNodes = 0;
 	private static int totalTime = 0;
@@ -54,76 +54,35 @@ public final class RivalTester
 	
 	public static void main(String args[])
 	{
-		//if (mode == MODE_EPD) new EPDRunner().go("S:\\Java\\Chess Supp\\EPD\\wac-hard.epd", 3, 30000);
 		if (mode == MODE_EPD) new EPDRunner().go("S:\\Java\\Chess Supp\\EPD\\wacnewno230.epd", 3, 15000);
 		if (mode == MODE_TESTHASH) testHash();
-		
-		//rivalVersusRival();
-		//threadTest();
-		
-// Time:  16.73 Nodes:  13,982,796 NPS: 835,891 
-		
-//		long t = System.currentTimeMillis();
-//		
-//		for (long i=1; i<10000000000L; i++)
-//		{
-//			a = testFunc();
-//		}
-//		System.out.println(System.currentTimeMillis()-t);
-//		System.exit(0);
 		
 		EngineStub engineStub = new EngineStub();
 		
 		if (m_isDebug) testHash();
 		
-		int hashSize = 128;//RivalConstants.DEFAULT_HASHTABLE_SIZE_MB;
+		int hashSize = RivalConstants.DEFAULT_HASHTABLE_SIZE_MB;
 
 		if (mode == MODE_SINGLE)
 		{
 			m_isDebug = true;
 			engineStub.setDebug(m_isDebug);
 			
-			//Bitboards.printBitboard(Bitboards.blackPawnSupport[8]);
-			//System.exit(0);
-			
-			//int searchDifficulty = 5000;
-			//int searchMethod = RivalConstants.SEARCH_TYPE_TIME;
+
 			int searchDifficulty = 12;
 			int searchMethod = RivalConstants.SEARCH_TYPE_DEPTH;
-			
-			//generateMoveAndDisplay(engineStub, getBoardModel("8/3B3R/6k1/8/5K2/5P2/8/8 w - - 9 77"), searchMethod, searchDifficulty, hashSize);
-			//BoardModel bm = getBoardModel("1Q6/5k2/4q3/8/7p/6p1/6P1/7K w - - 82 1");
-			//BoardModel bm = getBoardModel("5k2/5p1p/p3n1p1/P5P1/2BK1P1P/8/8/8 w - - 5 1"); // move 14 Qxe4
-			
-			//BoardModel bm = getBoardModel(AppConstants.FEN_START_CHESS);
-			
+
 			BoardModel bm = getBoardModel("2rq4/pp3rpk/2n2b2/4N2R/3P4/P7/1P4PP/3R2K1 b - - 1 1");
-			//BoardModel bm = getBoardModel("8/8/8/P7/4k3/8/8/7K w - - 0 1");
 			
 			engineStub.m_rivalSearch.setUseOpeningBook(false);
 			generateMoveAndDisplay(searchDifficulty, "Single", engineStub, bm, searchMethod, hashSize);
 			
 			System.exit(0);
-			
-			//FenChess fenChess = new FenChess( bm );
-			//fenChess.setFromStr( "5k2/3BR3/8/5K2/8/5P2/8/8 w - - 14 8" );
-			//searchDifficulty = 6;
-			//generateMoveAndDisplay(engineStub, bm, searchMethod, searchDifficulty, hashSize);
+
 		}
 		else
 		if (mode == MODE_SUITE)
 		{
-			// Time:   7.45 Nodes:   4,873,588 NPS: 653,821 
-			
-			// no isolated d pawn
-			//rn3r1k/4bppp/p2p4/3N2Pn/2p1P3/1P1B1P1b/P2B1R1P/2R3K1 w - - 0 1
-			
-			// isolated d pawn
-			//rn3r1k/4bppp/p2p4/3N2Pn/3pP3/1P1B1P1b/P2B1R1P/2R3K1 w - - 0 21 
-			
-			// recognise that the pawn game after the knight/bishop exchange is lost
-			//5k2/5p1p/p3n1p1/P5P1/2BK1P1P/8/8/8 w - - 5 1
-			
 			m_isDebug = false;
 			engineStub.setDebug(m_isDebug);
 			engineStub.m_rivalSearch.setUseOpeningBook(false);
@@ -131,7 +90,7 @@ public final class RivalTester
 			generateMoveAndDisplay(7, "QProb", engineStub, getBoardModel("5r2/p2Pk1p1/1p2B2p/3P4/1R3P2/5r2/1P5P/6K1 w - - 10 33"), RivalConstants.SEARCH_TYPE_DEPTH, hashSize);
 			generateMoveAndDisplay(6, "Passant", engineStub, getBoardModel("rnbqkbnr/ppppp1pp/8/4P3/5pP1/8/PPPP1P1P/RNBQKBNR b QKqk g3 0 3"), RivalConstants.SEARCH_TYPE_DEPTH, hashSize);
 			generateMoveAndDisplay(8, "KpK", engineStub, getBoardModel("8/8/8/8/8/p1k5/8/1K6 w - - 24 96"), RivalConstants.SEARCH_TYPE_DEPTH, hashSize);
-			generateMoveAndDisplay(7, "Start", engineStub, getBoardModel(AppConstants.FEN_START_CHESS), RivalConstants.SEARCH_TYPE_DEPTH, hashSize);
+			generateMoveAndDisplay(7, "Start", engineStub, getBoardModel("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), RivalConstants.SEARCH_TYPE_DEPTH, hashSize);
 			generateMoveAndDisplay(8, "KQkrp 3", engineStub, getBoardModel("8/8/1P6/5pr1/8/4R3/7k/2K5 w - -"), RivalConstants.SEARCH_TYPE_DEPTH, hashSize);
 			generateMoveAndDisplay(9, "KQkrp 1", engineStub, getBoardModel("8/2p4P/8/kr6/6R1/8/8/1K6 w - -"), RivalConstants.SEARCH_TYPE_DEPTH, hashSize);
 			generateMoveAndDisplay(6, "Promote", engineStub, getBoardModel("rnb1qbnr/pppPk1pp/8/8/8/8/PPPP1PPP/RNBQKBNR w QK - 1 5"), RivalConstants.SEARCH_TYPE_DEPTH, hashSize);
@@ -279,7 +238,6 @@ public final class RivalTester
 		System.out.println("Threat Extensions=" + nf.format(engineStub.m_rivalSearch.threatExtensions) + "/" + nf.format(engineStub.m_rivalSearch.immediateThreatExtensions));
 		System.out.println("Recapture Extensions=" + nf.format(engineStub.m_rivalSearch.recaptureExtensions) + " / " + nf.format(engineStub.m_rivalSearch.recaptureExtensionAttempts));
 		System.out.println("Late Move Reductions=" + nf.format(engineStub.m_rivalSearch.lateMoveReductions) + "/" + nf.format(engineStub.m_rivalSearch.lateMoveDoubleReductions));
-		//System.out.println("Zugzwangs Found=" + engineStub.m_rivalSearch.m_zugzwangCount);
 		
 		engineStub.m_rivalSearch.printHashPopulationStats();
 		engineStub.m_rivalSearch.showProfileTimes();
@@ -298,14 +256,9 @@ public final class RivalTester
 		Bitboards bitboards = new Bitboards();
 		EngineChessBoard engineBoard = new EngineChessBoard(bitboards);
 		
-//		System.out.println(Bitboards.directOpposition[27][24]);
-//		System.out.println(Bitboards.directOpposition[63][47]);
-//		System.out.println(Bitboards.directOpposition[63][61]);
-//		System.out.println(Bitboards.directOpposition[3][26]);
-		
 		BoardModel boardModel = new BoardModel();
 		FenChess fenChess = new FenChess( boardModel );
-		fenChess.setFromStr( AppConstants.FEN_START_CHESS );
+		fenChess.setFromStr( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
 		engineBoard.setBoard(boardModel);		
 		
 		make(engineBoard, "e2e4");		make(engineBoard, "c7c5");
@@ -364,7 +317,7 @@ public final class RivalTester
 	{
 		BoardModel boardModel = new BoardModel();
 		FenChess fenChess = new FenChess( boardModel );
-		fenChess.setFromStr( AppConstants.FEN_START_CHESS );
+		fenChess.setFromStr( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
 		
 		Bitboards bitboards = new Bitboards();
 		RivalSearch threadEngine = new RivalSearch();
@@ -377,9 +330,6 @@ public final class RivalTester
 
 		new Thread(threadEngine).start();
 
-		//Timer timer = new Timer();
-		//timer.schedule(new EngineOutputTask(threadEngine), 1000, 1000);
-
 		threadEngine.startSearch();
 		
 		System.out.println("Search started");
@@ -387,19 +337,15 @@ public final class RivalTester
 		while (threadEngine.isSearching())
 		{
 			System.out.println("Searching...");
-			//threadEngine.stopSearch();
 		}
 		System.out.println("Stopped...");
-
-		//timer.cancel();
-		//timer = null;
 		
 		System.exit(0);
 	}
 	
 	public static void setBoardState(EngineChessBoard engineBoard, int[] moves, int moveNum)
 	{
-		engineBoard.setBoard(UCIController.getBoardModel(AppConstants.FEN_START_CHESS));
+		engineBoard.setBoard(UCIController.getBoardModel("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
 		for (int i=0; i<moveNum; i++)
 		{
 			engineBoard.makeMove(moves[i]);
@@ -438,7 +384,7 @@ public final class RivalTester
 		for (int gameNum=1; gameNum<=games; gameNum++)
 		{
 			EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
-			engineBoard.setBoard(getBoardModel(AppConstants.FEN_START_CHESS));
+			engineBoard.setBoard(getBoardModel("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
 			
 			searcherWhite.setBoard(engineBoard);
 			searcherBlack.setBoard(engineBoard);

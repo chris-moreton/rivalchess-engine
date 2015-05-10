@@ -128,7 +128,7 @@ public class UCIController implements Runnable {
 							waitForSearchToComplete();
 							if (parts[1].equals("startpos"))
 							{
-								m_fenChess.setFromStr( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
+								m_fenChess.setFromStr( EngineChessBoard.START_POS );
 							}
 							else
 							{

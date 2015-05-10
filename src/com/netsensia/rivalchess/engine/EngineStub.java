@@ -1,11 +1,8 @@
 package com.netsensia.rivalchess.engine;
 
-import java.util.EventObject;
-
 import java.util.Vector;
 import java.util.Iterator;
 
-import com.netsensia.rivalchess.AppConstants;
 import com.netsensia.rivalchess.engine.core.Bitboards;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
@@ -275,11 +272,13 @@ public class EngineStub implements EngineServiceInterface
 		getEngineMove( difficulty );
 	}
 	
-	
-	synchronized public int calcGameStateId( BoardModel board, MoveHistoryContainer moveHistoryContainer )
+	synchronized public String calcGameState( 
+		BoardModel board,
+		MoveHistoryContainer moveHistoryContainer
+	)
 	{
 		m_engineBoard.setBoard(board);
-		int gameStateId = AppConstants.GAMESTATE_NOTINCHECK; 
+		String gameStateString = "GAMESTATE_NOTINCHECK"; 
 		
 		MoveHistoryItem[] moveArray = moveHistoryContainer.GetArray();
 		for (int i=0; i<moveArray.length; i++)
@@ -291,7 +290,7 @@ public class EngineStub implements EngineServiceInterface
 		
 		if (m_engineBoard.previousOccurrencesOfThisPosition() == 2)
 		{
-			gameStateId = AppConstants.GAMESTATE_THREEFOLD;
+			gameStateString = "GAMESTATE_THREEFOLD";
 		}
 		else
 		{
@@ -299,33 +298,33 @@ public class EngineStub implements EngineServiceInterface
 			{
 				if (m_engineBoard.isCheck())
 				{
-					gameStateId = AppConstants.GAMESTATE_CHECKMATE;
+					gameStateString = "GAMESTATE_CHECKMATE";
 				}
 				else
 				{
-					gameStateId = AppConstants.GAMESTATE_STALEMATE;
+					gameStateString = "GAMESTATE_STALEMATE";
 				}
 			}
 			else
 			{
 				if (m_engineBoard.m_halfMoveCount == 100)
 				{
-					gameStateId = AppConstants.GAMESTATE_50MOVERULE;
+					gameStateString = "GAMESTATE_50MOVERULE";
 				}
 				else
 				{
 					if (m_engineBoard.isCheck())
 					{			
-						gameStateId = AppConstants.GAMESTATE_INCHECK;		
+						gameStateString = "GAMESTATE_INCHECK";		
 					}
 					else
 					{
-						gameStateId = AppConstants.GAMESTATE_NOTINCHECK;
+						gameStateString = "GAMESTATE_NOTINCHECK";
 					}
 				}
 			}
 		}				
-		return gameStateId;		
+		return gameStateString;		
 	}
 	
 	synchronized private void getEngineMove( int difficulty )
