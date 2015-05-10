@@ -456,8 +456,6 @@ public class UCIController implements Runnable {
 	public static long getPerft(EngineChessBoard board, int depth)
 	{
 		if (depth == 0) return 1;
-		//if (depth == 0) return board.whitePieceValues + board.blackPieceValues + board.whitePawnValues + board.blackPawnValues;
-		//if (depth == 0) return board.m_movesMade;
 		long nodes = 0;
 		int moveNum = 0;
 		
