@@ -31,7 +31,6 @@ public class SearchPath
 		this.score = path.score;
 		this.height = path.height;
 
-		//System.arraycopy(path.move, 0, this.move, 0, path.height);
 		for (int i=0; i<path.height; i++) this.move[i] = path.move[i];
 	}
 
@@ -41,14 +40,11 @@ public class SearchPath
 		this.move[0] = compactMove;
 		this.score = path.score;
 		
-		//System.arraycopy(path.move, 0, this.move, 1, path.height);
 		for (int i=1; i<=path.height; i++) this.move[i] = path.move[i-1];
 	}
 	
 	public synchronized int getScore()
 	{
-//		if (this.score > RivalConstants.MATE_SCORE_START) return RivalConstants.VALUE_MATE - this.hashCorrectedHeight; 
-//		if (this.score < -RivalConstants.MATE_SCORE_START) return RivalConstants.VALUE_MATE + this.hashCorrectedHeight;
 		return this.score;
 	}
 	

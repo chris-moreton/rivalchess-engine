@@ -89,8 +89,6 @@ public class EngineStub implements EngineServiceInterface
 	@Override
 	synchronized public BoardRef[] getLegalMoves(BoardModel board, BoardRef boardRef)
 	{
-		//Log.i("getLegalMoves", "Selected square = " + ChessBoardConversion.getSimpleAlgebraicFromBitRef(ChessBoardConversion.getBitRefFromBoardRef(boardRef)));
-
 		m_engineBoard.setBoard(board);
 		
 		m_engineBoard.setLegalMoves(legalMoves);
@@ -248,7 +246,6 @@ public class EngineStub implements EngineServiceInterface
 	synchronized private void getEngineMove( BoardModel board, MoveHistoryContainer moveHistoryContainer, int difficulty )
 	{
 		m_engineBoard.setBoard(board);
-		//Log.i("BOARD [call " + (s_engineMoveCounter++) + "]", "moveHistoryContainer.size( ) = " + moveHistoryContainer.size( ));
 		if (moveHistoryContainer != null)
 		{
 			MoveHistoryItem[] moveArray = moveHistoryContainer.GetArray();
@@ -256,7 +253,6 @@ public class EngineStub implements EngineServiceInterface
 			{
 				String algebraicMove = moveArray[i].getAlgebraicMove().replaceAll("-", "");
 				int compactMove = ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(algebraicMove);
-				//Log.i(algebraicMove, "" + compactMove);
 									
 				try 
 				{
@@ -264,7 +260,6 @@ public class EngineStub implements EngineServiceInterface
 				}
 				catch( Exception e1 )
 				{
-					//Log.i("EXcEPTION", " " + algebraicMove + "][" + compactMove + "]\n" +  m_engineBoard + "\n" + e1.toString( ) );
 					System.exit( 0 );
 				}								    	 
 			}

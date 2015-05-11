@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.text.NumberFormat;
-
+import java.util.Random;
 import java.util.Timer;
 
 public final class RivalSearch implements Runnable
@@ -2859,6 +2859,10 @@ public final class RivalSearch implements Runnable
 
 	public void setSearchDepth(int searchDepth) 
 	{
+		if (searchDepth == -1) {
+			Random randomGenerator = new Random();
+			searchDepth = randomGenerator.nextInt(2);
+		}
 		this.m_finalDepthToSearch = searchDepth;
 	}
 
@@ -2910,22 +2914,6 @@ public final class RivalSearch implements Runnable
 				{
 					percent = ((double)m_totalMovesSearchedAtAllDepths / m_movesToSearchAtAllDepths) * 100.0;
 				}
-				// we are not searching to a set time, so see if we can estimate
-//				double mult = 1.0;
-//				if (this.m_previousFinalDepthToSearch > -1 && this.m_finalDepthToSearch != this.m_previousFinalDepthToSearch)
-//				{
-//					mult = (double)(this.m_finalDepthToSearch / this.m_previousFinalDepthToSearch) * 3;
-//				}
-//				if (this.m_previousSearchMillis == -1) this.m_previousSearchMillis = this.m_finalDepthToSearch * 200;
-//				int estimatedSearchMillis = (int)(this.m_previousSearchMillis * mult);
-//				if (duration > 0 && estimatedSearchMillis > 0)
-//				{
-//					percent = ((double)duration / estimatedSearchMillis) * 100.0;
-//				}
-//				else
-//				{
-//					percent = 0;
-//				}
 			}
 			else
 			{
