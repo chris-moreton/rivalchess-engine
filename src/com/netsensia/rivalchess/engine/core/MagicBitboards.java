@@ -65,7 +65,7 @@ public class MagicBitboards
 			Bitboards.getSetBits(mask, setBitsInMask);
 			bitCount = Long.bitCount(mask);
 			variationCount = (int)(1L << bitCount);
-			//System.out.println("Rook on " + ChessBoardConversion.getSimpleAlgebraicFromBitRef(bitRef) + ", variations = " + occupancyVariationCount);
+
 			for (i=0; i<variationCount; i++)
 			{
 				occupancyVariation[i] = 0; 
@@ -104,16 +104,12 @@ public class MagicBitboards
 					for (j=bitRef-7; j%8!=7 && j%8!=0 && j>=8 && (occupancyVariation[i] & (1L << j)) == 0; j-=7);
 					if (j>=0 && j<=63) occupancyAttackSet[i] |= (1L << j);
 				}
-				
-				//Bitboards.printBitboard(occupancyVariation[bitRef][i]);
 			}
 			
 			variations = (int)(1L << bitCount);
 			
 			for (i=0; i<variations; i++)
 			{
-				//System.out.println(isRook ? "Rook" : "Bishop" + " on " + bitRef + ", variation:");
-				//Bitboards.printBitboard(isRook ? occupancyVariationRook[bitRef][i] : occupancyVariationBishop[bitRef][i]);
 				validMoves = 0;
 				if (isRook)
 				{
@@ -145,10 +141,7 @@ public class MagicBitboards
 
 					magicMovesBishop[bitRef][magicIndex] = validMoves;
 				}
-				//System.out.println("Moves:");
-				//Bitboards.printBitboard(validMoves);
 			}			
-			//System.exit(0);
 		}
 	}
 	

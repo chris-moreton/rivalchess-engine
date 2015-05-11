@@ -54,7 +54,7 @@ public final class RivalTester
 	
 	public static void main(String args[])
 	{
-		if (mode == MODE_EPD) new EPDRunner().go("S:\\Java\\Chess Supp\\EPD\\wacnewno230.epd", 3, 15000);
+		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/bratko-kopec.epd", 3, 5000);
 		if (mode == MODE_TESTHASH) testHash();
 		
 		EngineStub engineStub = new EngineStub();

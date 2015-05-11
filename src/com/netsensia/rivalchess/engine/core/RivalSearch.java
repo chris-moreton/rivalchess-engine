@@ -75,8 +75,6 @@ public final class RivalSearch implements Runnable
 	private int[][][] historyMovesSuccess = new int[2][64][64];
 	private int[][][] historyMovesFail = new int[2][64][64];
 	private int[][][] historyPruneMoves = new int[2][64][64];
-	//private int[][][] historyKiller = new int[2][64][64];
-	//private int[] historyHigh = new int[2];
 	
 	private boolean m_useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK;
 	private boolean m_inBook = m_useOpeningBook;
@@ -212,27 +210,6 @@ public final class RivalSearch implements Runnable
 	{
 		return this.m_isUCIMode;
 	}
-	
-//	private void profileStart(int slot, String desc)
-//	{
-//		if (RivalConstants.PROFILING)
-//		{
-//			if (profiler[slot][RivalConstants.PROFILE_COUNT] == 0)
-//			{
-//				profilerDescs[slot] = desc;
-//			}
-//			profiler[slot][RivalConstants.PROFILE_STARTTIME] = System.currentTimeMillis();
-//		}
-//	}
-//	
-//	private void profileStop(int slot)
-//	{
-//		if (RivalConstants.PROFILING)
-//		{
-//			profiler[slot][RivalConstants.PROFILE_TOTALTIME] += (System.currentTimeMillis() - profiler[slot][RivalConstants.PROFILE_STARTTIME]);
-//			profiler[slot][RivalConstants.PROFILE_COUNT] ++;
-//		}
-//	}
 	
 	public void showProfileTimes()
 	{
@@ -1291,9 +1268,6 @@ public final class RivalSearch implements Runnable
 						0,
 						(whiteKingSafety - blackKingSafety) + (blackKingAttackedCount - whiteKingAttackedCount) * RivalConstants.KINGSAFETY_ATTACK_MULTIPLIER);
 			
-            //if (kingSafety > highest) { highest = kingSafety; board.printBoard(); System.out.println("HIGH: " + highest); }
-            //if (kingSafety < lowest) { lowest = kingSafety; board.printBoard(); System.out.println("LOW: " + lowest); }
-			
 		}
 		
 		eval += kingSafety;
@@ -1432,8 +1406,6 @@ public final class RivalSearch implements Runnable
 			}
 		}
 
-		//if (board.whitePieceValues + board.blackPieceValues == 0) return evaluateKingAndPawnsEnding(board, eval); 
-		
 		return eval;
 	}
 
@@ -1469,7 +1441,6 @@ public final class RivalSearch implements Runnable
 		int pawnDistanceFromPromotion = 7 - (pawnSquare / 8);
 		
 		return RivalConstants.VALUE_QUEEN - RivalConstants.ENDGAME_KPK_PAWN_PENALTY_PER_SQUARE * pawnDistanceFromPromotion;
-		//return RivalConstants.ENDGAME_KPK_PAWN_BONUS_PER_SQUARE * pawnDistanceFromPromotion;
 	}
 
 	public void storeHashMove(int move, EngineChessBoard board, int score, byte flag, int height)
@@ -2074,7 +2045,7 @@ public final class RivalSearch implements Runnable
 				}
 			}
 			bestPath.reset(); 
-			// We reset this hear because it may have been mucked about with during IID 
+			// We reset this here because it may have been mucked about with during IID 
 			// Notice that the search calls with ply, not ply+1, because search is for this level (we haven't made a move)
 		}
 		
