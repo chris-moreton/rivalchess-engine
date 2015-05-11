@@ -2861,7 +2861,10 @@ public final class RivalSearch implements Runnable
 	{
 		if (searchDepth == -1) {
 			Random randomGenerator = new Random();
-			searchDepth = randomGenerator.nextInt(2);
+			searchDepth = randomGenerator.nextInt(3);
+			if (searchDepth == 2) {
+				searchDepth = 1;
+			}
 		}
 		this.m_finalDepthToSearch = searchDepth;
 	}
