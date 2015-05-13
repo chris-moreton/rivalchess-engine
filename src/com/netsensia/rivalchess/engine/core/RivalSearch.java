@@ -2271,17 +2271,7 @@ public final class RivalSearch implements Runnable
 					
 					if (!this.m_abortingSearch)
 					{
-						//profileStart(10, "Search - After value returned");
 						newPath.score = -newPath.score;
-						
-//						if (newPath.score > 9000)
-//						{
-//							historyKiller[board.m_isWhiteToMove ? 1 : 0][(move >>> 16) & 63][(move & 63)] += 10000-newPath.score;
-//							if (historyKiller[board.m_isWhiteToMove ? 1 : 0][(move >>> 16) & 63][(move & 63)] > historyHigh[board.m_isWhiteToMove ? 1 : 0])
-//							{
-//								historyHigh[board.m_isWhiteToMove ? 1 : 0] = historyKiller[board.m_isWhiteToMove ? 1 : 0][(move >>> 16) & 63][(move & 63)];
-//							}
-//						}
 						
 						if (newPath.score >= high)
 						{
@@ -2693,7 +2683,6 @@ public final class RivalSearch implements Runnable
 						{
 							if (m_board.previousOccurrencesOfThisPosition() == 2)
 							{
-								//System.out.println("Deep");
 								ply1Draw = true;
 							}
 							m_board.unMakeMove();

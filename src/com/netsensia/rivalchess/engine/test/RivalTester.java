@@ -42,26 +42,19 @@ public final class RivalTester
 	private static int totalTime = 0;
 	private static NumberFormat nf = NumberFormat.getInstance();
 	
-	public static long testFunc()
-	{
-		long c = 0;
-		for (int i=0; i<5; i++)
-		{
-			c = i >>> 55;
-		}
-		return c;
-	}
-	
 	public static void main(String args[])
 	{
-		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/arasan18-bestmovesonly.epd", 3, 5000);
+		generateKPKBitBase();
+		System.exit(0);
+		
+		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/arasan18-bestmovesonly.epd", 3, 60000);
 		if (mode == MODE_TESTHASH) testHash();
 		
 		EngineStub engineStub = new EngineStub();
 		
 		if (m_isDebug) testHash();
 		
-		int hashSize = RivalConstants.DEFAULT_HASHTABLE_SIZE_MB;
+		int hashSize = 4096;
 
 		if (mode == MODE_SINGLE)
 		{
@@ -526,16 +519,16 @@ public final class RivalTester
 								
 								rivalSearch.setBoard(engineBoard);
 								rivalSearch.clearHash();
-								
+
 								rivalSearch.go();
-								int correctScore = rivalSearch.kpkLookup(whiteKingSquare, blackKingSquare, whitePawnSquare, mover == 0) == 0 ? 0 : 1;
+//								int correctScore = rivalSearch.kpkLookup(whiteKingSquare, blackKingSquare, whitePawnSquare, mover == 0) == 0 ? 0 : 1;
 								int score = rivalSearch.getCurrentScore() == 0 ? 0 : 1;
 								
-								if (score != correctScore)
-								{
-									System.out.println("Table says " + correctScore + " Rival said " + rivalSearch.getCurrentScore());
-									System.exit(0);
-								}
+//								if (score != correctScore)
+//								{
+//									System.out.println("Table says " + correctScore + " Rival said " + rivalSearch.getCurrentScore());
+//									System.exit(0);
+//								}
 								
 								int index = 
 									(whiteKingIndex * 64 * 48 * 2) +
