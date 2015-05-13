@@ -29,7 +29,7 @@ public final class RivalTester
 	public static final int MODE_PERFT = 3;
 	public static final int MODE_TESTHASH = 4;
 	
-	private static int mode = MODE_SUITE;
+	private static int mode = MODE_EPD;
 
 	private static int SUITE_DEPTH_ADDITION = 1;
 	
@@ -54,7 +54,7 @@ public final class RivalTester
 	
 	public static void main(String args[])
 	{
-		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/bratko-kopec.epd", 3, 5000);
+		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/arasan18-bestmovesonly.epd", 3, 5000);
 		if (mode == MODE_TESTHASH) testHash();
 		
 		EngineStub engineStub = new EngineStub();
@@ -69,10 +69,10 @@ public final class RivalTester
 			engineStub.setDebug(m_isDebug);
 			
 
-			int searchDifficulty = 12;
+			int searchDifficulty = 11;
 			int searchMethod = RivalConstants.SEARCH_TYPE_DEPTH;
 
-			BoardModel bm = getBoardModel("2rq4/pp3rpk/2n2b2/4N2R/3P4/P7/1P4PP/3R2K1 b - - 1 1");
+			BoardModel bm = getBoardModel("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 			
 			engineStub.m_rivalSearch.setUseOpeningBook(false);
 			generateMoveAndDisplay(searchDifficulty, "Single", engineStub, bm, searchMethod, hashSize);

@@ -82,12 +82,11 @@ public class EPDRunner
 
 		totalMillisToSolution += millisToSolution;
 		
-		//if (!correct) System.out.println("*************************************************************************************");
 		System.out.println(
 				epdPosition.id + "," + 
-				epdPosition.getLastMove() + "," + 
+				epdPosition.getPlyMovesString() + "," + 
 				epdPosition.bestMoves() + "," + 
-				(correct ? "Correct" : "F*A*I*L*E*D") + "," + 
+				(correct ? "Correct" : "[*****F*A*I*L*E*D*****]") + "," + 
 				correctSoFar + "," + 
 				doneSoFar + "," + 
 				millisToSolution + "," +
@@ -96,7 +95,6 @@ public class EPDRunner
 				totalTimeTaken + "," + 
 				(int)totalNPS);
 		
-		//if (!correct) System.out.println("*************************************************************************************");
 	}
 	
 	public void go(String filepath, int extraPlies, int maxMillis)
@@ -132,17 +130,13 @@ public class EPDRunner
 					
 					int count = 1;
 					String id = "";
-					do
+					rest = parts[count];
+					Pattern p = Pattern.compile("id (.*)");
+					Matcher m = p.matcher(rest);
+					if (m.find())
 					{
-						rest = parts[count];
-						Pattern p = Pattern.compile("id (.*)");
-						Matcher m = p.matcher(rest);
-						if (m.find())
-						{
-							id = m.group(1);
-						}
+						id = m.group(1);
 					}
-					while (++count < parts.length);
 					if (id.equals("")) System.exit(0);
 					
 					EPDPosition epdPosition = new EPDPosition(line.trim(), fen, bestMoves, id, maxMillis, extraPlies);

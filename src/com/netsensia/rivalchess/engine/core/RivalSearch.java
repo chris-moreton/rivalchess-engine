@@ -1857,7 +1857,7 @@ public final class RivalSearch implements Runnable
 							break; 
 					}
 					
-					score = 50 + (ps / 2); // 23 - 77
+					score = 50 + (ps / 2);
 				}
 				movesForSorting[i] |= ((127-score) << 24);
 			}

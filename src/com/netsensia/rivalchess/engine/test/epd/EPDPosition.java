@@ -93,19 +93,36 @@ public class EPDPosition
 		return this.endTime - this.startTime;
 	}
 	
+	public String getPlyMovesString()
+	{
+		String s = "[ ";
+		
+		for (EPDMove plyMove : plyMoves)
+		{
+			s += plyMove.pgnMove + " ";
+		}
+		return s + "]";
+	}
+	
 	public int millisWhenFirstCorrect()
 	{
+		int retVal = -1;
 		for (EPDMove plyMove : plyMoves)
 		{
 			for (String validMove : bestMoves)
 			{
 				if (validMove.equals(plyMove.pgnMove))
 				{
-					return plyMove.millis;
+					if (retVal == -1) {
+						retVal = plyMove.millis;
+					}
+				} else {
+					// If already set, set back to -1
+					retVal = -1;
 				}
 			}
 		}
-		return -1;
+		return retVal;
 	}
 	
 	public void setPlyMove(int ply, String pgnMove)

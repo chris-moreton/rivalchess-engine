@@ -136,7 +136,8 @@ public final class EngineChessBoard
 		{
 			if ((m_pieceBitboards[RivalConstants.WN] & Bitboards.knightMoves[attackedSquare]) != 0 |
 				(m_pieceBitboards[RivalConstants.WK] & Bitboards.kingMoves[attackedSquare]) != 0 |
-				// any white pawns sat on squares that a black pawn on bitref could capture are therefore themselves attacking bitref
+				// if there's a white pawn sat on a square that is an attack square for a black pawn on "attackedSquare", then
+				// the white pawn is attacking "attackedSquare"
 				(m_pieceBitboards[RivalConstants.WP] & Bitboards.blackPawnMovesCapture[attackedSquare] ) != 0) return true;
 		}
 		else
