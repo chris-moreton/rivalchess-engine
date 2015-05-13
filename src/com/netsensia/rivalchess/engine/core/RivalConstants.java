@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.engine.core;
 
 public final class RivalConstants 
 {
-	public static final String VERSION = "v1.0.0";
+	public static final String VERSION = "v1.0.1";
 
 	public static final boolean IS_ANDROID_VERSION = true;
 	public static final boolean BUILDING_ENDGAME_BASES = false;
@@ -45,11 +45,6 @@ public final class RivalConstants
 /***********************************	
  *	Evaluation function weightings *
  ***********************************/
-//	public static final int VALUE_PAWN = 100;
-//	public static final int VALUE_KNIGHT = 400;
-//	public static final int VALUE_BISHOP = 400;
-//	public static final int VALUE_ROOK = 600;
-//	public static final int VALUE_QUEEN = 1200;
 	public static final int VALUE_PAWN = 100;
 	public static final int VALUE_KNIGHT = 390;
 	public static final int VALUE_BISHOP = 390;
