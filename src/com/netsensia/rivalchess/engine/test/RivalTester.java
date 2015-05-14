@@ -481,6 +481,11 @@ public final class RivalTester
 		byte[] kpkBitbase = new byte[size];
 		for (int i=0; i<size; i++) kpkBitbase[i] = 0;
 
+		RivalSearch rivalSearch = new RivalSearch();
+		rivalSearch.setHashSizeMB(128);
+		rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+		rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH);
+		
 		for (int mover = 0; mover < 2; mover ++)
 			for (int whiteKingIndex = 0; whiteKingIndex < 32; whiteKingIndex ++)
 				for (int blackKingSquare = 0; blackKingSquare < 64; blackKingSquare ++)
@@ -521,13 +526,7 @@ public final class RivalTester
 								System.out.println(engineBoard);
 								System.out.println("# " + (draws + wins));
 								
-								RivalSearch rivalSearch = new RivalSearch();
-								rivalSearch.setHashSizeMB(128);
-								rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-								rivalSearch.setSearchDepth(25);
-								
 								rivalSearch.setBoard(engineBoard);
-								rivalSearch.clearHash();
 
 								rivalSearch.go();
 //								int correctScore = rivalSearch.kpkLookup(whiteKingSquare, blackKingSquare, whitePawnSquare, mover == 0) == 0 ? 0 : 1;
@@ -610,6 +609,7 @@ public final class RivalTester
 		RivalSearch rivalSearch = new RivalSearch();
 		rivalSearch.setHashSizeMB(128);
 		rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+		rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH);
 		
 		for (int mover = 0; mover < 2; mover ++)
 			for (int whiteKingIndex = 0; whiteKingIndex < 32; whiteKingIndex ++)
@@ -652,6 +652,7 @@ public final class RivalTester
 								boardModel.setBlackQueenSideCastleAvailable(false);
 								boardModel.setWhiteKingSideCastleAvailable(false);
 								boardModel.setWhiteQueenSideCastleAvailable(false);
+								boardModel.setEnPassantFile(-1);
 								boardModel.setWhiteToMove(mover == 0);
 								
 								engineBoard.setBoard(boardModel);
@@ -659,7 +660,6 @@ public final class RivalTester
 								if (!engineBoard.isNonMoverInCheck())
 								{
 									rivalSearch.setBoard(engineBoard);
-									//rivalSearch.clearHash();
 
 									int score = 0;
 									int searchScore = 0;

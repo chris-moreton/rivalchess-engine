@@ -1554,7 +1554,7 @@ public final class RivalSearch implements Runnable
 		movesForSorting[moveCount] = 0;
 	}
 	
-	int moveOrderStatus[] = new int[RivalConstants.MAX_SEARCH_DEPTH];
+	int moveOrderStatus[] = new int[RivalConstants.MAX_TREE_DEPTH];
 	
 	public int getHighScoreMove(EngineChessBoard board, int ply, int hashMove)
 	{
@@ -2628,8 +2628,6 @@ public final class RivalSearch implements Runnable
 			{
 				if (m_board.makeMove(move))
 				{
-					System.out.println(ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(move));
-					
 					boolean ply0Draw = false;
 					boolean ply1Draw = false;
 					
@@ -2671,7 +2669,6 @@ public final class RivalSearch implements Runnable
 					{
 						if (m_board.makeMove(move1))
 						{
-							System.out.println("-- " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(move1));
 							if (m_board.previousOccurrencesOfThisPosition() == 2)
 							{
 								ply1Draw = true;
