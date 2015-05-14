@@ -477,11 +477,6 @@ public final class RivalTester
 		byte[] kpkBitbase = new byte[size];
 		for (int i=0; i<size; i++) kpkBitbase[i] = 0;
 
-		RivalSearch rivalSearch = new RivalSearch();
-		rivalSearch.setHashSizeMB(128);
-		rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-		rivalSearch.setSearchDepth(25);
-		
 		for (int mover = 0; mover < 2; mover ++)
 			for (int whiteKingIndex = 0; whiteKingIndex < 32; whiteKingIndex ++)
 				for (int blackKingSquare = 0; blackKingSquare < 64; blackKingSquare ++)
@@ -508,6 +503,10 @@ public final class RivalTester
 							boardModel.setPieceCode(whiteKingX, whiteKingY, 'K');
 							boardModel.setPieceCode(blackKingX, blackKingY, 'k');
 							boardModel.setPieceCode(whitePawnX, whitePawnY, 'P');
+							boardModel.setWhiteKingSideCastleAvailable(false);
+							boardModel.setWhiteQueenSideCastleAvailable(false);
+							boardModel.setBlackKingSideCastleAvailable(false);
+							boardModel.setBlackQueenSideCastleAvailable(false);
 							boardModel.setWhiteToMove(mover == 0);
 							
 							engineBoard.setBoard(boardModel);
@@ -516,6 +515,11 @@ public final class RivalTester
 							{
 								System.out.println(engineBoard);
 								System.out.println("# " + (draws + wins));
+								
+								RivalSearch rivalSearch = new RivalSearch();
+								rivalSearch.setHashSizeMB(128);
+								rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+								rivalSearch.setSearchDepth(25);
 								
 								rivalSearch.setBoard(engineBoard);
 								rivalSearch.clearHash();
