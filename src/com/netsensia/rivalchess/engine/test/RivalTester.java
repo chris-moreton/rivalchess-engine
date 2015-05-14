@@ -484,7 +484,7 @@ public final class RivalTester
 		for (int mover = 0; mover < 2; mover ++)
 			for (int whiteKingIndex = 0; whiteKingIndex < 32; whiteKingIndex ++)
 				for (int blackKingSquare = 0; blackKingSquare < 64; blackKingSquare ++)
-					for (int whitePawnSquare = 38; whitePawnSquare < 56; whitePawnSquare ++)
+					for (int whitePawnSquare = 8; whitePawnSquare < 56; whitePawnSquare ++)
 					{
 						int whiteKingSquare = ((whiteKingIndex / 4) * 8) + (whiteKingIndex % 4);
 						
