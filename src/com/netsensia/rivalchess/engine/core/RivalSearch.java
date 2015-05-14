@@ -1554,7 +1554,7 @@ public final class RivalSearch implements Runnable
 		movesForSorting[moveCount] = 0;
 	}
 	
-	int moveOrderStatus[] = new int[RivalConstants.MAX_SEARCH_DEPTH];
+	int moveOrderStatus[] = new int[RivalConstants.MAX_TREE_DEPTH];
 	
 	public int getHighScoreMove(EngineChessBoard board, int ply, int hashMove)
 	{
@@ -2271,17 +2271,7 @@ public final class RivalSearch implements Runnable
 					
 					if (!this.m_abortingSearch)
 					{
-						//profileStart(10, "Search - After value returned");
 						newPath.score = -newPath.score;
-						
-//						if (newPath.score > 9000)
-//						{
-//							historyKiller[board.m_isWhiteToMove ? 1 : 0][(move >>> 16) & 63][(move & 63)] += 10000-newPath.score;
-//							if (historyKiller[board.m_isWhiteToMove ? 1 : 0][(move >>> 16) & 63][(move & 63)] > historyHigh[board.m_isWhiteToMove ? 1 : 0])
-//							{
-//								historyHigh[board.m_isWhiteToMove ? 1 : 0] = historyKiller[board.m_isWhiteToMove ? 1 : 0][(move >>> 16) & 63][(move & 63)];
-//							}
-//						}
 						
 						if (newPath.score >= high)
 						{
@@ -2596,18 +2586,12 @@ public final class RivalSearch implements Runnable
 			}
 		}
 		
-
-		//historyHigh[0] = 0;
-		//historyHigh[1] = 0;
-		
 		for (int i=0; i<64; i++)
 			for (int j=0; j<64; j++) {
 				historyMovesSuccess[0][i][j] = 0;
 				historyMovesSuccess[1][i][j] = 0;
 				historyMovesFail[0][i][j] = 0;
 				historyMovesFail[1][i][j] = 0;
-				//historyKiller[0][i][j] = 0;
-				//historyKiller[1][i][j] = 0;
 				historyPruneMoves[0][i][j] = RivalConstants.LMR_INITIAL_VALUE;
 				historyPruneMoves[1][i][j] = RivalConstants.LMR_INITIAL_VALUE;
 			}
@@ -2616,21 +2600,13 @@ public final class RivalSearch implements Runnable
 		
 		if (this.m_isDebug)
 		{
-			//System.out.println("Half Moves: " + m_board.m_halfMoveCount);
 			System.out.println("Hash: " + m_board.m_hashValue);
 			m_board.printLegalMoves(true, true);
-			//m_board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5c6"));
-			//m_board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("a7a6"));
-			//m_board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b2b4"));
-			//m_board.printPreviousBoards();
-			//System.exit(0);
 			System.out.println("Is Check = " + m_board.isCheck());
 			System.out.println("Eval = " + evaluate(m_board));
 			SearchPath sp = quiesce(m_board, 40, 0, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, m_board.isCheck());
 			System.out.println("Quiesce = " + sp.score);
 			System.out.println("FEN = " + m_board.getFen());
-			//System.out.println("Num White Attacks on D3 = " + m_board.countAttackersWithXRays(20, true));
-			//System.out.println("Num Black Attacks on D3 = " + m_board.countAttackersWithXRays(20, false));
 		}
 		
 		try
@@ -2646,6 +2622,8 @@ public final class RivalSearch implements Runnable
 			m_drawnPositionsAtRootCount[1] = 0;
 			int legal = 0;
 			int bestNewbieScore = -RivalConstants.INFINITY;
+			
+
 			while (move != 0)
 			{
 				if (m_board.makeMove(move))
@@ -2655,7 +2633,7 @@ public final class RivalSearch implements Runnable
 					
 					legal ++;
 					
-					if (this.m_iterativeDeepeningCurrentDepth < 1) // super newbie mode
+					if (this.m_iterativeDeepeningCurrentDepth < 1) // super beginner mode
 					{
 						SearchPath sp = quiesce(m_board, 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, m_board.isCheck());
 						sp.score = -sp.score;
@@ -2679,21 +2657,20 @@ public final class RivalSearch implements Runnable
 					}
 					if (m_board.previousOccurrencesOfThisPosition() == 2)
 					{
-						//System.out.println("Shallow");
-						//m_board.printBoard();
 						ply0Draw = true;
 					}
 					
 					m_board.setLegalMoves(depth1MovesTemp);
+					
 					int c1 = 0;
 					int move1 = depth1MovesTemp[c1] & 0x00FFFFFF;
+
 					while (move1 != 0)
 					{
 						if (m_board.makeMove(move1))
 						{
 							if (m_board.previousOccurrencesOfThisPosition() == 2)
 							{
-								//System.out.println("Deep");
 								ply1Draw = true;
 							}
 							m_board.unMakeMove();
@@ -2712,18 +2689,14 @@ public final class RivalSearch implements Runnable
 				move = depthZeroLegalMoves[++c] & 0x00FFFFFF;
 			}
 			
-			//System.exit(0);
 			if (this.m_useOpeningBook && m_board.getFen().trim().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"))
 			{
 				this.m_inBook = true;
-				//Log.i("Book", "Resetting");
 			}
 			
 			if (this.m_inBook)
 			{
-				//Log.i("Book", "Looking");
 				int libraryMove = m_openingLibrary.getMove(m_board.getFen());
-				//Log.i("Book", "Found " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(libraryMove));
 				if (libraryMove > 0 && m_board.isMoveLegal(libraryMove))
 				{
 					path = new SearchPath();

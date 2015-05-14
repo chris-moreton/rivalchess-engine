@@ -276,7 +276,11 @@ public final class RivalConstants
 	public static final int LAST_EXTENSION_LAYER = 4;
 	
 	public static final int[] MAX_NEW_EXTENSIONS_TREE_PART = 
-		{FRACTIONAL_EXTENSION_FULL, FRACTIONAL_EXTENSION_FULL / 4 * 3, FRACTIONAL_EXTENSION_FULL / 2, FRACTIONAL_EXTENSION_FULL / 8, 0}; 
+		{
+			FRACTIONAL_EXTENSION_FULL, FRACTIONAL_EXTENSION_FULL / 4 * 3,
+			FRACTIONAL_EXTENSION_FULL / 2, FRACTIONAL_EXTENSION_FULL / 8, 0
+		}; 
+	
 	/*
 	 * PVS
 	 */
@@ -398,6 +402,4 @@ public final class RivalConstants
 	public final static int GAMEPHASE_OPENING = 0;
 	public final static int GAMEPHASE_MIDDLEGAME = 1;
 	public final static int GAMEPHASE_ENDGAME = 1;
-	
-	//public static final boolean TRACK_PIECE_LOCATIONS = false;
 }

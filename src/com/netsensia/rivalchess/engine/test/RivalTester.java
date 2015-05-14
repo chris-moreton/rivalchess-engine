@@ -42,26 +42,23 @@ public final class RivalTester
 	private static int totalTime = 0;
 	private static NumberFormat nf = NumberFormat.getInstance();
 	
-	public static long testFunc()
-	{
-		long c = 0;
-		for (int i=0; i<5; i++)
-		{
-			c = i >>> 55;
-		}
-		return c;
-	}
-	
 	public static void main(String args[])
 	{
-		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/arasan18-bestmovesonly.epd", 3, 5000);
+		try {
+			generateKPKBitBase();
+			System.exit(0);
+		} catch (Exception e) {
+			System.exit(0);
+		}
+		
+		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/arasan18-bestmovesonly.epd", 3, 60000);
 		if (mode == MODE_TESTHASH) testHash();
 		
 		EngineStub engineStub = new EngineStub();
 		
 		if (m_isDebug) testHash();
 		
-		int hashSize = RivalConstants.DEFAULT_HASHTABLE_SIZE_MB;
+		int hashSize = 4096;
 
 		if (mode == MODE_SINGLE)
 		{
@@ -487,7 +484,7 @@ public final class RivalTester
 		RivalSearch rivalSearch = new RivalSearch();
 		rivalSearch.setHashSizeMB(128);
 		rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-		rivalSearch.setSearchDepth(25);
+		rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH);
 		
 		for (int mover = 0; mover < 2; mover ++)
 			for (int whiteKingIndex = 0; whiteKingIndex < 32; whiteKingIndex ++)
@@ -515,6 +512,11 @@ public final class RivalTester
 							boardModel.setPieceCode(whiteKingX, whiteKingY, 'K');
 							boardModel.setPieceCode(blackKingX, blackKingY, 'k');
 							boardModel.setPieceCode(whitePawnX, whitePawnY, 'P');
+							boardModel.setWhiteKingSideCastleAvailable(false);
+							boardModel.setWhiteQueenSideCastleAvailable(false);
+							boardModel.setBlackKingSideCastleAvailable(false);
+							boardModel.setBlackQueenSideCastleAvailable(false);
+							boardModel.setEnPassantFile(-1);
 							boardModel.setWhiteToMove(mover == 0);
 							
 							engineBoard.setBoard(boardModel);
@@ -525,17 +527,16 @@ public final class RivalTester
 								System.out.println("# " + (draws + wins));
 								
 								rivalSearch.setBoard(engineBoard);
-								rivalSearch.clearHash();
-								
+
 								rivalSearch.go();
-								int correctScore = rivalSearch.kpkLookup(whiteKingSquare, blackKingSquare, whitePawnSquare, mover == 0) == 0 ? 0 : 1;
+//								int correctScore = rivalSearch.kpkLookup(whiteKingSquare, blackKingSquare, whitePawnSquare, mover == 0) == 0 ? 0 : 1;
 								int score = rivalSearch.getCurrentScore() == 0 ? 0 : 1;
 								
-								if (score != correctScore)
-								{
-									System.out.println("Table says " + correctScore + " Rival said " + rivalSearch.getCurrentScore());
-									System.exit(0);
-								}
+//								if (score != correctScore)
+//								{
+//									System.out.println("Table says " + correctScore + " Rival said " + rivalSearch.getCurrentScore());
+//									System.exit(0);
+//								}
 								
 								int index = 
 									(whiteKingIndex * 64 * 48 * 2) +
@@ -608,6 +609,7 @@ public final class RivalTester
 		RivalSearch rivalSearch = new RivalSearch();
 		rivalSearch.setHashSizeMB(128);
 		rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+		rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH);
 		
 		for (int mover = 0; mover < 2; mover ++)
 			for (int whiteKingIndex = 0; whiteKingIndex < 32; whiteKingIndex ++)
@@ -650,6 +652,7 @@ public final class RivalTester
 								boardModel.setBlackQueenSideCastleAvailable(false);
 								boardModel.setWhiteKingSideCastleAvailable(false);
 								boardModel.setWhiteQueenSideCastleAvailable(false);
+								boardModel.setEnPassantFile(-1);
 								boardModel.setWhiteToMove(mover == 0);
 								
 								engineBoard.setBoard(boardModel);
@@ -657,7 +660,6 @@ public final class RivalTester
 								if (!engineBoard.isNonMoverInCheck())
 								{
 									rivalSearch.setBoard(engineBoard);
-									//rivalSearch.clearHash();
 
 									int score = 0;
 									int searchScore = 0;
