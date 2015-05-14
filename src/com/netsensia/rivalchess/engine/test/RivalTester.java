@@ -44,8 +44,12 @@ public final class RivalTester
 	
 	public static void main(String args[])
 	{
-		generateKPKBitBase();
-		System.exit(0);
+		try {
+			generateKPKBitBase();
+			System.exit(0);
+		} catch (Exception e) {
+			System.exit(0);
+		}
 		
 		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/arasan18-bestmovesonly.epd", 3, 60000);
 		if (mode == MODE_TESTHASH) testHash();
@@ -480,7 +484,7 @@ public final class RivalTester
 		for (int mover = 0; mover < 2; mover ++)
 			for (int whiteKingIndex = 0; whiteKingIndex < 32; whiteKingIndex ++)
 				for (int blackKingSquare = 0; blackKingSquare < 64; blackKingSquare ++)
-					for (int whitePawnSquare = 8; whitePawnSquare < 56; whitePawnSquare ++)
+					for (int whitePawnSquare = 38; whitePawnSquare < 56; whitePawnSquare ++)
 					{
 						int whiteKingSquare = ((whiteKingIndex / 4) * 8) + (whiteKingIndex % 4);
 						
@@ -507,6 +511,7 @@ public final class RivalTester
 							boardModel.setWhiteQueenSideCastleAvailable(false);
 							boardModel.setBlackKingSideCastleAvailable(false);
 							boardModel.setBlackQueenSideCastleAvailable(false);
+							boardModel.setEnPassantFile(-1);
 							boardModel.setWhiteToMove(mover == 0);
 							
 							engineBoard.setBoard(boardModel);
