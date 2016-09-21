@@ -3,6 +3,10 @@ Rival Chess Java Engine
 
 The Rival chess Java engine as used in the Rival Chess Android App.
 
+This is a UCI-compatible engine. The JAR file is in the dist directory and can be run by:
+
+	java -jar RivalChess.jar
+
 Written in collaboration with Russ Newman (the graphics creator on the DOS and Windows version of Rival).
 
 Russ again developed the graphics and this time also built the Android GUI.  The C++ UCI engine was converted to Java and plugged into Russ's code.
