@@ -45,7 +45,7 @@ public class EngineStub implements EngineServiceInterface
 		this.m_rivalSearch.startEngineTimer(false);
 		this.m_engineBoard = new EngineChessBoard(m_bitboards);
 		
-		ChessBoardConversion.getBoardRefFromBitRef( 0 ); //Force static initialisation of BitBoards.
+		ChessBoardConversion.getBoardRefFromBitRef( 0 ); //Force static initialization of BitBoards.
 	}
 	
 	public void newGame()
