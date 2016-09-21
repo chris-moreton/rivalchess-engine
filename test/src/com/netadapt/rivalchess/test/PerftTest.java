@@ -2,6 +2,8 @@ package com.netadapt.rivalchess.test;
 
 import static org.junit.Assert.assertEquals;
 
+import java.text.NumberFormat;
+
 import org.junit.Test;
 
 import com.netsensia.rivalchess.engine.core.Bitboards;
@@ -12,11 +14,19 @@ import com.netsensia.rivalchess.uci.UCIController;
 public class PerftTest {
 	
 	private EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
+	private NumberFormat nf = NumberFormat.getInstance();
 	
 	private void assertPerftScore(String fen, int depth, int expectedScore)
 	{
 		engineBoard.setBoard(UCIController.getBoardModel(fen));
-		assertEquals(expectedScore, UCIController.getPerft(engineBoard, depth));
+		long start = System.currentTimeMillis();
+		long nodes = UCIController.getPerft(engineBoard, depth);
+		assertEquals(expectedScore, nodes);
+		long end = System.currentTimeMillis();
+		long elapsed = end - start;
+		double seconds = elapsed / 1000.0;
+		double nps = nodes / seconds;
+		System.out.println("Nodes per second = " + this.nf.format(nps));
 	}
 	
     @Test

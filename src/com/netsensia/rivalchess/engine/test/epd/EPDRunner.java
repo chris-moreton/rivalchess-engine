@@ -87,7 +87,7 @@ public class EPDRunner
 				epdPosition.getPlyMovesString() + "," + 
 				epdPosition.bestMoves() + "," + 
 				(correct ? "Correct" : "[*****F*A*I*L*E*D*****]") + "," + 
-				correctSoFar + "," + 
+				correctSoFar + "/" + 
 				doneSoFar + "," + 
 				millisToSolution + "," +
 				(int)nps + "," +
@@ -114,7 +114,7 @@ public class EPDRunner
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
         String line;
         
-		System.out.println("ID,Rival,Best,Result,Correct,Total,Solved In,NPS,Solved In (Total),Time Taken (Total),NPS (Total)");
+		System.out.println("ID,Rival,Best,Result,Correct,Solved In,NPS,Solved In (Total),Time Taken (Total),NPS (Total)");
         
 	    try 
 	    {

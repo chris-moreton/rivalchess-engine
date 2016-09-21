@@ -44,14 +44,7 @@ public final class RivalTester
 	
 	public static void main(String args[])
 	{
-		try {
-			generateKPKBitBase();
-			System.exit(0);
-		} catch (Exception e) {
-			System.exit(0);
-		}
-		
-		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/arasan18-bestmovesonly.epd", 3, 60000);
+		if (mode == MODE_EPD) new EPDRunner().go("/Users/Chris/git/chess/rival-chess-android-engine/test/epd/arasan18-bestmovesonly.epd", 3, 200000);
 		if (mode == MODE_TESTHASH) testHash();
 		
 		EngineStub engineStub = new EngineStub();
@@ -527,6 +520,7 @@ public final class RivalTester
 								System.out.println("# " + (draws + wins));
 								
 								rivalSearch.setBoard(engineBoard);
+								rivalSearch.clearHash();
 
 								rivalSearch.go();
 //								int correctScore = rivalSearch.kpkLookup(whiteKingSquare, blackKingSquare, whitePawnSquare, mover == 0) == 0 ? 0 : 1;

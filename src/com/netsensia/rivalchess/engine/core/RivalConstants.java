@@ -26,7 +26,7 @@ public final class RivalConstants
 	public static final int MAX_LEGAL_MOVES = 220;
 	public static final int MAX_SEARCH_MILLIS = 60 * 60 * 1000; // 1 hour
 	public static final int MIN_SEARCH_MILLIS = 25;
-	public static final int MAX_SEARCH_DEPTH = 75;
+	public static final int MAX_SEARCH_DEPTH = 150;
 	public static final int MAX_QUIESCE_DEPTH = 50;
 	public static final int MAX_EXTENSION_DEPTH = 60;
 	public static final int MAX_TREE_DEPTH = MAX_SEARCH_DEPTH + MAX_QUIESCE_DEPTH + MAX_EXTENSION_DEPTH + 1;

@@ -46,7 +46,6 @@ public class EngineStub implements EngineServiceInterface
 		ChessBoardConversion.getBoardRefFromBitRef( 0 ); //Force static initialisation of BitBoards.
 	}
 	
-	
 	public void newGame()
 	{
 		this.cancelThink( );
