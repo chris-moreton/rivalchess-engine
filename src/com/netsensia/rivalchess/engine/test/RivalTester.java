@@ -29,7 +29,7 @@ public final class RivalTester
 	public static final int MODE_PERFT = 3;
 	public static final int MODE_TESTHASH = 4;
 	
-	private static int mode = MODE_EPD;
+	private static int mode = MODE_SINGLE;
 
 	private static int SUITE_DEPTH_ADDITION = 1;
 	
@@ -51,15 +51,14 @@ public final class RivalTester
 		
 		if (m_isDebug) testHash();
 		
-		int hashSize = 4096;
+		int hashSize = 4;
 
 		if (mode == MODE_SINGLE)
 		{
 			m_isDebug = true;
 			engineStub.setDebug(m_isDebug);
-			
 
-			int searchDifficulty = 11;
+			int searchDifficulty = 1;
 			int searchMethod = RivalConstants.SEARCH_TYPE_DEPTH;
 
 			BoardModel bm = getBoardModel("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");

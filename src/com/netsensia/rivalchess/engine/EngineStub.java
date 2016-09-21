@@ -23,6 +23,8 @@ public class EngineStub implements EngineServiceInterface
 	protected MoveRef m_currentEngineMoveRef = null;
 	protected int m_searchType = RivalConstants.SEARCH_TYPE_TIME;
 	private int m_engineDifficulty = 4000;
+	private int m_nodesToSearchPerLevel = 20000;
+	
 	private int m_hashSizeMB = RivalConstants.DEFAULT_HASHTABLE_SIZE_MB;
 	private int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
 	
@@ -330,11 +332,19 @@ public class EngineStub implements EngineServiceInterface
 		{
 			this.m_rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
 			this.m_rivalSearch.setMillisToThink(difficulty);
+			this.m_rivalSearch.setNodesToSearch(Integer.MAX_VALUE);
 		}
-		else
+		else if (this.m_searchType == RivalConstants.SEARCH_TYPE_TIME)
 		{
 			this.m_rivalSearch.setSearchDepth(difficulty);
 			this.m_rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+			this.m_rivalSearch.setNodesToSearch(Integer.MAX_VALUE);
+		}
+		else
+		{
+			this.m_rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
+			this.m_rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+			this.m_rivalSearch.setNodesToSearch(difficulty * this.m_nodesToSearchPerLevel);
 		}
 		m_rivalSearch.go();			
 	}
@@ -350,6 +360,16 @@ public class EngineStub implements EngineServiceInterface
 	synchronized public void setEngineMode(int mode)
 	{
 		this.m_searchType = mode;
+	}
+	
+	public int getNodesToSearchPerLevel()
+	{
+		return m_nodesToSearchPerLevel;
+	}
+
+	public void setNodesToSearchPerLevel(int nodesToSearchPerLevel)
+	{
+		this.m_nodesToSearchPerLevel = nodesToSearchPerLevel;
 	}
 	
 	public boolean wasSearchCancelled( )

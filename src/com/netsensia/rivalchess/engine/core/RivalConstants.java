@@ -306,6 +306,7 @@ public final class RivalConstants
 	
 	public static final int SEARCH_TYPE_TIME = 0;
 	public static final int SEARCH_TYPE_DEPTH = 1;
+	public static final int SEARCH_TYPE_NODES = 2;
 
 /***********************************	
  *	Hash table settings            *

@@ -61,6 +61,8 @@ public final class RivalSearch implements Runnable
 	
 	public EngineChessBoard m_board;
 	protected int m_millisecondsToThink;
+	protected int m_nodesToSearch = Integer.MAX_VALUE;
+	
 	protected boolean m_abortingSearch = true;
 	public long m_searchStartTime = -1, m_searchTargetEndTime, m_searchEndTime = 0;
 	protected int m_finalDepthToSearch = 1;
@@ -243,6 +245,7 @@ public final class RivalSearch implements Runnable
 			this.m_maxHashEntries = mainHashTableSize / RivalConstants.HASHPOSITION_SIZE_BYTES;
 			this.m_maxPawnHashEntries = pawnHashTableSize / RivalConstants.PAWNHASHENTRY_SIZE_BYTES;
 		}
+
 		setHashTable();
 	}	
 	
@@ -1871,7 +1874,7 @@ public final class RivalSearch implements Runnable
 	{
 		if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) m_nodes++;
 
-		if (this.m_currentTimeMillis > this.m_searchTargetEndTime)
+		if (this.m_currentTimeMillis > this.m_searchTargetEndTime || this.m_nodes > this.m_nodesToSearch)
 		{
 			this.m_abortingSearch = true;
 			this.m_isOkToSendInfo = false;
@@ -2828,6 +2831,16 @@ public final class RivalSearch implements Runnable
 		{
 			this.m_millisecondsToThink = RivalConstants.MIN_SEARCH_MILLIS;
 		}
+	}
+	
+	public int getNodesToSearch()
+	{
+		return m_nodesToSearch;
+	}
+
+	public void setNodesToSearch(int nodesToSearch)
+	{
+		this.m_nodesToSearch = nodesToSearch;
 	}
 
 	public void setSearchDepth(int searchDepth) 
