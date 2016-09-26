@@ -1,0 +1,4 @@
+#!/bin/bash
+
+java -jar /Users/Chris/git/chess/rival-chess-android-engine/dist/RivalChess.jar
+
