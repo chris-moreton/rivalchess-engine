@@ -223,18 +223,28 @@ public class UCIController implements Runnable {
 							{
 								m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
 								m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
+								m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
 							}
 							else
 							if (m_moveTime != -1)
 							{
 								m_engine.setMillisToThink(m_moveTime);
 								m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
+								m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
 							}
 							else
 							if (m_maxDepth != -1)
 							{
 								m_engine.setSearchDepth(m_maxDepth);
 								m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+								m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+							}
+							else
+							if (m_maxNodes != -1)
+							{
+								m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
+								m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+								m_engine.setNodesToSearch(m_maxNodes);
 							}
 							else
 							if (m_whiteTime != -1)

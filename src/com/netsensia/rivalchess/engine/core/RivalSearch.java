@@ -1874,7 +1874,7 @@ public final class RivalSearch implements Runnable
 	{
 		if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) m_nodes++;
 
-		if (this.m_currentTimeMillis > this.m_searchTargetEndTime || this.m_nodes > this.m_nodesToSearch)
+		if (this.m_currentTimeMillis > this.m_searchTargetEndTime || this.m_nodes >= this.m_nodesToSearch)
 		{
 			this.m_abortingSearch = true;
 			this.m_isOkToSendInfo = false;

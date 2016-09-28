@@ -23,6 +23,7 @@ public final class RivalConstants
 	public static final boolean TRACK_PIECE_SQUARE_VALUES = false;
 	
 	public static final int MAX_GAME_MOVES = 500;
+	public static final int MAX_NODES_TO_SEARCH = Integer.MAX_VALUE;
 	public static final int MAX_LEGAL_MOVES = 220;
 	public static final int MAX_SEARCH_MILLIS = 60 * 60 * 1000; // 1 hour
 	public static final int MIN_SEARCH_MILLIS = 25;
