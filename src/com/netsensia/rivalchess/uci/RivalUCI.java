@@ -22,7 +22,7 @@ public final class RivalUCI
 		
 		m_engine = new RivalSearch();
 		m_engine.startEngineTimer(true);
-		m_engine.setHashSizeMB(128);
+		m_engine.setHashSizeMB(32);
 		
 		new Thread(m_engine).start();
 		
