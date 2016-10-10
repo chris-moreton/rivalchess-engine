@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.engine.core;
 
 public final class RivalConstants 
 {
-	public static final String VERSION = "v1.0.2";
+	public static final String VERSION = "v1.0.3";
 
 	public static final boolean IS_ANDROID_VERSION = true;
 	public static final boolean BUILDING_ENDGAME_BASES = false;
@@ -12,7 +12,7 @@ public final class RivalConstants
 
 	public static final int INFINITY = 20000000;
 	
-	public static final boolean UCI_DEBUG = true;
+	public static final boolean UCI_DEBUG = false;
 	public static final String UCI_DEBUG_FILEPATH = "S:\\Java\\Chess Supp\\Engines\\";
 	public static final boolean UCI_LOG = false;
 	public static final int UCI_TIMER_INTERVAL_MILLIS = 50;
