@@ -3,5 +3,5 @@
 .project
 .buildpath
 .classpath
-
+*.log
 /bin/

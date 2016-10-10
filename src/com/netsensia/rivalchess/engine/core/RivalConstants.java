@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.engine.core;
 
 public final class RivalConstants 
 {
-	public static final String VERSION = "v1.0.1";
+	public static final String VERSION = "v1.0.2";
 
 	public static final boolean IS_ANDROID_VERSION = true;
 	public static final boolean BUILDING_ENDGAME_BASES = false;
@@ -12,7 +12,7 @@ public final class RivalConstants
 
 	public static final int INFINITY = 20000000;
 	
-	public static final boolean UCI_DEBUG = false;
+	public static final boolean UCI_DEBUG = true;
 	public static final String UCI_DEBUG_FILEPATH = "S:\\Java\\Chess Supp\\Engines\\";
 	public static final boolean UCI_LOG = false;
 	public static final int UCI_TIMER_INTERVAL_MILLIS = 50;
@@ -27,7 +27,7 @@ public final class RivalConstants
 	public static final int MAX_LEGAL_MOVES = 220;
 	public static final int MAX_SEARCH_MILLIS = 60 * 60 * 1000; // 1 hour
 	public static final int MIN_SEARCH_MILLIS = 25;
-	public static final int MAX_SEARCH_DEPTH = 150;
+	public static final int MAX_SEARCH_DEPTH = 125;
 	public static final int MAX_QUIESCE_DEPTH = 50;
 	public static final int MAX_EXTENSION_DEPTH = 60;
 	public static final int MAX_TREE_DEPTH = MAX_SEARCH_DEPTH + MAX_QUIESCE_DEPTH + MAX_EXTENSION_DEPTH + 1;

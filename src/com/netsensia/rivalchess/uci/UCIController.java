@@ -156,6 +156,7 @@ public class UCIController implements Runnable {
 							if (RivalConstants.UCI_DEBUG)
 							{
 								m_engine.m_board.printLegalMoves();
+								m_engine.m_board.printBoard();
 							}
 						}
 						if (parts[0].equals("go"))
