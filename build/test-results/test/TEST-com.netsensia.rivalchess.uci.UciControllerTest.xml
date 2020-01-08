@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.uci.UciControllerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2020-01-08T17:25:29" hostname="pop-os" time="0.035">
+  <properties/>
+  <testcase name="testUciConsole" classname="com.netsensia.rivalchess.uci.UciControllerTest" time="0.035"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
