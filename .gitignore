@@ -5,3 +5,4 @@
 .classpath
 *.log
 /bin/
+.idea/
