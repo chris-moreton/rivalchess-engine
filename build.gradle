@@ -1,0 +1,23 @@
+apply plugin: 'java'
+
+jar {
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'com.netsensia.rivalchess.uci.RivalUCI'
+        )
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+}
+
+test {
+    useJUnit()
+    maxHeapSize = '1G'
+}

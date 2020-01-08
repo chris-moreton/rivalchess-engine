@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.engine.core.PerftTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2020-01-08T12:35:28" hostname="pop-os" time="22.417">
+  <properties/>
+  <testcase name="testPerftScore" classname="com.netsensia.rivalchess.engine.core.PerftTest" time="22.417"/>
+  <system-out><![CDATA[Nodes per second = 18,947,171.653
+Nodes per second = 20,541,000
+Nodes per second = 15,495,570.064
+Nodes per second = ∞
+Nodes per second = 17,515,349.057
+Nodes per second = 22,182,250.217
+Nodes per second = 17,256,832.68
+Nodes per second = 18,283,800
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

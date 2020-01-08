@@ -3,16 +3,30 @@ Rival Chess Java Engine
 
 The Rival chess Java engine as used in the Rival Chess Android App.
 
-This is a UCI-compatible engine. The JAR file is in the dist directory and can be run by:
+This is a UCI-compatible engine.  The C++ UCI engine was converted to Java was an almost complete rewrite of the C++ code. 
 
-	java -jar RivalChess.jar
+It plays about 200-300 ECO higher than the old C++ engine when compared on the same hardware.
 
-Written in collaboration with Russ Newman (the graphics creator on the DOS and Windows version of Rival).
+## Build
 
-Russ again developed the graphics and this time also built the Android GUI.  The C++ UCI engine was converted to Java and plugged into Russ's code.
+    ./gradlew build
+    
+## Run
+    java -jar build/libs/rival-chess-android-engine.jar
+    
+## Play
 
-In reality, this was an almost complete rewrite of the C++ engine and plays about 200-300 ECO higher than the old C++ engine when compared on the same hardware.
+Detailed instructions on the Universal Chess Interface (UCI) can be found [here](http://wbec-ridderkerk.nl/html/UCIProtocol.html).
 
-Some detailed information of the use of magic bitboards in this version of Rival can be found [here](http://www.afewmorelines.com/understanding-magic-bitboards-in-chess-programming/).
+Here is a brief example of how to use the command line interface.
 
-![Rival Chess for Android screenshots](http://www.rivalchess.com/wp-content/themes/thesis_18/custom/rotator/screens.jpg)
+    Hi
+    ucinewgame
+    position startpos
+    go depth 3
+    info currmove g1h3 currmovenumber 20 depth 3 score cp 25 pv g1f3 g8f6 e2e3  time 0 nodes 113 nps 0
+    bestmove g1f3
+    move e2e3
+    go depth 3
+    info currmove g1h3 currmovenumber 20 depth 3 score cp 25 pv g1f3 g8f6 e2e3  time 1 nodes 108 nps 108000
+    bestmove g1f3
