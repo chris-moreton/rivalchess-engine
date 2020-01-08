@@ -56,16 +56,17 @@ public class UCIController implements Runnable {
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 	    String s;
 
-		BoardModel m_boardModel = new BoardModel();
-		FenChess m_fenChess = new FenChess( m_boardModel );
+		BoardModel boardModel = new BoardModel();
+		FenChess fenChess = new FenChess( boardModel );
 		m_bitboards = new Bitboards();
-		EngineChessBoard m_engineBoard = new EngineChessBoard(m_bitboards);
+		EngineChessBoard engineBoard = new EngineChessBoard(m_bitboards);
 		Date todaysDate = new java.util.Date();
 		SimpleDateFormat formatter = new SimpleDateFormat("MMMdd-HH-mm-ss-S");
 		String formattedDate = formatter.format(todaysDate);
 		m_engine.setUseOpeningBook(false);
 		
 	    try {
+
 	    	if (RivalConstants.UCI_DEBUG)
 	    	{
 				fstream = new FileWriter(RivalConstants.UCI_DEBUG_FILEPATH + "ucidebug-" + formattedDate + ".log",true);
@@ -81,231 +82,25 @@ public class UCIController implements Runnable {
 				{
 					Logger.log(out, s, ">");
 					String[] parts = s.split(" ");
-					int l = parts.length;
+					final int l = parts.length;
 					if (l > 0)
 					{
-						if (parts[0].equals("uci"))
-						{
-							EngineMonitor.sendUCI("id name Rival (build " + RivalConstants.VERSION + ")");
-							EngineMonitor.sendUCI("id author Chris Moreton");
-							EngineMonitor.sendUCI("option name Hash type spin default 1 min 1 max 256");
-							EngineMonitor.sendUCI("uciok");
-						}
-						if (parts[0].equals("var"))
-						{
-							showEngineVar(parts[1]);
-						}
-						if (parts[0].equals("perft"))
-						{
-							perftTest();
-						}
-						if (parts[0].equals("epd"))
-						{
-							Pattern p = Pattern.compile("epd \"(.*)\" (.*) (.*)");
-							Matcher m = p.matcher(s);
-							if (m.find())
-							{
-								EPDRunner epdRunner = new EPDRunner();
-								epdRunner.go(m.group(1), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
-							}
-						}
-						if (parts[0].equals("debug"))
-						{
-							waitForSearchToComplete();
-							m_isDebug = parts[1].equals("On"); 
-						}
-						if (parts[0].equals("isready"))
-						{
-							EngineMonitor.sendUCI("readyok");
-						}
-						if (parts[0].equals("ucinewgame"))
-						{
-							waitForSearchToComplete();
-							m_engine.newGame();
-						}
-						if (parts[0].equals("position"))
-						{
-							waitForSearchToComplete();
-							if (parts[1].equals("startpos"))
-							{
-								m_fenChess.setFromStr( EngineChessBoard.START_POS );
-							}
-							else
-							{
-								m_fenChess.setFromStr( s.substring(12).trim() );
-							}
-		
-							m_engineBoard.setBoard(m_boardModel);
-							m_engine.setBoard(m_engineBoard);
-							
-							if (l > 2)
-							{
-								
-								for (int pos=2; pos<l; pos++)
-								{
-									if (parts[pos].equals("moves"))
-									{
-										for (int i=pos+1; i<l; i++)
-										{
-											m_engine.m_board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(parts[i]));
-										}
-										break;
-									}
-								}
-							}
-							if (RivalConstants.UCI_DEBUG)
-							{
-								m_engine.m_board.printLegalMoves();
-								m_engine.m_board.printBoard();
-							}
-						}
-						if (parts[0].equals("go"))
-						{
-							m_whiteTime = -1;
-							m_blackTime = -1;
-							m_whiteInc = -1;
-							m_blackInc = -1;
-							m_movesToGo = 0;
-							m_moveTime = -1;
-							m_isInfinite = false;
-							m_maxDepth = -1;
-							for (int i=1; i<l; i++)
-							{
-								if (parts[i].equals("searchmoves"))
-								{
-								}
-								if (parts[i].equals("ponder"))
-								{
-								}
-								if (parts[i].equals("wtime"))
-								{
-									m_whiteTime = Integer.parseInt(parts[i+1]);
-								}
-								if (parts[i].equals("btime"))
-								{
-									m_blackTime = Integer.parseInt(parts[i+1]);
-								}
-								if (parts[i].equals("winc"))
-								{
-									m_whiteInc = Integer.parseInt(parts[i+1]);
-								}
-								if (parts[i].equals("binc"))
-								{
-									m_blackInc = Integer.parseInt(parts[i+1]);
-								}
-								if (parts[i].equals("movestogo"))
-								{
-									m_movesToGo = Integer.parseInt(parts[i+1]);
-								}
-								if (parts[i].equals("depth"))
-								{
-									m_maxDepth = Integer.parseInt(parts[i+1]);
-									m_engine.setSearchDepth(m_maxDepth);
-								}
-								if (parts[i].equals("nodes"))
-								{
-									m_maxNodes = Integer.parseInt(parts[i+1]);
-								}
-								if (parts[i].equals("mate"))
-								{
-									m_mateInX = Integer.parseInt(parts[i+1]);
-								}
-								if (parts[i].equals("movetime"))
-								{
-									m_moveTime = Integer.parseInt(parts[i+1]) * m_timeMultiple;
-								}
-								if (parts[i].equals("infinite"))
-								{
-									m_isInfinite = true;
-								}
-							}
-							
-							if (m_isInfinite)
-							{
-								m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-								m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
-								m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
-							}
-							else
-							if (m_moveTime != -1)
-							{
-								m_engine.setMillisToThink(m_moveTime);
-								m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
-								m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
-							}
-							else
-							if (m_maxDepth != -1)
-							{
-								m_engine.setSearchDepth(m_maxDepth);
-								m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-								m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
-							}
-							else
-							if (m_maxNodes != -1)
-							{
-								m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
-								m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-								m_engine.setNodesToSearch(m_maxNodes);
-							}
-							else
-							if (m_whiteTime != -1)
-							{
-					    		int calcTime = (m_engineBoard.m_isWhiteToMove ? m_whiteTime : m_blackTime) / (m_movesToGo == 0 ? 120 : m_movesToGo);
-					    		int guaranteedTime = (m_engineBoard.m_isWhiteToMove ? m_whiteInc : m_blackInc);
-					    		int timeToThink = calcTime + guaranteedTime - RivalConstants.UCI_TIMER_SAFTEY_MARGIN_MILLIS;
-					    		uciDebug("I am going to think for " + timeToThink + " millis");
-								m_engine.setMillisToThink(timeToThink);
-								m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
-							}
-							
-							m_engine.startSearch();
-						}
-						if (parts[0].equals("setoption"))
-						{
-							if (parts[1].equals("name"))
-							{
-								if (parts[2].equals("Clear") && parts[3].equals("Hash"))
-								{
-									m_engine.clearHash();
-								}
-								if (parts[2].equals("Hash"))
-								{
-									if (parts[3].equals("value"))
-									{
-										m_hashSizeMB = Integer.parseInt(parts[4]);
-										m_engine.setHashSizeMB(m_hashSizeMB);
-									}					
-								}					
-								if (parts[2].equals("OwnBook"))
-								{
-									if (parts[3].equals("value"))
-									{
-										if (parts[4].equals("true"))
-										{
-											m_engine.setUseOpeningBook(true);
-										}
-										else
-										{
-											m_engine.setUseOpeningBook(false);
-										}
-									}					
-								}					
-							}
-						}
-						if (parts[0].equals("stop"))
-						{
-							uciDebug("UCI stop command received");
-							m_engine.stopSearch();
-							waitForSearchToComplete();
-						}
-						if (parts[0].equals("quit"))
-						{
-							System.exit(0);
-						}
+						handleIfUciCommand(parts);
+						handleIfVarCommand(parts);
+						handleIfPerftCommand(parts);
+						handleIfEpdCommand(s, parts);
+						handleIfDebugCommand(parts);
+						handleIfIsReadyCommand(parts);
+						handleIfUciNewGameCommand(parts);
+						handleIfPositionCommand(s, boardModel, fenChess, engineBoard, parts);
+						handleIfGoCommand(engineBoard, parts);
+						handleIfSetOptionCommand(parts);
+						handleIfStopCommand(parts);
+						handleIfQuitCommand(parts);
 					}
 				}
 			}
-			uciDebug("That's it - I'm outta here");
+			uciDebug("Bye");
 			out.close();
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
@@ -313,8 +108,324 @@ public class UCIController implements Runnable {
 			e.printStackTrace();
 		}
 	}
-	
-	public void waitForSearchToComplete()
+
+	private void handleIfQuitCommand(String[] parts) {
+		if (parts[0].equals("quit"))
+		{
+			System.exit(0);
+		}
+	}
+
+	private void handleIfStopCommand(String[] parts) {
+		if (parts[0].equals("stop"))
+		{
+			uciDebug("UCI stop command received");
+			m_engine.stopSearch();
+			waitForSearchToComplete();
+		}
+	}
+
+	private void handleIfSetOptionCommand(String[] parts) {
+		if (parts[0].equals("setoption"))
+		{
+			handleIfSetOptionNameCommand(parts);
+		}
+	}
+
+	private void handleIfSetOptionNameCommand(String[] parts) {
+		if (parts[1].equals("name"))
+		{
+			handleIfSetOptionNameClearHashCommand(parts);
+			handleIfSetOptionHashValueCommand(parts);
+			handleIfSetOptionOwnBookCommand(parts);
+		}
+	}
+
+	private void handleIfSetOptionOwnBookCommand(String[] parts) {
+		if (parts[2].equals("OwnBook") && parts[3].equals("value"))
+		{
+			if (parts[4].equals("true"))
+			{
+				m_engine.setUseOpeningBook(true);
+			}
+			else
+			{
+				m_engine.setUseOpeningBook(false);
+			}
+		}
+	}
+
+	private static void handleIfSetOptionHashValueCommand(String[] parts) {
+		if (parts[2].equals("Hash"))
+		{
+			if (parts[3].equals("value"))
+			{
+				m_hashSizeMB = Integer.parseInt(parts[4]);
+				m_engine.setHashSizeMB(m_hashSizeMB);
+			}
+		}
+	}
+
+	private void handleIfSetOptionNameClearHashCommand(String[] parts) {
+		if (parts[2].equals("Clear") && parts[3].equals("Hash"))
+		{
+			m_engine.clearHash();
+		}
+	}
+
+	private static void handleIfGoCommand(EngineChessBoard m_engineBoard, String[] parts) {
+
+		if (parts[0].equals("go"))
+		{
+			m_whiteTime = -1;
+			m_blackTime = -1;
+			m_whiteInc = -1;
+			m_blackInc = -1;
+			m_movesToGo = 0;
+			m_moveTime = -1;
+			m_isInfinite = false;
+			m_maxDepth = -1;
+			for (int i=1; i<parts.length; i++)
+			{
+				handleIfGoWtime(parts, i);
+				handleIfGoBtime(parts, i);
+				handleIfGoWinc(parts, i);
+				handleIfGoBinc(parts, i);
+				handleIfGoMovesTogo(parts, i);
+				handleIfGoDepth(parts, i);
+				handleIfGoNodes(parts, i);
+				handleIfGoMate(parts, i);
+				handleIfGoMoveTime(parts, i);
+				handleIfGoInfinite(parts, i);
+			}
+
+			setSearchOptions(m_engineBoard);
+
+			m_engine.startSearch();
+		}
+	}
+
+	private static void setSearchOptions(EngineChessBoard engineBoard) {
+		if (m_isInfinite)
+		{
+			m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+			m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
+			m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+		}
+		else
+		if (m_moveTime != -1)
+		{
+			m_engine.setMillisToThink(m_moveTime);
+			m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
+			m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+		}
+		else
+		if (m_maxDepth != -1)
+		{
+			m_engine.setSearchDepth(m_maxDepth);
+			m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+			m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+		}
+		else
+		if (m_maxNodes != -1)
+		{
+			m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
+			m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+			m_engine.setNodesToSearch(m_maxNodes);
+		}
+		else
+		if (m_whiteTime != -1)
+		{
+			int calcTime = (engineBoard.m_isWhiteToMove ? m_whiteTime : m_blackTime) / (m_movesToGo == 0 ? 120 : m_movesToGo);
+			int guaranteedTime = (engineBoard.m_isWhiteToMove ? m_whiteInc : m_blackInc);
+			int timeToThink = calcTime + guaranteedTime - RivalConstants.UCI_TIMER_SAFTEY_MARGIN_MILLIS;
+			uciDebug("I am going to think for " + timeToThink + " millis");
+			m_engine.setMillisToThink(timeToThink);
+			m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH-2);
+		}
+	}
+
+	private static void handleIfGoInfinite(String[] parts, int i) {
+		if (parts[i].equals("infinite"))
+		{
+			m_isInfinite = true;
+		}
+	}
+
+	private static void handleIfGoMoveTime(String[] parts, int i) {
+		if (parts[i].equals("movetime"))
+		{
+			m_moveTime = Integer.parseInt(parts[i+1]) * m_timeMultiple;
+		}
+	}
+
+	private static void handleIfGoMate(String[] parts, int i) {
+		if (parts[i].equals("mate"))
+		{
+			m_mateInX = Integer.parseInt(parts[i+1]);
+		}
+	}
+
+	private static void handleIfGoNodes(String[] parts, int i) {
+		if (parts[i].equals("nodes"))
+		{
+			m_maxNodes = Integer.parseInt(parts[i+1]);
+		}
+	}
+
+	private static void handleIfGoDepth(String[] parts, int i) {
+		if (parts[i].equals("depth"))
+		{
+			m_maxDepth = Integer.parseInt(parts[i+1]);
+			m_engine.setSearchDepth(m_maxDepth);
+		}
+	}
+
+	private static void handleIfGoMovesTogo(String[] parts, int i) {
+		if (parts[i].equals("movestogo"))
+		{
+			m_movesToGo = Integer.parseInt(parts[i+1]);
+		}
+	}
+
+	private static void handleIfGoBinc(String[] parts, int i) {
+		if (parts[i].equals("binc"))
+		{
+			m_blackInc = Integer.parseInt(parts[i+1]);
+		}
+	}
+
+	private static void handleIfGoWinc(String[] parts, int i) {
+		if (parts[i].equals("winc"))
+		{
+			m_whiteInc = Integer.parseInt(parts[i+1]);
+		}
+	}
+
+	private static void handleIfGoBtime(String[] parts, int i) {
+		if (parts[i].equals("btime"))
+		{
+			m_blackTime = Integer.parseInt(parts[i+1]);
+		}
+	}
+
+	private static void handleIfGoWtime(String[] parts, int i) {
+		if (parts[i].equals("wtime"))
+		{
+			m_whiteTime = Integer.parseInt(parts[i+1]);
+		}
+	}
+
+	private void handleIfPositionCommand(String s, BoardModel boardModel, FenChess fenChess, EngineChessBoard engineBoard, String[] parts) {
+
+		if (parts[0].equals("position"))
+		{
+			waitForSearchToComplete();
+			setStartPosition(s, fenChess, parts);
+
+			engineBoard.setBoard(boardModel);
+			m_engine.setBoard(engineBoard);
+
+			playMovesFromPosition(parts);
+			if (RivalConstants.UCI_DEBUG)
+			{
+				m_engine.m_board.printLegalMoves();
+				m_engine.m_board.printBoard();
+			}
+		}
+	}
+
+	private void playMovesFromPosition(String[] parts) {
+		final int l = parts.length;
+
+		if (l > 2)
+		{
+			for (int pos=2; pos<l; pos++)
+			{
+				if (parts[pos].equals("moves"))
+				{
+					for (int i=pos+1; i<l; i++)
+					{
+						m_engine.m_board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(parts[i]));
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	private void setStartPosition(String s, FenChess fenChess, String[] parts) {
+		if (parts[1].equals("startpos"))
+		{
+			fenChess.setFromStr( EngineChessBoard.START_POS );
+		}
+		else
+		{
+			fenChess.setFromStr( s.substring(12).trim() );
+		}
+	}
+
+	private void handleIfUciNewGameCommand(String[] parts) {
+		if (parts[0].equals("ucinewgame"))
+		{
+			waitForSearchToComplete();
+			m_engine.newGame();
+		}
+	}
+
+	private void handleIfIsReadyCommand(String[] parts) {
+		if (parts[0].equals("isready"))
+		{
+			EngineMonitor.sendUCI("readyok");
+		}
+	}
+
+	private void handleIfUciCommand(String[] parts) {
+		if (parts[0].equals("uci"))
+		{
+			EngineMonitor.sendUCI("id name Rival (build " + RivalConstants.VERSION + ")");
+			EngineMonitor.sendUCI("id author Chris Moreton");
+			EngineMonitor.sendUCI("option name Hash type spin default 1 min 1 max 256");
+			EngineMonitor.sendUCI("uciok");
+		}
+	}
+
+	private void handleIfVarCommand(String[] parts) {
+		if (parts[0].equals("var"))
+		{
+			showEngineVar(parts[1]);
+		}
+	}
+
+	private void handleIfPerftCommand(String[] parts) {
+		if (parts[0].equals("perft"))
+		{
+			perftTest();
+		}
+	}
+
+	private void handleIfEpdCommand(String s, String[] parts) {
+		if (parts[0].equals("epd"))
+		{
+			Pattern p = Pattern.compile("epd \"(.*)\" (.*) (.*)");
+			Matcher m = p.matcher(s);
+			if (m.find())
+			{
+				EPDRunner epdRunner = new EPDRunner();
+				epdRunner.go(m.group(1), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
+			}
+		}
+	}
+
+	private static void handleIfDebugCommand(String[] parts) {
+		if (parts[0].equals("debug"))
+		{
+			waitForSearchToComplete();
+			m_isDebug = parts[1].equals("On");
+		}
+	}
+
+	public static void waitForSearchToComplete()
 	{
 		int state;
 		m_engine.stopSearch();
@@ -341,9 +452,7 @@ public class UCIController implements Runnable {
 	{
 		EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
 		engineBoard.setBoard(getBoardModel(fen));
-		
-		//engineBoard.printBoard();
-		//engineBoard.printLegalMoves();
+
 		System.out.print("Calculating Perft Value for " + fen + " at depth " + depth + "...");
 		long nodes = getPerft(engineBoard, depth);
 		System.out.println(" = " + nodes);
@@ -479,7 +588,6 @@ public class UCIController implements Runnable {
 				//board.printBoard();
 				nodes += getPerft(board, depth-1);
 				board.unMakeMove();
-				//board.printBoard();
 			}
 			moveNum ++;
 		}
@@ -496,7 +604,7 @@ public class UCIController implements Runnable {
 		    
 		    System.out.println("Class: " + c.getName());
 		    
-		    System.out.println(varName + " = " + field.get(new RivalConstants()));
+		    System.out.println(varName + " = " + field.get(RivalConstants.getInstance()));
 		}
 		catch (ClassNotFoundException e)
 		{

@@ -1,19 +1,19 @@
 package com.netsensia.rivalchess.engine.core;
 
-public final class RivalConstants 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public final class RivalConstants
 {
 	public static final String VERSION = "v1.0.3";
 
 	public static final boolean IS_ANDROID_VERSION = true;
-	public static final boolean BUILDING_ENDGAME_BASES = false;
-	public static final boolean USE_ALTERNATE_EVAL = false;
-	public static final boolean TEST_ALTERNATE_EVAL = false;
-	public static final boolean SHOW_PS_BREAKDOWN = false;
 
 	public static final int INFINITY = 20000000;
 	
 	public static final boolean UCI_DEBUG = false;
-	public static final String UCI_DEBUG_FILEPATH = "S:\\Java\\Chess Supp\\Engines\\";
+	public static final String UCI_DEBUG_FILEPATH = System.getProperty("java.io.tmpdir");
 	public static final boolean UCI_LOG = false;
 	public static final int UCI_TIMER_INTERVAL_MILLIS = 50;
 	public static final int UCI_TIMER_SAFTEY_MARGIN_MILLIS = 250;
@@ -53,20 +53,15 @@ public final class RivalConstants
 	public static final int VALUE_QUEEN = 1175;
 	public static final int VALUE_KING = 30000; // this gets used sometimes, for example in static exchange evaluation
 	
-	public static final int PIECE_VALUES[] = {
+	public static final List<Integer> PIECE_VALUES = Collections.unmodifiableList(Arrays.asList(
 		VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK,
 		VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK
-	};
+	));
 
 	public static final int PIECE_VALUES_MINI[] = {1,3,3,5,0,9};
 	
 	public static final int TOTAL_PIECE_VALUE_PER_SIDE_AT_START = (VALUE_KNIGHT * 2) + (VALUE_BISHOP * 2) + (VALUE_ROOK * 2) + (VALUE_QUEEN);
-	public static final int TOTAL_PIECE_VALUE_AT_START = TOTAL_PIECE_VALUE_PER_SIDE_AT_START * 2;
-	
-	public static final int TRADE_BONUS_PIECE_DIVISOR = 200;
-	public static final int TRADE_BONUS_PAWN_DIVISOR = 50;
 
-	public static final int VALUE_QUEENEARLY_PENALTY = 40;
 	public static final int OPENING_PHASE_MATERIAL = (int)(TOTAL_PIECE_VALUE_PER_SIDE_AT_START * 0.8);
 	
 	public static final int TRADE_BONUS_UPPER_PAWNS = 600;
@@ -84,17 +79,9 @@ public final class RivalConstants
 	public static final int PAWN_STAGE_MATERIAL_LOW = VALUE_ROOK;
 	public static final int PAWN_STAGE_MATERIAL_HIGH = VALUE_QUEEN + (2 * VALUE_ROOK) + (2 * VALUE_BISHOP);
 
-	public static final int KING_TROPISM_LOW_MATERIAL = VALUE_ROOK;
-	public static final int KING_TROPISM_HIGH_MATERIAL = VALUE_QUEEN + VALUE_KNIGHT;
-
 	public static final int CASTLE_BONUS_LOW_MATERIAL = VALUE_ROOK;
 	public static final int CASTLE_BONUS_HIGH_MATERIAL = VALUE_QUEEN + (VALUE_ROOK * 2) + (VALUE_BISHOP * 2);
-	
-	public static final int VALUE_DIRECT_OPPOSITION = 20;
-	
-	public static final int PIECE_SQUARE_IMPORTANCE_DIVISOR = 1;
 
-	public static final int VALUE_OPENING_UNDEVELOPED_MINOR_PENALTY = 25;
 
 	public static final int VALUE_BISHOP_MOBILITY[] = {-15,-10,-6,-2,2,6,10,13,16,18,20,22,23,24};
 	public static final int VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS = 3;
@@ -107,21 +94,15 @@ public final class RivalConstants
 	public static final int MATE_SCORE_START = 9000; // Allows for a mate in 500, probably enough :)
 	public static final int VALUE_SHOULD_WIN = 300;
 	
-	public static final int VALUE_ROOK_ON_SEVENTH_RANK = 20;
 	public static final int VALUE_ROOK_ON_OPEN_FILE = 25;
 	public static final int VALUE_ROOK_ON_HALF_OPEN_FILE = 12;
 	public static final int VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING = 20;
 	public static final int VALUE_ROOKS_ON_SAME_FILE = 8;
-	public static final int VALUE_ROOKS_ON_SAME_RANK = 10;
 	public static final int VALUE_ROOK_MOBILITY[] = {-10,-7,-4,-1,2,5,7,9,11,12,13,14,14,14,14};
 	
 	public static final int VALUE_QUEEN_MOBILITY[] = {-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,9,10,10,10,10,10,10,10,10,10,10,10,10};
 
 	public static final int VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY = 2;
-	
-	public static final int VALUE_QUEEN_TROPISM = 6;
-	public static final int VALUE_KNIGHT_TROPISM = 2;
-	public static final int VALUE_LONEKING_TROPISM = 10;
 	
 	public static final int VALUE_SIDE_PAWN_PENALTY = 10;
 	public static final int VALUE_DOUBLED_PAWN_PENALTY = 25;
@@ -143,20 +124,10 @@ public final class RivalConstants
 	public static final int VALUE_CONNECTED_PASSED_PAWN = 0;
 
 	public static final int KINGSAFETY_RIGHTWAY_DIVISOR = 4;
-	
-	public static final int VALUE_KINGKING_TROPISM = 20;
 
 	/*
 	 * King Safety
-	 */	
-	public static final int VALUE_KINGSAFETY_PAWNSHIELD_1 = 35;
-	public static final int VALUE_KINGSAFETY_PAWNSHIELD_2 = 12;
-	public static final int VALUE_KINGSAFETY_MINORPROTECTION = 12;
-	public static final int VALUE_KINGVICINITY_ATTACK_PENALTY = 4;
-	public static final int VALUE_KING_EXPOSED_AHEAD_PENALTY = 35;
-	public static final int VALUE_KING_EXPOSED_SIDE_PENALTY = 20;
-	public static final int VALUE_HANGING_KING_SQUARE_PENALTY = 10;
-	public static final int VALUE_CASTLE_APPEARANCE = 25;
+	 */
 
 	public static final int KINGSAFTEY_HALFOPEN_MIDFILE = 25;
 	public static final int KINGSAFTEY_HALFOPEN_NONMIDFILE = 10;
@@ -174,11 +145,8 @@ public final class RivalConstants
 	public static final int KINGSAFETY_MIN_PIECE_BALANCE = VALUE_ROOK + VALUE_BISHOP;
 	public static final int KINGSAFETY_MAX_PIECE_BALANCE = TOTAL_PIECE_VALUE_PER_SIDE_AT_START;
 	
-	public static final double VALUE_KING_SAFETY_MULTIPLIER = 0.75;
 	public static final int THREAT_SCORE_DIVISOR = 64;
-	
-	public static final boolean USE_KING_REGION_ATTACK_SCORING = false;
-	
+
 	public static final int EVAL_ENDGAME_TOTAL_PIECES = VALUE_ROOK * 6;	
 	public static final int ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR = 5;
 	public static final int ENDGAME_DRAW_DIVISOR = 30;
@@ -221,9 +189,7 @@ public final class RivalConstants
 
 	public static final boolean USE_PAWN_HASH = true;
 	public static final boolean USE_QUICK_PAWN_HASH_RETURN = true;
-	
-	public static final boolean USE_EVAL_FUTILITY_TEST = false;
-	public static final int EVAL_FUTILITY_WINDOW = 500;
+
 	public static final boolean USE_ASPIRATION_WINDOW = true;
 	public static final int ASPIRATION_RADIUS = 40;
 	
@@ -242,7 +208,6 @@ public final class RivalConstants
 	public static final int LMR_THRESHOLD = 50;
 	public static final int LMR_REPLACE_VALUE_AFTER_CUT = 50;
 	public static final int LMR_CUT_MARGIN = 0;
-	public static final int LMR_LAZY_EVAL_MARGIN = 200;
 	public static final boolean LMR_RESEARCH_ON_FAIL_HIGH = true;
 	
 	public static final int LMR_LEGALMOVES_BEFORE_ATTEMPT = 4;
@@ -262,7 +227,9 @@ public final class RivalConstants
 	 */
 	public static final boolean USE_FUTILITY_PRUNING = true;
 	public static final int FUTILITY_MARGIN_BASE = VALUE_PAWN * 2;
-	public static final int[] FUTILITY_MARGIN = {FUTILITY_MARGIN_BASE, FUTILITY_MARGIN_BASE * 2, FUTILITY_MARGIN_BASE * 3};
+	public static final List<Integer> FUTILITY_MARGIN =
+			Collections.unmodifiableList(
+					Arrays.asList(FUTILITY_MARGIN_BASE, FUTILITY_MARGIN_BASE * 2, FUTILITY_MARGIN_BASE * 3));
 
 	/*
 	 * Extensions
@@ -276,11 +243,9 @@ public final class RivalConstants
 	
 	public static final int LAST_EXTENSION_LAYER = 4;
 	
-	public static final int[] MAX_NEW_EXTENSIONS_TREE_PART = 
-		{
-			FRACTIONAL_EXTENSION_FULL, FRACTIONAL_EXTENSION_FULL / 4 * 3,
-			FRACTIONAL_EXTENSION_FULL / 2, FRACTIONAL_EXTENSION_FULL / 8, 0
-		}; 
+	public static final List<Integer> MAX_NEW_EXTENSIONS_TREE_PART =
+			Collections.unmodifiableList(Arrays.asList(FRACTIONAL_EXTENSION_FULL, FRACTIONAL_EXTENSION_FULL / 4 * 3,
+					FRACTIONAL_EXTENSION_FULL / 2, FRACTIONAL_EXTENSION_FULL / 8, 0));
 	
 	/*
 	 * PVS
@@ -307,7 +272,6 @@ public final class RivalConstants
 	
 	public static final int SEARCH_TYPE_TIME = 0;
 	public static final int SEARCH_TYPE_DEPTH = 1;
-	public static final int SEARCH_TYPE_NODES = 2;
 
 /***********************************	
  *	Hash table settings            *
@@ -327,10 +291,6 @@ public final class RivalConstants
 	public static final int HASHENTRY_64BIT2 = 6;
 	public static final int HASHENTRY_LOCK1 = 7;
 	public static final int NUM_HASH_FIELDS = USE_SUPER_VERIFY_ON_HASH ? 31 : 7;
-	
-	public static final long[] PAWN_HASH_GAMEPHASE_RANDOM = {1954285564129274880L, 7752066032753943600L, 7150705261809077200L};
-	
-	public static final int HASH_SEED = 8288277;
 
 	public static final int PAWNHASHENTRY_MAIN_SCORE = 0;
 	public static final int PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE = 1;
@@ -388,20 +348,14 @@ public final class RivalConstants
 	public static final int CASTLEPRIV_BNONE = ~CASTLEPRIV_BK & ~CASTLEPRIV_BQ;
 	public static final int CASTLEPRIV_WNONE = ~CASTLEPRIV_WK & ~CASTLEPRIV_WQ;
 
-/***********************************	
- *	Board State *
- ***********************************/
-	
-	public final static int GAMESTATE_INPLAY = 0;
-	public final static int GAMESTATE_THREEFOLD = 1;
-	public final static int GAMESTATE_50MOVERULE = 2;
-	public final static int GAMESTATE_CHECKMATE = 3;
-	public final static int GAMESTATE_STALEMATE = 4;
-	public final static int GAMESTATE_RESIGNATION = 5;
-	public final static int GAMESTATE_AGREEDDRAW = 6;
+	private static RivalConstants instance = null;
 
-	public final static int GAMEPHASE_UNKNOWN = -1;
-	public final static int GAMEPHASE_OPENING = 0;
-	public final static int GAMEPHASE_MIDDLEGAME = 1;
-	public final static int GAMEPHASE_ENDGAME = 1;
+	private RivalConstants() {}
+
+	public static RivalConstants getInstance() {
+		if (instance == null) {
+			instance = new RivalConstants();
+		}
+		return instance;
+	}
 }

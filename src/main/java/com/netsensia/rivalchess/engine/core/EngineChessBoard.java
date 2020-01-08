@@ -944,7 +944,7 @@ public final class EngineChessBoard
 				}
 				else
 				{
-					blackPieceValues -= RivalConstants.PIECE_VALUES[capturePiece];
+					blackPieceValues -= RivalConstants.PIECE_VALUES.get(capturePiece);
 					if (capturePiece == RivalConstants.BR)
 					{
 						if (toMask == Bitboards.BLACKKINGSIDEROOKMASK) this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_BK; else
@@ -1077,7 +1077,7 @@ public final class EngineChessBoard
 				}
 				else
 				{
-					whitePieceValues -= RivalConstants.PIECE_VALUES[capturePiece];
+					whitePieceValues -= RivalConstants.PIECE_VALUES.get(capturePiece);
 					if (capturePiece == RivalConstants.WR)
 					{
 						if (toMask == Bitboards.WHITEKINGSIDEROOKMASK) this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_WK; else
@@ -1180,8 +1180,8 @@ public final class EngineChessBoard
 				
 				if (capturePiece == RivalConstants.WP) this.whitePawnValues += RivalConstants.VALUE_PAWN; else
 					if (capturePiece == RivalConstants.BP) this.blackPawnValues += RivalConstants.VALUE_PAWN; else
-						if (capturePiece <= RivalConstants.WR) this.whitePieceValues += RivalConstants.PIECE_VALUES[capturePiece]; else
-							this.blackPieceValues += RivalConstants.PIECE_VALUES[capturePiece];
+						if (capturePiece <= RivalConstants.WR) this.whitePieceValues += RivalConstants.PIECE_VALUES.get(capturePiece); else
+							this.blackPieceValues += RivalConstants.PIECE_VALUES.get(capturePiece);
 			}
 			
 			// for promotions, remove promotion piece from toSquare

@@ -636,14 +636,14 @@ public final class RivalSearch implements Runnable
     	captureList[0] =
     		((1L << toSquare) == board.m_pieceBitboards[RivalConstants.ENPASSANTSQUARE]) ?
     			RivalConstants.VALUE_PAWN :
-    			RivalConstants.PIECE_VALUES[board.squareContents[toSquare]];
+    			RivalConstants.PIECE_VALUES.get(board.squareContents[toSquare]);
     	
     	int numCaptures = 1;
 
     	if (board.makeMove(move & ~RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL))
     	{
 	    	int currentPieceOnSquare = board.squareContents[toSquare];
-	    	int currentSquareValue = RivalConstants.PIECE_VALUES[currentPieceOnSquare];
+	    	int currentSquareValue = RivalConstants.PIECE_VALUES.get(currentPieceOnSquare);
 	
 	        indexOfFirstAttackerInDirection[0] = getNextDirectionAttackerAfterIndex(board, toSquare, 0, 0);
 	        indexOfFirstAttackerInDirection[1] = getNextDirectionAttackerAfterIndex(board, toSquare, 1, 0);
@@ -672,10 +672,10 @@ public final class RivalSearch implements Runnable
 	        	        int pieceType = board.squareContents[toSquare + Bitboards.bitRefIncrements[dir] * indexOfFirstAttackerInDirection[dir]];
 	        	        if (isWhiteToMove == (pieceType <= RivalConstants.WR))
 	        	        {
-	            			if (RivalConstants.PIECE_VALUES[pieceType] < lowestPieceValue) 
+	            			if (RivalConstants.PIECE_VALUES.get(pieceType) < lowestPieceValue)
 	            			{
 	            				bestDir = dir;
-	            				lowestPieceValue = RivalConstants.PIECE_VALUES[pieceType];
+	            				lowestPieceValue = RivalConstants.PIECE_VALUES.get(pieceType);
 	            			}
 	        	        }
 	        		}
@@ -692,7 +692,7 @@ public final class RivalSearch implements Runnable
 	        	
 	        	captureList[numCaptures++] = currentSquareValue;
 	        	
-	        	if (currentSquareValue == RivalConstants.PIECE_VALUES[RivalConstants.WK]) break;
+	        	if (currentSquareValue == RivalConstants.PIECE_VALUES.get(RivalConstants.WK)) break;
 	        	
 	        	currentSquareValue = lowestPieceValue;
 	        	
@@ -1664,7 +1664,7 @@ public final class RivalSearch implements Runnable
 		{
 			if (RivalConstants.USE_DELTA_PRUNING && !isCheck)
 			{
-				int materialIncrease = board.lastCapturePiece() > -1 ? RivalConstants.PIECE_VALUES[board.lastCapturePiece() % 6] : 0;
+				int materialIncrease = board.lastCapturePiece() > -1 ? RivalConstants.PIECE_VALUES.get(board.lastCapturePiece() % 6) : 0;
 				switch (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL)
 				{
 					case 0 : break;
@@ -2129,7 +2129,7 @@ public final class RivalSearch implements Runnable
 		        if (depthRemaining < 4 && !wasCheckBeforeMove && threatExtend == 0 && Math.abs(low) < RivalConstants.MATE_SCORE_START && Math.abs(high) < RivalConstants.MATE_SCORE_START) 
 		        {
 		        	if (futilityPruningEvaluation == -RivalConstants.INFINITY) futilityPruningEvaluation = evaluate(board);
-		        	futilityScore = futilityPruningEvaluation + RivalConstants.FUTILITY_MARGIN[depthRemaining-1];
+		        	futilityScore = futilityPruningEvaluation + RivalConstants.FUTILITY_MARGIN.get(depthRemaining-1);
 		        	if (futilityScore < low) canFutilityPrune = true;
 		        }
 		    }
@@ -2152,7 +2152,7 @@ public final class RivalSearch implements Runnable
 				{
 					recaptureExtensionAttempts ++;
 					recaptureExtend = 0;
-					if (targetPiece != -1 && RivalConstants.PIECE_VALUES[movePiece] == RivalConstants.PIECE_VALUES[targetPiece])
+					if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece) == RivalConstants.PIECE_VALUES.get(targetPiece))
 					{
 						currentSEEValue = staticExchangeEvaluation(board, move);
 						if (Math.abs(currentSEEValue) <= RivalConstants.RECAPTURE_EXTENSION_MARGIN)
@@ -2162,7 +2162,7 @@ public final class RivalSearch implements Runnable
 					if ((move & 63) == recaptureSquare)
 					{
 						if (currentSEEValue == -RivalConstants.INFINITY) currentSEEValue = staticExchangeEvaluation(board, move);
-						if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES[board.squareContents[recaptureSquare]] - RivalConstants.RECAPTURE_EXTENSION_MARGIN)
+						if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES.get(board.squareContents[recaptureSquare]) - RivalConstants.RECAPTURE_EXTENSION_MARGIN)
 						{ 
 							recaptureExtend = 1; 
 							recaptureExtensions ++;
@@ -2199,7 +2199,7 @@ public final class RivalSearch implements Runnable
 						}
 						
 						int partOfTree = ply / this.m_iterativeDeepeningCurrentDepth;
-						int maxNewExtensionsInThisPart = RivalConstants.MAX_NEW_EXTENSIONS_TREE_PART[partOfTree > RivalConstants.LAST_EXTENSION_LAYER ? RivalConstants.LAST_EXTENSION_LAYER : partOfTree];
+						int maxNewExtensionsInThisPart = RivalConstants.MAX_NEW_EXTENSIONS_TREE_PART.get(partOfTree > RivalConstants.LAST_EXTENSION_LAYER ? RivalConstants.LAST_EXTENSION_LAYER : partOfTree);
 						
 						newExtensions = 
 							extensions + 
