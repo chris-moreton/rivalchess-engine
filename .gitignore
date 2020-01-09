@@ -3,6 +3,8 @@
 .project
 .buildpath
 .classpath
+.gradle/
 *.log
 /bin/
 .idea/
+build/

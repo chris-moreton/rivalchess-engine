@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.util.Numbers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.text.NumberFormat;
 import java.util.Random;
@@ -15,6 +16,8 @@ import java.util.Timer;
 
 public final class RivalSearch implements Runnable
 {
+	private static PrintStream printStream;
+
 	public static int MOVEORDER_NONE = 0;
 	public static int MOVEORDER_CAPTURES = 1;
 	public static int MOVEORDER_ALL = 2;
@@ -125,9 +128,16 @@ public final class RivalSearch implements Runnable
 	private boolean m_isUCIMode = false;
 	
     private static byte[] rivalKPKBitbase = null;
-	
+
 	public RivalSearch()
 	{
+		this(System.out);
+	}
+
+	public RivalSearch(PrintStream printStream)
+	{
+		this.printStream = printStream;
+
 		this.m_currentTimeMillis = System.currentTimeMillis();
 		
 		this.m_currentPath = new SearchPath();
@@ -184,14 +194,14 @@ public final class RivalSearch implements Runnable
         	int fileSize = inStream.read(byteArray);
             if (fileSize != byteArraySize)
             {
-                System.out.println("Error: " + fileLoc + " file size is " + fileSize);
+                printStream.println("Error: " + fileLoc + " file size is " + fileSize);
                 System.exit(0);
             }
             inStream.close();
         } 
         catch (IOException e) 
         {
-            System.out.println("Could not load " + fileLoc + " file");
+            printStream.println("Could not load " + fileLoc + " file");
             System.exit(0);
         }
 	}
@@ -225,7 +235,7 @@ public final class RivalSearch implements Runnable
 					f.setMaximumFractionDigits(10);
 					f.setMinimumFractionDigits(10);
 					double average = ((double)profiler[i][RivalConstants.PROFILE_TOTALTIME] / profiler[i][RivalConstants.PROFILE_COUNT]) / 1000.0;
-					System.out.println("Slot " + i + " = " + (profiler[i][RivalConstants.PROFILE_TOTALTIME] / 1000.0) + "/" + profiler[i][RivalConstants.PROFILE_COUNT] + " = " + f.format(average) + " (" + profilerDescs[i] + ")");
+					printStream.println("Slot " + i + " = " + (profiler[i][RivalConstants.PROFILE_TOTALTIME] / 1000.0) + "/" + profiler[i][RivalConstants.PROFILE_COUNT] + " = " + f.format(average) + " (" + profilerDescs[i] + ")");
 				}
 			}
 		}
@@ -261,7 +271,7 @@ public final class RivalSearch implements Runnable
 	{
 		if (RivalConstants.UCI_DEBUG)
 		{
-			System.out.println("Getting ready for a new game");
+			printStream.println("Getting ready for a new game");
 		}
 		m_inBook = this.m_useOpeningBook;
 		clearHash();
@@ -1924,7 +1934,7 @@ public final class RivalSearch implements Runnable
 							{
 								isLocked = false;
 								this.m_heightBadClashes ++;
-								System.out.println("Height bad clash " + board.m_hashValue);
+								printStream.println("Height bad clash " + board.m_hashValue);
 								System.exit(0);
 							}
 						}
@@ -1974,7 +1984,7 @@ public final class RivalSearch implements Runnable
 							{
 								isLocked = false;
 								this.m_alwaysBadClashes ++;
-								System.out.println("Always bad clash " + board.m_hashValue);
+								printStream.println("Always bad clash " + board.m_hashValue);
 								System.exit(0);
 							}
 						}
@@ -2383,7 +2393,7 @@ public final class RivalSearch implements Runnable
 					{
 						board.printBoard();
 						board.printPreviousMoves();
-						System.out.println("Null move gave a score of " + -zugPath.score + " " + zugPath + " which was better than " + high + " but the best move at a reduced depth looks like " + bestPath.score + " " + bestPath);
+						printStream.println("Null move gave a score of " + -zugPath.score + " " + zugPath + " which was better than " + high + " but the best move at a reduced depth looks like " + bestPath.score + " " + bestPath);
 						System.exit(0);
 					}
 				}
@@ -2603,13 +2613,13 @@ public final class RivalSearch implements Runnable
 		
 		if (this.m_isDebug)
 		{
-			System.out.println("Hash: " + m_board.m_hashValue);
+			printStream.println("Hash: " + m_board.m_hashValue);
 			m_board.printLegalMoves(true, true);
-			System.out.println("Is Check = " + m_board.isCheck());
-			System.out.println("Eval = " + evaluate(m_board));
+			printStream.println("Is Check = " + m_board.isCheck());
+			printStream.println("Eval = " + evaluate(m_board));
 			SearchPath sp = quiesce(m_board, 40, 0, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, m_board.isCheck());
-			System.out.println("Quiesce = " + sp.score);
-			System.out.println("FEN = " + m_board.getFen());
+			printStream.println("Quiesce = " + sp.score);
+			printStream.println("FEN = " + m_board.getFen());
 		}
 		
 		try
@@ -2813,7 +2823,7 @@ public final class RivalSearch implements Runnable
 			setSearchComplete();
 			if (RivalConstants.UCI_DEBUG)
 			{
-				System.out.println("My search is finally complete");
+				printStream.println("My search is finally complete");
 			}
 		}
 	}
@@ -2976,7 +2986,7 @@ public final class RivalSearch implements Runnable
 		this.m_searchState = RivalConstants.SEARCHSTATE_SEARCHREQUESTED;
 		if (RivalConstants.UCI_DEBUG)
 		{
-			System.out.println("My search has been requested");
+			printStream.println("My search has been requested");
 		}
 	}
 	
@@ -2988,11 +2998,11 @@ public final class RivalSearch implements Runnable
 			{
 				if (this.m_abortingSearch)
 				{
-					System.out.println("My current search is no longer wanted, I know, I'm already aborting");
+					printStream.println("My current search is no longer wanted, I know, I'm already aborting");
 				}
 				else
 				{
-					System.out.println("My current search is no longer wanted, I'll abort then");
+					printStream.println("My current search is no longer wanted, I'll abort then");
 				}
 			}
 		}
@@ -3002,11 +3012,11 @@ public final class RivalSearch implements Runnable
 			{
 				if (this.m_abortingSearch)
 				{
-					System.out.println("I'm not even searching but am being asked to stop, and I'm already aborting");
+					printStream.println("I'm not even searching but am being asked to stop, and I'm already aborting");
 				}
 				else
 				{
-					System.out.println("I'm not even searching but am being asked to stop, and weirdly m_abortingSearch is false");
+					printStream.println("I'm not even searching but am being asked to stop, and weirdly m_abortingSearch is false");
 				}
 			}
 		}
@@ -3053,11 +3063,11 @@ public final class RivalSearch implements Runnable
 				heightCount ++;
 			}
 		}
-		System.out.println("Height replace retrieved " + nf.format(m_heightHashValuesRetrieved) + " / " + nf.format(m_heightHashValuesStored)); 
-		System.out.println("Always replace retrieved " + nf.format(m_alwaysHashValuesRetrieved) + " / " + nf.format(m_alwaysHashValuesStored)); 
+		printStream.println("Height replace retrieved " + nf.format(m_heightHashValuesRetrieved) + " / " + nf.format(m_heightHashValuesStored)); 
+		printStream.println("Always replace retrieved " + nf.format(m_alwaysHashValuesRetrieved) + " / " + nf.format(m_alwaysHashValuesStored)); 
 		
-		System.out.println("Height replace hash table population " + nf.format(heightCount) + " / " + nf.format(m_maxHashEntries) + " with " + nf.format(m_heightHashClashes) + " clashes and " + nf.format(m_heightBadClashes) + " bad clashes");
-		System.out.println("Always replace hash table population " + nf.format(alwaysCount) + " / " + nf.format(m_maxHashEntries) + " with " + nf.format(m_alwaysHashClashes) + " clashes and " + nf.format(m_alwaysBadClashes) + " bad clashes");
+		printStream.println("Height replace hash table population " + nf.format(heightCount) + " / " + nf.format(m_maxHashEntries) + " with " + nf.format(m_heightHashClashes) + " clashes and " + nf.format(m_heightBadClashes) + " bad clashes");
+		printStream.println("Always replace hash table population " + nf.format(alwaysCount) + " / " + nf.format(m_maxHashEntries) + " with " + nf.format(m_alwaysHashClashes) + " clashes and " + nf.format(m_alwaysBadClashes) + " bad clashes");
 	}
 	
 	public void setUseOpeningBook(boolean useBook)
@@ -3075,7 +3085,7 @@ public final class RivalSearch implements Runnable
 	{
 		if (RivalConstants.UCI_DEBUG)
 		{
-			System.out.println(s);
+			printStream.println(s);
 		}
 	}
 		
@@ -3093,7 +3103,7 @@ public final class RivalSearch implements Runnable
 			{
 				if (RivalConstants.UCI_DEBUG)
 				{
-					System.out.println("My request is being met");
+					printStream.println("My request is being met");
 				}
 				go();
 				
@@ -3113,9 +3123,9 @@ public final class RivalSearch implements Runnable
 					" nps " + getNodesPerSecond();
 					
 					String s2 = "bestmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(getCurrentMove());
-					System.out.println(s1);
+					printStream.println(s1);
 					if (m_out != null) Logger.log(m_out, s1, "<");
-					System.out.println(s2);
+					printStream.println(s2);
 					if (m_out != null) Logger.log(m_out, s2, "<");
 				}
 			}

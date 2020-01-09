@@ -41,7 +41,7 @@ public class EngineStub implements EngineServiceInterface
 	private void initStub( Bitboards bitboards )
 	{
 		this.m_bitboards = bitboards;
-		this.m_rivalSearch = new RivalSearch();
+		this.m_rivalSearch = new RivalSearch(System.out);
 		this.m_rivalSearch.startEngineTimer(false);
 		this.m_engineBoard = new EngineChessBoard(m_bitboards);
 		

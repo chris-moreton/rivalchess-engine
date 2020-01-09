@@ -34,7 +34,7 @@ public class EPDRunner
 	public EPDRunner()
 	{
 		engineChessBoard = new EngineChessBoard(new Bitboards());
-		rivalSearch = new RivalSearch();
+		rivalSearch = new RivalSearch(System.out);
 		boardModel = new BoardModel();
 		fenChess = new FenChess(boardModel);
 		nf.setMaximumFractionDigits(2);

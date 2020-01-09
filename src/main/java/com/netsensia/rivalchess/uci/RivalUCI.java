@@ -2,13 +2,11 @@ package com.netsensia.rivalchess.uci;
 
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 
 public final class RivalUCI 
 {
-	final static RivalSearch m_engine = new RivalSearch();
+	final static RivalSearch m_engine = new RivalSearch(System.out);
 
 	public static void main(String[] args)
 	{
@@ -33,6 +31,7 @@ public final class RivalUCI
 				m_engine,
 				timeMultiple,
 				new PrintStream(System.out));
+
 		new Thread(uciController).start();
 	}
 }

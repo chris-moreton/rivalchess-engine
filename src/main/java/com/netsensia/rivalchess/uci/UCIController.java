@@ -46,9 +46,9 @@ public class UCIController implements Runnable {
     private static int m_timeMultiple = 1;
     static PrintStream printStream;
 
-    private BoardModel boardModel = new BoardModel();
-    private FenChess fenChess = new FenChess(boardModel);
-    private EngineChessBoard engineBoard = new EngineChessBoard(m_bitboards);
+    private static BoardModel boardModel = new BoardModel();
+    private static FenChess fenChess = new FenChess(boardModel);
+    private static EngineChessBoard engineBoard = new EngineChessBoard(m_bitboards);
 
     public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
         m_engine = engine;
@@ -105,7 +105,7 @@ public class UCIController implements Runnable {
                 handleIfIsReadyCommand(parts);
                 handleIfUciNewGameCommand(parts);
                 handleIfPositionCommand(s, parts);
-                handleIfGoCommand(engineBoard, parts);
+                handleIfGoCommand(parts);
                 handleIfSetOptionCommand(parts);
                 handleIfStopCommand(parts);
                 handleIfQuitCommand(parts);
@@ -166,7 +166,7 @@ public class UCIController implements Runnable {
         }
     }
 
-    private static void handleIfGoCommand(EngineChessBoard m_engineBoard, String[] parts) {
+    private static void handleIfGoCommand(String[] parts) {
 
         if (parts[0].equals("go")) {
             m_whiteTime = -1;
@@ -190,13 +190,13 @@ public class UCIController implements Runnable {
                 handleIfGoInfinite(parts, i);
             }
 
-            setSearchOptions(m_engineBoard);
+            setSearchOptions();
 
             m_engine.startSearch();
         }
     }
 
-    private static void setSearchOptions(EngineChessBoard engineBoard) {
+    private static void setSearchOptions() {
         if (m_isInfinite) {
             m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
             m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
@@ -418,7 +418,7 @@ public class UCIController implements Runnable {
 
         fenChess.setFromStr(invertedFEN);
 
-        RivalSearch testSearcher = new RivalSearch();
+        RivalSearch testSearcher = new RivalSearch(System.out);
         EngineChessBoard testBoard = new EngineChessBoard(new Bitboards());
         testBoard.setBoard(boardModel);
         int eval1 = testSearcher.evaluate(testBoard);
