@@ -25,30 +25,30 @@ import com.netsensia.rivalchess.util.Logger;
 
 public class UCIController implements Runnable {
 
-    static boolean m_isDebug = false;
-    static int m_whiteTime;
-    static int m_blackTime;
-    static int m_whiteInc;
-    static int m_blackInc;
-    static int m_movesToGo;
-    static int m_maxDepth;
-    static int m_maxNodes;
-    static int m_mateInX;
-    static int m_moveTime;
-    static int m_hashSizeMB = 128;
-    static Bitboards m_bitboards;
-    static boolean m_isInfinite;
+    private boolean m_isDebug = false;
+    private int m_whiteTime;
+    private int m_blackTime;
+    private int m_whiteInc;
+    private int m_blackInc;
+    private int m_movesToGo;
+    private int m_maxDepth;
+    private int m_maxNodes;
+    private int m_mateInX;
+    private int m_moveTime;
+    private int m_hashSizeMB = 128;
+    private Bitboards m_bitboards;
+    boolean m_isInfinite;
 
-    private static FileWriter fstream;
-    private static PrintWriter out;
+    private FileWriter fstream;
+    private PrintWriter out;
 
-    static RivalSearch m_engine;
+    private RivalSearch m_engine;
     private static int m_timeMultiple = 1;
-    static PrintStream printStream;
+    private PrintStream printStream;
 
-    private static BoardModel boardModel = new BoardModel();
-    private static FenChess fenChess = new FenChess(boardModel);
-    private static EngineChessBoard engineBoard = new EngineChessBoard(m_bitboards);
+    private BoardModel boardModel = new BoardModel();
+    private FenChess fenChess = new FenChess(boardModel);
+    private EngineChessBoard engineBoard = new EngineChessBoard(m_bitboards);
 
     public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
         m_engine = engine;
@@ -151,7 +151,7 @@ public class UCIController implements Runnable {
         }
     }
 
-    private static void handleIfSetOptionHashValueCommand(String[] parts) {
+    private void handleIfSetOptionHashValueCommand(String[] parts) {
         if (parts[2].equals("Hash")) {
             if (parts[3].equals("value")) {
                 m_hashSizeMB = Integer.parseInt(parts[4]);
@@ -166,7 +166,7 @@ public class UCIController implements Runnable {
         }
     }
 
-    private static void handleIfGoCommand(String[] parts) {
+    private void handleIfGoCommand(String[] parts) {
 
         if (parts[0].equals("go")) {
             m_whiteTime = -1;
@@ -196,7 +196,7 @@ public class UCIController implements Runnable {
         }
     }
 
-    private static void setSearchOptions() {
+    private void setSearchOptions() {
         if (m_isInfinite) {
             m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
             m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
@@ -223,62 +223,62 @@ public class UCIController implements Runnable {
         }
     }
 
-    private static void handleIfGoInfinite(String[] parts, int i) {
+    private void handleIfGoInfinite(String[] parts, int i) {
         if (parts[i].equals("infinite")) {
             m_isInfinite = true;
         }
     }
 
-    private static void handleIfGoMoveTime(String[] parts, int i) {
+    private void handleIfGoMoveTime(String[] parts, int i) {
         if (parts[i].equals("movetime")) {
             m_moveTime = Integer.parseInt(parts[i + 1]) * m_timeMultiple;
         }
     }
 
-    private static void handleIfGoMate(String[] parts, int i) {
+    private void handleIfGoMate(String[] parts, int i) {
         if (parts[i].equals("mate")) {
             m_mateInX = Integer.parseInt(parts[i + 1]);
         }
     }
 
-    private static void handleIfGoNodes(String[] parts, int i) {
+    private void handleIfGoNodes(String[] parts, int i) {
         if (parts[i].equals("nodes")) {
             m_maxNodes = Integer.parseInt(parts[i + 1]);
         }
     }
 
-    private static void handleIfGoDepth(String[] parts, int i) {
+    private void handleIfGoDepth(String[] parts, int i) {
         if (parts[i].equals("depth")) {
             m_maxDepth = Integer.parseInt(parts[i + 1]);
             m_engine.setSearchDepth(m_maxDepth);
         }
     }
 
-    private static void handleIfGoMovesTogo(String[] parts, int i) {
+    private void handleIfGoMovesTogo(String[] parts, int i) {
         if (parts[i].equals("movestogo")) {
             m_movesToGo = Integer.parseInt(parts[i + 1]);
         }
     }
 
-    private static void handleIfGoBinc(String[] parts, int i) {
+    private void handleIfGoBinc(String[] parts, int i) {
         if (parts[i].equals("binc")) {
             m_blackInc = Integer.parseInt(parts[i + 1]);
         }
     }
 
-    private static void handleIfGoWinc(String[] parts, int i) {
+    private void handleIfGoWinc(String[] parts, int i) {
         if (parts[i].equals("winc")) {
             m_whiteInc = Integer.parseInt(parts[i + 1]);
         }
     }
 
-    private static void handleIfGoBtime(String[] parts, int i) {
+    private void handleIfGoBtime(String[] parts, int i) {
         if (parts[i].equals("btime")) {
             m_blackTime = Integer.parseInt(parts[i + 1]);
         }
     }
 
-    private static void handleIfGoWtime(String[] parts, int i) {
+    private void handleIfGoWtime(String[] parts, int i) {
         if (parts[i].equals("wtime")) {
             m_whiteTime = Integer.parseInt(parts[i + 1]);
         }
@@ -369,14 +369,14 @@ public class UCIController implements Runnable {
         }
     }
 
-    private static void handleIfDebugCommand(String[] parts) {
+    private void handleIfDebugCommand(String[] parts) {
         if (parts[0].equals("debug")) {
             waitForSearchToComplete();
             m_isDebug = parts[1].equals("On");
         }
     }
 
-    public static void waitForSearchToComplete() {
+    public void waitForSearchToComplete() {
         int state;
         m_engine.stopSearch();
         do {
@@ -386,7 +386,7 @@ public class UCIController implements Runnable {
         while (state != RivalConstants.SEARCHSTATE_READY && state != RivalConstants.SEARCHSTATE_SEARCHCOMPLETE);
     }
 
-    public static void uciDebug(String s) {
+    public void uciDebug(String s) {
         if (RivalConstants.UCI_DEBUG) {
             printStream.println(s);
             Logger.log(out, s, "D");
@@ -395,7 +395,7 @@ public class UCIController implements Runnable {
 
     public static int[][] m_legalMoves;
 
-    public static long verifyPerftScore(String fen, int depth, long correctNodeCount) {
+    public long verifyPerftScore(String fen, int depth, long correctNodeCount) {
         EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
         engineBoard.setBoard(getBoardModel(fen));
 
@@ -428,11 +428,7 @@ public class UCIController implements Runnable {
         int eval2 = testSearcher.evaluate(testBoard);
 
         if (eval1 != eval2) {
-            printStream.println("Eval flip error");
-            printStream.println(fen);
-            printStream.println(invertedFEN);
-            printStream.println(eval1 + " v " + eval2);
-            System.exit(0);
+            throw new RuntimeException("Eval flip error for " + fen + " " + invertedFEN + " " + eval1 + " " + eval2);
         }
 
         return boardModel;
@@ -486,7 +482,7 @@ public class UCIController implements Runnable {
         return newFen;
     }
 
-    public static void perftTest() {
+    public void perftTest() {
         long totalNodes = 0;
         m_legalMoves = new int[10][RivalConstants.MAX_LEGAL_MOVES];
 
@@ -533,7 +529,7 @@ public class UCIController implements Runnable {
         return nodes;
     }
 
-    public static void showEngineVar(String varName) {
+    public void showEngineVar(String varName) {
         try {
             Class<?> c = Class.forName("com.netsensia.rivalchess.engine.core.RivalConstants");
             Field field = c.getDeclaredField(varName);

@@ -1,9 +1,7 @@
 package com.netsensia.rivalchess.uci;
 
 import com.netsensia.rivalchess.engine.core.RivalSearch;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -41,7 +39,7 @@ public class UciControllerTest {
     }
 
     @Test
-    public void testUciOkResponse() throws InterruptedException, IOException {
+    public void testUciOkResponse() {
         uciController.processUCICommand("uci");
 
         assertTrue(outSpy.toString().contains("uciok"));
