@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -18,6 +17,7 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.engine.test.epd.EPDRunner;
+import com.netsensia.rivalchess.exception.EvaluationFlipException;
 import com.netsensia.rivalchess.model.board.BoardModel;
 import com.netsensia.rivalchess.model.board.FenChess;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -25,34 +25,31 @@ import com.netsensia.rivalchess.util.Logger;
 
 public class UCIController implements Runnable {
 
-    private boolean m_isDebug = false;
-    private int m_whiteTime;
-    private int m_blackTime;
-    private int m_whiteInc;
-    private int m_blackInc;
-    private int m_movesToGo;
-    private int m_maxDepth;
-    private int m_maxNodes;
-    private int m_mateInX;
-    private int m_moveTime;
-    private int m_hashSizeMB = 128;
-    private Bitboards m_bitboards;
-    boolean m_isInfinite;
+    private int whiteTime;
+    private int blackTime;
+    private int whiteInc;
+    private int blackInc;
+    private int movesToGo;
+    private int maxDepth;
+    private int maxNodes;
+    private int moveTime;
+    private boolean isInfinite;
 
-    private FileWriter fstream;
+    private Bitboards bitboards;
+
     private PrintWriter out;
 
-    private RivalSearch m_engine;
-    private static int m_timeMultiple = 1;
+    private RivalSearch rivalSearch;
+    private int timeMultiple;
     private PrintStream printStream;
 
     private BoardModel boardModel = new BoardModel();
     private FenChess fenChess = new FenChess(boardModel);
-    private EngineChessBoard engineBoard = new EngineChessBoard(m_bitboards);
+    private EngineChessBoard engineBoard = new EngineChessBoard(bitboards);
 
     public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
-        m_engine = engine;
-        m_timeMultiple = timeMultiple;
+        rivalSearch = engine;
+        this.timeMultiple = timeMultiple;
         this.printStream = printStream;
         EngineMonitor.setPrintStream(this.printStream);
     }
@@ -62,18 +59,21 @@ public class UCIController implements Runnable {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String s;
 
-        m_bitboards = new Bitboards();
+        bitboards = new Bitboards();
         Date todaysDate = new java.util.Date();
         SimpleDateFormat formatter = new SimpleDateFormat("MMMdd-HH-mm-ss-S");
         String formattedDate = formatter.format(todaysDate);
-        m_engine.setUseOpeningBook(false);
+        rivalSearch.setUseOpeningBook(false);
 
         try {
 
             if (RivalConstants.UCI_DEBUG) {
-                fstream = new FileWriter(RivalConstants.UCI_DEBUG_FILEPATH + "ucidebug-" + formattedDate + ".log", true);
-                out = new PrintWriter(fstream);
-                m_engine.setLogWriter(out);
+                out = new PrintWriter(
+                        new FileWriter(
+                                RivalConstants.UCI_DEBUG_FILEPATH + "ucidebug-" + formattedDate + ".log", true
+                        )
+                );
+                rivalSearch.setLogWriter(out);
             }
 
             while ((s = in.readLine()) != null) {
@@ -99,9 +99,7 @@ public class UCIController implements Runnable {
             if (parts.length > 0) {
                 handleIfUciCommand(parts);
                 handleIfVarCommand(parts);
-                handleIfPerftCommand(parts);
                 handleIfEpdCommand(s, parts);
-                handleIfDebugCommand(parts);
                 handleIfIsReadyCommand(parts);
                 handleIfUciNewGameCommand(parts);
                 handleIfPositionCommand(s, parts);
@@ -122,7 +120,7 @@ public class UCIController implements Runnable {
     private void handleIfStopCommand(String[] parts) {
         if (parts[0].equals("stop")) {
             uciDebug("UCI stop command received");
-            m_engine.stopSearch();
+            rivalSearch.stopSearch();
             waitForSearchToComplete();
         }
     }
@@ -144,39 +142,36 @@ public class UCIController implements Runnable {
     private void handleIfSetOptionOwnBookCommand(String[] parts) {
         if (parts[2].equals("OwnBook") && parts[3].equals("value")) {
             if (parts[4].equals("true")) {
-                m_engine.setUseOpeningBook(true);
+                rivalSearch.setUseOpeningBook(true);
             } else {
-                m_engine.setUseOpeningBook(false);
+                rivalSearch.setUseOpeningBook(false);
             }
         }
     }
 
     private void handleIfSetOptionHashValueCommand(String[] parts) {
-        if (parts[2].equals("Hash")) {
-            if (parts[3].equals("value")) {
-                m_hashSizeMB = Integer.parseInt(parts[4]);
-                m_engine.setHashSizeMB(m_hashSizeMB);
-            }
+        if (parts[2].equals("Hash") && parts[3].equals("value")) {
+            rivalSearch.setHashSizeMB(Integer.parseInt(parts[4]));
         }
     }
 
     private void handleIfSetOptionNameClearHashCommand(String[] parts) {
         if (parts[2].equals("Clear") && parts[3].equals("Hash")) {
-            m_engine.clearHash();
+            rivalSearch.clearHash();
         }
     }
 
     private void handleIfGoCommand(String[] parts) {
 
         if (parts[0].equals("go")) {
-            m_whiteTime = -1;
-            m_blackTime = -1;
-            m_whiteInc = -1;
-            m_blackInc = -1;
-            m_movesToGo = 0;
-            m_moveTime = -1;
-            m_isInfinite = false;
-            m_maxDepth = -1;
+            whiteTime = -1;
+            blackTime = -1;
+            whiteInc = -1;
+            blackInc = -1;
+            movesToGo = 0;
+            moveTime = -1;
+            isInfinite = false;
+            maxDepth = -1;
             for (int i = 1; i < parts.length; i++) {
                 handleIfGoWtime(parts, i);
                 handleIfGoBtime(parts, i);
@@ -185,102 +180,95 @@ public class UCIController implements Runnable {
                 handleIfGoMovesTogo(parts, i);
                 handleIfGoDepth(parts, i);
                 handleIfGoNodes(parts, i);
-                handleIfGoMate(parts, i);
                 handleIfGoMoveTime(parts, i);
                 handleIfGoInfinite(parts, i);
             }
 
             setSearchOptions();
 
-            m_engine.startSearch();
+            rivalSearch.startSearch();
         }
     }
 
     private void setSearchOptions() {
-        if (m_isInfinite) {
-            m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-            m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
-        } else if (m_moveTime != -1) {
-            m_engine.setMillisToThink(m_moveTime);
-            m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
-        } else if (m_maxDepth != -1) {
-            m_engine.setSearchDepth(m_maxDepth);
-            m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-            m_engine.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
-        } else if (m_maxNodes != -1) {
-            m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            m_engine.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-            m_engine.setNodesToSearch(m_maxNodes);
-        } else if (m_whiteTime != -1) {
-            int calcTime = (engineBoard.m_isWhiteToMove ? m_whiteTime : m_blackTime) / (m_movesToGo == 0 ? 120 : m_movesToGo);
-            int guaranteedTime = (engineBoard.m_isWhiteToMove ? m_whiteInc : m_blackInc);
+        if (isInfinite) {
+            rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+            rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            rivalSearch.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+        } else if (moveTime != -1) {
+            rivalSearch.setMillisToThink(moveTime);
+            rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            rivalSearch.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+        } else if (maxDepth != -1) {
+            rivalSearch.setSearchDepth(maxDepth);
+            rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+            rivalSearch.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+        } else if (maxNodes != -1) {
+            rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+            rivalSearch.setNodesToSearch(maxNodes);
+        } else if (whiteTime != -1) {
+            int calcTime = (engineBoard.m_isWhiteToMove ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
+            int guaranteedTime = (engineBoard.m_isWhiteToMove ? whiteInc : blackInc);
             int timeToThink = calcTime + guaranteedTime - RivalConstants.UCI_TIMER_SAFTEY_MARGIN_MILLIS;
             uciDebug("I am going to think for " + timeToThink + " millis");
-            m_engine.setMillisToThink(timeToThink);
-            m_engine.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            rivalSearch.setMillisToThink(timeToThink);
+            rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
         }
     }
 
     private void handleIfGoInfinite(String[] parts, int i) {
         if (parts[i].equals("infinite")) {
-            m_isInfinite = true;
+            isInfinite = true;
         }
     }
 
     private void handleIfGoMoveTime(String[] parts, int i) {
         if (parts[i].equals("movetime")) {
-            m_moveTime = Integer.parseInt(parts[i + 1]) * m_timeMultiple;
-        }
-    }
-
-    private void handleIfGoMate(String[] parts, int i) {
-        if (parts[i].equals("mate")) {
-            m_mateInX = Integer.parseInt(parts[i + 1]);
+            moveTime = Integer.parseInt(parts[i + 1]) * timeMultiple;
         }
     }
 
     private void handleIfGoNodes(String[] parts, int i) {
         if (parts[i].equals("nodes")) {
-            m_maxNodes = Integer.parseInt(parts[i + 1]);
+            maxNodes = Integer.parseInt(parts[i + 1]);
         }
     }
 
     private void handleIfGoDepth(String[] parts, int i) {
         if (parts[i].equals("depth")) {
-            m_maxDepth = Integer.parseInt(parts[i + 1]);
-            m_engine.setSearchDepth(m_maxDepth);
+            maxDepth = Integer.parseInt(parts[i + 1]);
+            rivalSearch.setSearchDepth(maxDepth);
         }
     }
 
     private void handleIfGoMovesTogo(String[] parts, int i) {
         if (parts[i].equals("movestogo")) {
-            m_movesToGo = Integer.parseInt(parts[i + 1]);
+            movesToGo = Integer.parseInt(parts[i + 1]);
         }
     }
 
     private void handleIfGoBinc(String[] parts, int i) {
         if (parts[i].equals("binc")) {
-            m_blackInc = Integer.parseInt(parts[i + 1]);
+            blackInc = Integer.parseInt(parts[i + 1]);
         }
     }
 
     private void handleIfGoWinc(String[] parts, int i) {
         if (parts[i].equals("winc")) {
-            m_whiteInc = Integer.parseInt(parts[i + 1]);
+            whiteInc = Integer.parseInt(parts[i + 1]);
         }
     }
 
     private void handleIfGoBtime(String[] parts, int i) {
         if (parts[i].equals("btime")) {
-            m_blackTime = Integer.parseInt(parts[i + 1]);
+            blackTime = Integer.parseInt(parts[i + 1]);
         }
     }
 
     private void handleIfGoWtime(String[] parts, int i) {
         if (parts[i].equals("wtime")) {
-            m_whiteTime = Integer.parseInt(parts[i + 1]);
+            whiteTime = Integer.parseInt(parts[i + 1]);
         }
     }
 
@@ -291,12 +279,12 @@ public class UCIController implements Runnable {
             setStartPosition(s, fenChess, parts);
 
             engineBoard.setBoard(boardModel);
-            m_engine.setBoard(engineBoard);
+            rivalSearch.setBoard(engineBoard);
 
             playMovesFromPosition(parts);
             if (RivalConstants.UCI_DEBUG) {
-                m_engine.m_board.printLegalMoves();
-                m_engine.m_board.printBoard();
+                rivalSearch.m_board.printLegalMoves();
+                rivalSearch.m_board.printBoard();
             }
         }
     }
@@ -308,7 +296,7 @@ public class UCIController implements Runnable {
             for (int pos = 2; pos < l; pos++) {
                 if (parts[pos].equals("moves")) {
                     for (int i = pos + 1; i < l; i++) {
-                        m_engine.m_board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(parts[i]));
+                        rivalSearch.m_board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(parts[i]));
                     }
                     break;
                 }
@@ -327,7 +315,7 @@ public class UCIController implements Runnable {
     private void handleIfUciNewGameCommand(String[] parts) {
         if (parts[0].equals("ucinewgame")) {
             waitForSearchToComplete();
-            m_engine.newGame();
+            rivalSearch.newGame();
         }
     }
 
@@ -352,12 +340,6 @@ public class UCIController implements Runnable {
         }
     }
 
-    private void handleIfPerftCommand(String[] parts) {
-        if (parts[0].equals("perft")) {
-            perftTest();
-        }
-    }
-
     private void handleIfEpdCommand(String s, String[] parts) {
         if (parts[0].equals("epd")) {
             Pattern p = Pattern.compile("epd \"(.*)\" (.*) (.*)");
@@ -369,18 +351,11 @@ public class UCIController implements Runnable {
         }
     }
 
-    private void handleIfDebugCommand(String[] parts) {
-        if (parts[0].equals("debug")) {
-            waitForSearchToComplete();
-            m_isDebug = parts[1].equals("On");
-        }
-    }
-
     public void waitForSearchToComplete() {
         int state;
-        m_engine.stopSearch();
+        rivalSearch.stopSearch();
         do {
-            state = m_engine.getEngineState();
+            state = rivalSearch.getEngineState();
             uciDebug("Waiting for it all to end...");
         }
         while (state != RivalConstants.SEARCHSTATE_READY && state != RivalConstants.SEARCHSTATE_SEARCHCOMPLETE);
@@ -393,32 +368,14 @@ public class UCIController implements Runnable {
         }
     }
 
-    public static int[][] m_legalMoves;
-
-    public long verifyPerftScore(String fen, int depth, long correctNodeCount) {
-        EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
-        engineBoard.setBoard(getBoardModel(fen));
-
-        System.out.print("Calculating Perft Value for " + fen + " at depth " + depth + "...");
-        long nodes = getPerft(engineBoard, depth);
-        printStream.println(" = " + nodes);
-        if (nodes != correctNodeCount) {
-            printStream.println("*********************");
-            printStream.println("ERROR IN Perft Test!!");
-            printStream.println("*********************");
-            System.exit(0);
-        }
-        return nodes;
-    }
-
-    public static BoardModel getBoardModel(String fen) {
+    public static BoardModel getBoardModel(String fen) throws EvaluationFlipException {
         BoardModel boardModel = new BoardModel();
         FenChess fenChess = new FenChess(boardModel);
         String invertedFEN = invertFEN(fen);
 
         fenChess.setFromStr(invertedFEN);
 
-        RivalSearch testSearcher = new RivalSearch(System.out);
+        RivalSearch testSearcher = new RivalSearch();
         EngineChessBoard testBoard = new EngineChessBoard(new Bitboards());
         testBoard.setBoard(boardModel);
         int eval1 = testSearcher.evaluate(testBoard);
@@ -428,7 +385,7 @@ public class UCIController implements Runnable {
         int eval2 = testSearcher.evaluate(testBoard);
 
         if (eval1 != eval2) {
-            throw new RuntimeException("Eval flip error for " + fen + " " + invertedFEN + " " + eval1 + " " + eval2);
+            throw new EvaluationFlipException("Eval flip error for " + fen + " " + invertedFEN + " " + eval1 + " " + eval2);
         }
 
         return boardModel;
@@ -482,44 +439,16 @@ public class UCIController implements Runnable {
         return newFen;
     }
 
-    public void perftTest() {
-        long totalNodes = 0;
-        m_legalMoves = new int[10][RivalConstants.MAX_LEGAL_MOVES];
-
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setMinimumFractionDigits(0);
-        nf.setMaximumFractionDigits(0);
-
-        long t1 = System.currentTimeMillis();
-
-        totalNodes += verifyPerftScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", 4, 20541);
-        totalNodes += verifyPerftScore("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", 6, 38633283);
-        totalNodes += verifyPerftScore("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 5, 4865609);
-        totalNodes += verifyPerftScore("8/3K4/2p5/p2b2r1/5k2/8/8/1q6 b - 1 67", 2, 279);
-        totalNodes += verifyPerftScore("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 5, 11139762);
-        totalNodes += verifyPerftScore("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", 7, 178633661);
-        totalNodes += verifyPerftScore("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 5, 193690690);
-
-        long t2 = System.currentTimeMillis() - t1;
-        long nps = (long) (((double) totalNodes / t2) * 1000);
-        printStream.println("(" + totalNodes + "/" + t2 + ")*1000 = " + nf.format(nps) + " nps");
-
-        printStream.println("Move generation test passed");
-
-        System.exit(0);
-    }
-
     public static long getPerft(EngineChessBoard board, int depth) {
         if (depth == 0) return 1;
         long nodes = 0;
         int moveNum = 0;
 
-        int[] legalMoves = m_legalMoves[depth];
+        int[] legalMoves = new int[RivalConstants.MAX_LEGAL_MOVES];
 
         board.setLegalMoves(legalMoves);
         while (legalMoves[moveNum] != 0) {
             if (board.makeMove(legalMoves[moveNum])) {
-                //board.printBoard();
                 nodes += getPerft(board, depth - 1);
                 board.unMakeMove();
             }
