@@ -5,16 +5,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertTrue;
 
 
 public class UciControllerTest {
 
-    static RivalSearch m_engine;
+    RivalSearch rivalSearch;
     UCIController uciController;
     ByteArrayOutputStream outSpy;
 
@@ -23,18 +23,18 @@ public class UciControllerTest {
 
         outSpy = new ByteArrayOutputStream();
 
-        m_engine = new RivalSearch(new PrintStream(outSpy));
+        rivalSearch = new RivalSearch(new PrintStream(outSpy));
 
-        m_engine.startEngineTimer(true);
-        m_engine.setHashSizeMB(32);
+        rivalSearch.startEngineTimer(true);
+        rivalSearch.setHashSizeMB(32);
 
-        new Thread(m_engine).start();
+        new Thread(rivalSearch).start();
 
-        uciController = new UCIController(m_engine, 1, new PrintStream(outSpy));
+        uciController = new UCIController(rivalSearch, 1, new PrintStream(outSpy));
 
         new Thread(uciController).start();
 
-        TimeUnit.SECONDS.sleep(2);
+        SECONDS.sleep(2);
 
     }
 
@@ -52,9 +52,9 @@ public class UciControllerTest {
         uciController.processUCICommand("position startpos");
         uciController.processUCICommand("go depth 3");
 
-        TimeUnit.SECONDS.sleep(5);
+        SECONDS.sleep(1);
 
-        while (m_engine.isSearching()) {}
+        await().atMost(10, SECONDS).until(() -> !rivalSearch.isSearching());
 
         assertTrue(outSpy.toString().contains("bestmove g1f3"));
     }

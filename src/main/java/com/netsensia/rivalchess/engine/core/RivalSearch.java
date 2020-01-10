@@ -398,20 +398,7 @@ public final class RivalSearch implements Runnable
 	        
 	        if ((whiteIsolatedPawns & Bitboards.FILE_D) != 0) pawnScore -= RivalConstants.VALUE_ISOLATED_DPAWN_PENALTY;
 	        if ((blackIsolatedPawns & Bitboards.FILE_D) != 0) pawnScore += RivalConstants.VALUE_ISOLATED_DPAWN_PENALTY;
-	        
-	        //long pawnBlockedSquares = ((board.m_pieceBitboards[RivalConstants.WP] | board.m_pieceBitboards[RivalConstants.BP]) >>> 8);
-	        //long willBeAttackedOnAdvancing = (blackPawnAttacks >>> 8);
-	        //long squaresWhichCanBeDefendedByPawns = Bitboards.northFill(whitePawnAttacks);
-	        //long squaresDefendingPawns = (((board.m_pieceBitboards[RivalConstants.WP] & ~Bitboards.FILE_A) >>> 7) | ((board.m_pieceBitboards[RivalConstants.WP] & ~Bitboards.FILE_H) >>> 9));
-	        //long enemyPawnFileMask = Bitboards.northFill(blackPawnFiles);
-	        //long backwardPawnsOnHalfOpenFiles = 
-//	        	board.m_pieceBitboards[RivalConstants.WP] & 
-//	        	~pawnBlockedSquares & 
-//	        	willBeAttackedOnAdvancing & 
-//	        	~squaresWhichCanBeDefendedByPawns & 
-//	        	squaresDefendingPawns & 
-//	        	~enemyPawnFileMask;
-	        
+
 	        pawnScore -= 
 	        	Long.bitCount(
 	    	        	board.m_pieceBitboards[RivalConstants.WP] & 
@@ -421,20 +408,7 @@ public final class RivalSearch implements Runnable
 	    	        	(((board.m_pieceBitboards[RivalConstants.WP] & ~Bitboards.FILE_A) >>> 7) | ((board.m_pieceBitboards[RivalConstants.WP] & ~Bitboards.FILE_H) >>> 9)) & 
 	    	        	~Bitboards.northFill(blackPawnFiles)
 	        	) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY;
-	        
-	        //pawnBlockedSquares = ((board.m_pieceBitboards[RivalConstants.BP] | board.m_pieceBitboards[RivalConstants.WP]) << 8);
-	        //willBeAttackedOnAdvancing = (whitePawnAttacks << 8);
-	        //squaresWhichCanBeDefendedByPawns = Bitboards.southFill(blackPawnAttacks);
-	        //squaresDefendingPawns = (((board.m_pieceBitboards[RivalConstants.BP] & ~Bitboards.FILE_A) << 9) | ((board.m_pieceBitboards[RivalConstants.BP] & ~Bitboards.FILE_H) << 7));
-	        //enemyPawnFileMask = Bitboards.northFill(whitePawnFiles);
-//	        backwardPawnsOnHalfOpenFiles = 
-//	        	board.m_pieceBitboards[RivalConstants.BP] & 
-//	        	~((board.m_pieceBitboards[RivalConstants.BP] | board.m_pieceBitboards[RivalConstants.WP]) << 8) & 
-//	        	(whitePawnAttacks << 8) & 
-//	        	~Bitboards.southFill(blackPawnAttacks) & 
-//	        	(((board.m_pieceBitboards[RivalConstants.BP] & ~Bitboards.FILE_A) << 9) | ((board.m_pieceBitboards[RivalConstants.BP] & ~Bitboards.FILE_H) << 7)) & 
-//	        	~Bitboards.northFill(whitePawnFiles);
-	        
+
 	        pawnScore += Long.bitCount(
 		        	board.m_pieceBitboards[RivalConstants.BP] & 
 		        	~((board.m_pieceBitboards[RivalConstants.BP] | board.m_pieceBitboards[RivalConstants.WP]) << 8) & 

@@ -22,8 +22,11 @@ import com.netsensia.rivalchess.model.board.BoardModel;
 import com.netsensia.rivalchess.model.board.FenChess;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UCIController implements Runnable {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(UCIController.class);
 
     private int whiteTime;
     private int blackTime;
@@ -84,10 +87,8 @@ public class UCIController implements Runnable {
             if (RivalConstants.UCI_DEBUG) {
                 out.close();
             }
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException | NumberFormatException e) {
+            LOGGER.info(e.getMessage());
         }
     }
 
@@ -141,11 +142,7 @@ public class UCIController implements Runnable {
 
     private void handleIfSetOptionOwnBookCommand(String[] parts) {
         if (parts[2].equals("OwnBook") && parts[3].equals("value")) {
-            if (parts[4].equals("true")) {
-                rivalSearch.setUseOpeningBook(true);
-            } else {
-                rivalSearch.setUseOpeningBook(false);
-            }
+            rivalSearch.setUseOpeningBook(parts[4].equals("true"));
         }
     }
 
@@ -371,12 +368,12 @@ public class UCIController implements Runnable {
     public static BoardModel getBoardModel(String fen) throws EvaluationFlipException {
         BoardModel boardModel = new BoardModel();
         FenChess fenChess = new FenChess(boardModel);
-        String invertedFEN = invertFEN(fen);
-
-        fenChess.setFromStr(invertedFEN);
+        String invertedFen = invertFen(fen);
 
         RivalSearch testSearcher = new RivalSearch();
         EngineChessBoard testBoard = new EngineChessBoard(new Bitboards());
+
+        fenChess.setFromStr(invertedFen);
         testBoard.setBoard(boardModel);
         int eval1 = testSearcher.evaluate(testBoard);
 
@@ -385,13 +382,13 @@ public class UCIController implements Runnable {
         int eval2 = testSearcher.evaluate(testBoard);
 
         if (eval1 != eval2) {
-            throw new EvaluationFlipException("Eval flip error for " + fen + " " + invertedFEN + " " + eval1 + " " + eval2);
+            throw new EvaluationFlipException("Eval flip error for " + fen + " " + invertedFen + " " + eval1 + " " + eval2);
         }
 
         return boardModel;
     }
 
-    public static String invertFEN(String fen) {
+    public static String invertFen(String fen) {
         fen = fen.replace(" b ", " . ");
         fen = fen.replace(" w ", " ; ");
 
@@ -432,11 +429,13 @@ public class UCIController implements Runnable {
                         boardParts[1] + "/" +
                         boardParts[0];
 
+        StringBuilder newFenBuilder = new StringBuilder(newFen);
+
         for (int i = 1; i < fenParts.length; i++) {
-            newFen += " " + fenParts[i];
+            newFenBuilder.append(" " + fenParts[i]);
         }
 
-        return newFen;
+        return newFenBuilder.toString();
     }
 
     public static long getPerft(EngineChessBoard board, int depth) {
@@ -466,20 +465,10 @@ public class UCIController implements Runnable {
             printStream.println("Class: " + c.getName());
 
             printStream.println(varName + " = " + field.get(RivalConstants.getInstance()));
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (SecurityException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+
+        } catch (ClassNotFoundException | SecurityException |
+                NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
+            LOGGER.info(e.getMessage());
         }
 
     }
