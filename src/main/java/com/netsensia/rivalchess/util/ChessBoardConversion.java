@@ -9,8 +9,7 @@ import com.netsensia.rivalchess.model.board.MoveRef;
 
 public class ChessBoardConversion 
 {
-	private static Bitboards bitboards = new Bitboards();
-	private static EngineChessBoard engineChessBoard = new EngineChessBoard(bitboards);
+	private static EngineChessBoard engineChessBoard = new EngineChessBoard();
 	
 	public static BoardRef getBoardRefFromBitRef(int bitRef)
 	{

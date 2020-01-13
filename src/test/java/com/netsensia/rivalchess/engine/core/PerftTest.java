@@ -19,7 +19,7 @@ public class PerftTest {
 
     private void assertPerftScore(String fen, int depth, int expectedScore) throws EvaluationFlipException {
 
-        EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
+        EngineChessBoard engineBoard = new EngineChessBoard();
         NumberFormat nf = NumberFormat.getInstance();
 
         engineBoard.setBoard(UCIController.getBoardModel(fen));

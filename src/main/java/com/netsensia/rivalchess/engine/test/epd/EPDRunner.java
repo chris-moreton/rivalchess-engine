@@ -33,7 +33,7 @@ public class EPDRunner
 	
 	public EPDRunner()
 	{
-		engineChessBoard = new EngineChessBoard(new Bitboards());
+		engineChessBoard = new EngineChessBoard();
 		rivalSearch = new RivalSearch(System.out);
 		boardModel = new BoardModel();
 		fenChess = new FenChess(boardModel);

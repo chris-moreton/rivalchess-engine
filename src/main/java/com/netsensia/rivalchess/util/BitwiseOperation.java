@@ -25,27 +25,6 @@ public class BitwiseOperation
 		return count;
 	}
 
-	public static long flipBitboardOnVerticalAxis(long bitboard)
-	{
-		long k1 = 0x5555555555555555L;
-		long k2 = 0x3333333333333333L;
-		long k4 = 0x0f0f0f0f0f0f0f0fL;
-		bitboard = ((bitboard >> 1) & k1) | ((bitboard & k1) << 1);
-		bitboard = ((bitboard >> 2) & k2) | ((bitboard & k2) << 2);
-		bitboard = ((bitboard >> 4) & k4) | ((bitboard & k4) << 4);
-		return bitboard;
-	}
-
-	public static long flipBitboardOnHorizontalAxis(long bitboard)
-	{
-		long k1 = 0x00FF00FF00FF00FFL;
-		long k2 = 0x0000FFFF0000FFFFL;
-		bitboard = ((bitboard >>  8) & k1) | ((bitboard & k1) <<  8);
-		bitboard = ((bitboard >> 16) & k2) | ((bitboard & k2) << 16);
-		bitboard = ( bitboard >> 32)       | ( bitboard       << 32);
-		return bitboard;	
-	}
-	
 	public static long rotateBitboard90AntiClockwise(long b)
 	{
 		long t; // temporary

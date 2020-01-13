@@ -32,9 +32,7 @@ public final class EngineChessBoard
 	public int m_movesMade;
 	
 	public byte squareContents[] = new byte[64];
-	
-	public Bitboards m_bitboards;
-	
+
 	public boolean m_isOnNullMove = false;
 	
 	protected int[] m_legalMoves;
@@ -69,9 +67,8 @@ public final class EngineChessBoard
 	public long m_hashValue;
 	public long m_pawnHashValue;
 	
-	public EngineChessBoard(Bitboards bitboards)
+	public EngineChessBoard()
 	{
-		this.m_bitboards = bitboards;
 		initArrays();
 	}
 	

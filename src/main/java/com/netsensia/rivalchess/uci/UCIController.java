@@ -38,8 +38,6 @@ public class UCIController implements Runnable {
     private int moveTime;
     private boolean isInfinite;
 
-    private Bitboards bitboards;
-
     private PrintWriter out;
 
     private RivalSearch rivalSearch;
@@ -48,7 +46,7 @@ public class UCIController implements Runnable {
 
     private BoardModel boardModel = new BoardModel();
     private FenChess fenChess = new FenChess(boardModel);
-    private EngineChessBoard engineBoard = new EngineChessBoard(bitboards);
+    private EngineChessBoard engineBoard = new EngineChessBoard();
 
     public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
         rivalSearch = engine;
@@ -62,7 +60,6 @@ public class UCIController implements Runnable {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String s;
 
-        bitboards = new Bitboards();
         Date todaysDate = new java.util.Date();
         SimpleDateFormat formatter = new SimpleDateFormat("MMMdd-HH-mm-ss-S");
         String formattedDate = formatter.format(todaysDate);
@@ -371,7 +368,7 @@ public class UCIController implements Runnable {
         String invertedFen = invertFen(fen);
 
         RivalSearch testSearcher = new RivalSearch();
-        EngineChessBoard testBoard = new EngineChessBoard(new Bitboards());
+        EngineChessBoard testBoard = new EngineChessBoard();
 
         fenChess.setFromStr(invertedFen);
         testBoard.setBoard(boardModel);

@@ -30,20 +30,14 @@ public class EngineStub implements EngineServiceInterface
 	
 	public EngineStub(  )
 	{							
-		this.initStub( new Bitboards() );
+		this.initStub();
 	}
 
-	public EngineStub( Bitboards bitboards )
+	private void initStub( )
 	{
-		this.initStub( bitboards );
-	}
-	
-	private void initStub( Bitboards bitboards )
-	{
-		this.m_bitboards = bitboards;
 		this.m_rivalSearch = new RivalSearch(System.out);
 		this.m_rivalSearch.startEngineTimer(false);
-		this.m_engineBoard = new EngineChessBoard(m_bitboards);
+		this.m_engineBoard = new EngineChessBoard();
 		
 		ChessBoardConversion.getBoardRefFromBitRef( 0 ); //Force static initialization of BitBoards.
 	}

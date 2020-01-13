@@ -227,8 +227,7 @@ public final class RivalTester {
     }
 
     public static void testHash() {
-        Bitboards bitboards = new Bitboards();
-        EngineChessBoard engineBoard = new EngineChessBoard(bitboards);
+        EngineChessBoard engineBoard = new EngineChessBoard();
 
         BoardModel boardModel = new BoardModel();
         FenChess fenChess = new FenChess(boardModel);
@@ -316,9 +315,8 @@ public final class RivalTester {
         FenChess fenChess = new FenChess(boardModel);
         fenChess.setFromStr("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-        Bitboards bitboards = new Bitboards();
         RivalSearch threadEngine = new RivalSearch();
-        EngineChessBoard engineBoard = new EngineChessBoard(bitboards);
+        EngineChessBoard engineBoard = new EngineChessBoard();
         engineBoard.setBoard(boardModel);
         threadEngine.setBoard(engineBoard);
         threadEngine.setSearchDepth(50);
@@ -374,7 +372,7 @@ public final class RivalTester {
         searcherBlack.setHashSizeMB(64);
 
         for (int gameNum = 1; gameNum <= games; gameNum++) {
-            EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
+            EngineChessBoard engineBoard = new EngineChessBoard();
             engineBoard.setBoard(getBoardModel("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
 
             searcherWhite.setBoard(engineBoard);
@@ -468,7 +466,7 @@ public final class RivalTester {
 
     public static void generateKPKBitBase() {
         BoardRef boardRef;
-        EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
+        EngineChessBoard engineBoard = new EngineChessBoard();
 
         int draws = 0;
         int wins = 0;
@@ -580,7 +578,7 @@ public final class RivalTester {
 
     public static void generateKQKPBitBase() {
         BoardRef boardRef;
-        EngineChessBoard engineBoard = new EngineChessBoard(new Bitboards());
+        EngineChessBoard engineBoard = new EngineChessBoard();
 
         int draws = 0;
         int wins = 0;
