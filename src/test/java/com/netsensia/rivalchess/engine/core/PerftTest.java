@@ -50,7 +50,6 @@ public class PerftTest {
     }
 
     @Test
-    @Ignore
     public void testPerftScoreLong() throws EvaluationFlipException, IllegalFenException {
 
         assertPerftScore("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", 6, 38633283);

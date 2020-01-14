@@ -53,9 +53,7 @@ public class BoardModel implements Cloneable
 	protected boolean m_isWhiteToMove = true;
 		
 	protected int m_gameStateId = 0;
-	
-	protected String m_instanceStamp;
-	
+
 	protected MoveState m_lastMoveState = null;
 	
 	public BoardModel( )
@@ -258,11 +256,6 @@ public class BoardModel implements Cloneable
 		this.setPieceCode( boardRef.getXFile( ), boardRef.getYRank( ), pieceCode );
 	}
 
-	public boolean isBoardRefOnBoard( int xFile, int yRank )
-	{
-		return (xFile >=0 && xFile <  this.getNumXFiles( ) &&  yRank >=0 && yRank <  this.getNumYRanks( ));
-	}
-
 	public int getNumXFiles( )
 	{
 		return this.m_numXFiles;
@@ -321,74 +314,12 @@ public class BoardModel implements Cloneable
 		}
 		return (isWhite?whitePieceCount:blackPieceCount);		
 	}
-	
-	public Hashtable<Character, Integer> getPieceCodeStatusReport( )
-	{
-		Hashtable<Character, Integer> map = new Hashtable<Character, Integer>();
-		for (char pc : this.m_boardArray) 
-		{ 
-			if ( pc != VACANT_TILE)
-			{
-				if ( map.containsKey( pc ))
-				{
-					int numPieces = (Integer) (map.get(pc)) + 1;
-					map.remove(pc);
-					map.put(pc, numPieces);
-				
-				}
-				else
-				{					
-					map.put(pc, 1);
-				}
-			}
-		}
-		return map;
-	}
-	
-	public boolean isPawnPromotionMove( MoveRef moveRef )
-	{
-		char srcPiece = this.getPieceCode( moveRef.getSrcXFile( ), moveRef.getSrcYRank( ) );
-		if (srcPiece == 'P' && moveRef.getTgtYRank( ) == 0 )
-		{
-			return true;
-		}
-		if (srcPiece == 'p' && moveRef.getTgtYRank( ) == 7 )
-		{
-			return true;
-		}
-		return false;
-	}
-	
+
 	public boolean isWhitePieceCode( char pcCode )
 	{
 		return (Character.toUpperCase(pcCode) == pcCode);
 	}
-	
-	public boolean isOnBoard( BoardRef boardRef )
-	{
-		if ( boardRef.getXFile() < 0 ||  boardRef.getYRank( ) < 0 || boardRef.getXFile( ) >= this.getNumXFiles( ) ||  boardRef.getYRank( ) >= this.getNumYRanks( ))
-		{
-			return false;		
-		}			
-		return true;
-	}
 
-	public boolean isValidPieceSelect( BoardRef boardRef )
-	{
-		char pc = this.getPieceCode( boardRef );
-		
-		if ( this.isWhitePieceCode( pc ) && this.isWhiteToMove())
-		{
-			return true;
-		}
-		
-		if ( ! this.isWhitePieceCode( pc ) && this.isBlackToMove( ))
-		{
-			return true;
-		}		
-		return false;	
-	}
-	
     public BoardModel clone(  )
     {   
     	
@@ -407,7 +338,6 @@ public class BoardModel implements Cloneable
 		return null;
     }
 
-    
     public void setFrom( BoardModel boardModel)
     {
     	this.m_boardArray = boardModel.m_boardArray.clone( );
@@ -435,11 +365,6 @@ public class BoardModel implements Cloneable
     	}
     	
     }
-    
-    public MoveRef getLastMove()
-	{
-		return this.m_lastMove;
-	}
 
 	public void setLastMove(MoveRef lastMove)
 	{
