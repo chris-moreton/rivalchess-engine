@@ -87,6 +87,8 @@ public class FenUtils {
     }
 
     public static String invertFen(String fen) {
+        fen = fen.trim();
+
         fen = fen.replace(" b ", " . ");
         fen = fen.replace(" w ", " ; ");
 
@@ -130,9 +132,24 @@ public class FenUtils {
         StringBuilder newFenBuilder = new StringBuilder(newFen);
 
         for (int i = 1; i < fenParts.length; i++) {
-            newFenBuilder.append(" " + fenParts[i]);
+            if (i == 3) {
+                newFenBuilder.append(" " + invertSquare(fenParts[i]));
+            } else {
+                newFenBuilder.append(" " + fenParts[i]);
+            }
         }
 
         return newFenBuilder.toString();
+    }
+
+    private static String invertSquare(String square) {
+        char file = square.charAt(0);
+        char rank = square.charAt(1);
+
+        char newFile = (char)('h' - file + 'a');
+        char newRank = (char)('8' - rank + '1');
+
+        StringBuffer sb = new StringBuffer();
+        return sb.append(newFile).append(newRank).toString();
     }
 }
