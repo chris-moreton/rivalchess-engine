@@ -208,16 +208,6 @@ public class BoardModel implements Cloneable
 			return true;
 		}
 	}
-	
-	public boolean isTileVacant( BoardRef boardRef  )
-	{
-		return ( this.isTileVacant( boardRef.getXFile( ), boardRef.getYRank( )));
-	}
-	
-	public boolean isTileVacant( int xFile, int yRank  )
-	{
-		return ( this.getPieceCode( xFile, yRank ) == VACANT_TILE);
-	}
 
 	public char getPieceCode( BoardRef boardRef )
 	{
@@ -231,7 +221,7 @@ public class BoardModel implements Cloneable
 
 	public void removePiece( int xFile, int yRank )
 	{
-		this.setPieceCode( xFile, yRank, VACANT_TILE );  //blank source
+		this.setPieceCode( xFile, yRank, VACANT_TILE );
 	}
 
 	public void setPieceCode( int xFile, int yRank, char pieceCode )

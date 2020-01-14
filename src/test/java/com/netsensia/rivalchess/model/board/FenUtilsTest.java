@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.model.board;
 
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import org.junit.Test;
 

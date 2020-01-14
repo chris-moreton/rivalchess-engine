@@ -149,7 +149,7 @@ public class FenUtils {
         char newFile = (char)('h' - file + 'a');
         char newRank = (char)('8' - rank + '1');
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         return sb.append(newFile).append(newRank).toString();
     }
 }
