@@ -25,35 +25,17 @@ public class FenChess {
         for (int i = 0; i < fenStr.length(); i++) {
             final char fenToken = fenStr.charAt(fenIndex++);
 
-            // If this is an integer, pad board with spaces
             if (fenToken >= '0' && fenToken <= '9') {
-                int numPadded = Character.digit(fenToken, 10);
-
-                for (int n = 1; n <= numPadded; n++) {
-                    final int targetXFile = boardArrayIndex % this.board.getNumXFiles();
-                    final int targetYRank = boardArrayIndex / this.board.getNumXFiles();
-
-                    this.board.setPieceCode(targetXFile, targetYRank, BoardModel.VACANT_TILE);
-                    boardArrayIndex++;
-                }
-            } else // set the right piece unless divider
-            {
-                if (fenToken != '/') {
-                    final int targetXFile = boardArrayIndex % this.board.getNumXFiles();
-                    final int targetYRank = boardArrayIndex / this.board.getNumXFiles();
-
-                    this.board.setPieceCode(targetXFile, targetYRank, fenToken);
-                    boardArrayIndex++;
-                }
+                boardArrayIndex = padBoardWithSpaces(boardArrayIndex, fenToken);
+            } else if (fenToken != '/') {
+                boardArrayIndex = setPiece(boardArrayIndex, fenToken);
             }
 
-            // No space should exist until finished.
             if (fenToken == ' ') {
                 throw new IllegalFenException("Unexpected space character found");
             }
 
             if (boardArrayIndex == (this.board.getNumXFiles() * this.board.getNumYRanks())) {
-                // We have the whole board
                 break;
             }
 
@@ -62,7 +44,7 @@ public class FenChess {
             }
         }
 
-        fenIndex++; // Scoot past space
+        fenIndex++;
 
         final char fenToken = fenStr.charAt(fenIndex++);
 
@@ -79,33 +61,32 @@ public class FenChess {
         this.board.setBlackQueenSideCastleAvailable(false);
         this.board.setBlackKingSideCastleAvailable(false);
 
-        while (fenStr.charAt(fenIndex) != ' ') {
-            switch (fenStr.charAt(fenIndex)) {
-                case 'Q':
-                    this.board.setWhiteQueenSideCastleAvailable(true);
-                    break;
-                case 'K':
-                    this.board.setWhiteKingSideCastleAvailable(true);
-                    break;
-                case 'q':
-                    this.board.setBlackQueenSideCastleAvailable(true);
-                    break;
-                case 'k':
-                    this.board.setBlackKingSideCastleAvailable(true);
-                    break;
-                case '-':
-                    break;
-                default:
-                    throw new IllegalFenException("Illegal character found in castle section " + fenStr.charAt(fenIndex));
-            }
-            // castle privileges
-            fenIndex++;
-        }
+        final String castleFlags = fenStr.substring(fenIndex, fenStr.indexOf(' ', fenIndex));
 
-        final char enPassantChar = fenStr.charAt(fenIndex+1);
+        this.board.setWhiteQueenSideCastleAvailable(castleFlags.contains("Q"));
+        this.board.setWhiteKingSideCastleAvailable(castleFlags.contains("K"));
+        this.board.setBlackQueenSideCastleAvailable(castleFlags.contains("q"));
+        this.board.setBlackKingSideCastleAvailable(castleFlags.contains("k"));
+
+        final char enPassantChar = fenStr.charAt(fenIndex + castleFlags.length() + 1);
 
         this.board.setEnPassantFile(enPassantChar != '-' ? enPassantChar - 97 : -1);
+    }
 
+    private int setPiece(int boardArrayIndex, char fenToken) {
+        final int targetXFile = boardArrayIndex % this.board.getNumXFiles();
+        final int targetYRank = boardArrayIndex / this.board.getNumXFiles();
+
+        this.board.setPieceCode(targetXFile, targetYRank, fenToken);
+        boardArrayIndex++;
+        return boardArrayIndex;
+    }
+
+    private int padBoardWithSpaces(int boardArrayIndex, char fenToken) {
+        for (int n = 1; n <= Character.digit(fenToken, 10); n++) {
+            boardArrayIndex = setPiece(boardArrayIndex, BoardModel.VACANT_TILE);
+        }
+        return boardArrayIndex;
     }
 
 }
