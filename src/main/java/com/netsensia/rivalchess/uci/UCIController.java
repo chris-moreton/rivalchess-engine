@@ -17,7 +17,7 @@ import com.netsensia.rivalchess.engine.test.epd.EPDRunner;
 import com.netsensia.rivalchess.exception.EvaluationFlipException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.board.FenChess;
+import com.netsensia.rivalchess.model.board.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -40,8 +40,6 @@ public class UCIController implements Runnable {
     private int timeMultiple;
     private PrintStream printStream;
 
-    private BoardModel boardModel = new BoardModel();
-    private FenChess fenChess = new FenChess(boardModel);
     private EngineChessBoard engineBoard = new EngineChessBoard();
 
     public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
@@ -253,9 +251,7 @@ public class UCIController implements Runnable {
             waitForSearchToComplete();
 
             try {
-                setStartPosition(s, fenChess, parts);
-
-                engineBoard.setBoard(boardModel);
+                engineBoard.setBoard(getBoardModel(s, parts));
                 rivalSearch.setBoard(engineBoard);
 
                 playMovesFromPosition(parts);
@@ -282,12 +278,14 @@ public class UCIController implements Runnable {
         }
     }
 
-    private void setStartPosition(String s, FenChess fenChess, String[] parts) throws IllegalFenException {
+    private BoardModel getBoardModel(String s, String[] parts) throws IllegalFenException {
+        BoardModel boardModel;
         if (parts[1].equals("startpos")) {
-            fenChess.setFromStr(EngineChessBoard.START_POS);
+            boardModel = FenUtils.getBoardModel(EngineChessBoard.START_POS);
         } else {
-            fenChess.setFromStr(s.substring(12).trim());
+            boardModel = FenUtils.getBoardModel(s.substring(12).trim());
         }
+        return boardModel;
     }
 
     private void handleIfUciNewGameCommand(String[] parts) {
@@ -340,79 +338,6 @@ public class UCIController implements Runnable {
             state = rivalSearch.getEngineState();
         }
         while (state != RivalConstants.SEARCHSTATE_READY && state != RivalConstants.SEARCHSTATE_SEARCHCOMPLETE);
-    }
-
-    public static BoardModel getBoardModel(String fen) throws EvaluationFlipException, IllegalFenException {
-        BoardModel boardModel = new BoardModel();
-        FenChess fenChess = new FenChess(boardModel);
-        String invertedFen = invertFen(fen);
-
-        RivalSearch testSearcher = new RivalSearch();
-        EngineChessBoard testBoard = new EngineChessBoard();
-
-        fenChess.setFromStr(invertedFen);
-        testBoard.setBoard(boardModel);
-        int eval1 = testSearcher.evaluate(testBoard);
-
-        fenChess.setFromStr(fen);
-        testBoard.setBoard(boardModel);
-        int eval2 = testSearcher.evaluate(testBoard);
-
-        if (eval1 != eval2) {
-            throw new EvaluationFlipException("Eval flip error for " + fen + " " + invertedFen + " " + eval1 + " " + eval2);
-        }
-
-        return boardModel;
-    }
-
-    public static String invertFen(String fen) {
-        fen = fen.replace(" b ", " . ");
-        fen = fen.replace(" w ", " ; ");
-
-        fen = fen.replace('Q', 'z');
-        fen = fen.replace('K', 'x');
-        fen = fen.replace('N', 'c');
-        fen = fen.replace('B', 'v');
-        fen = fen.replace('R', 'm');
-        fen = fen.replace('P', ',');
-
-        fen = fen.replace('q', 'Q');
-        fen = fen.replace('k', 'K');
-        fen = fen.replace('n', 'N');
-        fen = fen.replace('b', 'B');
-        fen = fen.replace('r', 'R');
-        fen = fen.replace('p', 'P');
-
-        fen = fen.replace('z', 'q');
-        fen = fen.replace('x', 'k');
-        fen = fen.replace('c', 'n');
-        fen = fen.replace('v', 'b');
-        fen = fen.replace('m', 'r');
-        fen = fen.replace(',', 'p');
-
-        fen = fen.replace(" . ", " w ");
-        fen = fen.replace(" ; ", " b ");
-
-        String[] fenParts = fen.split(" ");
-        String[] boardParts = fenParts[0].split("/");
-
-        String newFen =
-                boardParts[7] + "/" +
-                        boardParts[6] + "/" +
-                        boardParts[5] + "/" +
-                        boardParts[4] + "/" +
-                        boardParts[3] + "/" +
-                        boardParts[2] + "/" +
-                        boardParts[1] + "/" +
-                        boardParts[0];
-
-        StringBuilder newFenBuilder = new StringBuilder(newFen);
-
-        for (int i = 1; i < fenParts.length; i++) {
-            newFenBuilder.append(" " + fenParts[i]);
-        }
-
-        return newFenBuilder.toString();
     }
 
     public static long getPerft(EngineChessBoard board, int depth) {

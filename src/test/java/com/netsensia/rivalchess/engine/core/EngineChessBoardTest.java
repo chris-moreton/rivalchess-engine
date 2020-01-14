@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.board.FenChess;
+import com.netsensia.rivalchess.model.board.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.junit.Test;
 
@@ -18,13 +18,11 @@ public class EngineChessBoardTest {
         final EngineChessBoard board = new EngineChessBoard();
         final List<String> moves = new ArrayList<>();
         final BoardModel boardModel = new BoardModel();
-        final FenChess fenChess = new FenChess(boardModel);
 
         moves.add("e2e4");
         moves.add("e7e5");
 
-        fenChess.setFromStr(EngineChessBoard.START_POS);
-        board.setBoard(boardModel);
+        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
 
         for (String move : moves) {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
@@ -37,8 +35,7 @@ public class EngineChessBoardTest {
         moves.add("c3b1");
         moves.add("c6b8");
 
-        fenChess.setFromStr(EngineChessBoard.START_POS);
-        board.setBoard(boardModel);
+        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
 
         for (String move : moves) {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
@@ -51,8 +48,7 @@ public class EngineChessBoardTest {
         moves.add("c3b1");
         moves.add("c6b8");
 
-        fenChess.setFromStr(EngineChessBoard.START_POS);
-        board.setBoard(boardModel);
+        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
 
         for (String move : moves) {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
@@ -60,8 +56,7 @@ public class EngineChessBoardTest {
 
         assertTrue(board.previousOccurrencesOfThisPosition() == 2);
 
-        fenChess.setFromStr(EngineChessBoard.START_POS);
-        board.setBoard(boardModel);
+        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
 
         moves.add("b1c3");
         moves.add("b8a6");
@@ -72,8 +67,7 @@ public class EngineChessBoardTest {
 
         assertTrue(board.previousOccurrencesOfThisPosition() == 0);
 
-        fenChess.setFromStr(EngineChessBoard.START_POS);
-        board.setBoard(boardModel);
+        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
 
         moves.add("c3b1");
         moves.add("a6b8");

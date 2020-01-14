@@ -6,13 +6,12 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.netsensia.rivalchess.engine.core.Bitboards;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.board.FenChess;
+import com.netsensia.rivalchess.model.board.FenUtils;
 
 public class EPDRunner 
 {
@@ -29,7 +28,6 @@ public class EPDRunner
 	EngineChessBoard engineChessBoard;
 	RivalSearch rivalSearch;
 	BoardModel boardModel;
-	FenChess fenChess;
 	public int maxMillis;
 	
 	public EPDRunner()
@@ -37,7 +35,6 @@ public class EPDRunner
 		engineChessBoard = new EngineChessBoard();
 		rivalSearch = new RivalSearch(System.out);
 		boardModel = new BoardModel();
-		fenChess = new FenChess(boardModel);
 		nf.setMaximumFractionDigits(2);
 		nfi.setMaximumFractionDigits(0);
 	}
@@ -45,8 +42,7 @@ public class EPDRunner
 	public void doPosition(EPDPosition epdPosition) throws IllegalFenException
 	{
 		positions.add(epdPosition);
-		fenChess.setFromStr(epdPosition.fen);
-		engineChessBoard.setBoard(boardModel);
+		engineChessBoard.setBoard(FenUtils.getBoardModel(epdPosition.fen));
 		rivalSearch.newGame();
 		rivalSearch.setBoard(engineChessBoard);
 		rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH);

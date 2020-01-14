@@ -6,6 +6,7 @@ import java.text.NumberFormat;
 
 import com.netsensia.rivalchess.exception.EvaluationFlipException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.model.board.FenUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -23,7 +24,7 @@ public class PerftTest {
         EngineChessBoard engineBoard = new EngineChessBoard();
         NumberFormat nf = NumberFormat.getInstance();
 
-        engineBoard.setBoard(UCIController.getBoardModel(fen));
+        engineBoard.setBoard(FenUtils.getBoardModel(fen));
         long start = System.currentTimeMillis();
         long nodes = UCIController.getPerft(engineBoard, depth);
 
