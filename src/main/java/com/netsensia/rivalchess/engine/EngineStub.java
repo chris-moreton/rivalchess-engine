@@ -17,7 +17,6 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class EngineStub implements EngineServiceInterface
 {
-	protected Bitboards m_bitboards = null;
 	public RivalSearch m_rivalSearch = null;
 	protected EngineChessBoard m_engineBoard = null;
 	protected MoveRef m_currentEngineMoveRef = null;

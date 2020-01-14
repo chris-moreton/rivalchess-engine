@@ -1,18 +1,15 @@
 package com.netsensia.rivalchess.uci;
 
 import java.io.BufferedReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.netsensia.rivalchess.engine.core.Bitboards;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
@@ -21,12 +18,12 @@ import com.netsensia.rivalchess.exception.EvaluationFlipException;
 import com.netsensia.rivalchess.model.board.BoardModel;
 import com.netsensia.rivalchess.model.board.FenChess;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
-import com.netsensia.rivalchess.util.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class UCIController implements Runnable {
 
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(UCIController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UCIController.class);
 
     private int whiteTime;
     private int blackTime;
@@ -37,8 +34,6 @@ public class UCIController implements Runnable {
     private int maxNodes;
     private int moveTime;
     private boolean isInfinite;
-
-    private PrintWriter out;
 
     private RivalSearch rivalSearch;
     private int timeMultiple;
@@ -57,6 +52,8 @@ public class UCIController implements Runnable {
 
     @Override
     public void run() {
+        printStream.println("Welcome to Rival Chess UCI");
+        
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String s;
 
@@ -67,32 +64,17 @@ public class UCIController implements Runnable {
 
         try {
 
-            if (RivalConstants.UCI_DEBUG) {
-                out = new PrintWriter(
-                        new FileWriter(
-                                RivalConstants.UCI_DEBUG_FILEPATH + "ucidebug-" + formattedDate + ".log", true
-                        )
-                );
-                rivalSearch.setLogWriter(out);
-            }
-
             while ((s = in.readLine()) != null) {
                 processUCICommand(s);
             }
-            uciDebug("Bye");
 
-            if (RivalConstants.UCI_DEBUG) {
-                out.close();
-            }
         } catch (IOException | NumberFormatException e) {
             LOGGER.info(e.getMessage());
         }
     }
 
     public void processUCICommand(String s) {
-        uciDebug("Received input: " + s);
         if (s.trim().length() != 0) {
-            Logger.log(out, s, ">");
             String[] parts = s.split(" ");
             if (parts.length > 0) {
                 handleIfUciCommand(parts);
@@ -117,7 +99,6 @@ public class UCIController implements Runnable {
 
     private void handleIfStopCommand(String[] parts) {
         if (parts[0].equals("stop")) {
-            uciDebug("UCI stop command received");
             rivalSearch.stopSearch();
             waitForSearchToComplete();
         }
@@ -205,7 +186,6 @@ public class UCIController implements Runnable {
             int calcTime = (engineBoard.m_isWhiteToMove ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
             int guaranteedTime = (engineBoard.m_isWhiteToMove ? whiteInc : blackInc);
             int timeToThink = calcTime + guaranteedTime - RivalConstants.UCI_TIMER_SAFTEY_MARGIN_MILLIS;
-            uciDebug("I am going to think for " + timeToThink + " millis");
             rivalSearch.setMillisToThink(timeToThink);
             rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
         }
@@ -350,16 +330,8 @@ public class UCIController implements Runnable {
         rivalSearch.stopSearch();
         do {
             state = rivalSearch.getEngineState();
-            uciDebug("Waiting for it all to end...");
         }
         while (state != RivalConstants.SEARCHSTATE_READY && state != RivalConstants.SEARCHSTATE_SEARCHCOMPLETE);
-    }
-
-    public void uciDebug(String s) {
-        if (RivalConstants.UCI_DEBUG) {
-            printStream.println(s);
-            Logger.log(out, s, "D");
-        }
     }
 
     public static BoardModel getBoardModel(String fen) throws EvaluationFlipException {
