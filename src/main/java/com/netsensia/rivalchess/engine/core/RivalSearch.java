@@ -12,31 +12,33 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 
 public final class RivalSearch implements Runnable {
     private static PrintStream printStream;
 
-    public boolean g_flag;
-    public boolean m_isOkToSendInfo = false;
+    private boolean isOkToSendInfo = false;
     private PrintWriter m_out;
 
     private boolean m_wasSearchCancelled = false;
 
-    public int m_nodes = 0;
-    public long m_currentTimeMillis;
+    private int nodes = 0;
+    private long currentTimeMillis;
 
-    public long m_drawnPositionsAtRoot[][] = new long[2][RivalConstants.MAX_LEGAL_MOVES];
-    public int m_drawnPositionsAtRootCount[] = new int[2];
+    private List<List<Long>> drawnPositionsAtRoot;
+
+    private int[] drawnPositionsAtRootCount = new int[2];
 
     private int aspirationLow, aspirationHigh;
 
     private boolean quit = false;
 
-    private int m_currentDepthZeroValidMoves = 0;
-    private int m_movesToSearchAtAllDepths = 0;
-    private int m_totalMovesSearchedAtAllDepths = 0;
+    private int currentDepthZeroValidMoves = 0;
+    private int movesToSearchAtAllDepths = 0;
+    private int totalMovesSearchedAtAllDepths = 0;
 
     public int m_futilityPrunes = 0;
     public int m_alwaysHashClashes = 0;
@@ -124,9 +126,14 @@ public final class RivalSearch implements Runnable {
     }
 
     public RivalSearch(PrintStream printStream) {
+
+        drawnPositionsAtRoot = new ArrayList<>();
+        drawnPositionsAtRoot.add(new ArrayList<>());
+        drawnPositionsAtRoot.add(new ArrayList<>());
+
         this.printStream = printStream;
 
-        this.m_currentTimeMillis = System.currentTimeMillis();
+        this.setCurrentTimeMillis(System.currentTimeMillis());
 
         this.m_currentPath = new SearchPath();
         this.m_currentPathString = "";
@@ -654,7 +661,7 @@ public final class RivalSearch implements Runnable {
     int lowest = 9999;
 
     public int evaluate(EngineChessBoard board) {
-        if (RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) this.m_nodes++;
+        if (RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) this.setNodes(this.getNodes() + 1);
 
         if (board.whitePieceValues + board.blackPieceValues + board.whitePawnValues + board.blackPawnValues == 0)
             return 0;
@@ -1468,7 +1475,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public SearchPath quiesce(EngineChessBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) {
-        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) m_nodes++;
+        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
 
         SearchPath newPath;
         SearchPath bestPath;
@@ -1692,11 +1699,11 @@ public final class RivalSearch implements Runnable {
 
     @SuppressWarnings("unused")
     public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, boolean doingIID, int recaptureSquare, boolean isCheck) {
-        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) m_nodes++;
+        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
 
-        if (this.m_currentTimeMillis > this.m_searchTargetEndTime || this.m_nodes >= this.m_nodesToSearch) {
+        if (this.getCurrentTimeMillis() > this.m_searchTargetEndTime || this.getNodes() >= this.m_nodesToSearch) {
             this.m_abortingSearch = true;
-            this.m_isOkToSendInfo = false;
+            this.setOkToSendInfo(false);
             return null;
         }
 
@@ -2145,7 +2152,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public SearchPath searchZero(EngineChessBoard board, byte depth, int ply, int low, int high) {
-        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) m_nodes++;
+        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
 
         int numMoves = 0;
         byte flag = RivalConstants.UPPERBOUND;
@@ -2168,7 +2175,7 @@ public final class RivalSearch implements Runnable {
             if (m_board.makeMove(move)) {
                 boolean isCheck = board.isCheck();
 
-                m_totalMovesSearchedAtAllDepths++;
+                totalMovesSearchedAtAllDepths++;
                 checkExtend = 0;
                 pawnExtend = 0;
                 if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
@@ -2275,7 +2282,7 @@ public final class RivalSearch implements Runnable {
         this.m_wasSearchCancelled = false;
         this.m_searchState = RivalConstants.SEARCHSTATE_SEARCHING;
         this.m_abortingSearch = false;
-        this.m_totalMovesSearchedAtAllDepths = 0;
+        this.totalMovesSearchedAtAllDepths = 0;
 
         this.m_hashTableVersion++;
 
@@ -2298,7 +2305,7 @@ public final class RivalSearch implements Runnable {
 
         aspirationLow = -RivalConstants.INFINITY;
         aspirationHigh = RivalConstants.INFINITY;
-        this.m_nodes = 0;
+        this.setNodes(0);
 
         for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
             this.mateKiller[i] = -1;
@@ -2332,16 +2339,15 @@ public final class RivalSearch implements Runnable {
         try {
             m_board.setLegalMoves(depthZeroLegalMoves);
             int depthZeroMoveCount = 0;
-            m_currentDepthZeroValidMoves = 0;
+            currentDepthZeroValidMoves = 0;
 
             int c = 0;
             int[] depth1MovesTemp = new int[RivalConstants.MAX_LEGAL_MOVES];
             int move = depthZeroLegalMoves[c] & 0x00FFFFFF;
-            m_drawnPositionsAtRootCount[0] = 0;
-            m_drawnPositionsAtRootCount[1] = 0;
+            getDrawnPositionsAtRootCount()[0] = 0;
+            getDrawnPositionsAtRootCount()[1] = 0;
             int legal = 0;
             int bestNewbieScore = -RivalConstants.INFINITY;
-
 
             while (move != 0) {
                 if (m_board.makeMove(move)) {
@@ -2387,11 +2393,15 @@ public final class RivalSearch implements Runnable {
                         move1 = depth1MovesTemp[++c1] & 0x00FFFFFF;
                     }
 
-                    if (ply0Draw) m_drawnPositionsAtRoot[0][m_drawnPositionsAtRootCount[0]++] = m_board.m_hashValue;
-                    if (ply1Draw) m_drawnPositionsAtRoot[1][m_drawnPositionsAtRootCount[1]++] = m_board.m_hashValue;
+                    if (ply0Draw) {
+                        drawnPositionsAtRoot.get(0).add(m_board.m_hashValue);
+                    }
+                    if (ply1Draw) {
+                        drawnPositionsAtRoot.get(1).add(m_board.m_hashValue);
+                    }
 
                     m_board.unMakeMove();
-                    m_currentDepthZeroValidMoves++;
+                    currentDepthZeroValidMoves++;
                 }
                 depthZeroMoveCount++;
 
@@ -2420,12 +2430,12 @@ public final class RivalSearch implements Runnable {
 
             scoreFullWidthMoves(m_board, 0);
 
-            this.m_movesToSearchAtAllDepths = m_currentDepthZeroValidMoves * this.m_finalDepthToSearch;
+            this.movesToSearchAtAllDepths = currentDepthZeroValidMoves * this.m_finalDepthToSearch;
 
             for (byte depth = 1; depth <= this.m_finalDepthToSearch && !this.m_abortingSearch; depth++) {
                 this.m_iterativeDeepeningCurrentDepth = depth;
 
-                if (depth > 1) m_isOkToSendInfo = true;
+                if (depth > 1) setOkToSendInfo(true);
 
                 if (RivalConstants.USE_ASPIRATION_WINDOW) {
                     path = searchZero(m_board, depth, 0, aspirationLow, aspirationHigh);
@@ -2532,7 +2542,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public int getNodes() {
-        return this.m_nodes;
+        return this.nodes;
     }
 
     public synchronized boolean isSearching() {
@@ -2562,8 +2572,8 @@ public final class RivalSearch implements Runnable {
             now = System.currentTimeMillis();
             duration = now - this.m_searchStartTime;
             if (this.m_millisecondsToThink == RivalConstants.MAX_SEARCH_MILLIS) {
-                if (m_totalMovesSearchedAtAllDepths > 0 && m_movesToSearchAtAllDepths > 0) {
-                    percent = ((double) m_totalMovesSearchedAtAllDepths / m_movesToSearchAtAllDepths) * 100.0;
+                if (totalMovesSearchedAtAllDepths > 0 && movesToSearchAtAllDepths > 0) {
+                    percent = ((double) totalMovesSearchedAtAllDepths / movesToSearchAtAllDepths) * 100.0;
                 }
             } else {
                 percent = ((double) duration / this.m_millisecondsToThink) * 100.0;
@@ -2594,14 +2604,14 @@ public final class RivalSearch implements Runnable {
         if (timePassed == 0) {
             return 0;
         } else {
-            return (int) (((double) this.m_nodes / (double) timePassed) * 1000.0);
+            return (int) (((double) this.getNodes() / (double) timePassed) * 1000.0);
         }
     }
 
-    public boolean isDrawnAtRoot(EngineChessBoard board, int ply) {
+    private boolean isDrawnAtRoot(EngineChessBoard board, int ply) {
         int i;
-        for (i = 0; i < m_drawnPositionsAtRootCount[ply]; i++) {
-            if (m_drawnPositionsAtRoot[ply][i] == board.m_hashValue) {
+        for (i = 0; i < getDrawnPositionsAtRootCount()[ply]; i++) {
+            if (drawnPositionsAtRoot.get(ply).get(i).equals(board.m_hashValue)) {
                 return true;
             }
         }
@@ -2706,7 +2716,7 @@ public final class RivalSearch implements Runnable {
             if (this.m_searchState == RivalConstants.SEARCHSTATE_SEARCHREQUESTED) {
                 go();
 
-                m_isOkToSendInfo = false;
+                setOkToSendInfo(false);
 
                 if (m_isUCIMode) {
                     String s1 =
@@ -2728,6 +2738,34 @@ public final class RivalSearch implements Runnable {
                 }
             }
         }
+    }
+
+    public boolean isOkToSendInfo() {
+        return isOkToSendInfo;
+    }
+
+    public void setOkToSendInfo(boolean okToSendInfo) {
+        this.isOkToSendInfo = okToSendInfo;
+    }
+
+    public void setNodes(int nodes) {
+        this.nodes = nodes;
+    }
+
+    public long getCurrentTimeMillis() {
+        return currentTimeMillis;
+    }
+
+    public void setCurrentTimeMillis(long currentTimeMillis) {
+        this.currentTimeMillis = currentTimeMillis;
+    }
+
+    public List<List<Long>> getDrawnPositionsAtRoot() {
+        return drawnPositionsAtRoot;
+    }
+
+    public int[] getDrawnPositionsAtRootCount() {
+        return drawnPositionsAtRootCount;
     }
 
 }

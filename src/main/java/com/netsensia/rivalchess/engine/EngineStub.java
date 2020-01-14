@@ -3,7 +3,6 @@ package com.netsensia.rivalchess.engine;
 import java.util.Vector;
 import java.util.Iterator;
 
-import com.netsensia.rivalchess.engine.core.Bitboards;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
@@ -163,7 +162,7 @@ public class EngineStub implements EngineServiceInterface
 		}
 		else
 		{
-			return this.m_rivalSearch.m_nodes;
+			return this.m_rivalSearch.getNodes();
 		}
 	}
 

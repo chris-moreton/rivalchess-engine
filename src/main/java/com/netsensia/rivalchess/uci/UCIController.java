@@ -15,6 +15,7 @@ import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.engine.test.epd.EPDRunner;
 import com.netsensia.rivalchess.exception.EvaluationFlipException;
+import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.board.BoardModel;
 import com.netsensia.rivalchess.model.board.FenChess;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -53,7 +54,7 @@ public class UCIController implements Runnable {
     @Override
     public void run() {
         printStream.println("Welcome to Rival Chess UCI");
-        
+
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String s;
 
@@ -250,16 +251,19 @@ public class UCIController implements Runnable {
 
         if (parts[0].equals("position")) {
             waitForSearchToComplete();
-            setStartPosition(s, fenChess, parts);
 
-            engineBoard.setBoard(boardModel);
-            rivalSearch.setBoard(engineBoard);
+            try {
+                setStartPosition(s, fenChess, parts);
 
-            playMovesFromPosition(parts);
-            if (RivalConstants.UCI_DEBUG) {
-                rivalSearch.m_board.printLegalMoves();
-                rivalSearch.m_board.printBoard();
+                engineBoard.setBoard(boardModel);
+                rivalSearch.setBoard(engineBoard);
+
+                playMovesFromPosition(parts);
+
+            } catch (IllegalFenException e) {
+                this.printStream.println("Illegal fen");
             }
+
         }
     }
 
@@ -278,7 +282,7 @@ public class UCIController implements Runnable {
         }
     }
 
-    private void setStartPosition(String s, FenChess fenChess, String[] parts) {
+    private void setStartPosition(String s, FenChess fenChess, String[] parts) throws IllegalFenException {
         if (parts[1].equals("startpos")) {
             fenChess.setFromStr(EngineChessBoard.START_POS);
         } else {
@@ -319,8 +323,12 @@ public class UCIController implements Runnable {
             Pattern p = Pattern.compile("epd \"(.*)\" (.*) (.*)");
             Matcher m = p.matcher(s);
             if (m.find()) {
-                EPDRunner epdRunner = new EPDRunner();
-                epdRunner.go(m.group(1), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
+                try {
+                    EPDRunner epdRunner = new EPDRunner();
+                    epdRunner.go(m.group(1), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
+                } catch (IllegalFenException e) {
+                    this.printStream.println("Illegal fen");
+                }
             }
         }
     }
@@ -334,7 +342,7 @@ public class UCIController implements Runnable {
         while (state != RivalConstants.SEARCHSTATE_READY && state != RivalConstants.SEARCHSTATE_SEARCHCOMPLETE);
     }
 
-    public static BoardModel getBoardModel(String fen) throws EvaluationFlipException {
+    public static BoardModel getBoardModel(String fen) throws EvaluationFlipException, IllegalFenException {
         BoardModel boardModel = new BoardModel();
         FenChess fenChess = new FenChess(boardModel);
         String invertedFen = invertFen(fen);

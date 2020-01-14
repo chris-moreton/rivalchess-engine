@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.engine.core.Bitboards;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.board.BoardModel;
 import com.netsensia.rivalchess.model.board.FenChess;
 
@@ -41,7 +42,7 @@ public class EPDRunner
 		nfi.setMaximumFractionDigits(0);
 	}
 	
-	public void doPosition(EPDPosition epdPosition)
+	public void doPosition(EPDPosition epdPosition) throws IllegalFenException
 	{
 		positions.add(epdPosition);
 		fenChess.setFromStr(epdPosition.fen);
@@ -97,7 +98,7 @@ public class EPDRunner
 		
 	}
 	
-	public void go(String filepath, int extraPlies, int maxMillis)
+	public void go(String filepath, int extraPlies, int maxMillis) throws IllegalFenException
 	{
 		this.maxMillis = maxMillis;
 		sessionStartTime = System.currentTimeMillis();
