@@ -1,6 +1,7 @@
-package com.netsensia.rivalchess.model;
+package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.model.Board;
 
 public class FenUtils {
 

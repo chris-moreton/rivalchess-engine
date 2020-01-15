@@ -16,7 +16,7 @@ import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.engine.test.epd.EPDRunner;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
-import com.netsensia.rivalchess.model.FenUtils;
+import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;

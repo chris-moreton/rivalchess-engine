@@ -11,7 +11,7 @@ import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
-import com.netsensia.rivalchess.model.FenUtils;
+import com.netsensia.rivalchess.util.FenUtils;
 
 public class EPDRunner 
 {

@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.model;
 
-public class Move implements Cloneable {
+public class Move {
     protected int srcXFile;
     protected int srcYRank;
 

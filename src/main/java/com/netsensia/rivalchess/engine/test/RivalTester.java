@@ -8,7 +8,7 @@
 //import java.util.Date;
 //
 //import com.netsensia.rivalchess.engine.EngineStub;
-//import com.netsensia.rivalchess.engine.core.Bitboards;
+//import com.netsensia.rivalchess.bitboards.Bitboards;
 //import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 //import com.netsensia.rivalchess.engine.core.RivalConstants;
 //import com.netsensia.rivalchess.engine.core.RivalSearch;

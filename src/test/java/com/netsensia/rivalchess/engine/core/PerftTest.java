@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.text.NumberFormat;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.model.FenUtils;
+import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
