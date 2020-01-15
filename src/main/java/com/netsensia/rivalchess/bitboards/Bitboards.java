@@ -360,7 +360,7 @@ public final class Bitboards {
     private static List<Integer> flipPieceSquareValues(List<Integer> list) {
         List<Integer> newList = new ArrayList<>();
         for (int j = 0; j < 64; j++) {
-            newList.set(j, list.get(Bitboards.bitFlippedHorizontalAxis[j]));
+            newList.add(list.get(Bitboards.bitFlippedHorizontalAxis[j]));
         }
         return Collections.unmodifiableList(newList);
     }
