@@ -14,10 +14,9 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.engine.test.epd.EPDRunner;
-import com.netsensia.rivalchess.exception.EvaluationFlipException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.board.FenUtils;
+import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -278,14 +277,14 @@ public class UCIController implements Runnable {
         }
     }
 
-    private BoardModel getBoardModel(String s, String[] parts) throws IllegalFenException {
-        BoardModel boardModel;
+    private Board getBoardModel(String s, String[] parts) throws IllegalFenException {
+        Board board;
         if (parts[1].equals("startpos")) {
-            boardModel = FenUtils.getBoardModel(EngineChessBoard.START_POS);
+            board = FenUtils.getBoardModel(EngineChessBoard.START_POS);
         } else {
-            boardModel = FenUtils.getBoardModel(s.substring(12).trim());
+            board = FenUtils.getBoardModel(s.substring(12).trim());
         }
-        return boardModel;
+        return board;
     }
 
     private void handleIfUciNewGameCommand(String[] parts) {

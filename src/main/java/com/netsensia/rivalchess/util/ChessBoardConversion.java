@@ -1,37 +1,36 @@
 package com.netsensia.rivalchess.util;
 
-import com.netsensia.rivalchess.engine.core.Bitboards;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
-import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.board.BoardRef;
-import com.netsensia.rivalchess.model.board.MoveRef;
+import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.Square;
+import com.netsensia.rivalchess.model.Move;
 
 public class ChessBoardConversion 
 {
 	private static EngineChessBoard engineChessBoard = new EngineChessBoard();
 	
-	public static BoardRef getBoardRefFromBitRef(int bitRef)
+	public static Square getBoardRefFromBitRef(int bitRef)
 	{
 		bitRef = 63 - bitRef;
 		int x = bitRef % 8;
 		int y = (int)Math.floor(bitRef / 8);
-		return new BoardRef(x,y);
+		return new Square(x,y);
 	}
 	
-	public static int getBitRefFromBoardRef(BoardRef boardRef)
+	public static int getBitRefFromBoardRef(Square boardRef)
 	{
 		return 63 - (8*boardRef.getYRank()) - boardRef.getXFile();
 	}
 
-	public static MoveRef getMoveRefFromEngineMove(int move) 
+	public static Move getMoveRefFromEngineMove(int move)
 	{
 		int from = (move >> 16) & 63;
 		int to = move & 63;
-		BoardRef boardRefFrom = ChessBoardConversion.getBoardRefFromBitRef(from);
-		BoardRef boardRefTo = ChessBoardConversion.getBoardRefFromBitRef(to);
+		Square boardRefFrom = ChessBoardConversion.getBoardRefFromBitRef(from);
+		Square boardRefTo = ChessBoardConversion.getBoardRefFromBitRef(to);
 
-		MoveRef moveRef = new MoveRef(boardRefFrom, boardRefTo);
+		Move moveRef = new Move(boardRefFrom, boardRefTo);
 
 		int promotionPieceCode = move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
 		switch (promotionPieceCode)
@@ -65,15 +64,15 @@ public class ChessBoardConversion
 		int from = (compactMove >> 16) & 63;
 		int to = compactMove & 63;
 		
-		MoveRef moveRef = getMoveRefFromEngineMove(compactMove);
-		char pp = moveRef.getPromotedPieceCode();
+		Move move = getMoveRefFromEngineMove(compactMove);
+		char pp = move.getPromotedPieceCode();
 		
 		return getSimpleAlgebraicFromBitRef(from) + getSimpleAlgebraicFromBitRef(to) + (pp == '#' || pp == ' ' ? "" : pp); 
 	}
 
 	public static String getSimpleAlgebraicFromBitRef(int bitRef)
 	{
-		BoardRef boardRef = ChessBoardConversion.getBoardRefFromBitRef(bitRef);
+		Square boardRef = ChessBoardConversion.getBoardRefFromBitRef(bitRef);
 		
 		char a = (char)(boardRef.getXFile() + 97);
 		
@@ -85,14 +84,14 @@ public class ChessBoardConversion
 		return (move[0] << 16) | move[1]; 
 	}
 	
-	public static int getCompactMoveFromMoveRef(MoveRef moveRef)
+	public static int getCompactMoveFromMoveRef(Move move)
 	{
-		BoardRef source = moveRef.getSrcBoardRef();
-		BoardRef target = moveRef.getTgtBoardRef();
+		Square source = move.getSrcBoardRef();
+		Square target = move.getTgtBoardRef();
 		
 		int compactMove = (getBitRefFromBoardRef(source) << 16) | getBitRefFromBoardRef(target);
 		
-		switch (moveRef.getPromotedPieceCode())
+		switch (move.getPromotedPieceCode())
 		{
 			case 'Q' : case 'q' : compactMove |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN; break;
 			case 'B' : case 'b' : compactMove |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP; break;
@@ -103,10 +102,10 @@ public class ChessBoardConversion
 		return compactMove;
 	}
 
-	public static String getPGNMoveFromMoveRef(MoveRef moveRef, BoardModel boardModel)
+	public static String getPGNMoveFromMoveRef(Move move, Board board)
 	{
-		engineChessBoard.setBoard(boardModel);
-		return getPGNMoveFromCompactMove(getCompactMoveFromMoveRef(moveRef), engineChessBoard);
+		engineChessBoard.setBoard(board);
+		return getPGNMoveFromCompactMove(getCompactMoveFromMoveRef(move), engineChessBoard);
 	}
 	
 	public static String getPGNMoveFromCompactMove(int move, EngineChessBoard board)
@@ -194,8 +193,8 @@ public class ChessBoardConversion
 		int toX = s.toUpperCase().charAt(2) - 65;
 		int toY = 7 - (s.toUpperCase().charAt(3) - 49);
 		
-		int fromBitRef = getBitRefFromBoardRef(new BoardRef(fromX, fromY));
-		int toBitRef = getBitRefFromBoardRef(new BoardRef(toX, toY));
+		int fromBitRef = getBitRefFromBoardRef(new Square(fromX, fromY));
+		int toBitRef = getBitRefFromBoardRef(new Square(toX, toY));
 		
 		int l = s.length();
 		char promotionPiece;

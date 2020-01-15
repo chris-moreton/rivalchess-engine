@@ -4,9 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.text.NumberFormat;
 
-import com.netsensia.rivalchess.exception.EvaluationFlipException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.model.board.FenUtils;
+import com.netsensia.rivalchess.model.FenUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -49,6 +49,7 @@ public class PerftTest {
     }
 
     @Test
+    @Ignore
     public void testPerftScoreLong() throws IllegalFenException {
 
         assertPerftScore("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", 6, 38633283);

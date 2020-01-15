@@ -1,4 +1,4 @@
-package com.netsensia.rivalchess.model.board;
+package com.netsensia.rivalchess.model;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
 
@@ -6,9 +6,9 @@ public class FenUtils {
 
     private FenUtils() {}
 
-    public static BoardModel getBoardModel(String fenStr) throws IllegalFenException {
+    public static Board getBoardModel(String fenStr) throws IllegalFenException {
 
-        final BoardModel board = new BoardModel();
+        final Board board = new Board();
         
         if (fenStr.trim().equals("")) {
             throw new IllegalFenException("Empty FEN");
@@ -70,7 +70,7 @@ public class FenUtils {
         return board;
     }
 
-    private static int setPiece(BoardModel board, int boardArrayIndex, char fenToken) {
+    private static int setPiece(Board board, int boardArrayIndex, char fenToken) {
         final int targetXFile = boardArrayIndex % board.getNumXFiles();
         final int targetYRank = boardArrayIndex / board.getNumXFiles();
 
@@ -79,9 +79,9 @@ public class FenUtils {
         return boardArrayIndex;
     }
 
-    private static int padBoardWithSpaces(BoardModel board, int boardArrayIndex, char fenToken) {
+    private static int padBoardWithSpaces(Board board, int boardArrayIndex, char fenToken) {
         for (int n = 1; n <= Character.digit(fenToken, 10); n++) {
-            boardArrayIndex = setPiece(board, boardArrayIndex, BoardModel.VACANT_TILE);
+            boardArrayIndex = setPiece(board, boardArrayIndex, Board.VACANT_TILE);
         }
         return boardArrayIndex;
     }

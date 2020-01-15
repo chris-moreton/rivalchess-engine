@@ -15,8 +15,8 @@
 //import com.netsensia.rivalchess.engine.test.epd.EPDRunner;
 //import com.netsensia.rivalchess.exception.EvaluationFlipException;
 //import com.netsensia.rivalchess.exception.IllegalFenException;
-//import com.netsensia.rivalchess.model.board.BoardModel;
-//import com.netsensia.rivalchess.model.board.BoardRef;
+//import com.netsensia.rivalchess.model.BoardModel;
+//import com.netsensia.rivalchess.model.BoardRef;
 //import com.netsensia.rivalchess.model.board.FenChess;
 //import com.netsensia.rivalchess.uci.UCIController;
 //import com.netsensia.rivalchess.util.ChessBoardConversion;

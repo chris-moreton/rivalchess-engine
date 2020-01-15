@@ -10,8 +10,8 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.board.FenUtils;
+import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.FenUtils;
 
 public class EPDRunner 
 {
@@ -27,14 +27,14 @@ public class EPDRunner
 	NumberFormat nfi = NumberFormat.getInstance();
 	EngineChessBoard engineChessBoard;
 	RivalSearch rivalSearch;
-	BoardModel boardModel;
+	Board board;
 	public int maxMillis;
 	
 	public EPDRunner()
 	{
 		engineChessBoard = new EngineChessBoard();
 		rivalSearch = new RivalSearch(System.out);
-		boardModel = new BoardModel();
+		board = new Board();
 		nf.setMaximumFractionDigits(2);
 		nfi.setMaximumFractionDigits(0);
 	}

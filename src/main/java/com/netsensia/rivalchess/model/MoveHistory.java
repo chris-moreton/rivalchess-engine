@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.model;
 
 import java.util.Vector;
 
-public class MoveHistoryContainer extends Vector<MoveHistoryItem> implements Cloneable {
+public class MoveHistory extends Vector<MoveHistoryItem> implements Cloneable {
     static final long serialVersionUID = 1;
 
     synchronized public MoveHistoryItem[] GetArray() {
@@ -45,12 +45,12 @@ public class MoveHistoryContainer extends Vector<MoveHistoryItem> implements Clo
         this.clear();
     }
 
-    synchronized public MoveHistoryContainer clone() {
-        MoveHistoryContainer newMoveHistoryContainer;
+    synchronized public MoveHistory clone() {
+        MoveHistory newMoveHistory;
 
-        newMoveHistoryContainer = (MoveHistoryContainer) super.clone();
+        newMoveHistory = (MoveHistory) super.clone();
 
-        return newMoveHistoryContainer;
+        return newMoveHistory;
     }
 
     synchronized public MoveHistoryItem GetTopMoveHistoryItem() {

@@ -1,8 +1,8 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.board.FenUtils;
+import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.junit.Test;
 
@@ -17,7 +17,7 @@ public class EngineChessBoardTest {
     public void canRecognisePreviousPositions() throws IllegalFenException {
         final EngineChessBoard board = new EngineChessBoard();
         final List<String> moves = new ArrayList<>();
-        final BoardModel boardModel = new BoardModel();
+        final Board boardModel = new Board();
 
         moves.add("e2e4");
         moves.add("e7e5");

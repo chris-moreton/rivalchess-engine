@@ -7,18 +7,18 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.engine.core.SearchPath;
-import com.netsensia.rivalchess.model.MoveHistoryContainer;
+import com.netsensia.rivalchess.model.MoveHistory;
 import com.netsensia.rivalchess.model.MoveHistoryItem;
-import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.board.BoardRef;
-import com.netsensia.rivalchess.model.board.MoveRef;
+import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.Square;
+import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class EngineStub implements EngineServiceInterface
 {
 	public RivalSearch m_rivalSearch = null;
 	protected EngineChessBoard m_engineBoard = null;
-	protected MoveRef m_currentEngineMoveRef = null;
+	protected Move m_currentEngineMove = null;
 	protected int m_searchType = RivalConstants.SEARCH_TYPE_TIME;
 	private int m_engineDifficulty = 4000;
 	private int m_nodesToSearchPerLevel = 20000;
@@ -67,29 +67,29 @@ public class EngineStub implements EngineServiceInterface
 		return numMoves;
 	}
 
-	synchronized public int numLegalMoves(BoardModel board)
+	synchronized public int numLegalMoves(Board board)
 	{
 		m_engineBoard.setBoard(board);
 		return numLegalMoves(m_engineBoard);
 
 	}
 	
-	synchronized public boolean isMoveAvailable(BoardModel boardModel)
+	synchronized public boolean isMoveAvailable(Board board)
 	{
-		return this.numLegalMoves( boardModel ) > 0;
+		return this.numLegalMoves(board) > 0;
 	}
 	
 	@Override
-	synchronized public BoardRef[] getLegalMoves(BoardModel board, BoardRef boardRef)
+	synchronized public Square[] getLegalMoves(Board board, Square boardRef)
 	{
 		m_engineBoard.setBoard(board);
 		
 		m_engineBoard.setLegalMoves(legalMoves);
 		
-		Vector<BoardRef> boardRefVector = new Vector<BoardRef>();
+		Vector<Square> boardRefVector = new Vector<Square>();
 		
 		int moveNum = 0;
-		BoardRef boardRefFrom;
+		Square boardRefFrom;
 		while (legalMoves[moveNum] != 0)
 		{
 			boardRefFrom = ChessBoardConversion.getBoardRefFromBitRef((legalMoves[moveNum] >>> 16) & 63);
@@ -105,8 +105,8 @@ public class EngineStub implements EngineServiceInterface
 			moveNum ++;
 		}
 		
-		BoardRef boardRefArray[] = new BoardRef[boardRefVector.size()];
-		Iterator<BoardRef> i = boardRefVector.iterator();
+		Square boardRefArray[] = new Square[boardRefVector.size()];
+		Iterator<Square> i = boardRefVector.iterator();
 		moveNum = 0;
 		while (i.hasNext())
 		{
@@ -129,7 +129,7 @@ public class EngineStub implements EngineServiceInterface
 		return !this.m_rivalSearch.isSearching();
 	}	
 	
-	synchronized public void startEngine( BoardModel board, MoveHistoryContainer moveHistory )
+	synchronized public void startEngine(Board board, MoveHistory moveHistory )
 	{
 		this.getEngineMove( board, moveHistory, this.m_engineDifficulty );
 	}
@@ -139,7 +139,7 @@ public class EngineStub implements EngineServiceInterface
 		return this.m_rivalSearch.m_currentPath;
 	}
 	
-	synchronized public boolean isSquareAttacked( BoardModel board, BoardRef boardRef, boolean isWhiteAttacking )
+	synchronized public boolean isSquareAttacked(Board board, Square boardRef, boolean isWhiteAttacking )
 	{
 		m_engineBoard.setBoard(board);
 		
@@ -149,7 +149,7 @@ public class EngineStub implements EngineServiceInterface
 	}
 	
 	@Override
-	synchronized public MoveRef getCurrentEngineMove()
+	synchronized public Move getCurrentEngineMove()
 	{
 		return ChessBoardConversion.getMoveRefFromEngineMove(this.m_rivalSearch.getCurrentMove());
 	}
@@ -236,12 +236,12 @@ public class EngineStub implements EngineServiceInterface
 		this.m_hashSizeMB = size;
 	}
 	
-	synchronized private void getEngineMove( BoardModel board, MoveHistoryContainer moveHistoryContainer, int difficulty )
+	synchronized private void getEngineMove(Board board, MoveHistory moveHistory, int difficulty )
 	{
 		m_engineBoard.setBoard(board);
-		if (moveHistoryContainer != null)
+		if (moveHistory != null)
 		{
-			MoveHistoryItem[] moveArray = moveHistoryContainer.GetArray();
+			MoveHistoryItem[] moveArray = moveHistory.GetArray();
 			for (int i=0; i<moveArray.length; i++)
 			{
 				String algebraicMove = moveArray[i].getAlgebraicMove().replaceAll("-", "");
@@ -261,14 +261,14 @@ public class EngineStub implements EngineServiceInterface
 	}
 	
 	synchronized public String calcGameState( 
-		BoardModel board,
-		MoveHistoryContainer moveHistoryContainer
+		Board board,
+		MoveHistory moveHistory
 	)
 	{
 		m_engineBoard.setBoard(board);
 		String gameStateString = "GAMESTATE_NOTINCHECK"; 
 		
-		MoveHistoryItem[] moveArray = moveHistoryContainer.GetArray();
+		MoveHistoryItem[] moveArray = moveHistory.GetArray();
 		for (int i=0; i<moveArray.length; i++)
 		{
 			String algebraicMove = moveArray[i].getAlgebraicMove().replaceAll("-", "");

@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
-import com.netsensia.rivalchess.model.board.BoardModel;
+import com.netsensia.rivalchess.model.Board;
 
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
@@ -70,7 +70,7 @@ public final class EngineChessBoard {
         initArrays();
     }
 
-    public void setBoard(BoardModel board) {
+    public void setBoard(Board board) {
         this.m_movesMade = 0;
         this.m_halfMoveCount = board.getHalfMoveCount();
         setBitboards(board);
@@ -540,7 +540,7 @@ public final class EngineChessBoard {
         return GAMESTATE_INPLAY;
     }
 
-    public void setBitboards(BoardModel board) {
+    public void setBitboards(Board board) {
         byte bitNum;
         long bitSet;
         int pieceIndex = -1;

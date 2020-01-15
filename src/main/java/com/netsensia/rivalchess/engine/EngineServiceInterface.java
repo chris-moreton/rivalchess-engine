@@ -1,17 +1,17 @@
 package com.netsensia.rivalchess.engine;
 
 import com.netsensia.rivalchess.engine.core.SearchPath;
-import com.netsensia.rivalchess.model.board.BoardModel;
-import com.netsensia.rivalchess.model.MoveHistoryContainer;
-import com.netsensia.rivalchess.model.board.BoardRef;
-import com.netsensia.rivalchess.model.board.MoveRef;
+import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.MoveHistory;
+import com.netsensia.rivalchess.model.Square;
+import com.netsensia.rivalchess.model.Move;
 
 public interface EngineServiceInterface
 {
-	public void startEngine( BoardModel board, MoveHistoryContainer moveHistory );
-	public MoveRef getCurrentEngineMove();
+	public void startEngine(Board board, MoveHistory moveHistory );
+	public Move getCurrentEngineMove();
 	public boolean isSearchComplete();
-	public BoardRef[] getLegalMoves( BoardModel board, BoardRef boardRef );
+	public Square[] getLegalMoves(Board board, Square boardRef );
 			
 	public void setEngineDifficulty(int engineDifficulty );
 	public int getGetEngineDifficulty( );
