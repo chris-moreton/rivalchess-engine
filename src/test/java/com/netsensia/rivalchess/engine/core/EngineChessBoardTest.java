@@ -30,29 +30,11 @@ public class EngineChessBoardTest {
 
         assertTrue(board.previousOccurrencesOfThisPosition() == 0);
 
-        moves.add("b1c3");
-        moves.add("b8c6");
-        moves.add("c3b1");
-        moves.add("c6b8");
-
-        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
-
-        for (String move : moves) {
-            board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
-        }
+        moveKnightsBackAndForth(board, moves);
 
         assertTrue(board.previousOccurrencesOfThisPosition() == 1);
 
-        moves.add("b1c3");
-        moves.add("b8c6");
-        moves.add("c3b1");
-        moves.add("c6b8");
-
-        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
-
-        for (String move : moves) {
-            board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
-        }
+        moveKnightsBackAndForth(board, moves);
 
         assertTrue(board.previousOccurrencesOfThisPosition() == 2);
 
@@ -78,5 +60,18 @@ public class EngineChessBoardTest {
 
         assertTrue(board.previousOccurrencesOfThisPosition() == 3);
 
+    }
+
+    private void moveKnightsBackAndForth(EngineChessBoard board, List<String> moves) throws IllegalFenException {
+        moves.add("b1c3");
+        moves.add("b8c6");
+        moves.add("c3b1");
+        moves.add("c6b8");
+
+        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+
+        for (String move : moves) {
+            board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
+        }
     }
 }
