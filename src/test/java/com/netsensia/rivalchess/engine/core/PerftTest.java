@@ -44,7 +44,7 @@ public class PerftTest {
     public void testPerftScoreShort() throws IllegalFenException {
         assertPerftScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", 4, 20541);
         assertPerftScore("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 5, 4865609);
-        assertPerftScore("8/3K4/2p5/p2b2r1/5k2/8/8/1q6 b - 1 67", 2, 279);
+        assertPerftScore("8/3K4/2p5/p2b2r1/5k2/8/8/1q6 b - - 1 67", 2, 279);
         assertPerftScore("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", 4, 182838);
     }
 

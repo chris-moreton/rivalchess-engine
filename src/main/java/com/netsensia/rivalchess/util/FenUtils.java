@@ -87,7 +87,7 @@ public class FenUtils {
         return boardArrayIndex;
     }
 
-    public static String invertFen(String fen) {
+    public static String invertFen(String fen) throws IllegalFenException {
         fen = fen.trim();
 
         fen = fen.replace(" b ", " . ");
@@ -143,7 +143,15 @@ public class FenUtils {
         return newFenBuilder.toString();
     }
 
-    private static String invertSquare(String square) {
+    private static String invertSquare(final String square) throws IllegalFenException {
+        if (square.equals("-")) {
+            return square;
+        }
+
+        if (square.length() != 2) {
+            throw new IllegalFenException("Invalid square reference " + square);
+        }
+
         char file = square.charAt(0);
         char rank = square.charAt(1);
 
