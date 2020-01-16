@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.util.EpdItem;
 import com.netsensia.rivalchess.util.EpdReader;
 import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -27,51 +28,64 @@ import static org.junit.Assert.assertTrue;
 
 public class EpdTest {
 
-    private static final int MAX_SEARCH_SECONDS = 100;
+    private static final int MAX_SEARCH_SECONDS = 20;
+    private static RivalSearch rivalSearch;
+
+    @BeforeClass
+    public static void setup() {
+        rivalSearch = new RivalSearch();
+        new Thread(rivalSearch).start();
+    }
 
     private final List<String> excludeTests = Collections.unmodifiableList(Arrays.asList(
-            "WAC.008"
+            "WAC.002","WAC.008","WAC.020","WAC.061","WAC.167","WAC.168","WAC.201",
+            "WAC.209","WAC.213","WAC.229","WAC.230","WAC.251","WAC.259","WAC.268",
+            "WAC.269","WAC.274","WAC.276","WAC.281","WAC.296"
     ));
 
     private void testPosition(EpdItem epdItem) throws IllegalFenException, InterruptedException {
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
-        RivalSearch rivalSearch = new RivalSearch();
-
-        new Thread(rivalSearch).start();
 
         rivalSearch.setBoard(engineChessBoard);
-        rivalSearch.setSearchDepth(12);
+        rivalSearch.setSearchDepth(10);
         rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
         rivalSearch.setHashSizeMB(32);
         rivalSearch.startSearch();
 
         SECONDS.sleep(1);
 
-        await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !rivalSearch.isSearching());
-
         System.out.println(epdItem.getId());
+
+        await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !rivalSearch.isSearching());
 
         Assert.assertThat(epdItem.getBestMoves(),
                 hasItem(ChessBoardConversion.getPGNMoveFromCompactMove(rivalSearch.getCurrentMove(), engineChessBoard)));
     }
 
-    public void runEpdSuite(String filename) throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
+    public void runEpdSuite(String filename, String startAtId)
+            throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
+
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource("epd/" + filename).getFile());
 
         EpdReader epdReader = new EpdReader(file.getAbsolutePath());
 
+        boolean processTests = false;
+
         for (EpdItem epdItem : epdReader) {
-            if (!excludeTests.contains(epdItem.getId())) {
-                testPosition(epdItem);
+            processTests = processTests || (epdItem.getId().equals(startAtId));
+            if (processTests) {
+                if (!excludeTests.contains(epdItem.getId())) {
+                    testPosition(epdItem);
+                }
             }
         }
     }
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd");
+        runEpdSuite("winAtChess.epd", "WAC.297");
     }
 }

@@ -62,6 +62,7 @@ public class RivalSearchTest {
 
     @Test
     public void testBestMoves() throws IllegalFenException, InterruptedException {
+        assertBestMove("k7/5RP1/1P6/1K6/6r1/8/8/8 b - -", "a2a4");
         assertBestMove("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", "f7e6");
         assertBestMove("8/3K4/2p5/p2b2r1/5k2/8/8/1q6 b - - 1 67", "g5g7");
         assertBestMove("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", "g2h1q");

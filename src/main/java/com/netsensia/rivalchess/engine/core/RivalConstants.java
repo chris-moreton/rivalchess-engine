@@ -51,15 +51,13 @@ public final class RivalConstants
 	public static final int VALUE_BISHOP = 390;
 	public static final int VALUE_ROOK = 595;
 	public static final int VALUE_QUEEN = 1175;
-	public static final int VALUE_KING = 30000; // this gets used sometimes, for example in static exchange evaluation
+	public static final int VALUE_KING = 30000;
 	
 	public static final List<Integer> PIECE_VALUES = Collections.unmodifiableList(Arrays.asList(
 		VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK,
 		VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK
 	));
 
-	public static final int PIECE_VALUES_MINI[] = {1,3,3,5,0,9};
-	
 	public static final int TOTAL_PIECE_VALUE_PER_SIDE_AT_START = (VALUE_KNIGHT * 2) + (VALUE_BISHOP * 2) + (VALUE_ROOK * 2) + (VALUE_QUEEN);
 
 	public static final int OPENING_PHASE_MATERIAL = (int)(TOTAL_PIECE_VALUE_PER_SIDE_AT_START * 0.8);
@@ -69,9 +67,6 @@ public final class RivalConstants
 	public static final int WRONG_COLOUR_BISHOP_PENALTY_DIVISOR = 2;
 	public static final int WRONG_COLOUR_BISHOP_MATERIAL_LOW = VALUE_BISHOP * 2;
 	public static final int WRONG_COLOUR_BISHOP_MATERIAL_HIGH = VALUE_QUEEN * 2 + VALUE_ROOK * 2 + VALUE_BISHOP * 2;
-
-	public static final int KING_STAGE_MATERIAL_LOW = VALUE_ROOK;
-	public static final int KING_STAGE_MATERIAL_HIGH = VALUE_QUEEN + (2 * VALUE_ROOK) + (2 * VALUE_BISHOP);
 	
 	public static final int KNIGHT_STAGE_MATERIAL_LOW = VALUE_KNIGHT + (8 * VALUE_PAWN);
 	public static final int KNIGHT_STAGE_MATERIAL_HIGH = VALUE_QUEEN + (2 * VALUE_ROOK) + (2 * VALUE_BISHOP) + (6 * VALUE_PAWN);
@@ -121,7 +116,6 @@ public final class RivalConstants
 	public static final int VALUE_KING_CANNOT_CATCH_PAWN = 500;
 	public static final int PAWN_ADJUST_MAX_MATERIAL = VALUE_QUEEN + VALUE_ROOK; // passed pawn bonus starts increasing once enemy material falls below this
 	public static final int VALUE_ISOLATED_DPAWN_PENALTY = 30;
-	public static final int VALUE_CONNECTED_PASSED_PAWN = 0;
 
 	public static final int KINGSAFETY_RIGHTWAY_DIVISOR = 4;
 

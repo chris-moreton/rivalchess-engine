@@ -656,10 +656,6 @@ public final class EngineChessBoard {
         this.m_pieceBitboards[RivalConstants.ALL] = m_pieceBitboards[RivalConstants.FRIENDLY] | m_pieceBitboards[RivalConstants.ENEMY];
     }
 
-    public void resetBackups() {
-        this.m_movesMade = 0;
-    }
-
     public boolean isOnNullMove() {
         return this.m_isOnNullMove;
     }
@@ -708,6 +704,7 @@ public final class EngineChessBoard {
 
         this.m_moveList[this.m_movesMade].movePiece = (byte) movePiece;
         this.m_pieceBitboards[movePiece] ^= fromMask | toMask;
+
         this.squareContents[moveFrom] = -1;
         this.squareContents[moveTo] = (byte) movePiece;
 
