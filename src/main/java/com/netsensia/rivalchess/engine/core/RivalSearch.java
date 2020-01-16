@@ -2520,10 +2520,6 @@ public final class RivalSearch implements Runnable {
         }
     }
 
-    public int getNodesToSearch() {
-        return m_nodesToSearch;
-    }
-
     public void setNodesToSearch(int nodesToSearch) {
         this.m_nodesToSearch = nodesToSearch;
     }
@@ -2537,10 +2533,6 @@ public final class RivalSearch implements Runnable {
             }
         }
         this.m_finalDepthToSearch = searchDepth;
-    }
-
-    public int getSearchDepth() {
-        return this.m_finalDepthToSearch;
     }
 
     public int getNodes() {
@@ -2672,33 +2664,6 @@ public final class RivalSearch implements Runnable {
         this.m_previousFinalDepthToSearch = this.m_finalDepthToSearch;
     }
 
-    public synchronized long getSearchEndTime() {
-        return this.m_searchEndTime;
-    }
-
-    public void setDebug(boolean isDebug) {
-        this.m_isDebug = isDebug;
-    }
-
-    public void printHashPopulationStats() {
-        NumberFormat nf = NumberFormat.getInstance();
-        int alwaysCount = 0;
-        int heightCount = 0;
-        for (int i = 0; i < m_maxHashEntries; i++) {
-            if (hashTableAlways[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_FLAG] != RivalConstants.EMPTY) {
-                alwaysCount++;
-            }
-            if (hashTableHeight[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_FLAG] != RivalConstants.EMPTY) {
-                heightCount++;
-            }
-        }
-        printStream.println("Height replace retrieved " + nf.format(m_heightHashValuesRetrieved) + " / " + nf.format(m_heightHashValuesStored));
-        printStream.println("Always replace retrieved " + nf.format(m_alwaysHashValuesRetrieved) + " / " + nf.format(m_alwaysHashValuesStored));
-
-        printStream.println("Height replace hash table population " + nf.format(heightCount) + " / " + nf.format(m_maxHashEntries) + " with " + nf.format(m_heightHashClashes) + " clashes and " + nf.format(m_heightBadClashes) + " bad clashes");
-        printStream.println("Always replace hash table population " + nf.format(alwaysCount) + " / " + nf.format(m_maxHashEntries) + " with " + nf.format(m_alwaysHashClashes) + " clashes and " + nf.format(m_alwaysBadClashes) + " bad clashes");
-    }
-
     public void setUseOpeningBook(boolean useBook) {
         this.m_useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK && useBook;
         this.m_inBook = this.m_useOpeningBook;
@@ -2706,10 +2671,6 @@ public final class RivalSearch implements Runnable {
 
     public boolean isAbortingSearch() {
         return this.m_abortingSearch;
-    }
-
-    public void setLogWriter(PrintWriter out) {
-        this.m_out = out;
     }
 
     public void run() {

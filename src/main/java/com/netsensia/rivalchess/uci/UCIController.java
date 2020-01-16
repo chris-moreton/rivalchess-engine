@@ -55,9 +55,6 @@ public class UCIController implements Runnable {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String s;
 
-        Date todaysDate = new java.util.Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("MMMdd-HH-mm-ss-S");
-        String formattedDate = formatter.format(todaysDate);
         rivalSearch.setUseOpeningBook(false);
 
         try {

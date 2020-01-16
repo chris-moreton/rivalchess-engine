@@ -255,7 +255,6 @@ public final class EngineChessBoard {
         List<Long> bitboardMaskForwardPawnMoves;
         List<Long> bitboardMaskCapturePawnMoves;
         long bitboardPawnMoves;
-        long bitboardJumpMoves;
 
         this.m_numLegalMoves = 0;
         this.m_legalMoves[this.m_numLegalMoves] = 0;
@@ -503,45 +502,6 @@ public final class EngineChessBoard {
     public void setLegalMoves(int[] moveArray) {
         this.m_legalMoves = moveArray;
         generateLegalMoves();
-    }
-
-    public int materialBalance() {
-        if (this.m_isWhiteToMove) {
-            return whitePieceValues + whitePawnValues - blackPieceValues - blackPawnValues;
-        } else {
-            return blackPieceValues + blackPawnValues - whitePieceValues - whitePawnValues;
-        }
-    }
-
-    public int getGameState() {
-        int[] legalMoves = new int[RivalConstants.MAX_LEGAL_MOVES];
-        this.m_legalMoves = legalMoves;
-
-        generateLegalMoves();
-
-        if (this.m_numLegalMoves == 0) {
-            if (this.isCheck()) {
-                return GAMESTATE_CHECKMATE;
-            } else {
-                return GAMESTATE_STALEMATE;
-            }
-        }
-
-        if (this.previousOccurrencesOfThisPosition() == 2) {
-            return GAMESTATE_THREEFOLD_DRAW;
-        }
-
-        if (this.m_halfMoveCount == 100) {
-            return GAMESTATE_FIFTYMOVE_DRAW;
-        }
-
-        if (this.m_movesMade >= RivalConstants.MAX_GAME_MOVES) {
-            return GAMESTATE_GAMETOOLONG_DRAW;
-        }
-
-        System.out.println("Num backups = " + m_movesMade);
-
-        return GAMESTATE_INPLAY;
     }
 
     public void setBitboards(Board board) {
