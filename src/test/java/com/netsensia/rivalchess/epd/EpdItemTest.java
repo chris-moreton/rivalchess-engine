@@ -27,7 +27,7 @@ public class EpdItemTest {
         EpdItem epdItem = new EpdItem(epdString);
 
         assertEquals(3, epdItem.getBestMoves().size());
-        assertEquals("Bf8", epdItem.getBestMoves().get(0));
+        assertEquals("Bf89", epdItem.getBestMoves().get(0));
         assertEquals("Nf5", epdItem.getBestMoves().get(1));
         assertEquals("Qf4", epdItem.getBestMoves().get(2));
         assertEquals("3r3k/1r3p1p/p1pB1p2/8/p1qNP1Q1/P6P/1P4P1/3R3K w - -", epdItem.getFen());
