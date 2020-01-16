@@ -1007,8 +1007,8 @@ public final class EngineChessBoard {
 
         final int fromSquare = (this.m_moveList[this.m_movesMade].move >>> 16) & 63;
         final int toSquare = this.m_moveList[this.m_movesMade].move & 63;
-        final int flippedFromSquare = Bitboards.bitFlippedHorizontalAxis[fromSquare];
-        final int flippedToSquare = Bitboards.bitFlippedHorizontalAxis[toSquare];
+        final int flippedFromSquare = Bitboards.bitFlippedHorizontalAxis.get(fromSquare);
+        final int flippedToSquare = Bitboards.bitFlippedHorizontalAxis.get(toSquare);
         final long fromMask = (1L << fromSquare);
         final long toMask = (1L << toSquare);
 
@@ -1027,8 +1027,8 @@ public final class EngineChessBoard {
                     if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
                         this.pieceSquareValues[RivalConstants.WP] += Bitboards.pieceSquareTablePawn.get(fromSquare) - Bitboards.pieceSquareTablePawn.get(toSquare);
                         this.pieceSquareValuesEndGame[RivalConstants.WP] += Bitboards.pieceSquareTablePawnEndGame.get(fromSquare) - Bitboards.pieceSquareTablePawnEndGame.get(toSquare);
-                        this.pieceSquareValues[RivalConstants.BP] += Bitboards.pieceSquareTablePawn.get(Bitboards.bitFlippedHorizontalAxis[toSquare - 8]);
-                        this.pieceSquareValuesEndGame[RivalConstants.BP] += Bitboards.pieceSquareTablePawnEndGame.get(Bitboards.bitFlippedHorizontalAxis[toSquare - 8]);
+                        this.pieceSquareValues[RivalConstants.BP] += Bitboards.pieceSquareTablePawn.get(Bitboards.bitFlippedHorizontalAxis.get(toSquare - 8));
+                        this.pieceSquareValuesEndGame[RivalConstants.BP] += Bitboards.pieceSquareTablePawnEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(toSquare - 8));
                     }
                     break;
                 } else if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.BP) {

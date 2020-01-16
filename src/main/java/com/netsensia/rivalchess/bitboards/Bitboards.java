@@ -8,14 +8,6 @@ import java.util.List;
 public final class Bitboards {
     public static final MagicBitboards magicBitboards = new MagicBitboards();
 
-    public static final long KING_9 = // G2
-            1L << 18 | 1L << 17 | 1L << 16 |
-                    1L << 10 | 1L << 8 |
-                    1L << 2 | 1L << 1 | 1L;
-
-    public static final long KNIGHT_18 = // F3
-            1L << 35 | 1L << 33 | 1L << 28 | 1L << 24 | 1L << 12 | 1L << 8 | 1L << 3 | 1L << 1;
-
     public static final long RANK_8 = 0xFF00000000000000L;
     public static final long RANK_7 = 0x00FF000000000000L;
     public static final long RANK_6 = 0x0000FF0000000000L;
@@ -54,8 +46,6 @@ public final class Bitboards {
     public static final int G6 = 41;
     public static final int H2 = 8;
     public static final int H7 = 48;
-
-    public static final long FIRST_TWO_RANKS = 0xFFFF;
 
     public static final long MIDDLE_FILES_8_BIT = 0xE7;
     public static final long NONMID_FILES_8_BIT = 0x18;
@@ -315,16 +305,17 @@ public final class Bitboards {
                     0, 8, 16, 24, 24, 16, 8, 0
     ));
 
-    public static final int[] bitFlippedHorizontalAxis = {56, 57, 58, 59, 60, 61, 62, 63, 48, 49, 50, 51, 52, 53, 54, 55, 40, 41, 42, 43, 44, 45, 46, 47, 32, 33, 34, 35, 36, 37, 38, 39, 24, 25, 26, 27, 28, 29, 30, 31, 16, 17, 18, 19, 20, 21, 22, 23, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7};
-    public static final int[] bitFlippedVerticalAxis = {7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 23, 22, 21, 20, 19, 18, 17, 16, 31, 30, 29, 28, 27, 26, 25, 24, 39, 38, 37, 36, 35, 34, 33, 32, 47, 46, 45, 44, 43, 42, 41, 40, 55, 54, 53, 52, 51, 50, 49, 48, 63, 62, 61, 60, 59, 58, 57, 56};
+    public static final List<Integer> bitFlippedHorizontalAxis = Collections.unmodifiableList(Arrays.asList(
+            56, 57, 58, 59, 60, 61, 62, 63, 48, 49, 50, 51, 52, 53, 54, 55, 40, 41, 42, 43, 44, 45, 46, 47, 32, 33, 34, 35, 36, 37, 38, 39, 24, 25, 26, 27, 28, 29, 30, 31, 16, 17, 18, 19, 20, 21, 22, 23, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7
+    ));
 
-    public static int[][] tropism;
-    public static int[][] distance;
-    public static boolean[][] directOpposition;
-
-    public static final int[] xIncrements = {-1, -1, 0, 1, 1, 1, 0, -1};
-    public static final int[] yIncrements = {0, -1, -1, -1, 0, 1, 1, 1};
-    public static final int[] bitRefIncrements = {-1, -9, -8, -7, 1, 9, 8, 7};
+    public static final List<Integer> bitFlippedVerticalAxis = Collections.unmodifiableList(Arrays.asList(
+            7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 23, 22, 21, 20, 19, 18, 17, 16, 31, 30, 29, 28, 27, 26, 25, 24, 39, 38, 37, 36, 35, 34, 33, 32, 47, 46, 45, 44, 43, 42, 41, 40, 55, 54, 53, 52, 51, 50, 49, 48, 63, 62, 61, 60, 59, 58, 57, 56
+    ));
+    
+    public static final List<Integer> xIncrements = Collections.unmodifiableList(Arrays.asList(-1, -1, 0, 1, 1, 1, 0, -1));
+    public static final List<Integer> yIncrements = Collections.unmodifiableList(Arrays.asList(0, -1, -1, -1, 0, 1, 1, 1));
+    public static final List<Integer> bitRefIncrements = Collections.unmodifiableList(Arrays.asList(-1, -9, -8, -7, 1, 9, 8, 7));
 
     private Bitboards() {
     }
@@ -353,14 +344,10 @@ public final class Bitboards {
             pieceSquareTableEndGame
     ));
 
-    static {
-        generateTropismValues();
-    }
-
     private static List<Integer> flipPieceSquareValues(List<Integer> list) {
         List<Integer> newList = new ArrayList<>();
         for (int j = 0; j < 64; j++) {
-            newList.add(list.get(Bitboards.bitFlippedHorizontalAxis[j]));
+            newList.add(list.get(Bitboards.bitFlippedHorizontalAxis.get(j)));
         }
         return Collections.unmodifiableList(newList);
     }
@@ -389,36 +376,4 @@ public final class Bitboards {
         return bitboard;
     }
 
-    public static void generateTropismValues() {
-        tropism = new int[64][64];
-        distance = new int[64][64];
-        directOpposition = new boolean[64][64];
-        int i;
-        int j;
-        int iFile;
-        int jFile;
-        int iRank;
-        int jRank;
-        int t1;
-        int t2;
-
-        for (i = 0; i < 64; i++) {
-            for (j = 0; j < 64; j++) {
-                iFile = i % 8;
-                jFile = j % 8;
-                iRank = i / 8;
-                jRank = j / 8;
-
-                t1 = 7 - Math.abs(iFile - jFile);
-                t2 = 7 - Math.abs(iRank - jRank);
-                tropism[i][j] = Math.min(t1, t2);
-
-                t1 = Math.abs(iFile - jFile);
-                t2 = Math.abs(iRank - jRank);
-                distance[i][j] = Math.min(t1, t2);
-
-                directOpposition[i][j] = ((iFile == jFile && Math.abs(iRank - jRank) == 2) || (iRank == jRank && Math.abs(iFile - jFile) == 2));
-            }
-        }
-    }
 }
