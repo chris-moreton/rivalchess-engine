@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.util.FenUtils;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
