@@ -1,9 +1,8 @@
-package com.netsensia.rivalchess.model.board;
+package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.Square;
-import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
