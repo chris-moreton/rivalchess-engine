@@ -20,12 +20,12 @@ public class EpdItem {
         bestMoves = Arrays.asList(parts[1].trim().split(" "));
 
         Pattern pattern = Pattern.compile("id \"(.*?)\"");
-        Matcher matcher = pattern.matcher(parts[2]);
+        Matcher matcher = pattern.matcher(line);
 
         if (matcher.find()) {
             id = matcher.group(1);
         } else {
-            throw new IllegalEpdItemException("Could not parse EPD test item id.");
+            throw new IllegalEpdItemException("Could not parse EPD test item id " + line);
         }
 
     }

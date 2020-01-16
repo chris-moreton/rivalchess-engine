@@ -1,17 +1,20 @@
 package com.netsensia.rivalchess.util;
 
+import com.netsensia.rivalchess.exception.IllegalEpdItemException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public class EpdReader {
+public class EpdReader implements Iterable<EpdItem>     {
 
-    private static List<String> tests = new ArrayList<>();
+    private static List<EpdItem> epdItems = new ArrayList<>();
 
-    public EpdReader(String filename) throws IOException {
+    public EpdReader(String filename) throws IOException, IllegalEpdItemException {
 
         File file = new File(filename);
 
@@ -22,13 +25,19 @@ public class EpdReader {
 
         while ((line = br.readLine()) != null) {
             if (!line.trim().equals("")) {
-                tests.add(line);
+                epdItems.add(new EpdItem(line));
             }
         }
         fr.close();
     }
 
     public int size() {
-        return tests.size();
+        return epdItems.size();
     }
+
+    @Override
+    public Iterator<EpdItem> iterator() {
+        return epdItems.iterator();
+    }
+
 }

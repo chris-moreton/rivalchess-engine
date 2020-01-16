@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.util;
 
+import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import org.junit.Test;
 
 import java.io.File;
@@ -10,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 public class EpdReaderTest {
 
     @Test
-    public void testSize() throws IOException {
+    public void testSize() throws IOException, IllegalEpdItemException {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource("epd/winAtChess.epd").getFile());
 
