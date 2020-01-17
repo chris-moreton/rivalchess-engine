@@ -250,7 +250,7 @@ public final class EngineChessBoard {
     }
 
     public void generateLegalMoves() {
-        int bitRef, kingSquare;
+        int bitRef;
         long knightBitboard, rookBitboard, bishopBitboard, pawnBitboard;
         List<Long> bitboardMaskForwardPawnMoves;
         List<Long> bitboardMaskCapturePawnMoves;
@@ -259,14 +259,14 @@ public final class EngineChessBoard {
         this.m_numLegalMoves = 0;
         this.m_legalMoves[this.m_numLegalMoves] = 0;
 
+        final int kingSquare = this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare;
+
         if (this.m_isWhiteToMove) {
-            kingSquare = this.m_whiteKingSquare;
             knightBitboard = m_pieceBitboards[RivalConstants.WN];
             pawnBitboard = m_pieceBitboards[RivalConstants.WP];
             bitboardMaskForwardPawnMoves = Bitboards.whitePawnMovesForward;
             bitboardMaskCapturePawnMoves = Bitboards.whitePawnMovesCapture;
         } else {
-            kingSquare = this.m_blackKingSquare;
             knightBitboard = m_pieceBitboards[RivalConstants.BN];
             pawnBitboard = m_pieceBitboards[RivalConstants.BP];
             bitboardMaskForwardPawnMoves = Bitboards.blackPawnMovesForward;
@@ -383,8 +383,8 @@ public final class EngineChessBoard {
     }
 
     public void generateLegalQuiesceMoves(boolean includeChecks) {
-        int bitRef, kingSquare, enemyKingSquare;
-        long knightBitboard, rookBitboard, bishopBitboard, pawnBitboard;
+        int bitRef;
+        long rookBitboard, bishopBitboard;
         List<Long> bitboardMaskForwardPawnMoves;
         List<Long> bitboardMaskCapturePawnMoves;
         long bitboardPawnMoves;
@@ -393,34 +393,20 @@ public final class EngineChessBoard {
         this.m_numLegalMoves = 0;
         this.m_legalMoves[this.m_numLegalMoves] = 0;
 
+        final int kingSquare = this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare;
+        final int enemyKingSquare = this.m_isWhiteToMove ? this.m_blackKingSquare : this.m_whiteKingSquare;
+        final long knightBitboard = this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WN] : m_pieceBitboards[RivalConstants.BN];
+        final long pawnBitboard = this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WP] : m_pieceBitboards[RivalConstants.BP];
+
         if (this.m_isWhiteToMove) {
-            kingSquare = this.m_whiteKingSquare;
-            enemyKingSquare = this.m_blackKingSquare;
-            knightBitboard = m_pieceBitboards[RivalConstants.WN];
-            pawnBitboard = m_pieceBitboards[RivalConstants.WP];
             bitboardMaskForwardPawnMoves = Bitboards.whitePawnMovesForward;
             bitboardMaskCapturePawnMoves = Bitboards.whitePawnMovesCapture;
         } else {
-            kingSquare = this.m_blackKingSquare;
-            enemyKingSquare = this.m_whiteKingSquare;
-            knightBitboard = m_pieceBitboards[RivalConstants.BN];
-            pawnBitboard = m_pieceBitboards[RivalConstants.BP];
             bitboardMaskForwardPawnMoves = Bitboards.blackPawnMovesForward;
             bitboardMaskCapturePawnMoves = Bitboards.blackPawnMovesCapture;
         }
 
-        /*************************************
-         * Knight Moves
-         * ************************************/
-        while (knightBitboard != 0) {
-            knightBitboard ^= (1L << (bitRef = Long.numberOfTrailingZeros(knightBitboard)));
-            if (includeChecks) {
-                possibleDestinations = m_pieceBitboards[RivalConstants.ENEMY] | (Bitboards.knightMoves.get(enemyKingSquare) & ~m_pieceBitboards[RivalConstants.FRIENDLY]);
-            } else {
-                possibleDestinations = m_pieceBitboards[RivalConstants.ENEMY];
-            }
-            addMoves(bitRef << 16, Bitboards.knightMoves.get(bitRef) & possibleDestinations);
-        }
+        generateQuiesceKnightMoves(includeChecks, enemyKingSquare, knightBitboard);
 
         /*************************************
          * King Moves
@@ -432,30 +418,7 @@ public final class EngineChessBoard {
         /*************************************
          * Pawn Moves
          * ************************************/
-        while (pawnBitboard != 0) {
-            pawnBitboard ^= (1L << (bitRef = Long.numberOfTrailingZeros(pawnBitboard)));
-
-            bitboardPawnMoves = 0;
-
-            if (includeChecks) {
-                bitboardPawnMoves = bitboardMaskForwardPawnMoves.get(bitRef) & ~m_pieceBitboards[RivalConstants.ALL];
-
-                bitboardPawnMoves = getBitboardPawnJumpMoves(bitboardPawnMoves);
-
-                if (this.m_isWhiteToMove) {
-                    bitboardPawnMoves &= Bitboards.blackPawnMovesCapture.get(enemyKingSquare);
-                } else {
-                    bitboardPawnMoves &= Bitboards.whitePawnMovesCapture.get(enemyKingSquare);
-                }
-            }
-
-            // promotions
-            bitboardPawnMoves |= (bitboardMaskForwardPawnMoves.get(bitRef) & ~m_pieceBitboards[RivalConstants.ALL]) & (Bitboards.RANK_1 | Bitboards.RANK_8);
-
-            bitboardPawnMoves = getBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves);
-
-            addPossiblePromotionMoves(bitRef << 16, bitboardPawnMoves, true);
-        }
+        generateQuiescePawnMoves(includeChecks, bitboardMaskForwardPawnMoves, bitboardMaskCapturePawnMoves, enemyKingSquare, pawnBitboard);
 
         long rookCheckSquares = Bitboards.magicBitboards.magicMovesRook[enemyKingSquare][(int) (((m_pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskRook[enemyKingSquare]) * MagicBitboards.magicNumberRook[enemyKingSquare]) >>> MagicBitboards.magicNumberShiftsRook[enemyKingSquare])];
         long bishopCheckSquares = Bitboards.magicBitboards.magicMovesBishop[enemyKingSquare][(int) (((m_pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskBishop[enemyKingSquare]) * MagicBitboards.magicNumberBishop[enemyKingSquare]) >>> MagicBitboards.magicNumberShiftsBishop[enemyKingSquare])];
@@ -492,6 +455,49 @@ public final class EngineChessBoard {
         }
 
         this.m_legalMoves[this.m_numLegalMoves] = 0;
+    }
+
+    private void generateQuiescePawnMoves(boolean includeChecks, List<Long> bitboardMaskForwardPawnMoves, List<Long> bitboardMaskCapturePawnMoves, int enemyKingSquare, long pawnBitboard) {
+        int bitRef;
+        long bitboardPawnMoves;
+        while (pawnBitboard != 0) {
+            pawnBitboard ^= (1L << (bitRef = Long.numberOfTrailingZeros(pawnBitboard)));
+
+            bitboardPawnMoves = 0;
+
+            if (includeChecks) {
+                bitboardPawnMoves = bitboardMaskForwardPawnMoves.get(bitRef) & ~m_pieceBitboards[RivalConstants.ALL];
+
+                bitboardPawnMoves = getBitboardPawnJumpMoves(bitboardPawnMoves);
+
+                if (this.m_isWhiteToMove) {
+                    bitboardPawnMoves &= Bitboards.blackPawnMovesCapture.get(enemyKingSquare);
+                } else {
+                    bitboardPawnMoves &= Bitboards.whitePawnMovesCapture.get(enemyKingSquare);
+                }
+            }
+
+            // promotions
+            bitboardPawnMoves |= (bitboardMaskForwardPawnMoves.get(bitRef) & ~m_pieceBitboards[RivalConstants.ALL]) & (Bitboards.RANK_1 | Bitboards.RANK_8);
+
+            bitboardPawnMoves = getBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves);
+
+            addPossiblePromotionMoves(bitRef << 16, bitboardPawnMoves, true);
+        }
+    }
+
+    private void generateQuiesceKnightMoves(boolean includeChecks, int enemyKingSquare, long knightBitboard) {
+        int bitRef;
+        long possibleDestinations;
+        while (knightBitboard != 0) {
+            knightBitboard ^= (1L << (bitRef = Long.numberOfTrailingZeros(knightBitboard)));
+            if (includeChecks) {
+                possibleDestinations = m_pieceBitboards[RivalConstants.ENEMY] | (Bitboards.knightMoves.get(enemyKingSquare) & ~m_pieceBitboards[RivalConstants.FRIENDLY]);
+            } else {
+                possibleDestinations = m_pieceBitboards[RivalConstants.ENEMY];
+            }
+            addMoves(bitRef << 16, Bitboards.knightMoves.get(bitRef) & possibleDestinations);
+        }
     }
 
     public void setLegalQuiesceMoves(int[] moveArray, boolean includeChecks) {

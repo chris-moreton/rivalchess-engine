@@ -24,9 +24,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.hasItem;
 
+@SuppressWarnings("squid:S106")
 public class EpdTest {
 
-    private static final int MAX_SEARCH_SECONDS = 120;
+    private static final int MAX_SEARCH_SECONDS = 300;
     private static RivalSearch rivalSearch;
 
     @BeforeClass
@@ -36,7 +37,7 @@ public class EpdTest {
     }
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
-            "WAC.213","WAC.230","WAC.274"
+            "WAC.230","WAC.274"
     ));
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException {
@@ -57,7 +58,7 @@ public class EpdTest {
         System.out.println(epdItem.getId());
 
         try {
-            await().atMost(MAX_SEARCH_SECONDS * 2, SECONDS).until(() -> !rivalSearch.isSearching());
+            await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !rivalSearch.isSearching());
         } catch (ConditionTimeoutException e) {
             rivalSearch.stopSearch();
 
@@ -69,6 +70,7 @@ public class EpdTest {
         }
 
         final String move = ChessBoardConversion.getPGNMoveFromCompactMove(rivalSearch.getCurrentMove(), engineChessBoard);
+
         System.out.println("Looking for " + move + " in " + epdItem.getBestMoves());
 
         if (expectedToPass) {
@@ -103,11 +105,11 @@ public class EpdTest {
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.099", true);
+        runEpdSuite("winAtChess.epd", "WAC.001", true);
     }
 
     @Test
     public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.100", false);
+        runEpdSuite("winAtChess.epd", "WAC.001", false);
     }
 }
