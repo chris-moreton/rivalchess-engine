@@ -315,8 +315,8 @@ public final class EngineChessBoard {
         addMoves(kingSquare << 16, Bitboards.kingMoves.get(kingSquare) & ~m_pieceBitboards[RivalConstants.FRIENDLY]);
     }
 
-    private void generateKingMoves(int castleprivWk, long whitekingsidecastlesquares, int i, boolean b, int i2, int i3, int castleprivWq, long whitequeensidecastlesquares, int i4, int i5) {
-        if ((m_castlePrivileges & castleprivWk) != 0L && (m_pieceBitboards[RivalConstants.ALL] & whitekingsidecastlesquares) == 0L) {
+    private void generateKingMoves(final int castlePriveleges, final long kingSideCastleSquares, int i, boolean b, int i2, int i3, int castleprivWq, long whitequeensidecastlesquares, int i4, int i5) {
+        if ((m_castlePrivileges & castlePriveleges) != 0L && (m_pieceBitboards[RivalConstants.ALL] & kingSideCastleSquares) == 0L) {
             if (!isSquareAttacked(i, b) && !isSquareAttacked(i2, b)) {
                 this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i3;
             }
@@ -575,7 +575,6 @@ public final class EngineChessBoard {
 
         int ep = board.getEnPassantFile();
         if (ep == -1) {
-            ep = 8;
             m_pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 0;
         } else {
             if (board.isWhiteToMove()) {

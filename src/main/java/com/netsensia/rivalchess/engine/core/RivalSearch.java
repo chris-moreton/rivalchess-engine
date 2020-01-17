@@ -20,7 +20,7 @@ import java.util.Random;
 import java.util.Timer;
 
 public final class RivalSearch implements Runnable {
-    private static PrintStream printStream;
+    private PrintStream printStream;
 
     private boolean isOkToSendInfo = false;
     private PrintWriter m_out;
@@ -289,12 +289,12 @@ public final class RivalSearch implements Runnable {
         }
     }
 
-    static long lastPawnHashValue = -1;
-    static int lastPawnScore = 0;
-    static int lastWhitePassedPawnScore = 0;
-    static int lastBlackPassedPawnScore = 0;
-    static long lastWhitePassedPawns = 0;
-    static long lastBlackPassedPawns = 0;
+    long lastPawnHashValue = -1;
+    int lastPawnScore = 0;
+    int lastWhitePassedPawnScore = 0;
+    int lastBlackPassedPawnScore = 0;
+    long lastWhitePassedPawns = 0;
+    long lastBlackPassedPawns = 0;
 
     private int getPawnScore(EngineChessBoard board, int totalPieceScore) {
         int pawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
@@ -1228,15 +1228,17 @@ public final class RivalSearch implements Runnable {
             else if (board.whitePawnValues == 0 && board.whitePieceValues - RivalConstants.VALUE_BISHOP <= board.blackPieceValues)
                 return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR;
             else if (Long.bitCount(board.m_pieceBitboards[RivalConstants.ALL]) > 3 && (board.m_pieceBitboards[RivalConstants.WR] | board.m_pieceBitboards[RivalConstants.WN] | board.m_pieceBitboards[RivalConstants.WQ]) == 0) {
-                // if this is not yet a KPK ending, and if white has only A pawns and has no dark bishop and the black king is on a8/a7/b8/b7 then this is probably a draw
+                // If this is not yet a KPK ending, and if white has only A pawns and has no dark bishop and the black king is on a8/a7/b8/b7 then this is probably a draw.
+                // Do the same for H pawns
+
                 if (((board.m_pieceBitboards[RivalConstants.WP] & ~Bitboards.FILE_A) == 0) &&
                         ((board.m_pieceBitboards[RivalConstants.WB] & Bitboards.LIGHT_SQUARES) == 0) &&
-                        ((board.m_pieceBitboards[RivalConstants.BK] & Bitboards.A8A7B8B7) != 0))
+                        ((board.m_pieceBitboards[RivalConstants.BK] & Bitboards.A8A7B8B7) != 0) || ((board.m_pieceBitboards[RivalConstants.WP] & ~Bitboards.FILE_H) == 0) &&
+                                ((board.m_pieceBitboards[RivalConstants.WB] & Bitboards.DARK_SQUARES) == 0) &&
+                                ((board.m_pieceBitboards[RivalConstants.BK] & Bitboards.H8H7G8G7) != 0)) {
                     return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
-                else if (((board.m_pieceBitboards[RivalConstants.WP] & ~Bitboards.FILE_H) == 0) &&
-                        ((board.m_pieceBitboards[RivalConstants.WB] & Bitboards.DARK_SQUARES) == 0) &&
-                        ((board.m_pieceBitboards[RivalConstants.BK] & Bitboards.H8H7G8G7) != 0))
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                }
+
             }
             if (board.blackPawnValues == 0) {
                 if (board.whitePieceValues - board.blackPieceValues > RivalConstants.VALUE_BISHOP) {
@@ -1382,7 +1384,7 @@ public final class RivalSearch implements Runnable {
         }
     }
 
-    static int movesForSorting[];
+    int movesForSorting[];
 
     private void scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) {
         int i, score;
@@ -1699,7 +1701,7 @@ public final class RivalSearch implements Runnable {
 
     SearchPath zugPath = new SearchPath();
 
-    public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, boolean doingIID, int recaptureSquare, boolean isCheck) {
+    public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, int recaptureSquare, boolean isCheck) {
         if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
 
         if (this.getCurrentTimeMillis() > this.m_searchTargetEndTime || this.getNodes() >= this.m_nodesToSearch) {
@@ -1844,7 +1846,7 @@ public final class RivalSearch implements Runnable {
             }
             if (doIt) {
                 if (depth - RivalConstants.IID_REDUCE_DEPTH > 0) {
-                    newPath = search(board, (byte) (depth - RivalConstants.IID_REDUCE_DEPTH), ply, low, high, extensions, canVerifyNullMove, true, recaptureSquare, isCheck);
+                    newPath = search(board, (byte) (depth - RivalConstants.IID_REDUCE_DEPTH), ply, low, high, extensions, canVerifyNullMove, recaptureSquare, isCheck);
                     // it's not really a hash move, but this will cause the order routine to rank it first
                     if (newPath != null && newPath.height > 0) hashMove = newPath.move[0];
                 }
@@ -1864,7 +1866,7 @@ public final class RivalSearch implements Runnable {
             if ((board.m_isWhiteToMove ? board.whitePieceValues : board.blackPieceValues) >= RivalConstants.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES &&
                     (board.m_isWhiteToMove ? board.whitePawnValues : board.blackPawnValues) > 0) {
                 board.makeNullMove();
-                newPath = search(board, (byte) (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, canVerifyNullMove, false, -1, false);
+                newPath = search(board, (byte) (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, canVerifyNullMove, -1, false);
                 if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                 else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                 if (!this.m_abortingSearch) {
@@ -2020,19 +2022,19 @@ public final class RivalSearch implements Runnable {
                         do {
                             lmrResearch = false;
                             if (scoutSearch) {
-                                newPath = search(m_board, (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, canVerifyNullMove, false, newRecaptureSquare, isCheck);
+                                newPath = search(m_board, (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
                                 if (newPath != null)
                                     if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                     else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                                 if (!this.m_abortingSearch && -newPath.score > low) {
                                     // research with normal window
-                                    newPath = search(m_board, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, false, newRecaptureSquare, isCheck);
+                                    newPath = search(m_board, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
                                     if (newPath != null)
                                         if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                                 }
                             } else {
-                                newPath = search(board, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, false, newRecaptureSquare, isCheck);
+                                newPath = search(board, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
                                 if (newPath != null)
                                     if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                     else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
@@ -2214,16 +2216,16 @@ public final class RivalSearch implements Runnable {
                     newPath.setPath(move);
                 } else {
                     if (scoutSearch) {
-                        newPath = search(m_board, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, canMakeNullMove, false, -1, isCheck);
+                        newPath = search(m_board, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, canMakeNullMove, -1, isCheck);
                         if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                         if (!this.m_abortingSearch && -newPath.score > low) {
-                            newPath = search(m_board, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, false, -1, isCheck);
+                            newPath = search(m_board, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
                             if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                             else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                         }
                     } else {
-                        newPath = search(m_board, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, false, -1, isCheck);
+                        newPath = search(m_board, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
                         if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                     }

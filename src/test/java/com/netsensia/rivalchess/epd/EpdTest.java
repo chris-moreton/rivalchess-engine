@@ -26,7 +26,6 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.hasItem;
 
 @SuppressWarnings("squid:S106")
-@Ignore
 public class EpdTest {
 
     private static final int MAX_SEARCH_SECONDS = 300;
