@@ -23,13 +23,10 @@ import java.util.List;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class EpdTest {
 
-    private static final int MAX_SEARCH_SECONDS = 4;
+    private static final int MAX_SEARCH_SECONDS = 120;
     private static RivalSearch rivalSearch;
 
     @BeforeClass
@@ -50,8 +47,9 @@ public class EpdTest {
         rivalSearch.setBoard(engineChessBoard);
         rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
         rivalSearch.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
-        rivalSearch.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
-        rivalSearch.setHashSizeMB(32);
+
+        rivalSearch.setNodesToSearch(epdItem.getMaxNodesToSearch());
+        rivalSearch.setHashSizeMB(128);
         rivalSearch.startSearch();
 
         SECONDS.sleep(1);
@@ -105,11 +103,11 @@ public class EpdTest {
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.001", true);
+        runEpdSuite("winAtChess.epd", "WAC.099", true);
     }
 
     @Test
     public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.001", false);
+        runEpdSuite("winAtChess.epd", "WAC.100", false);
     }
 }

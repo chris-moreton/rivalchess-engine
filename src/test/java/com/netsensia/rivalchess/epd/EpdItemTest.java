@@ -33,4 +33,18 @@ public class EpdItemTest {
         assertEquals("3r3k/1r3p1p/p1pB1p2/8/p1qNP1Q1/P6P/1P4P1/3R3K w - -", epdItem.getFen());
         assertEquals("WAC.294", epdItem.getId());
     }
+
+    @Test
+    public void testEpdItemWithNodesPart() throws IllegalEpdItemException {
+        final String epdString = "2kr2nr/pp1n1ppp/2p1p3/q7/1b1P1B2/P1N2Q1P/1PP1BPP1/R3K2R w KQ - bm axb4; id \"WAC.269\"; nodes 19283;";
+
+        EpdItem epdItem = new EpdItem(epdString);
+
+        assertEquals(1, epdItem.getBestMoves().size());
+        assertEquals("axb4", epdItem.getBestMoves().get(0));
+        assertEquals("2kr2nr/pp1n1ppp/2p1p3/q7/1b1P1B2/P1N2Q1P/1PP1BPP1/R3K2R w KQ -", epdItem.getFen());
+        assertEquals("WAC.269", epdItem.getId());
+        assertEquals(19283, epdItem.getMaxNodesToSearch());
+
+    }
 }

@@ -12,6 +12,7 @@ public class EpdItem {
     private String fen;
     private List<String> bestMoves;
     private String id;
+    private int maxNodesToSearch = 10000000;
 
     public EpdItem(String line) throws IllegalEpdItemException {
         final String[] parts = line.split("bm|;");
@@ -28,6 +29,12 @@ public class EpdItem {
             throw new IllegalEpdItemException("Could not parse EPD test item id " + line);
         }
 
+        pattern = Pattern.compile("nodes (.*);");
+        matcher = pattern.matcher(line);
+
+        if (matcher.find()) {
+            maxNodesToSearch = Integer.parseInt(matcher.group(1));
+        }
     }
 
     public String getFen() {
@@ -41,4 +48,9 @@ public class EpdItem {
     public String getId() {
         return id;
     }
+
+    public int getMaxNodesToSearch() {
+        return maxNodesToSearch;
+    }
+
 }
