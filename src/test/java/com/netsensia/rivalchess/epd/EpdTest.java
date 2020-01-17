@@ -12,6 +12,7 @@ import com.netsensia.rivalchess.util.FenUtils;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -25,6 +26,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.hasItem;
 
 @SuppressWarnings("squid:S106")
+@Ignore
 public class EpdTest {
 
     private static final int MAX_SEARCH_SECONDS = 300;
