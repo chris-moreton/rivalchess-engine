@@ -1699,7 +1699,6 @@ public final class RivalSearch implements Runnable {
 
     SearchPath zugPath = new SearchPath();
 
-    @SuppressWarnings("unused")
     public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, boolean doingIID, int recaptureSquare, boolean isCheck) {
         if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
 

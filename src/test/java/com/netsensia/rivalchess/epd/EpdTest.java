@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 
 public class EpdTest {
 
-    private static final int MAX_SEARCH_SECONDS = 20;
+    private static final int MAX_SEARCH_SECONDS = 4;
     private static RivalSearch rivalSearch;
 
     @BeforeClass
@@ -39,10 +39,7 @@ public class EpdTest {
     }
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
-            "WAC.002","WAC.008","WAC.168","WAC.201","WAC.209",
-            "WAC.213","WAC.229","WAC.230","WAC.251","WAC.259",
-            "WAC.268","WAC.269","WAC.274","WAC.276","WAC.281",
-            "WAC.296"
+            "WAC.213","WAC.230","WAC.274"
     ));
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException {
@@ -50,10 +47,10 @@ public class EpdTest {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
 
-        rivalSearch.quit();
         rivalSearch.setBoard(engineChessBoard);
-        rivalSearch.setSearchDepth(10);
-        rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+        rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+        rivalSearch.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
+        rivalSearch.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
         rivalSearch.setHashSizeMB(32);
         rivalSearch.startSearch();
 
@@ -62,10 +59,15 @@ public class EpdTest {
         System.out.println(epdItem.getId());
 
         try {
-            await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !rivalSearch.isSearching());
+            await().atMost(MAX_SEARCH_SECONDS * 2, SECONDS).until(() -> !rivalSearch.isSearching());
         } catch (ConditionTimeoutException e) {
-            assertFalse(expectedToPass);
-            return;
+            rivalSearch.stopSearch();
+
+            int state;
+            do {
+                state = rivalSearch.getEngineState();
+            }
+            while (state != RivalConstants.SEARCHSTATE_READY && state != RivalConstants.SEARCHSTATE_SEARCHCOMPLETE);
         }
 
         final String move = ChessBoardConversion.getPGNMoveFromCompactMove(rivalSearch.getCurrentMove(), engineChessBoard);
