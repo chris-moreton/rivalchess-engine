@@ -212,16 +212,6 @@ public final class EngineChessBoard {
 
         while (bitboard != 0) {
             bitboard ^= (1L << (toSquare = Long.numberOfTrailingZeros(bitboard)));
-            long toSquareBoardMask = 1L << toSquare;
-            int capturePiece = 0;
-
-            if ((toSquareBoardMask & m_pieceBitboards[RivalConstants.ENEMY]) != 0) {
-                int offset = m_isWhiteToMove ? 6 : 0;
-                for (int i = RivalConstants.WP; i <= RivalConstants.WR; i++)
-                    if ((toSquareBoardMask & m_pieceBitboards[i + offset]) != 0) {
-                        capturePiece = i + 1; // we don't care about colour, and we add 1 so that it can't be zero
-                    }
-            }
 
             if (toSquare >= 56 || toSquare <= 7) {
                 this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN);
@@ -231,9 +221,6 @@ public final class EngineChessBoard {
                     this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP);
                 }
             } else {
-                if (capturePiece == 0 && (m_pieceBitboards[RivalConstants.ENPASSANTSQUARE] & toSquareBoardMask) != 0)
-                    capturePiece = RivalConstants.WP + 1; // add 1 so that it can't be zero
-
                 this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMoveMask | toSquare;
             }
         }
@@ -251,8 +238,7 @@ public final class EngineChessBoard {
 
     public void generateLegalMoves() {
 
-        this.m_numLegalMoves = 0;
-        this.m_legalMoves[this.m_numLegalMoves] = 0;
+        clearLegalMovesArray();
 
         final int kingSquare = this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare;
 
@@ -272,6 +258,11 @@ public final class EngineChessBoard {
 
         generateSliderMoves(RivalConstants.WB, RivalConstants.BB, Bitboards.magicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop);
 
+        this.m_legalMoves[this.m_numLegalMoves] = 0;
+    }
+
+    private void clearLegalMovesArray() {
+        this.m_numLegalMoves = 0;
         this.m_legalMoves[this.m_numLegalMoves] = 0;
     }
 
@@ -307,23 +298,23 @@ public final class EngineChessBoard {
 
     private void generateKingMoves(int kingSquare) {
         if (this.m_isWhiteToMove) {
-            generateKingMoves(RivalConstants.CASTLEPRIV_WK, Bitboards.WHITEKINGSIDECASTLESQUARES, 3, false, 2, 1, RivalConstants.CASTLEPRIV_WQ, Bitboards.WHITEQUEENSIDECASTLESQUARES, 4, 5);
+            generateKingMoves(RivalConstants.CASTLEPRIV_WK, Bitboards.WHITEKINGSIDECASTLESQUARES, 3, false, RivalConstants.CASTLEPRIV_WQ, Bitboards.WHITEQUEENSIDECASTLESQUARES, 4);
         } else {
-            generateKingMoves(RivalConstants.CASTLEPRIV_BK, Bitboards.BLACKKINGSIDECASTLESQUARES, 59, true, 58, 57, RivalConstants.CASTLEPRIV_BQ, Bitboards.BLACKQUEENSIDECASTLESQUARES, 60, 61);
+            generateKingMoves(RivalConstants.CASTLEPRIV_BK, Bitboards.BLACKKINGSIDECASTLESQUARES, 59, true, RivalConstants.CASTLEPRIV_BQ, Bitboards.BLACKQUEENSIDECASTLESQUARES, 60);
         }
 
         addMoves(kingSquare << 16, Bitboards.kingMoves.get(kingSquare) & ~m_pieceBitboards[RivalConstants.FRIENDLY]);
     }
 
-    private void generateKingMoves(final int castlePriveleges, final long kingSideCastleSquares, int i, boolean b, int i2, int i3, int castleprivWq, long whitequeensidecastlesquares, int i4, int i5) {
+    private void generateKingMoves(final int castlePriveleges, final long kingSideCastleSquares, int i, boolean b, int castleprivWq, long whitequeensidecastlesquares, int i4) {
         if ((m_castlePrivileges & castlePriveleges) != 0L && (m_pieceBitboards[RivalConstants.ALL] & kingSideCastleSquares) == 0L) {
-            if (!isSquareAttacked(i, b) && !isSquareAttacked(i2, b)) {
-                this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i3;
+            if (!isSquareAttacked(i, b) && !isSquareAttacked(i-1, b)) {
+                this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i-2;
             }
         }
         if ((m_castlePrivileges & castleprivWq) != 0L && (m_pieceBitboards[RivalConstants.ALL] & whitequeensidecastlesquares) == 0L) {
             if (!isSquareAttacked(i, b) && !isSquareAttacked(i4, b)) {
-                this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i5;
+                this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i4+1;
             }
         }
     }
@@ -371,8 +362,7 @@ public final class EngineChessBoard {
 
         final long possibleDestinations = m_pieceBitboards[RivalConstants.ENEMY];
 
-        this.m_numLegalMoves = 0;
-        this.m_legalMoves[this.m_numLegalMoves] = 0;
+        clearLegalMovesArray();
 
         final int kingSquare = this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare;
         final int enemyKingSquare = this.m_isWhiteToMove ? this.m_blackKingSquare : this.m_whiteKingSquare;
