@@ -240,19 +240,13 @@ public final class EngineChessBoard {
 
         clearLegalMovesArray();
 
-        final int kingSquare = this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare;
+        generateKnightMoves(this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WN] : m_pieceBitboards[RivalConstants.BN]);
 
-        final long knightBitboard = this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WN] : m_pieceBitboards[RivalConstants.BN];
-        final long pawnBitboard = this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WP] : m_pieceBitboards[RivalConstants.BP];
+        generateKingMoves(this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare);
 
-        final List<Long>  bitboardMaskForwardPawnMoves = this.m_isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward;
-        final List<Long>  bitboardMaskCapturePawnMoves = this.m_isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture;
-
-        generateKnightMoves(knightBitboard);
-
-        generateKingMoves(kingSquare);
-
-        generatePawnMoves(pawnBitboard, bitboardMaskForwardPawnMoves, bitboardMaskCapturePawnMoves);
+        generatePawnMoves(this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WP] : m_pieceBitboards[RivalConstants.BP],
+                this.m_isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
+                this.m_isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture);
 
         generateSliderMoves(RivalConstants.WR, RivalConstants.BR, Bitboards.magicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook);
 
@@ -366,17 +360,18 @@ public final class EngineChessBoard {
 
         final int kingSquare = this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare;
         final int enemyKingSquare = this.m_isWhiteToMove ? this.m_blackKingSquare : this.m_whiteKingSquare;
-        final long knightBitboard = this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WN] : m_pieceBitboards[RivalConstants.BN];
-        final long pawnBitboard = this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WP] : m_pieceBitboards[RivalConstants.BP];
 
-        final List<Long>  bitboardMaskForwardPawnMoves = this.m_isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward;
-        final List<Long>  bitboardMaskCapturePawnMoves = this.m_isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture;
-
-        generateQuiesceKnightMoves(includeChecks, enemyKingSquare, knightBitboard);
+        generateQuiesceKnightMoves(includeChecks,
+                enemyKingSquare,
+                this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WN] : m_pieceBitboards[RivalConstants.BN]);
 
         addMoves(kingSquare << 16, Bitboards.kingMoves.get(kingSquare) & possibleDestinations);
 
-        generateQuiescePawnMoves(includeChecks, bitboardMaskForwardPawnMoves, bitboardMaskCapturePawnMoves, enemyKingSquare, pawnBitboard);
+        generateQuiescePawnMoves(includeChecks,
+                this.m_isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
+                this.m_isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture,
+                enemyKingSquare,
+                this.m_isWhiteToMove ? m_pieceBitboards[RivalConstants.WP] : m_pieceBitboards[RivalConstants.BP]);
 
         generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Bitboards.magicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook, RivalConstants.WR, RivalConstants.BR);
 
