@@ -119,11 +119,11 @@ public class EPDRunner
 			{
 				if (!line.trim().equals(""))
 				{
-					String parts[] = line.split("bm");
+					String[] parts = line.split("bm");
 					String fen = parts[0].trim();
 					String rest = parts[1];
 					parts = rest.split(";");
-					String bestMoves[] = parts[0].trim().split(" ");
+					String[] bestMoves = parts[0].trim().split(" ");
 					
 					int count = 1;
 					String id = "";
@@ -157,7 +157,7 @@ public class EPDRunner
 		int totalPositions = 0;
 		int totalCorrect = 0;
 		int timeSegments = (maxMillis / 1000) + 1;
-		int solvedIn[] = new int[timeSegments];
+		int[] solvedIn = new int[timeSegments];
 		for (int i=0; i<timeSegments; i++) solvedIn[i] = 0;
 		
 		System.out.println("POSITIONS FAILED");

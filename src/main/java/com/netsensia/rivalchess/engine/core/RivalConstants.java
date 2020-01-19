@@ -78,7 +78,7 @@ public final class RivalConstants
 	public static final int CASTLE_BONUS_HIGH_MATERIAL = VALUE_QUEEN + (VALUE_ROOK * 2) + (VALUE_BISHOP * 2);
 
 
-	public static final int VALUE_BISHOP_MOBILITY[] = {-15,-10,-6,-2,2,6,10,13,16,18,20,22,23,24};
+	public static final int[] VALUE_BISHOP_MOBILITY = {-15,-10,-6,-2,2,6,10,13,16,18,20,22,23,24};
 	public static final int VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS = 3;
 	public static final int VALUE_TRAPPED_BISHOP_PENALTY = (int)(VALUE_PAWN * 1.5);
 	public static final int VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY = VALUE_PAWN;
@@ -93,9 +93,9 @@ public final class RivalConstants
 	public static final int VALUE_ROOK_ON_HALF_OPEN_FILE = 12;
 	public static final int VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING = 20;
 	public static final int VALUE_ROOKS_ON_SAME_FILE = 8;
-	public static final int VALUE_ROOK_MOBILITY[] = {-10,-7,-4,-1,2,5,7,9,11,12,13,14,14,14,14};
+	public static final int[] VALUE_ROOK_MOBILITY = {-10,-7,-4,-1,2,5,7,9,11,12,13,14,14,14,14};
 	
-	public static final int VALUE_QUEEN_MOBILITY[] = {-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,9,10,10,10,10,10,10,10,10,10,10,10,10};
+	public static final int[] VALUE_QUEEN_MOBILITY = {-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,9,10,10,10,10,10,10,10,10,10,10,10,10};
 
 	public static final int VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY = 2;
 	

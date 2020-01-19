@@ -917,196 +917,206 @@ public final class EngineChessBoard {
         final long fromMask = (1L << fromSquare);
         final long toMask = (1L << toSquare);
 
-        this.squareContents[fromSquare] = (byte) this.m_moveList[this.m_movesMade].movePiece;
+        this.squareContents[fromSquare] = this.m_moveList[this.m_movesMade].movePiece;
         this.squareContents[toSquare] = -1;
 
-        do {
-            // deal with en passants first, they are special moves and capture moves, so just get them out of the way
-            if (toMask == this.m_moveList[this.m_movesMade].enPassantBitboard) {
-                if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.WP) {
-                    this.m_pieceBitboards[RivalConstants.WP] ^= toMask | fromMask;
-                    this.m_pieceBitboards[RivalConstants.BP] ^= toMask >>> 8;
-                    this.blackPawnValues += RivalConstants.VALUE_PAWN;
-                    this.squareContents[toSquare - 8] = RivalConstants.BP;
+        // deal with en passants first, they are special moves and capture moves, so just get them out of the way
+        if (!unMakeEnPassants(fromSquare, toSquare, flippedFromSquare, flippedToSquare, fromMask, toMask)) {
 
-                    if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                        this.pieceSquareValues[RivalConstants.WP] += Bitboards.pieceSquareTablePawn.get(fromSquare) - Bitboards.pieceSquareTablePawn.get(toSquare);
-                        this.pieceSquareValuesEndGame[RivalConstants.WP] += Bitboards.pieceSquareTablePawnEndGame.get(fromSquare) - Bitboards.pieceSquareTablePawnEndGame.get(toSquare);
-                        this.pieceSquareValues[RivalConstants.BP] += Bitboards.pieceSquareTablePawn.get(Bitboards.bitFlippedHorizontalAxis.get(toSquare - 8));
-                        this.pieceSquareValuesEndGame[RivalConstants.BP] += Bitboards.pieceSquareTablePawnEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(toSquare - 8));
-                    }
-                    break;
-                } else if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.BP) {
-                    this.m_pieceBitboards[RivalConstants.BP] ^= toMask | fromMask;
-                    this.m_pieceBitboards[RivalConstants.WP] ^= toMask << 8;
-                    this.whitePawnValues += RivalConstants.VALUE_PAWN;
-                    this.squareContents[toSquare + 8] = RivalConstants.WP;
-
-                    if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                        this.pieceSquareValues[RivalConstants.BP] += Bitboards.pieceSquareTablePawn.get(flippedFromSquare) - Bitboards.pieceSquareTablePawn.get(flippedToSquare);
-                        this.pieceSquareValuesEndGame[RivalConstants.BP] += Bitboards.pieceSquareTablePawnEndGame.get(flippedFromSquare) - Bitboards.pieceSquareTablePawnEndGame.get(flippedToSquare);
-                        this.pieceSquareValues[RivalConstants.WP] += Bitboards.pieceSquareTablePawn.get(toSquare + 8);
-                        this.pieceSquareValuesEndGame[RivalConstants.WP] += Bitboards.pieceSquareTablePawnEndGame.get(toSquare + 8);
-                    }
-                    break;
-                }
-            }
-
-            // put capture piece back on toSquare, we don't get here is an en passant has just been unmade
-            final byte capturePiece = (byte) this.m_moveList[this.m_movesMade].capturePiece;
-            if (capturePiece != -1) {
-                this.squareContents[toSquare] = capturePiece;
-                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                    pieceSquareValues[capturePiece] += Bitboards.pieceSquareTable.get(0).get(capturePiece).get(toSquare);
-                    pieceSquareValuesEndGame[capturePiece] += Bitboards.pieceSquareTable.get(1).get(capturePiece).get(toSquare);
-                }
-                this.m_pieceBitboards[capturePiece] ^= toMask;
-
-                if (capturePiece == RivalConstants.WP) this.whitePawnValues += RivalConstants.VALUE_PAWN;
-                else if (capturePiece == RivalConstants.BP) this.blackPawnValues += RivalConstants.VALUE_PAWN;
-                else if (capturePiece <= RivalConstants.WR)
-                    this.whitePieceValues += RivalConstants.PIECE_VALUES.get(capturePiece);
-                else
-                    this.blackPieceValues += RivalConstants.PIECE_VALUES.get(capturePiece);
-            }
+            // put capture piece back on toSquare, we don't get here if an en passant has just been unmade
+            replaceCapturedPiece(toSquare, toMask);
 
             // for promotions, remove promotion piece from toSquare
-            final int promotionPiece = this.m_moveList[this.m_movesMade].move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
-            if (promotionPiece != 0) {
-                if (this.m_isWhiteToMove) {
-                    this.m_pieceBitboards[RivalConstants.WP] ^= fromMask;
-                    this.whitePawnValues += RivalConstants.VALUE_PAWN;
-                    if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                        pieceSquareValues[RivalConstants.WP] += Bitboards.pieceSquareTablePawn.get(fromSquare);
-                        pieceSquareValuesEndGame[RivalConstants.WP] += Bitboards.pieceSquareTablePawnEndGame.get(fromSquare);
-                    }
-                    switch (promotionPiece) {
-                        case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                                pieceSquareValues[RivalConstants.WQ] -= Bitboards.pieceSquareTableQueen.get(toSquare);
-                            this.m_pieceBitboards[RivalConstants.WQ] ^= toMask;
-                            this.whitePieceValues -= RivalConstants.VALUE_QUEEN;
-                            break;
-                        case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                                pieceSquareValues[RivalConstants.WB] -= Bitboards.pieceSquareTableBishop.get(toSquare);
-                            this.m_pieceBitboards[RivalConstants.WB] ^= toMask;
-                            this.whitePieceValues -= RivalConstants.VALUE_BISHOP;
-                            break;
-                        case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                                pieceSquareValues[RivalConstants.WN] -= Bitboards.pieceSquareTableKnight.get(toSquare);
-                                pieceSquareValuesEndGame[RivalConstants.WN] -= Bitboards.pieceSquareTableKnightEndGame.get(toSquare);
-                            }
-                            this.m_pieceBitboards[RivalConstants.WN] ^= toMask;
-                            this.whitePieceValues -= RivalConstants.VALUE_KNIGHT;
-                            break;
-                        case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                                pieceSquareValues[RivalConstants.WR] -= Bitboards.pieceSquareTableRook.get(toSquare);
-                            this.m_pieceBitboards[RivalConstants.WR] ^= toMask;
-                            this.whitePieceValues -= RivalConstants.VALUE_ROOK;
-                            break;
-                    }
-                } else {
-                    this.m_pieceBitboards[RivalConstants.BP] ^= fromMask;
-                    this.blackPawnValues += RivalConstants.VALUE_PAWN;
-                    if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                        pieceSquareValues[RivalConstants.BP] += Bitboards.pieceSquareTablePawn.get(flippedFromSquare);
-                        pieceSquareValuesEndGame[RivalConstants.BP] += Bitboards.pieceSquareTablePawnEndGame.get(flippedFromSquare);
-                    }
-                    switch (promotionPiece) {
-                        case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                                pieceSquareValues[RivalConstants.BQ] -= Bitboards.pieceSquareTableQueen.get(flippedToSquare);
-                            this.m_pieceBitboards[RivalConstants.BQ] ^= toMask;
-                            this.blackPieceValues -= RivalConstants.VALUE_QUEEN;
-                            break;
-                        case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                                pieceSquareValues[RivalConstants.BB] -= Bitboards.pieceSquareTableBishop.get(flippedToSquare);
-                            this.m_pieceBitboards[RivalConstants.BB] ^= toMask;
-                            this.blackPieceValues -= RivalConstants.VALUE_BISHOP;
-                            break;
-                        case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                                pieceSquareValues[RivalConstants.BN] -= Bitboards.pieceSquareTableKnight.get(flippedToSquare);
-                                pieceSquareValuesEndGame[RivalConstants.BN] -= Bitboards.pieceSquareTableKnightEndGame.get(flippedToSquare);
-                            }
-                            this.m_pieceBitboards[RivalConstants.BN] ^= toMask;
-                            this.blackPieceValues -= RivalConstants.VALUE_KNIGHT;
-                            break;
-                        case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                                pieceSquareValues[RivalConstants.BR] -= Bitboards.pieceSquareTableRook.get(flippedToSquare);
-                            this.m_pieceBitboards[RivalConstants.BR] ^= toMask;
-                            this.blackPieceValues -= RivalConstants.VALUE_ROOK;
-                            break;
-                    }
-                }
-                break;
-            }
+            if (!removePromotionPiece(fromSquare, toSquare, flippedFromSquare, flippedToSquare, fromMask, toMask)) {
 
-            // now that promotions are out of the way, we can remove the moving piece from toSquare and put it back on fromSquare
-            final byte movePiece = (byte) this.m_moveList[this.m_movesMade].movePiece;
-            this.m_pieceBitboards[movePiece] ^= toMask | fromMask;
-            if (movePiece == RivalConstants.WK) this.m_whiteKingSquare = (byte) fromSquare;
-            else if (movePiece == RivalConstants.BK) this.m_blackKingSquare = (byte) fromSquare;
-            else if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                pieceSquareValues[movePiece] += (Bitboards.pieceSquareTable.get(0).get(movePiece).get(fromSquare) - Bitboards.pieceSquareTable.get(0).get(movePiece).get(toSquare));
-                pieceSquareValuesEndGame[movePiece] += (Bitboards.pieceSquareTable.get(1).get(movePiece).get(fromSquare) - Bitboards.pieceSquareTable.get(1).get(movePiece).get(toSquare));
-            }
+                // now that promotions are out of the way, we can remove the moving piece from toSquare and put it back on fromSquare
+                final byte movePiece = replaceMovedPiece(fromSquare, toSquare, fromMask, toMask);
 
-            // for castles, replace the rook
-            if (movePiece == RivalConstants.WK) {
-                if ((toMask | fromMask) == Bitboards.WHITEKINGSIDECASTLEMOVEMASK) {
-                    this.m_pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEKINGSIDECASTLEROOKMOVE;
-                    this.squareContents[Bitboards.H1] = RivalConstants.WR;
-                    this.squareContents[Bitboards.F1] = -1;
-                    if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                        pieceSquareValues[RivalConstants.WR] += Bitboards.pieceSquareTableRook.get(Bitboards.H1) - Bitboards.pieceSquareTableRook.get(Bitboards.F1);
-                } else if ((toMask | fromMask) == Bitboards.WHITEQUEENSIDECASTLEMOVEMASK) {
-                    this.m_pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEQUEENSIDECASTLEROOKMOVE;
-                    this.squareContents[Bitboards.A1] = RivalConstants.WR;
-                    this.squareContents[Bitboards.D1] = -1;
-                    if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                        pieceSquareValues[RivalConstants.WR] += Bitboards.pieceSquareTableRook.get(Bitboards.A1) - Bitboards.pieceSquareTableRook.get(Bitboards.D1);
-                }
-                break;
-            } else if (movePiece == RivalConstants.BK) {
-                if ((toMask | fromMask) == Bitboards.BLACKKINGSIDECASTLEMOVEMASK) {
-                    this.m_pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKKINGSIDECASTLEROOKMOVE;
-                    this.squareContents[Bitboards.H8] = RivalConstants.BR;
-                    this.squareContents[Bitboards.F8] = -1;
-                    if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                        pieceSquareValues[RivalConstants.BR] += Bitboards.pieceSquareTableRook.get(Bitboards.H1) - Bitboards.pieceSquareTableRook.get(Bitboards.F1);
-                } else if ((toMask | fromMask) == Bitboards.BLACKQUEENSIDECASTLEMOVEMASK) {
-                    this.m_pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKQUEENSIDECASTLEROOKMOVE;
-                    this.squareContents[Bitboards.A8] = RivalConstants.BR;
-                    this.squareContents[Bitboards.D8] = -1;
-                    if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                        pieceSquareValues[RivalConstants.BR] += Bitboards.pieceSquareTableRook.get(Bitboards.A1) - Bitboards.pieceSquareTableRook.get(Bitboards.D1);
-                }
-                break;
+                // for castles, replace the rook
+                replaceCastledRook(fromMask, toMask, movePiece);
             }
-            break;
-        } while (true);
+        }
 
         calculateSupplementaryBitboards();
     }
 
-    public boolean isQuiesceMove(int[] move) {
-        boolean isQuiesceMove = false;
-        long currentEnemyPieces = this.m_pieceBitboards[RivalConstants.ENEMY];
-        if (this.makeMove((move[0] << 16) | move[1])) {
-            isQuiesceMove = currentEnemyPieces != this.m_pieceBitboards[RivalConstants.FRIENDLY];
-            this.unMakeMove();
+    private byte replaceMovedPiece(int fromSquare, int toSquare, long fromMask, long toMask) {
+        final byte movePiece = this.m_moveList[this.m_movesMade].movePiece;
+        this.m_pieceBitboards[movePiece] ^= toMask | fromMask;
+        if (movePiece == RivalConstants.WK) this.m_whiteKingSquare = (byte) fromSquare;
+        else if (movePiece == RivalConstants.BK) this.m_blackKingSquare = (byte) fromSquare;
+        else if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
+            pieceSquareValues[movePiece] += (Bitboards.pieceSquareTable.get(0).get(movePiece).get(fromSquare) - Bitboards.pieceSquareTable.get(0).get(movePiece).get(toSquare));
+            pieceSquareValuesEndGame[movePiece] += (Bitboards.pieceSquareTable.get(1).get(movePiece).get(fromSquare) - Bitboards.pieceSquareTable.get(1).get(movePiece).get(toSquare));
         }
-        return isQuiesceMove;
+        return movePiece;
     }
 
-    public int movesMade() {
-        return this.m_movesMade;
+    private void replaceCastledRook(long fromMask, long toMask, byte movePiece) {
+        if (movePiece == RivalConstants.WK) {
+            if ((toMask | fromMask) == Bitboards.WHITEKINGSIDECASTLEMOVEMASK) {
+                this.m_pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEKINGSIDECASTLEROOKMOVE;
+                this.squareContents[Bitboards.H1] = RivalConstants.WR;
+                this.squareContents[Bitboards.F1] = -1;
+                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                    pieceSquareValues[RivalConstants.WR] += Bitboards.pieceSquareTableRook.get(Bitboards.H1) - Bitboards.pieceSquareTableRook.get(Bitboards.F1);
+            } else if ((toMask | fromMask) == Bitboards.WHITEQUEENSIDECASTLEMOVEMASK) {
+                this.m_pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEQUEENSIDECASTLEROOKMOVE;
+                this.squareContents[Bitboards.A1] = RivalConstants.WR;
+                this.squareContents[Bitboards.D1] = -1;
+                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                    pieceSquareValues[RivalConstants.WR] += Bitboards.pieceSquareTableRook.get(Bitboards.A1) - Bitboards.pieceSquareTableRook.get(Bitboards.D1);
+            }
+            return;
+        } else if (movePiece == RivalConstants.BK) {
+            if ((toMask | fromMask) == Bitboards.BLACKKINGSIDECASTLEMOVEMASK) {
+                this.m_pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKKINGSIDECASTLEROOKMOVE;
+                this.squareContents[Bitboards.H8] = RivalConstants.BR;
+                this.squareContents[Bitboards.F8] = -1;
+                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                    pieceSquareValues[RivalConstants.BR] += Bitboards.pieceSquareTableRook.get(Bitboards.H1) - Bitboards.pieceSquareTableRook.get(Bitboards.F1);
+            } else if ((toMask | fromMask) == Bitboards.BLACKQUEENSIDECASTLEMOVEMASK) {
+                this.m_pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKQUEENSIDECASTLEROOKMOVE;
+                this.squareContents[Bitboards.A8] = RivalConstants.BR;
+                this.squareContents[Bitboards.D8] = -1;
+                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                    pieceSquareValues[RivalConstants.BR] += Bitboards.pieceSquareTableRook.get(Bitboards.A1) - Bitboards.pieceSquareTableRook.get(Bitboards.D1);
+            }
+            return;
+        }
+    }
+
+    private boolean removePromotionPiece(int fromSquare, int toSquare, int flippedFromSquare, int flippedToSquare, long fromMask, long toMask) {
+        boolean done;
+        final int promotionPiece = this.m_moveList[this.m_movesMade].move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
+        if (promotionPiece != 0) {
+            if (this.m_isWhiteToMove) {
+                this.m_pieceBitboards[RivalConstants.WP] ^= fromMask;
+                this.whitePawnValues += RivalConstants.VALUE_PAWN;
+                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
+                    pieceSquareValues[RivalConstants.WP] += Bitboards.pieceSquareTablePawn.get(fromSquare);
+                    pieceSquareValuesEndGame[RivalConstants.WP] += Bitboards.pieceSquareTablePawnEndGame.get(fromSquare);
+                }
+                switch (promotionPiece) {
+                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
+                        if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                            pieceSquareValues[RivalConstants.WQ] -= Bitboards.pieceSquareTableQueen.get(toSquare);
+                        this.m_pieceBitboards[RivalConstants.WQ] ^= toMask;
+                        this.whitePieceValues -= RivalConstants.VALUE_QUEEN;
+                        break;
+                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
+                        if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                            pieceSquareValues[RivalConstants.WB] -= Bitboards.pieceSquareTableBishop.get(toSquare);
+                        this.m_pieceBitboards[RivalConstants.WB] ^= toMask;
+                        this.whitePieceValues -= RivalConstants.VALUE_BISHOP;
+                        break;
+                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
+                        if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
+                            pieceSquareValues[RivalConstants.WN] -= Bitboards.pieceSquareTableKnight.get(toSquare);
+                            pieceSquareValuesEndGame[RivalConstants.WN] -= Bitboards.pieceSquareTableKnightEndGame.get(toSquare);
+                        }
+                        this.m_pieceBitboards[RivalConstants.WN] ^= toMask;
+                        this.whitePieceValues -= RivalConstants.VALUE_KNIGHT;
+                        break;
+                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
+                        if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                            pieceSquareValues[RivalConstants.WR] -= Bitboards.pieceSquareTableRook.get(toSquare);
+                        this.m_pieceBitboards[RivalConstants.WR] ^= toMask;
+                        this.whitePieceValues -= RivalConstants.VALUE_ROOK;
+                        break;
+                }
+            } else {
+                this.m_pieceBitboards[RivalConstants.BP] ^= fromMask;
+                this.blackPawnValues += RivalConstants.VALUE_PAWN;
+                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
+                    pieceSquareValues[RivalConstants.BP] += Bitboards.pieceSquareTablePawn.get(flippedFromSquare);
+                    pieceSquareValuesEndGame[RivalConstants.BP] += Bitboards.pieceSquareTablePawnEndGame.get(flippedFromSquare);
+                }
+                switch (promotionPiece) {
+                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
+                        if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                            pieceSquareValues[RivalConstants.BQ] -= Bitboards.pieceSquareTableQueen.get(flippedToSquare);
+                        this.m_pieceBitboards[RivalConstants.BQ] ^= toMask;
+                        this.blackPieceValues -= RivalConstants.VALUE_QUEEN;
+                        break;
+                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
+                        if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                            pieceSquareValues[RivalConstants.BB] -= Bitboards.pieceSquareTableBishop.get(flippedToSquare);
+                        this.m_pieceBitboards[RivalConstants.BB] ^= toMask;
+                        this.blackPieceValues -= RivalConstants.VALUE_BISHOP;
+                        break;
+                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
+                        if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
+                            pieceSquareValues[RivalConstants.BN] -= Bitboards.pieceSquareTableKnight.get(flippedToSquare);
+                            pieceSquareValuesEndGame[RivalConstants.BN] -= Bitboards.pieceSquareTableKnightEndGame.get(flippedToSquare);
+                        }
+                        this.m_pieceBitboards[RivalConstants.BN] ^= toMask;
+                        this.blackPieceValues -= RivalConstants.VALUE_KNIGHT;
+                        break;
+                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
+                        if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
+                            pieceSquareValues[RivalConstants.BR] -= Bitboards.pieceSquareTableRook.get(flippedToSquare);
+                        this.m_pieceBitboards[RivalConstants.BR] ^= toMask;
+                        this.blackPieceValues -= RivalConstants.VALUE_ROOK;
+                        break;
+                }
+            }
+            done = true;
+            return true;
+        }
+        return false;
+    }
+
+    private void replaceCapturedPiece(int toSquare, long toMask) {
+        final byte capturePiece = (byte) this.m_moveList[this.m_movesMade].capturePiece;
+        if (capturePiece != -1) {
+            this.squareContents[toSquare] = capturePiece;
+            if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
+                pieceSquareValues[capturePiece] += Bitboards.pieceSquareTable.get(0).get(capturePiece).get(toSquare);
+                pieceSquareValuesEndGame[capturePiece] += Bitboards.pieceSquareTable.get(1).get(capturePiece).get(toSquare);
+            }
+            this.m_pieceBitboards[capturePiece] ^= toMask;
+
+            if (capturePiece == RivalConstants.WP) this.whitePawnValues += RivalConstants.VALUE_PAWN;
+            else if (capturePiece == RivalConstants.BP) this.blackPawnValues += RivalConstants.VALUE_PAWN;
+            else if (capturePiece <= RivalConstants.WR)
+                this.whitePieceValues += RivalConstants.PIECE_VALUES.get(capturePiece);
+            else
+                this.blackPieceValues += RivalConstants.PIECE_VALUES.get(capturePiece);
+        }
+    }
+
+    private boolean unMakeEnPassants(int fromSquare, int toSquare, int flippedFromSquare, int flippedToSquare, long fromMask, long toMask) {
+        if (toMask == this.m_moveList[this.m_movesMade].enPassantBitboard) {
+            if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.WP) {
+                this.m_pieceBitboards[RivalConstants.WP] ^= toMask | fromMask;
+                this.m_pieceBitboards[RivalConstants.BP] ^= toMask >>> 8;
+                this.blackPawnValues += RivalConstants.VALUE_PAWN;
+                this.squareContents[toSquare - 8] = RivalConstants.BP;
+
+                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
+                    this.pieceSquareValues[RivalConstants.WP] += Bitboards.pieceSquareTablePawn.get(fromSquare) - Bitboards.pieceSquareTablePawn.get(toSquare);
+                    this.pieceSquareValuesEndGame[RivalConstants.WP] += Bitboards.pieceSquareTablePawnEndGame.get(fromSquare) - Bitboards.pieceSquareTablePawnEndGame.get(toSquare);
+                    this.pieceSquareValues[RivalConstants.BP] += Bitboards.pieceSquareTablePawn.get(Bitboards.bitFlippedHorizontalAxis.get(toSquare - 8));
+                    this.pieceSquareValuesEndGame[RivalConstants.BP] += Bitboards.pieceSquareTablePawnEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(toSquare - 8));
+                }
+                return true;
+            } else if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.BP) {
+                this.m_pieceBitboards[RivalConstants.BP] ^= toMask | fromMask;
+                this.m_pieceBitboards[RivalConstants.WP] ^= toMask << 8;
+                this.whitePawnValues += RivalConstants.VALUE_PAWN;
+                this.squareContents[toSquare + 8] = RivalConstants.WP;
+
+                if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
+                    this.pieceSquareValues[RivalConstants.BP] += Bitboards.pieceSquareTablePawn.get(flippedFromSquare) - Bitboards.pieceSquareTablePawn.get(flippedToSquare);
+                    this.pieceSquareValuesEndGame[RivalConstants.BP] += Bitboards.pieceSquareTablePawnEndGame.get(flippedFromSquare) - Bitboards.pieceSquareTablePawnEndGame.get(flippedToSquare);
+                    this.pieceSquareValues[RivalConstants.WP] += Bitboards.pieceSquareTablePawn.get(toSquare + 8);
+                    this.pieceSquareValuesEndGame[RivalConstants.WP] += Bitboards.pieceSquareTablePawnEndGame.get(toSquare + 8);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     public int lastCapturePiece() {

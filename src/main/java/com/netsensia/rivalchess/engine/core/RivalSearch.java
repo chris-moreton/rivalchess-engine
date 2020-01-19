@@ -38,7 +38,6 @@ public final class RivalSearch implements Runnable {
 
     private boolean quit = false;
 
-    private int currentDepthZeroValidMoves = 0;
     private int movesToSearchAtAllDepths = 0;
     private int totalMovesSearchedAtAllDepths = 0;
 
@@ -95,9 +94,9 @@ public final class RivalSearch implements Runnable {
 
     private int m_searchState;
     private int m_hashTableVersion = 1;
-    private int hashTableHeight[];
-    private int hashTableAlways[];
-    private long pawnHashTable[];
+    private int[] hashTableHeight;
+    private int[] hashTableAlways;
+    private long[] pawnHashTable;
     public int m_maxHashEntries;
     private int m_maxPawnHashEntries;
     private int m_lastHashSizeCreated;
@@ -114,10 +113,8 @@ public final class RivalSearch implements Runnable {
     private int[] depthZeroLegalMoves;
     private int[] depthZeroMoveScores;
 
-    private boolean m_isDebug = false;
-
-    private long profiler[][];
-    private String profilerDescs[];
+    private long[][] profiler;
+    private String[] profilerDescs;
 
     private boolean m_isUCIMode = false;
 
@@ -621,7 +618,7 @@ public final class RivalSearch implements Runnable {
         return captureList[0] - score;
     }
 
-    final private int getNextDirectionAttackerAfterIndex(EngineChessBoard board, int bitRef, int direction, int index) {
+    private int getNextDirectionAttackerAfterIndex(EngineChessBoard board, int bitRef, int direction, int index) {
         final int xInc = Bitboards.xIncrements.get(direction);
         final int yInc = Bitboards.yIncrements.get(direction);
         int pieceType;
@@ -955,7 +952,6 @@ public final class RivalSearch implements Runnable {
         final boolean whiteDarkBishopExists = (board.m_pieceBitboards[RivalConstants.WB] & Bitboards.DARK_SQUARES) != 0;
         final boolean blackLightBishopExists = (board.m_pieceBitboards[RivalConstants.BB] & Bitboards.LIGHT_SQUARES) != 0;
         final boolean blackDarkBishopExists = (board.m_pieceBitboards[RivalConstants.BB] & Bitboards.DARK_SQUARES) != 0;
-        ;
 
         final int whiteBishopColourCount = (whiteLightBishopExists ? 1 : 0) + (whiteDarkBishopExists ? 1 : 0);
         final int blackBishopColourCount = (blackLightBishopExists ? 1 : 0) + (blackDarkBishopExists ? 1 : 0);
@@ -994,7 +990,6 @@ public final class RivalSearch implements Runnable {
 
         if (blackBishopColourCount == 2)
             bishopScore -= RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.blackPawnValues / RivalConstants.VALUE_PAWN)) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
-        ;
 
         if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.whitePieceValues == board.blackPieceValues) {
             // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
@@ -1384,7 +1379,7 @@ public final class RivalSearch implements Runnable {
         }
     }
 
-    int movesForSorting[];
+    int[] movesForSorting;
 
     private void scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) {
         int i, score;
@@ -1424,7 +1419,7 @@ public final class RivalSearch implements Runnable {
         movesForSorting[moveCount] = 0;
     }
 
-    MoveOrder moveOrderStatus[] = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
+    MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
 
     private int getHighScoreMove(EngineChessBoard board, int ply, int hashMove) {
         if (moveOrderStatus[ply] == MoveOrder.NONE && hashMove != 0) {
@@ -2263,7 +2258,6 @@ public final class RivalSearch implements Runnable {
             }
             numMoves++;
             move = orderedMoves[0][numMoves] & 0x00FFFFFF;
-            ;
         }
 
         if (!this.m_abortingSearch) {
@@ -2329,7 +2323,8 @@ public final class RivalSearch implements Runnable {
 
         SearchPath path;
 
-        if (this.m_isDebug) {
+        boolean m_isDebug = false;
+        if (m_isDebug) {
             printStream.println("Hash: " + m_board.m_hashValue);
             m_board.printLegalMoves(true, true);
             printStream.println("Is Check = " + m_board.isCheck());
@@ -2342,7 +2337,7 @@ public final class RivalSearch implements Runnable {
         try {
             m_board.setLegalMoves(depthZeroLegalMoves);
             int depthZeroMoveCount = 0;
-            currentDepthZeroValidMoves = 0;
+            int currentDepthZeroValidMoves = 0;
 
             int c = 0;
             int[] depth1MovesTemp = new int[RivalConstants.MAX_LEGAL_MOVES];

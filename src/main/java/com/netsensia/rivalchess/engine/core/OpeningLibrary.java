@@ -222,7 +222,7 @@ public class OpeningLibrary
 		for (int i=0; i<size; i++)
 		{
 			position = openings.get(i);
-			String parts[] = position.fen.split(" ");
+			String[] parts = position.fen.split(" ");
 			String fen1 = parts[0] + parts[1];
 			parts = fen.split(" ");
 			String fen2 = parts[0] + parts[1];

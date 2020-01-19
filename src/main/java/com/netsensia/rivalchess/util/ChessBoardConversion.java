@@ -126,7 +126,7 @@ public class ChessBoardConversion
 		
 		char qualifier = ' ';
 		
-		int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
+		int[] legalMoves = new int[RivalConstants.MAX_LEGAL_MOVES];
 		board.setLegalMoves(legalMoves);
 		
 		int moveCount = 0;

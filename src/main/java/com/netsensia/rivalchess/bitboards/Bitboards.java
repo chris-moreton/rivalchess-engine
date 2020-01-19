@@ -51,7 +51,7 @@ public final class Bitboards {
     public static final long NONMID_FILES_8_BIT = 0x18;
 
     public static final long F1G1 = (1L << 1) | (1L << 2);
-    public static final long G1H1 = (1L << 0) | (1L << 1);
+    public static final long G1H1 = 1L | (1L << 1);
     public static final long A1B1 = (1L << 7) | (1L << 6);
     public static final long B1C1 = (1L << 6) | (1L << 5);
     public static final long F8G8 = (1L << 58) | (1L << 57);
@@ -68,7 +68,7 @@ public final class Bitboards {
     public static final long A1A2B1B2 = (1L << 7) | (1L << 6) | (1L << 15) | (1L << 14);
     public static final long A8A7B8B7 = (1L << 63) | (1L << 62) | (1L << 55) | (1L << 54);
     public static final long H8H7G8G7 = (1L << 57) | (1L << 56) | (1L << 49) | (1L << 48);
-    public static final long H1H2G1G2 = (1L << 0) | (1L << 1) | (1L << 8) | (1L << 9);
+    public static final long H1H2G1G2 = 1L | (1L << 1) | (1L << 8) | (1L << 9);
     public static final long A2A7H2H7 = (1L << 15) | (1L << 55) | (1L << 8) | (1L << 48);
 
     public static final long LOW32 = 0x00000000FFFFFFFFL;
