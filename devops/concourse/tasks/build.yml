@@ -1,0 +1,18 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: netsensia/pipelinefull
+    tag: 1.0.12
+inputs:
+  - name: source-code
+outputs:
+  - name: build
+run:
+  dir: source-code
+  path: sh
+  args:
+    - -exc
+    - |
+      ./gradlew build
+

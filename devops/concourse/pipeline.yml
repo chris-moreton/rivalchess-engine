@@ -1,0 +1,16 @@
+---
+resources:
+  - name: source-code
+    type: git
+    source:
+      uri: git@github.com:((GITHUB_REPO_ACCOUNT))/((PRODUCT))-((COMPONENT))
+      branch: master
+jobs:
+  - name: build
+    public: true
+    plan:
+      - get: source-code
+        trigger: true
+      - task: test
+        file: source-code/devops/concourse/tasks/build.yml
+
