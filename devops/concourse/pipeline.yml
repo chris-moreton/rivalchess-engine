@@ -5,6 +5,7 @@ resources:
     source:
       uri: git@github.com:((GITHUB_REPO_ACCOUNT))/((PRODUCT))-((COMPONENT))
       branch: master
+      password: ((GITHUB_API_TOKEN))
 jobs:
   - name: build
     public: true
