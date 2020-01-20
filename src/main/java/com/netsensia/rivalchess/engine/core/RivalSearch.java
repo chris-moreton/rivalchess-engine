@@ -175,10 +175,7 @@ public final class RivalSearch implements Runnable {
         if (RivalConstants.USE_INTERNAL_OPENING_BOOK) m_openingLibrary = new OpeningLibrary();
     }
 
-    public synchronized void quit() {
-        quit = true;
-    }
-
+    @SuppressWarnings("SameParameterValue")
     private void loadBitbase(byte[] byteArray, int byteArraySize, String fileLoc) {
         InputStream inStream;
         inStream = getClass().getResourceAsStream(fileLoc);
@@ -1831,7 +1828,7 @@ public final class RivalSearch implements Runnable {
             return bestPath;
         }
 
-        if (RivalConstants.USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= RivalConstants.IID_MIN_DEPTH && hashMove == 0 && !board.isOnNullMove()) {
+        if (RivalConstants.USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= RivalConstants.IID_MIN_DEPTH && hashMove == 0 && board.isNotOnNullMove()) {
             boolean doIt = true;
 
             if (RivalConstants.IID_PV_NODES_ONLY) {
@@ -1857,7 +1854,7 @@ public final class RivalSearch implements Runnable {
         int threatExtend = 0, pawnExtend = 0;
 
         int nullMoveReduceDepth = (depthRemaining > RivalConstants.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE) ? RivalConstants.NULLMOVE_REDUCE_DEPTH + 1 : RivalConstants.NULLMOVE_REDUCE_DEPTH;
-        if (RivalConstants.USE_NULLMOVE_PRUNING && !isCheck && !board.isOnNullMove() && depthRemaining > 1) {
+        if (RivalConstants.USE_NULLMOVE_PRUNING && !isCheck && board.isNotOnNullMove() && depthRemaining > 1) {
             if ((board.m_isWhiteToMove ? board.whitePieceValues : board.blackPieceValues) >= RivalConstants.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES &&
                     (board.m_isWhiteToMove ? board.whitePawnValues : board.blackPawnValues) > 0) {
                 board.makeNullMove();
@@ -1957,7 +1954,7 @@ public final class RivalSearch implements Runnable {
 
                     isCheck = board.isCheck();
 
-                    if (RivalConstants.USE_FUTILITY_PRUNING && canFutilityPrune && !isCheck && !board.wasCapture() && !board.wasPawnPush()) {
+                    if (RivalConstants.USE_FUTILITY_PRUNING && canFutilityPrune && !isCheck && board.wasCapture() && !board.wasPawnPush()) {
                         m_futilityPrunes++;
                         newPath = searchPath[ply + 1];
                         newPath.reset();
@@ -1994,7 +1991,7 @@ public final class RivalSearch implements Runnable {
                                         move != hashMove &&
                                         !wasCheckBeforeMove &&
                                         historyPruneMoves[board.m_isWhiteToMove ? 1 : 0][(move >>> 16) & 63][(move & 63)] <= RivalConstants.LMR_THRESHOLD &&
-                                        !board.wasCapture() &&
+                                        board.wasCapture() &&
                                         (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0 || !board.wasPawnPush())) {
                             if (-evaluate(board) <= low + RivalConstants.LMR_CUT_MARGIN) {
                                 lateMoveReduction = 1;

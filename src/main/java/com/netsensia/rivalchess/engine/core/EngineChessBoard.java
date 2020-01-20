@@ -23,10 +23,10 @@ public final class EngineChessBoard {
     public int whitePawnValues = 0;
     public int blackPawnValues = 0;
 
-    public int pieceSquareValues[] = new int[12];
-    public int pieceSquareValuesEndGame[] = new int[12];
+    public int[] pieceSquareValues = new int[12];
+    public int[] pieceSquareValuesEndGame = new int[12];
 
-    public long m_pieceBitboards[];
+    public long[] m_pieceBitboards;
 
     public int m_castlePrivileges;
     public boolean m_isWhiteToMove;
@@ -34,14 +34,14 @@ public final class EngineChessBoard {
     public byte m_blackKingSquare;
     public int m_movesMade;
 
-    public byte squareContents[] = new byte[64];
+    public byte[] squareContents = new byte[64];
 
     public boolean m_isOnNullMove = false;
 
     protected int[] m_legalMoves;
     protected int m_numLegalMoves;
 
-    public MoveDetail m_moveList[];
+    public MoveDetail[] m_moveList;
 
     public int m_halfMoveCount = 0;
 
@@ -604,8 +604,8 @@ public final class EngineChessBoard {
         this.m_pieceBitboards[RivalConstants.ALL] = m_pieceBitboards[RivalConstants.FRIENDLY] | m_pieceBitboards[RivalConstants.ENEMY];
     }
 
-    public boolean isOnNullMove() {
-        return this.m_isOnNullMove;
+    public boolean isNotOnNullMove() {
+        return !this.m_isOnNullMove;
     }
 
     public void makeNullMove() {
@@ -1124,7 +1124,7 @@ public final class EngineChessBoard {
     }
 
     public boolean wasCapture() {
-        return this.m_moveList[this.m_movesMade - 1].capturePiece != -1;
+        return this.m_moveList[this.m_movesMade - 1].capturePiece == -1;
     }
 
     public boolean wasPawnPush() {
@@ -1234,8 +1234,8 @@ public final class EngineChessBoard {
     }
 
     private char[] getCharBoard() {
-        char board[] = new char[64];
-        char pieces[] = new char[]{'P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r'};
+        char[] board = new char[64];
+        char[] pieces = new char[]{'P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r'};
 
         for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
             int[] bitsSet = new int[64];

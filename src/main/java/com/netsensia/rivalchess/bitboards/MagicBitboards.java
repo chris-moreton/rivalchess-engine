@@ -92,7 +92,6 @@ public class MagicBitboards
 					for (j=bitRef+1; j%8!=7 && j%8!=0 && (occupancyVariation[i] & (1L << j)) == 0; j++);
 					if (j>=0 && j<=63) occupancyAttackSet[i] |= (1L << j);
 					for (j=bitRef-1; j%8!=7 && j%8!=0 && j>=0 && (occupancyVariation[i] & (1L << j)) == 0; j--);
-					if (j>=0 && j<=63) occupancyAttackSet[i] |= (1L << j);
 				}
 				else
 				{
@@ -103,8 +102,8 @@ public class MagicBitboards
 					for (j=bitRef+7; j%8!=7 && j%8!=0 && j<=55 && (occupancyVariation[i] & (1L << j)) == 0; j+=7);
 					if (j>=0 && j<=63) occupancyAttackSet[i] |= (1L << j);
 					for (j=bitRef-7; j%8!=7 && j%8!=0 && j>=8 && (occupancyVariation[i] & (1L << j)) == 0; j-=7);
-					if (j>=0 && j<=63) occupancyAttackSet[i] |= (1L << j);
 				}
+				if (j>=0 && j<=63) occupancyAttackSet[i] |= (1L << j);
 			}
 			
 			variations = (int)(1L << bitCount);

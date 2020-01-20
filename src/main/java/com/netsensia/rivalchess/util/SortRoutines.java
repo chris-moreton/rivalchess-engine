@@ -31,18 +31,5 @@ public class SortRoutines
 	 
 	   return index;
 	}
-	
-	public static int[][] quicksort(int[][] array, int lo, int hi)
-	{
-	   if (hi > lo)
-	   {
-	      int partitionPivotIndex = lo;
-	 
-	      int newPivotIndex = partition(array, lo, hi, partitionPivotIndex);
-	 
-	      quicksort(array, lo, newPivotIndex-1);
-	      quicksort(array, newPivotIndex+1, hi);
-	   }
-	   return array;
-	}	
+
 }
