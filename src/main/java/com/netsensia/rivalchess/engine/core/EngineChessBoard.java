@@ -1082,10 +1082,10 @@ public final class EngineChessBoard {
 
         if (!m_isWhiteToMove) // white made the last move
         {
-            if (toSquare >= 40 && toSquare <= 47)
+            if (toSquare >= 40)
                 return (Long.bitCount(Bitboards.whitePassedPawnMask.get(toSquare) & m_pieceBitboards[RivalConstants.BP]) == 0);
         } else {
-            if (toSquare >= 16 && toSquare <= 23)
+            if (toSquare <= 23)
                 return (Long.bitCount(Bitboards.blackPassedPawnMask.get(toSquare) & m_pieceBitboards[RivalConstants.WP]) == 0);
         }
 
@@ -1104,16 +1104,16 @@ public final class EngineChessBoard {
     }
 
     public String allMovesString() {
-        String s = "";
+        StringBuilder s = new StringBuilder();
         for (int i = 0; i < this.m_movesMade; i++) {
-            s += ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(this.m_moveList[i].move) + " ";
+            s.append(ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(this.m_moveList[i].move)).append(" ");
         }
 
-        return s;
+        return s.toString();
     }
 
     public String getFen() {
-        String fen = "";
+        StringBuilder fen = new StringBuilder();
         char[] board = getCharBoard();
 
         char spaces = '0';
@@ -1122,60 +1122,60 @@ public final class EngineChessBoard {
                 spaces++;
             } else {
                 if (spaces > '0') {
-                    fen += spaces;
+                    fen.append(spaces);
                     spaces = '0';
                 }
-                fen += board[i];
+                fen.append(board[i]);
             }
             if (i % 8 == 0) {
                 if (spaces > '0') {
-                    fen += spaces;
+                    fen.append(spaces);
                     spaces = '0';
                 }
                 if (i > 0) {
-                    fen += '/';
+                    fen.append('/');
                 }
             }
         }
 
-        fen += ' ';
-        fen += m_isWhiteToMove ? 'w' : 'b';
-        fen += ' ';
+        fen.append(' ');
+        fen.append(m_isWhiteToMove ? 'w' : 'b');
+        fen.append(' ');
 
         boolean noPrivs = true;
 
         if ((m_castlePrivileges & RivalConstants.CASTLEPRIV_WK) != 0) {
-            fen += 'K';
+            fen.append('K');
             noPrivs = false;
         }
         if ((m_castlePrivileges & RivalConstants.CASTLEPRIV_WQ) != 0) {
-            fen += 'Q';
+            fen.append('Q');
             noPrivs = false;
         }
         if ((m_castlePrivileges & RivalConstants.CASTLEPRIV_BK) != 0) {
-            fen += 'k';
+            fen.append('k');
             noPrivs = false;
         }
         if ((m_castlePrivileges & RivalConstants.CASTLEPRIV_BQ) != 0) {
-            fen += 'q';
+            fen.append('q');
             noPrivs = false;
         }
 
-        if (noPrivs) fen += '-';
+        if (noPrivs) fen.append('-');
 
-        fen += ' ';
+        fen.append(' ');
         long bitboard = m_pieceBitboards[RivalConstants.ENPASSANTSQUARE];
         if (Long.bitCount(bitboard) > 0) {
             int epSquare = Long.numberOfTrailingZeros(bitboard);
             char file = (char) (7 - (epSquare % 8));
             char rank = (char) (epSquare <= 23 ? 2 : 5);
-            fen += (char) (file + 'a');
-            fen += (char) (rank + '1');
+            fen.append((char) (file + 'a'));
+            fen.append((char) (rank + '1'));
         } else {
-            fen += '-';
+            fen.append('-');
         }
 
-        return fen;
+        return fen.toString();
     }
 
     private char[] getCharBoard() {
@@ -1212,7 +1212,7 @@ public final class EngineChessBoard {
     }
 
     public void printLegalMoves(boolean isQuiesce, boolean includeChecks) {
-        String s = "";
+        StringBuilder s = new StringBuilder();
         int[] moves = new int[RivalConstants.MAX_GAME_MOVES];
         if (isQuiesce) {
             this.setLegalQuiesceMoves(moves, includeChecks);
@@ -1223,7 +1223,7 @@ public final class EngineChessBoard {
         while (moves[i] != 0) {
             if (this.makeMove(moves[i])) {
                 if (!this.isNonMoverInCheck()) {
-                    s += ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(moves[i]) + " ";
+                    s.append(ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(moves[i])).append(" ");
                 }
                 this.unMakeMove();
             }
@@ -1245,24 +1245,24 @@ public final class EngineChessBoard {
 
     public String getBoardString() {
         String newLine = System.getProperty("line.separator");
-        String s = newLine;
+        StringBuilder s = new StringBuilder(newLine);
 
-        s += "*************" + newLine;
-        s += (m_isWhiteToMove ? "White To Move" : "Black To Move") + newLine;
-        s += "*************" + newLine;
+        s.append("*************").append(newLine);
+        s.append(m_isWhiteToMove ? "White To Move" : "Black To Move").append(newLine);
+        s.append("*************").append(newLine);
 
         char[] board = getCharBoard();
 
         for (int i = 63; i >= 0; i--) {
-            s += (board[i] == 0 ? '-' : board[i]);
+            s.append(board[i] == 0 ? '-' : board[i]);
             if (i % 8 == 0) {
-                s += newLine;
+                s.append(newLine);
             }
         }
 
-        s += (getFen());
+        s.append(getFen());
 
-        return s;
+        return s.toString();
     }
 
     public void printBoard() {

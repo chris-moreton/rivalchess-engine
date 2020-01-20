@@ -30,7 +30,7 @@ public class SearchPath
 		this.score = path.score;
 		this.height = path.height;
 
-		for (int i=0; i<path.height; i++) this.move[i] = path.move[i];
+		if (path.height >= 0) System.arraycopy(path.move, 0, this.move, 0, path.height);
 	}
 
 	public synchronized void setPath(int compactMove, SearchPath path)
@@ -38,8 +38,8 @@ public class SearchPath
 		this.height = path.height + 1;
 		this.move[0] = compactMove;
 		this.score = path.score;
-		
-		for (int i=1; i<=path.height; i++) this.move[i] = path.move[i-1];
+
+		if (path.height >= 0) System.arraycopy(path.move, 0, this.move, 1, path.height);
 	}
 	
 	public synchronized int getScore()

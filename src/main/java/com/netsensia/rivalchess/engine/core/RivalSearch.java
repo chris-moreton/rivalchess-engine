@@ -404,7 +404,7 @@ public final class RivalSearch implements Runnable {
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
                 final int pawnDistance = Math.min(5, (sq / 8));
-                final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), Math.abs(kingY - 0));
+                final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), kingY);
                 pawnScore -= Numbers.linearScale(board.whitePieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0);
                 if ((pawnDistance < (kingDistance - (board.m_isWhiteToMove ? 1 : 0))) && (board.whitePieceValues == 0))
                     pawnScore -= RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN;
@@ -1165,6 +1165,7 @@ public final class RivalSearch implements Runnable {
             return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
 
         if (eval > 0) {
+            //noinspection ConstantConditions
             if (board.whitePawnValues == 0 && (board.whitePieceValues == RivalConstants.VALUE_KNIGHT || board.whitePieceValues == RivalConstants.VALUE_BISHOP))
                 return eval - (int) (board.whitePieceValues * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.whitePawnValues == 0 && board.whitePieceValues - RivalConstants.VALUE_BISHOP <= board.blackPieceValues)
@@ -1204,6 +1205,7 @@ public final class RivalSearch implements Runnable {
             }
         }
         if (eval < 0) {
+            //noinspection ConstantConditions
             if (board.blackPawnValues == 0 && (board.blackPieceValues == RivalConstants.VALUE_KNIGHT || board.blackPieceValues == RivalConstants.VALUE_BISHOP))
                 return eval + (int) (board.blackPieceValues * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.blackPawnValues == 0 && board.blackPieceValues - RivalConstants.VALUE_BISHOP <= board.whitePieceValues)
@@ -1523,7 +1525,7 @@ public final class RivalSearch implements Runnable {
                     else if ((movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN)
                         score = 109;
                     else if (see == 0) score = 107;
-                    else if (see < 0) {
+                    else {
                         // losing captures with a winning history
                         int historyScore = historyScore(board.m_isWhiteToMove, ((movesForSorting[i] >>> 16) & 63), toSquare);
                         if (historyScore > 5) {
@@ -2017,9 +2019,7 @@ public final class RivalSearch implements Runnable {
                                     // if this move is in second place, or if it's not in the table at all,
                                     // then move first to second, and replace first with this move
                                     if (killerMoves[ply][0] != move) {
-                                        for (int j = RivalConstants.NUM_KILLER_MOVES - 1; j > 0; j--) {
-                                            killerMoves[ply][j] = killerMoves[ply][j - 1];
-                                        }
+                                        System.arraycopy(killerMoves[ply], 0, killerMoves[ply], 1, RivalConstants.NUM_KILLER_MOVES - 1);
                                         killerMoves[ply][0] = move;
                                     }
                                     if (RivalConstants.USE_MATE_HISTORY_KILLERS && newPath.score > RivalConstants.MATE_SCORE_START) {

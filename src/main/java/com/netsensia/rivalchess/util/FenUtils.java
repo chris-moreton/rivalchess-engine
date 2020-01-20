@@ -134,9 +134,9 @@ public class FenUtils {
 
         for (int i = 1; i < fenParts.length; i++) {
             if (i == 3) {
-                newFenBuilder.append(" " + invertSquare(fenParts[i]));
+                newFenBuilder.append(" ").append(invertSquare(fenParts[i]));
             } else {
-                newFenBuilder.append(" " + fenParts[i]);
+                newFenBuilder.append(" ").append(fenParts[i]);
             }
         }
 

@@ -108,7 +108,7 @@ public class ChessBoardConversion
 			{
 				if (board.squareContents[legalMoveFrom] == board.squareContents[from])
 				{
-					if (legalMoveFrom != from || legalMoveTo != to)
+					if (legalMoveFrom != from)
 					{
 						if (legalMoveFrom % 8 == from % 8) // same file
 						{

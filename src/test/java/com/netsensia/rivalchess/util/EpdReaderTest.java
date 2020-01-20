@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,7 +14,7 @@ public class EpdReaderTest {
     @Test
     public void testSize() throws IOException, IllegalEpdItemException {
         ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource("epd/winAtChess.epd").getFile());
+        File file = new File(Objects.requireNonNull(classLoader.getResource("epd/winAtChess.epd")).getFile());
 
         EpdReader epdReader = new EpdReader(file.getAbsolutePath());
 

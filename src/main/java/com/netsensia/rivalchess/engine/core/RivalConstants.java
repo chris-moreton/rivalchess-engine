@@ -278,8 +278,8 @@ public final class RivalConstants
 	public static final int NUM_PAWNHASH_FIELDS = 6;
 	public static final int PAWNHASH_DEFAULT_SCORE = -INFINITY;
 	
-	public static final int HASHPOSITION_SIZE_BYTES = 0 + 8 /* pointer to array */ + (NUM_HASH_FIELDS * 4); /* array contents */
-	public static final int PAWNHASHENTRY_SIZE_BYTES = 0 + 8 /* pointer to array */ + (NUM_PAWNHASH_FIELDS * 8); /* array contents */
+	public static final int HASHPOSITION_SIZE_BYTES = 8 +  /* pointer to array */ (NUM_HASH_FIELDS * 4); /* array contents */
+	public static final int PAWNHASHENTRY_SIZE_BYTES = 8 +  /* pointer to array */ (NUM_PAWNHASH_FIELDS * 8); /* array contents */
 	
 	public static final byte UPPERBOUND = 0;
 	public static final byte LOWERBOUND = 1;

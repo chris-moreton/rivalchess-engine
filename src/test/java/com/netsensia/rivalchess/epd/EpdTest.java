@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -50,7 +51,7 @@ public class EpdTest {
         rivalSearch.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
 
         rivalSearch.setNodesToSearch(epdItem.getMaxNodesToSearch());
-        rivalSearch.setHashSizeMB(128);
+        rivalSearch.setHashSizeMB(32);
         rivalSearch.startSearch();
 
         SECONDS.sleep(1);
@@ -85,7 +86,7 @@ public class EpdTest {
             throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
 
         ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource("epd/" + filename).getFile());
+        File file = new File(Objects.requireNonNull(classLoader.getResource("epd/" + filename)).getFile());
 
         EpdReader epdReader = new EpdReader(file.getAbsolutePath());
 
