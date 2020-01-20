@@ -9,8 +9,8 @@ import java.util.regex.Pattern;
 
 public class EpdItem {
 
-    private String fen;
-    private List<String> bestMoves;
+    private final String fen;
+    private final List<String> bestMoves;
     private String id;
     private int maxNodesToSearch = 10000000;
 

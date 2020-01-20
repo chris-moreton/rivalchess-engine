@@ -2,9 +2,9 @@ package com.netsensia.rivalchess.engine.core;
 
 public class OpeningPosition 
 {
-	String fen;
-	String move;
-	int frequency;
+	final String fen;
+	final String move;
+	final int frequency;
 	
 	public OpeningPosition(String fen, String move, int frequency)
 	{

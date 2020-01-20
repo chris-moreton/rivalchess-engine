@@ -5,15 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
-import com.netsensia.rivalchess.engine.test.epd.EPDRunner;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.util.FenUtils;
@@ -35,11 +30,11 @@ public class UCIController implements Runnable {
     private int moveTime;
     private boolean isInfinite;
 
-    private RivalSearch rivalSearch;
-    private int timeMultiple;
-    private PrintStream printStream;
+    private final RivalSearch rivalSearch;
+    private final int timeMultiple;
+    private final PrintStream printStream;
 
-    private EngineChessBoard engineBoard = new EngineChessBoard();
+    private final EngineChessBoard engineBoard = new EngineChessBoard();
 
     public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
         rivalSearch = engine;
@@ -74,7 +69,6 @@ public class UCIController implements Runnable {
             if (parts.length > 0) {
                 handleIfUciCommand(parts);
                 handleIfVarCommand(parts);
-                handleIfEpdCommand(s, parts);
                 handleIfIsReadyCommand(parts);
                 handleIfUciNewGameCommand(parts);
                 handleIfPositionCommand(s, parts);
@@ -88,6 +82,7 @@ public class UCIController implements Runnable {
 
     private void handleIfQuitCommand(String[] parts) {
         if (parts[0].equals("quit")) {
+            rivalSearch.quit();
             System.exit(0);
         }
     }
@@ -309,21 +304,6 @@ public class UCIController implements Runnable {
     private void handleIfVarCommand(String[] parts) {
         if (parts[0].equals("var")) {
             showEngineVar(parts[1]);
-        }
-    }
-
-    private void handleIfEpdCommand(String s, String[] parts) {
-        if (parts[0].equals("epd")) {
-            Pattern p = Pattern.compile("epd \"(.*)\" (.*) (.*)");
-            Matcher m = p.matcher(s);
-            if (m.find()) {
-                try {
-                    EPDRunner epdRunner = new EPDRunner();
-                    epdRunner.go(m.group(1), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
-                } catch (IllegalFenException e) {
-                    this.printStream.println("Illegal fen");
-                }
-            }
         }
     }
 

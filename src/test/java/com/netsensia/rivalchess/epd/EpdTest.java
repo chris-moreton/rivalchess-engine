@@ -12,7 +12,6 @@ import com.netsensia.rivalchess.util.FenUtils;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -77,7 +76,7 @@ public class EpdTest {
         if (expectedToPass) {
             Assert.assertThat(epdItem.getBestMoves(), hasItem(move));
         } else {
-            Assert.assertTrue(!epdItem.getBestMoves().contains(ChessBoardConversion.getPGNMoveFromCompactMove(
+            Assert.assertFalse(epdItem.getBestMoves().contains(ChessBoardConversion.getPGNMoveFromCompactMove(
                     rivalSearch.getCurrentMove(), engineChessBoard)));
         }
     }

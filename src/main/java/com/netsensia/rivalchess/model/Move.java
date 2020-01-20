@@ -14,15 +14,6 @@ public class Move {
         this.m_promotedPieceCode = '#';
     }
 
-    public Move(Move source) {
-        this.srcXFile = source.srcXFile;
-        this.srcYRank = source.srcYRank;
-
-        this.m_tgtXFile = source.m_tgtXFile;
-        this.m_tgtYRank = source.m_tgtYRank;
-        this.m_promotedPieceCode = source.m_promotedPieceCode;
-    }
-
     public Move(int srcXFile, int srcYRank, int tgtXFile, int tgtYRank) {
         this.set(srcXFile, srcYRank, tgtXFile, tgtYRank);
     }
@@ -65,10 +56,6 @@ public class Move {
 
     public char getPromotedPieceCode() {
         return this.m_promotedPieceCode;
-    }
-
-    public boolean isPromotedPieceCode() {
-        return this.m_promotedPieceCode != '#';
     }
 
     @Override

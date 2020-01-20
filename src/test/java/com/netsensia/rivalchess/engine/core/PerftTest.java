@@ -6,7 +6,6 @@ import java.text.NumberFormat;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.util.FenUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;

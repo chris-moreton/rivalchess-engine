@@ -7,11 +7,11 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class OpeningLibrary 
 {
-	private ArrayList<OpeningPosition> openings;
+	private final ArrayList<OpeningPosition> openings;
 	
 	public OpeningLibrary()
 	{
-		openings = new ArrayList<OpeningPosition>();
+		openings = new ArrayList<>();
 
 		openings.add(new OpeningPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -", "e2e4", 5872));
 		openings.add(new OpeningPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -", "d2d4", 3603));
@@ -215,7 +215,7 @@ public class OpeningLibrary
 	public int getMove(String fen)
 	{
 		OpeningPosition position = null;
-		ArrayList<OpeningPosition> matched = new ArrayList<OpeningPosition>();
+		ArrayList<OpeningPosition> matched = new ArrayList<>();
 		
 		int size = openings.size();
 		//Log.i("Book", "Size " + size);

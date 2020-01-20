@@ -2,19 +2,17 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
-import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.Move;
 
 public class ChessBoardConversion 
 {
-	private static EngineChessBoard engineChessBoard = new EngineChessBoard();
-	
+
 	public static Square getBoardRefFromBitRef(int bitRef)
 	{
 		bitRef = 63 - bitRef;
 		int x = bitRef % 8;
-		int y = (int)Math.floor(bitRef / 8);
+		int y = bitRef / 8;
 		return new Square(x,y);
 	}
 	
@@ -78,36 +76,7 @@ public class ChessBoardConversion
 		
 		return "" + a + ((7-boardRef.getYRank()) + 1);
 	}
-	
-	public static int getCompactMove(int[] move)
-	{
-		return (move[0] << 16) | move[1]; 
-	}
-	
-	public static int getCompactMoveFromMoveRef(Move move)
-	{
-		Square source = move.getSrcBoardRef();
-		Square target = move.getTgtBoardRef();
-		
-		int compactMove = (getBitRefFromBoardRef(source) << 16) | getBitRefFromBoardRef(target);
-		
-		switch (move.getPromotedPieceCode())
-		{
-			case 'Q' : case 'q' : compactMove |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN; break;
-			case 'B' : case 'b' : compactMove |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP; break;
-			case 'R' : case 'r' : compactMove |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK; break;
-			case 'N' : case 'n' : compactMove |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT; break;
-		}
-		
-		return compactMove;
-	}
 
-	public static String getPGNMoveFromMoveRef(Move move, Board board)
-	{
-		engineChessBoard.setBoard(board);
-		return getPGNMoveFromCompactMove(getCompactMoveFromMoveRef(move), engineChessBoard);
-	}
-	
 	public static String getPGNMoveFromCompactMove(int move, EngineChessBoard board)
 	{
 		String pgnMove = "";

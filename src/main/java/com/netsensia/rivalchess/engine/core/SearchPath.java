@@ -4,11 +4,10 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class SearchPath 
 {
-	public int[] move;
+	public final int[] move;
 	public int score;
 	public int height = 0;
-	public int hashCorrectedHeight = 0;
-	
+
 	public SearchPath()
 	{
 		move = new int[RivalConstants.MAX_TREE_DEPTH];

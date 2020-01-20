@@ -8,7 +8,7 @@ import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class EngineMonitor extends TimerTask {
-    private RivalSearch m_engine;
+    private final RivalSearch m_engine;
     private static PrintStream m_out;
 
     public EngineMonitor(RivalSearch engine) {

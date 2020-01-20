@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.junit.Test;
@@ -9,7 +8,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class EngineChessBoardTest {
 
@@ -17,7 +16,6 @@ public class EngineChessBoardTest {
     public void canRecognisePreviousPositions() throws IllegalFenException {
         final EngineChessBoard board = new EngineChessBoard();
         final List<String> moves = new ArrayList<>();
-        final Board boardModel = new Board();
 
         moves.add("e2e4");
         moves.add("e7e5");
@@ -28,15 +26,15 @@ public class EngineChessBoardTest {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
         }
 
-        assertTrue(board.previousOccurrencesOfThisPosition() == 0);
+        assertEquals(0, board.previousOccurrencesOfThisPosition());
 
         moveKnightsBackAndForth(board, moves);
 
-        assertTrue(board.previousOccurrencesOfThisPosition() == 1);
+        assertEquals(1, board.previousOccurrencesOfThisPosition());
 
         moveKnightsBackAndForth(board, moves);
 
-        assertTrue(board.previousOccurrencesOfThisPosition() == 2);
+        assertEquals(2, board.previousOccurrencesOfThisPosition());
 
         board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
 
@@ -47,7 +45,7 @@ public class EngineChessBoardTest {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
         }
 
-        assertTrue(board.previousOccurrencesOfThisPosition() == 0);
+        assertEquals(0, board.previousOccurrencesOfThisPosition());
 
         board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
 
@@ -58,7 +56,7 @@ public class EngineChessBoardTest {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
         }
 
-        assertTrue(board.previousOccurrencesOfThisPosition() == 3);
+        assertEquals(3, board.previousOccurrencesOfThisPosition());
 
     }
 

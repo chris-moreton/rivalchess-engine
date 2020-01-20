@@ -12,7 +12,7 @@ import java.util.List;
 
 public class EpdReader implements Iterable<EpdItem>     {
 
-    private static List<EpdItem> epdItems = new ArrayList<>();
+    private static final List<EpdItem> epdItems = new ArrayList<>();
 
     public EpdReader(String filename) throws IOException, IllegalEpdItemException {
 
@@ -20,7 +20,6 @@ public class EpdReader implements Iterable<EpdItem>     {
 
         FileReader fr = new FileReader(file);
         BufferedReader br = new BufferedReader(fr);
-        StringBuffer sb = new StringBuffer();
         String line;
 
         while ((line = br.readLine()) != null) {

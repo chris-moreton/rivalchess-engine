@@ -13,8 +13,6 @@ public final class RivalConstants
 	public static final int INFINITY = 20000000;
 	
 	public static final boolean UCI_DEBUG = false;
-	public static final String UCI_DEBUG_FILEPATH = System.getProperty("java.io.tmpdir");
-	public static final boolean UCI_LOG = false;
 	public static final int UCI_TIMER_INTERVAL_MILLIS = 50;
 	public static final int UCI_TIMER_SAFTEY_MARGIN_MILLIS = 250;
 
@@ -31,17 +29,6 @@ public final class RivalConstants
 	public static final int MAX_QUIESCE_DEPTH = 50;
 	public static final int MAX_EXTENSION_DEPTH = 60;
 	public static final int MAX_TREE_DEPTH = MAX_SEARCH_DEPTH + MAX_QUIESCE_DEPTH + MAX_EXTENSION_DEPTH + 1;
-	
-/***********************************	
- *	Profiler 					   *
- ***********************************/
-
-	public static final boolean PROFILING = false;
-	public static final int PROFILE_SLOTS = 100;
-	public static final int PROFILE_STARTTIME = 0;
-	public static final int PROFILE_COUNT = 1;
-	public static final int PROFILE_TOTALTIME = 2;
-	public static final int PROFILE_DATA_COUNT = 3;
 
 /***********************************	
  *	Evaluation function weightings *
@@ -187,7 +174,7 @@ public final class RivalConstants
 	public static final boolean USE_ASPIRATION_WINDOW = true;
 	public static final int ASPIRATION_RADIUS = 40;
 	
-	public static boolean USE_INTERNAL_OPENING_BOOK = true;
+	public static final boolean USE_INTERNAL_OPENING_BOOK = true;
 	
 	public static final boolean USE_PIECE_SQUARES_IN_MOVE_ORDERING = true;
 	
@@ -262,10 +249,6 @@ public final class RivalConstants
 	public static final int SEARCHSTATE_SEARCHING = 1;
 	public static final int SEARCHSTATE_SEARCHCOMPLETE = 2;
 	public static final int SEARCHSTATE_SEARCHREQUESTED = 4;
-	public static final int SEARCHSTATE_NOENGINE = 5;
-	
-	public static final int SEARCH_TYPE_TIME = 0;
-	public static final int SEARCH_TYPE_DEPTH = 1;
 
 /***********************************	
  *	Hash table settings            *

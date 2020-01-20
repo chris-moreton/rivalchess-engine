@@ -7,9 +7,9 @@ public class Board {
 
     public static final char VACANT_TILE = '_';
 
-    protected char[] boardArray;
-    protected int numXFiles;
-    protected int numYRanks;
+    protected final char[] boardArray;
+    protected final int numXFiles;
+    protected final int numYRanks;
     protected int enPassantFile = 0;
 
     protected boolean isWhiteKingSideCastleAvailable = true;
@@ -17,7 +17,7 @@ public class Board {
     protected boolean isBlackKingSideCastleAvailable = true;
     protected boolean isBlackQueenSideCastleAvailable = true;
 
-    protected int halfMoveCount = 0;
+    protected final int halfMoveCount = 0;
     protected boolean isWhiteToMove = true;
 
     public Board() {

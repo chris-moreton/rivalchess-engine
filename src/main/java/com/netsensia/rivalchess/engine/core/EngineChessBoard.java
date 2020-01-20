@@ -11,20 +11,13 @@ import java.util.List;
 public final class EngineChessBoard {
     public static final String START_POS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-    public static final int GAMESTATE_INPLAY = 0;
-    public static final int GAMESTATE_CHECKMATE = 1;
-    public static final int GAMESTATE_STALEMATE = 2;
-    public static final int GAMESTATE_THREEFOLD_DRAW = 3;
-    public static final int GAMESTATE_FIFTYMOVE_DRAW = 4;
-    public static final int GAMESTATE_GAMETOOLONG_DRAW = 5;
-
     public int whitePieceValues = 0;
     public int blackPieceValues = 0;
     public int whitePawnValues = 0;
     public int blackPawnValues = 0;
 
-    public int[] pieceSquareValues = new int[12];
-    public int[] pieceSquareValuesEndGame = new int[12];
+    public final int[] pieceSquareValues = new int[12];
+    public final int[] pieceSquareValuesEndGame = new int[12];
 
     public long[] m_pieceBitboards;
 
@@ -34,7 +27,7 @@ public final class EngineChessBoard {
     public byte m_blackKingSquare;
     public int m_movesMade;
 
-    public byte[] squareContents = new byte[64];
+    public final byte[] squareContents = new byte[64];
 
     public boolean m_isOnNullMove = false;
 
@@ -157,54 +150,6 @@ public final class EngineChessBoard {
         }
 
         return false;
-    }
-
-    public int countAttackersWithBatteries(final int attackedSquare, boolean isWhiteAttacking) {
-        int attackers = 0;
-        long bAll = m_pieceBitboards[RivalConstants.ALL];
-        long bitboardRook, bitboardBishop;
-
-        if (isWhiteAttacking) {
-            bitboardRook = m_pieceBitboards[RivalConstants.WR] | m_pieceBitboards[RivalConstants.WQ];
-            bitboardBishop = m_pieceBitboards[RivalConstants.WB] | m_pieceBitboards[RivalConstants.WQ];
-
-            if ((m_pieceBitboards[RivalConstants.WN] & Bitboards.knightMoves.get(attackedSquare)) != 0)
-                attackers += Long.bitCount(m_pieceBitboards[RivalConstants.WN] & Bitboards.knightMoves.get(attackedSquare));
-            if ((m_pieceBitboards[RivalConstants.WK] & Bitboards.kingMoves.get(attackedSquare)) != 0)
-                attackers += Long.bitCount(m_pieceBitboards[RivalConstants.WK] & Bitboards.kingMoves.get(attackedSquare));
-            if ((m_pieceBitboards[RivalConstants.WP] & Bitboards.blackPawnMovesCapture.get(attackedSquare)) != 0)
-                attackers += Long.bitCount(m_pieceBitboards[RivalConstants.WP] & Bitboards.blackPawnMovesCapture.get(attackedSquare));
-        } else {
-            bitboardRook = m_pieceBitboards[RivalConstants.BR] | m_pieceBitboards[RivalConstants.BQ];
-            bitboardBishop = m_pieceBitboards[RivalConstants.BB] | m_pieceBitboards[RivalConstants.BQ];
-
-            if ((m_pieceBitboards[RivalConstants.BN] & Bitboards.knightMoves.get(attackedSquare)) != 0)
-                attackers += Long.bitCount(m_pieceBitboards[RivalConstants.BN] & Bitboards.knightMoves.get(attackedSquare));
-            if ((m_pieceBitboards[RivalConstants.BK] & Bitboards.kingMoves.get(attackedSquare)) != 0)
-                attackers += Long.bitCount(m_pieceBitboards[RivalConstants.BK] & Bitboards.kingMoves.get(attackedSquare));
-            if ((m_pieceBitboards[RivalConstants.BP] & Bitboards.whitePawnMovesCapture.get(attackedSquare)) != 0)
-                attackers += Long.bitCount(m_pieceBitboards[RivalConstants.BP] & Bitboards.whitePawnMovesCapture.get(attackedSquare));
-        }
-
-        int attackerSquare;
-        long attackedSquareMask = 1L << attackedSquare;
-        long attacks;
-
-        long noFriendlySliders = bAll ^ bitboardBishop;
-        while (bitboardBishop != 0) {
-            bitboardBishop ^= (1L << (attackerSquare = Long.numberOfTrailingZeros(bitboardBishop)));
-            attacks = Bitboards.magicBitboards.magicMovesBishop[attackerSquare][(int) (((noFriendlySliders & MagicBitboards.occupancyMaskBishop[attackerSquare]) * MagicBitboards.magicNumberBishop[attackerSquare]) >>> MagicBitboards.magicNumberShiftsBishop[attackerSquare])];
-            if ((attacks & attackedSquareMask) != 0) attackers++;
-        }
-
-        noFriendlySliders = bAll ^ bitboardRook;
-        while (bitboardRook != 0) {
-            bitboardRook ^= (1L << (attackerSquare = Long.numberOfTrailingZeros(bitboardRook)));
-            attacks = Bitboards.magicBitboards.magicMovesRook[attackerSquare][(int) (((noFriendlySliders & MagicBitboards.occupancyMaskRook[attackerSquare]) * MagicBitboards.magicNumberRook[attackerSquare]) >>> MagicBitboards.magicNumberShiftsRook[attackerSquare])];
-            if ((attacks & attackedSquareMask) != 0) attackers++;
-        }
-
-        return attackers;
     }
 
     private void addPossiblePromotionMoves(final int fromSquareMoveMask, long bitboard, boolean queenCapturesOnly) {
@@ -1068,7 +1013,7 @@ public final class EngineChessBoard {
     }
 
     private void replaceCapturedPiece(int toSquare, long toMask) {
-        final byte capturePiece = (byte) this.m_moveList[this.m_movesMade].capturePiece;
+        final byte capturePiece = this.m_moveList[this.m_movesMade].capturePiece;
         if (capturePiece != -1) {
             this.squareContents[toSquare] = capturePiece;
             if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
@@ -1264,24 +1209,6 @@ public final class EngineChessBoard {
             i++;
         }
         return false;
-    }
-
-    public boolean isHanging(int square, boolean isWhiteAttacking) {
-        return this.countAttackersWithBatteries(square, isWhiteAttacking) > this.countAttackersWithBatteries(square, !isWhiteAttacking);
-    }
-
-    public void printMoveList(int[] moves) {
-        String s = "";
-        int i = 0;
-        while (moves[i] != 0) {
-            s += ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(moves[i]) + " ";
-            i++;
-        }
-        System.out.println(s);
-    }
-
-    public void printLegalMoves() {
-        printLegalMoves(false, false);
     }
 
     public void printLegalMoves(boolean isQuiesce, boolean includeChecks) {

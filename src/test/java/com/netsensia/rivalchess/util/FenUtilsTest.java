@@ -33,7 +33,7 @@ public class FenUtilsTest {
         assertEquals(board.getPieceCode(new Square(1,0)), '_');
 
         assertTrue(board.isBlackToMove());
-        assertTrue(board.getEnPassantFile() == 6);
+        assertEquals(6, board.getEnPassantFile());
     }
 
     @Test

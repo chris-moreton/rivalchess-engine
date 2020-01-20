@@ -4,8 +4,7 @@ import com.netsensia.rivalchess.model.Square;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 
 public class SquareTest {
 
@@ -25,15 +24,15 @@ public class SquareTest {
 
         Object o = new Object();
 
-        assertTrue(br1.equals(br3));
-        assertFalse(br1.equals(br2));
-        assertTrue(br3.equals(br1));
-        assertFalse(br2.equals(br1));
-        assertFalse(br2.equals(br3));
-        assertFalse(br3.equals(br2));
+        assertEquals(br1, br3);
+        assertNotEquals(br1, br2);
+        assertEquals(br3, br1);
+        assertNotEquals(br2, br1);
+        assertNotEquals(br2, br3);
+        assertNotEquals(br3, br2);
 
-        assertFalse(o.equals(br1));
-        assertFalse(br1.equals(o));
+        assertNotEquals(o, br1);
+        assertNotEquals(br1, o);
 
     }
 
