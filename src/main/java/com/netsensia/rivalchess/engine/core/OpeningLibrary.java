@@ -214,7 +214,7 @@ public class OpeningLibrary
 	
 	public int getMove(String fen)
 	{
-		OpeningPosition position = null;
+		OpeningPosition position;
 		ArrayList<OpeningPosition> matched = new ArrayList<>();
 		
 		int size = openings.size();

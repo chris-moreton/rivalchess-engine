@@ -16,8 +16,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -56,7 +59,9 @@ public class EpdTest {
 
         SECONDS.sleep(1);
 
-        System.out.println(epdItem.getId());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println(epdItem.getId() + " " + dtf.format(now));
 
         try {
             await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !rivalSearch.isSearching());

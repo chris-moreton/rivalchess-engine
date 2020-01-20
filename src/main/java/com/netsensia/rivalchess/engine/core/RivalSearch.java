@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Timer;
 
@@ -77,7 +78,7 @@ public final class RivalSearch implements Runnable {
     public int recaptureExtensionAttempts = 0;
 
     private int m_searchState;
-    private int m_hashTableVersion = 1;
+    private int m_hashTableVersion;
     private int[] hashTableHeight;
     private int[] hashTableAlways;
     private long[] pawnHashTable;
@@ -1165,7 +1166,7 @@ public final class RivalSearch implements Runnable {
             return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
 
         if (eval > 0) {
-            //noinspection ConstantConditions
+            //noinspection ConstantConditions,ConditionCoveredByFurtherCondition
             if (board.whitePawnValues == 0 && (board.whitePieceValues == RivalConstants.VALUE_KNIGHT || board.whitePieceValues == RivalConstants.VALUE_BISHOP))
                 return eval - (int) (board.whitePieceValues * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.whitePawnValues == 0 && board.whitePieceValues - RivalConstants.VALUE_BISHOP <= board.blackPieceValues)
@@ -1205,7 +1206,7 @@ public final class RivalSearch implements Runnable {
             }
         }
         if (eval < 0) {
-            //noinspection ConstantConditions
+            //noinspection ConstantConditions,ConditionCoveredByFurtherCondition
             if (board.blackPawnValues == 0 && (board.blackPieceValues == RivalConstants.VALUE_KNIGHT || board.blackPieceValues == RivalConstants.VALUE_BISHOP))
                 return eval + (int) (board.blackPieceValues * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.blackPawnValues == 0 && board.blackPieceValues - RivalConstants.VALUE_BISHOP <= board.whitePieceValues)
@@ -1332,7 +1333,7 @@ public final class RivalSearch implements Runnable {
 
     private void scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) {
         int i, score;
-        int promotionMask = 0;
+        int promotionMask;
 
         int moveCount = 0;
 
@@ -1761,7 +1762,6 @@ public final class RivalSearch implements Runnable {
 
         int checkExtend = 0;
         if ((extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
-            checkExtend = 0;
             if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
                 checkExtend = 1;
                 checkExtensions++;
@@ -1813,7 +1813,7 @@ public final class RivalSearch implements Runnable {
                 if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                 else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                 if (!this.m_abortingSearch) {
-                    if (-newPath.score >= high) {
+                    if (-Objects.requireNonNull(newPath).score >= high) {
                         if (RivalConstants.USE_VERIFIED_NULLMOVE && (board.m_isWhiteToMove ? board.whitePieceValues : board.blackPieceValues) < RivalConstants.VERIFIED_WHEN_PIECEVALUES_LESS_THAN && canVerifyNullMove) {
                             // rather than return here as we would normally when finding a null move cutoff,
                             // we will perform a normal search with a reduced depth (-1)
@@ -1852,7 +1852,7 @@ public final class RivalSearch implements Runnable {
             research = false;
             int legalMoveCount = 0;
 
-            int futilityPruningEvaluation = -RivalConstants.INFINITY;
+            int futilityPruningEvaluation;
 
             boolean wasCheckBeforeMove = board.isCheck();
 
@@ -1861,8 +1861,7 @@ public final class RivalSearch implements Runnable {
             int futilityScore = low;
             if (RivalConstants.USE_FUTILITY_PRUNING) {
                 if (depthRemaining < 4 && !wasCheckBeforeMove && threatExtend == 0 && Math.abs(low) < RivalConstants.MATE_SCORE_START && Math.abs(high) < RivalConstants.MATE_SCORE_START) {
-                    if (futilityPruningEvaluation == -RivalConstants.INFINITY)
-                        futilityPruningEvaluation = evaluate(board);
+                    futilityPruningEvaluation = evaluate(board);
                     futilityScore = futilityPruningEvaluation + RivalConstants.FUTILITY_MARGIN.get(depthRemaining - 1);
                     if (futilityScore < low) canFutilityPrune = true;
                 }
@@ -1884,7 +1883,7 @@ public final class RivalSearch implements Runnable {
                 if (RivalConstants.FRACTIONAL_EXTENSION_RECAPTURE > 0 && (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
                     recaptureExtensionAttempts++;
                     recaptureExtend = 0;
-                    if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece) == RivalConstants.PIECE_VALUES.get(targetPiece)) {
+                    if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece).equals(RivalConstants.PIECE_VALUES.get(targetPiece))) {
                         currentSEEValue = staticExchangeEvaluation(board, move);
                         if (Math.abs(currentSEEValue) <= RivalConstants.RECAPTURE_EXTENSION_MARGIN)
                             newRecaptureSquare = (move & 63);
@@ -1922,7 +1921,7 @@ public final class RivalSearch implements Runnable {
                         }
 
                         int partOfTree = ply / this.m_iterativeDeepeningCurrentDepth;
-                        int maxNewExtensionsInThisPart = RivalConstants.MAX_NEW_EXTENSIONS_TREE_PART.get(partOfTree > RivalConstants.LAST_EXTENSION_LAYER ? RivalConstants.LAST_EXTENSION_LAYER : partOfTree);
+                        int maxNewExtensionsInThisPart = RivalConstants.MAX_NEW_EXTENSIONS_TREE_PART.get(Math.min(partOfTree, RivalConstants.LAST_EXTENSION_LAYER));
 
                         newExtensions =
                                 extensions +
@@ -1951,6 +1950,7 @@ public final class RivalSearch implements Runnable {
                             }
                         }
 
+                        //noinspection ConstantConditions
                         if (RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION > -1) {
                             lateMoveReductionsMade += lateMoveReduction;
                             if (lateMoveReductionsMade > RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION && depthRemaining > 3) {
@@ -1969,7 +1969,7 @@ public final class RivalSearch implements Runnable {
                                 if (newPath != null)
                                     if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                     else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
-                                if (!this.m_abortingSearch && -newPath.score > low) {
+                                if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                                     // research with normal window
                                     newPath = search(m_board, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
                                     if (newPath != null)
@@ -1982,7 +1982,7 @@ public final class RivalSearch implements Runnable {
                                     if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                     else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                             }
-                            if (!this.m_abortingSearch && lateMoveReduction > 0 && -newPath.score >= low) {
+                            if (!this.m_abortingSearch && lateMoveReduction > 0 && -Objects.requireNonNull(newPath).score >= low) {
                                 lmrResearch = RivalConstants.LMR_RESEARCH_ON_FAIL_HIGH;
                                 lateMoveReduction = 0;
                             }
@@ -1992,7 +1992,7 @@ public final class RivalSearch implements Runnable {
                     }
 
                     if (!this.m_abortingSearch) {
-                        newPath.score = -newPath.score;
+                        Objects.requireNonNull(newPath).score = -newPath.score;
 
                         if (newPath.score >= high) {
                             if (RivalConstants.USE_HISTORY_HEURISTIC) {
@@ -2113,7 +2113,7 @@ public final class RivalSearch implements Runnable {
 
         boolean scoutSearch = false;
 
-        int checkExtend = 0, pawnExtend = 0;
+        int checkExtend, pawnExtend;
 
         while (move != 0 && !this.m_abortingSearch) {
             if (m_board.makeMove(move)) {
@@ -2160,7 +2160,7 @@ public final class RivalSearch implements Runnable {
                         newPath = search(m_board, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, canMakeNullMove, -1, isCheck);
                         if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
-                        if (!this.m_abortingSearch && -newPath.score > low) {
+                        if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                             newPath = search(m_board, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
                             if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                             else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
@@ -2172,7 +2172,7 @@ public final class RivalSearch implements Runnable {
                     }
                 }
                 if (!this.m_abortingSearch) {
-                    newPath.score = -newPath.score;
+                    Objects.requireNonNull(newPath).score = -newPath.score;
 
                     if (newPath.score >= high) {
                         board.unMakeMove();
@@ -2264,17 +2264,6 @@ public final class RivalSearch implements Runnable {
             }
 
         SearchPath path;
-
-        boolean m_isDebug = false;
-        if (m_isDebug) {
-            printStream.println("Hash: " + m_board.m_hashValue);
-            m_board.printLegalMoves(true, true);
-            printStream.println("Is Check = " + m_board.isCheck());
-            printStream.println("Eval = " + evaluate(m_board));
-            SearchPath sp = quiesce(m_board, 40, 0, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, m_board.isCheck());
-            printStream.println("Quiesce = " + sp.score);
-            printStream.println("FEN = " + m_board.getFen());
-        }
 
         try {
             m_board.setLegalMoves(depthZeroLegalMoves);
@@ -2378,7 +2367,7 @@ public final class RivalSearch implements Runnable {
                 if (RivalConstants.USE_ASPIRATION_WINDOW) {
                     path = searchZero(m_board, depth, 0, aspirationLow, aspirationHigh);
 
-                    if (!this.m_abortingSearch && path.score <= aspirationLow) {
+                    if (!this.m_abortingSearch && Objects.requireNonNull(path).score <= aspirationLow) {
                         aspirationLow = -RivalConstants.INFINITY;
                         path = searchZero(m_board, depth, 0, aspirationLow, aspirationHigh);
                     } else if (!this.m_abortingSearch && path.score >= aspirationHigh) {
@@ -2386,12 +2375,12 @@ public final class RivalSearch implements Runnable {
                         path = searchZero(m_board, depth, 0, aspirationLow, aspirationHigh);
                     }
 
-                    if (!this.m_abortingSearch && (path.score <= aspirationLow || path.score >= aspirationHigh)) {
+                    if (!this.m_abortingSearch && (Objects.requireNonNull(path).score <= aspirationLow || path.score >= aspirationHigh)) {
                         path = searchZero(m_board, depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
                     }
 
                     if (!this.m_abortingSearch) {
-                        m_currentPath.setPath(path);
+                        m_currentPath.setPath(Objects.requireNonNull(path));
                         m_currentPathString = "" + m_currentPath;
                         aspirationLow = path.score - RivalConstants.ASPIRATION_RADIUS;
                         aspirationHigh = path.score + RivalConstants.ASPIRATION_RADIUS;
@@ -2401,7 +2390,7 @@ public final class RivalSearch implements Runnable {
                 }
 
                 if (!this.m_abortingSearch) {
-                    m_currentPath.setPath(path);
+                    m_currentPath.setPath(Objects.requireNonNull(path));
                     m_currentPathString = "" + m_currentPath;
                     if (path.score > RivalConstants.MATE_SCORE_START) {
                         setSearchComplete();

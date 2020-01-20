@@ -401,7 +401,7 @@ public final class EngineChessBoard {
     public void setBitboards(Board board) {
         byte bitNum;
         long bitSet;
-        int pieceIndex = -1;
+        int pieceIndex;
         char piece;
 
         whitePieceValues = 0;
@@ -912,7 +912,6 @@ public final class EngineChessBoard {
                 if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
                     pieceSquareValues[RivalConstants.WR] += Bitboards.pieceSquareTableRook.get(Bitboards.A1) - Bitboards.pieceSquareTableRook.get(Bitboards.D1);
             }
-            return;
         } else if (movePiece == RivalConstants.BK) {
             if ((toMask | fromMask) == Bitboards.BLACKKINGSIDECASTLEMOVEMASK) {
                 this.m_pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKKINGSIDECASTLEROOKMOVE;
@@ -927,7 +926,6 @@ public final class EngineChessBoard {
                 if (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
                     pieceSquareValues[RivalConstants.BR] += Bitboards.pieceSquareTableRook.get(Bitboards.A1) - Bitboards.pieceSquareTableRook.get(Bitboards.D1);
             }
-            return;
         }
     }
 
@@ -1006,7 +1004,6 @@ public final class EngineChessBoard {
                         break;
                 }
             }
-            done = true;
             return true;
         }
         return false;
@@ -1209,30 +1206,6 @@ public final class EngineChessBoard {
             i++;
         }
         return false;
-    }
-
-    public void printLegalMoves(boolean isQuiesce, boolean includeChecks) {
-        StringBuilder s = new StringBuilder();
-        int[] moves = new int[RivalConstants.MAX_GAME_MOVES];
-        if (isQuiesce) {
-            this.setLegalQuiesceMoves(moves, includeChecks);
-        } else {
-            this.setLegalMoves(moves);
-        }
-        int i = 0;
-        while (moves[i] != 0) {
-            if (this.makeMove(moves[i])) {
-                if (!this.isNonMoverInCheck()) {
-                    s.append(ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(moves[i])).append(" ");
-                }
-                this.unMakeMove();
-            }
-            i++;
-        }
-        this.printBoard();
-        System.out.println("******************** LEGAL MOVES ********************");
-        System.out.println(s);
-        System.out.println("*****************************************************");
     }
 
     public void printPreviousMoves() {

@@ -47,7 +47,7 @@ public class MagicBitboards
 		occupancyAttackSet = null;
 	}
 	
-	@SuppressWarnings("DuplicatedCode")
+	@SuppressWarnings({"DuplicatedCode", "StatementWithEmptyBody"})
 	public void generateOccupancyVariationsAndDatabase(boolean isRook)
 	{
 		long validMoves;
@@ -65,6 +65,10 @@ public class MagicBitboards
 			mask = isRook ? occupancyMaskRook[bitRef] : occupancyMaskBishop[bitRef];
 			Bitboards.getSetBits(mask, setBitsInMask);
 			bitCount = Long.bitCount(mask);
+
+			// How many possibilities are there for occupancy patterns for this piece on this square
+			// e.g. For a bishop on a8, there are 7 squares to move to, 7^2 = 64 possible variations of
+			// how those squares could be occupied.
 			variationCount = (int)(1L << bitCount);
 
 			for (i=0; i<variationCount; i++)
