@@ -1,5 +1,8 @@
 package com.netsensia.rivalchess.bitboards;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MagicBitboards
 {
 	public static final long[] occupancyMaskRook = {
@@ -57,15 +60,15 @@ public class MagicBitboards
 		int magicIndex;
 		int variationCount;
 
-		// Index 0 will be the square reference of the first bit set in the mask, index 1, the 2nd, etc...
-		int[] setBitsInMask = new int[64];
-		int[] setBitsInIndex = new int[64];
+		List<Integer> setBitsInMask;
+		List<Integer> setBitsInIndex;
+
 		int bitCount;
 		
 		for (bitRef=0; bitRef<=63; bitRef++)
 		{
 			mask = isRook ? occupancyMaskRook[bitRef] : occupancyMaskBishop[bitRef];
-			Bitboards.getSetBits(mask, setBitsInMask);
+			setBitsInMask = Bitboards.getSetBits(mask);
 			bitCount = Long.bitCount(mask);
 
 			// How many possibilities are there for occupancy patterns for this piece on this square
@@ -77,10 +80,9 @@ public class MagicBitboards
 			{
 				occupancyVariation[i] = 0; 
 				// find bits set in index "i" and map them to bits in the 64 bit "occupancyVariation"
-				Bitboards.getSetBits(i, setBitsInIndex);
-				for (j=0; setBitsInIndex[j] != -1; j++)
-				{
-					occupancyVariation[i] |= (1L << setBitsInMask[setBitsInIndex[j]]);
+				setBitsInIndex = Bitboards.getSetBits(i);
+				for (int setBitInIndex : setBitsInIndex) {
+					occupancyVariation[i] |= (1L << setBitsInMask.get(setBitInIndex));
 					// e.g. if setBitsInIndex[0] == 3 then the third bit (position 4) is set in counter "i"
 					// so we add the third relevant bit in the mask to this occupancyVariation
 					// the third relevant bit in the mask is found by setBitsInMask[3]

@@ -1180,10 +1180,9 @@ public final class EngineChessBoard {
         char[] pieces = new char[]{'P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r'};
 
         for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-            int[] bitsSet = new int[64];
-            Bitboards.getSetBits(m_pieceBitboards[i], bitsSet);
-            for (int j = 0; bitsSet[j] != -1; j++) {
-                board[bitsSet[j]] = pieces[i];
+            List<Integer> bitsSet = Bitboards.getSetBits(m_pieceBitboards[i]);
+            for (int bitSet : bitsSet) {
+                board[bitSet] = pieces[i];
             }
         }
         return board;

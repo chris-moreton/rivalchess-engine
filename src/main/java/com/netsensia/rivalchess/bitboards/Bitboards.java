@@ -352,16 +352,6 @@ public final class Bitboards {
         return setBits;
     }
 
-    public static void getSetBits(long bitboard, int[] retArray) {
-        int bitsSet = 0;
-        while (bitboard != 0) {
-            retArray[bitsSet] = Long.numberOfTrailingZeros(bitboard);
-            bitboard ^= (1L << retArray[bitsSet++]);
-        }
-
-        retArray[bitsSet] = -1;
-    }
-
     public static long southFill(long bitboard) {
         bitboard |= (bitboard >>> 8);
         bitboard |= (bitboard >>> 16);
