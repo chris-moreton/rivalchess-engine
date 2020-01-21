@@ -29,7 +29,6 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.hasItem;
 
 @SuppressWarnings("squid:S106")
-@Ignore
 public class EpdTest {
 
     private static final int MAX_SEARCH_SECONDS = 300;
@@ -112,7 +111,7 @@ public class EpdTest {
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.111", true);
+        runEpdSuite("winAtChess.epd", "WAC.001", true);
     }
 
     @Test

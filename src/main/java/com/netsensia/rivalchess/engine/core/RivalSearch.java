@@ -1873,8 +1873,7 @@ public final class RivalSearch implements Runnable {
 
             int move;
             while ((move = getHighScoreMove(board, ply, hashMove)) != 0 && !this.m_abortingSearch) {
-                final int targetPiece = board.squareContents[move & 63];
-                final int movePiece = board.squareContents[(move >>> 16) & 63];
+
                 int recaptureExtend = 0;
 
                 int newRecaptureSquare = -1;
@@ -1883,11 +1882,6 @@ public final class RivalSearch implements Runnable {
                 if (RivalConstants.FRACTIONAL_EXTENSION_RECAPTURE > 0 && (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
                     recaptureExtensionAttempts++;
                     recaptureExtend = 0;
-                    if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece).equals(RivalConstants.PIECE_VALUES.get(targetPiece))) {
-                        currentSEEValue = staticExchangeEvaluation(board, move);
-                        if (Math.abs(currentSEEValue) <= RivalConstants.RECAPTURE_EXTENSION_MARGIN)
-                            newRecaptureSquare = (move & 63);
-                    }
 
                     if ((move & 63) == recaptureSquare) {
                         if (currentSEEValue == -RivalConstants.INFINITY)
