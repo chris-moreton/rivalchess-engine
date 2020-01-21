@@ -341,6 +341,17 @@ public final class Bitboards {
         return Collections.unmodifiableList(newList);
     }
 
+    public static List<Integer> getSetBits(long bitboard) {
+        List<Integer> setBits = new ArrayList<>();
+        while (bitboard != 0) {
+            final int trailingZeroes = Long.numberOfTrailingZeros(bitboard);
+            setBits.add(trailingZeroes);
+            bitboard ^= (1L << trailingZeroes);
+        }
+
+        return setBits;
+    }
+
     public static void getSetBits(long bitboard, int[] retArray) {
         int bitsSet = 0;
         while (bitboard != 0) {

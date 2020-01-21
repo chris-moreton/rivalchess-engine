@@ -56,6 +56,8 @@ public class MagicBitboards
 		long mask;
 		int magicIndex;
 		int variationCount;
+
+		// Index 0 will be the square reference of the first bit set in the mask, index 1, the 2nd, etc...
 		int[] setBitsInMask = new int[64];
 		int[] setBitsInIndex = new int[64];
 		int bitCount;
