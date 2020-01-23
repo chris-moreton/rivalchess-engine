@@ -366,4 +366,8 @@ public final class Bitboards {
         return bitboard;
     }
 
+    public static long getPawnFiles(long bitboard) {
+        return southFill(bitboard) & RANK_1;
+    }
+
 }
