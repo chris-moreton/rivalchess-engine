@@ -41,7 +41,7 @@ public class EpdTest {
     }
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
-            "WAC.230","WAC.274"
+            "WAC.111","WAC.100","WAC.141","WAC.213","WAC.230","WAC.243","WAC.274"
     ));
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException {
@@ -111,7 +111,7 @@ public class EpdTest {
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChessReduced.epd", "WAC.100", true);
+        runEpdSuite("winAtChess.epd", "WAC.001", true);
     }
 
     @Test
