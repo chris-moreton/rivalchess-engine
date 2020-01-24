@@ -85,7 +85,7 @@ public class BitboardsTest {
     // Starting with the most advanced bit on each file, fill all the bits above it on the same file.
     public void getPawnFiles() {
 
-        String bitboardString =
+        final long bitboard = new BigInteger(
                 "01000000" +
                 "00000000" +
                 "11100000" +
@@ -93,9 +93,9 @@ public class BitboardsTest {
                 "01000001" +
                 "11000010" +
                 "00000000" +
-                "10101010";
+                "10101010", 2).longValue();
 
-        String expectedString =
+        final long expected = new BigInteger(
                 "00000000" +
                 "00000000" +
                 "00000000" +
@@ -103,11 +103,58 @@ public class BitboardsTest {
                 "00000000" +
                 "00000000" +
                 "00000000" +
-                "11101011";
-
-        long bitboard = new BigInteger(bitboardString, 2).longValue();
-        long expected = new BigInteger(expectedString, 2).longValue();
+                "11101011", 2).longValue();
 
         assertEquals(expected, Bitboards.getPawnFiles(bitboard));
+    }
+
+    @Test
+    public void getBlackPawnAttacks() {
+        final long bitboard = new BigInteger(
+                 "00000000" +
+                    "00000000" +
+                    "11100000" +
+                    "00000000" +
+                    "01000001" +
+                    "11000010" +
+                    "00000000" +
+                    "00000000", 2).longValue();
+
+        final long expected = new BigInteger(
+                "00000000" +
+                    "00000000" +
+                    "00000000" +
+                    "11110000" +
+                    "00000000" +
+                    "10100010" +
+                    "11100101" +
+                    "00000000", 2).longValue();
+
+        assertEquals(expected, Bitboards.getBlackPawnAttacks(bitboard));
+    }
+
+    @Test
+    public void getWhitePawnAttacks() {
+        final long bitboard = new BigInteger(
+                 "00000000" +
+                    "00000000" +
+                    "11100000" +
+                    "00000000" +
+                    "01000001" +
+                    "11000010" +
+                    "00000000" +
+                    "00000000", 2).longValue();
+
+        final long expected = new BigInteger(
+                 "00000000" +
+                    "11110000" +
+                    "00000000" +
+                    "10100010" +
+                    "11100101" +
+                    "00000000" +
+                    "00000000" +
+                    "00000000", 2).longValue();
+
+        assertEquals(expected, Bitboards.getWhitePawnAttacks(bitboard));
     }
 }

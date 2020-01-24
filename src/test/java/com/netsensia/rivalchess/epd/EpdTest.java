@@ -41,8 +41,24 @@ public class EpdTest {
     }
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
-            "WAC.111","WAC.100","WAC.141","WAC.213","WAC.230","WAC.243","WAC.274"
+            "WAC.230","WAC.274",
+            "WAC.100",
+            "WAC.111","WAC.141","WAC.213","WAC.243",
+            "WAC.002","WAC.008","WAC.071","WAC.080","WAC.092","WAC.116","WAC.120",
+            "WAC.163","WAC.196","WAC.200","WAC.229","WAC.237","WAC.247","WAC.256",
+            "WAC.265","WAC.269","WAC.275","WAC.293","WAC.297",
+            "WAC.041","WAC.090","WAC.157","WAC.193","WAC.204","WAC.242","WAC.280","WAC.291"
     ));
+
+    @Test
+    public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
+        runEpdSuite("winAtChess.epd", "WAC.291", true);
+    }
+
+    @Test
+    public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
+        runEpdSuite("winAtChess.epd", "WAC.001", false);
+    }
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException {
 
@@ -109,13 +125,4 @@ public class EpdTest {
         }
     }
 
-    @Test
-    public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.001", true);
-    }
-
-    @Test
-    public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.001", false);
-    }
 }

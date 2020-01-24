@@ -370,4 +370,11 @@ public final class Bitboards {
         return southFill(bitboard) & RANK_1;
     }
 
+    public static long getBlackPawnAttacks(long bitboard) {
+        return ((bitboard & ~FILE_A) >>> 7) | ((bitboard & ~FILE_H) >>> 9);
+    }
+
+    public static long getWhitePawnAttacks(long bitboard) {
+        return ((bitboard & ~FILE_A) << 9) | ((bitboard & ~FILE_H) << 7);
+    }
 }

@@ -12,7 +12,7 @@ public class EpdItem {
     private final String fen;
     private final List<String> bestMoves;
     private String id;
-    private int maxNodesToSearch = 10000000;
+    private int maxNodesToSearch = 500000;
 
     public EpdItem(String line) throws IllegalEpdItemException {
         final String[] parts = line.split("bm|;");

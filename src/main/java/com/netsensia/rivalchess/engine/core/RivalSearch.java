@@ -278,8 +278,8 @@ public final class RivalSearch implements Runnable {
         }
 
         if (pawnScore == RivalConstants.PAWNHASH_DEFAULT_SCORE) {
-            final long whitePawnAttacks = getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]);
-            final long blackPawnAttacks = getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]);
+            final long whitePawnAttacks = Bitboards.getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]);
+            final long blackPawnAttacks = Bitboards.getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]);
             final long whitePawnFiles = Bitboards.getPawnFiles(board.m_pieceBitboards[RivalConstants.WP]);
             final long blackPawnFiles = Bitboards.getPawnFiles(board.m_pieceBitboards[RivalConstants.BP]);
 
@@ -289,13 +289,13 @@ public final class RivalSearch implements Runnable {
                     board.m_pieceBitboards[RivalConstants.WP] &
                             ~Bitboards.southFill(board.m_pieceBitboards[RivalConstants.BP] | blackPawnAttacks | (board.m_pieceBitboards[RivalConstants.WP] >>> 8));
 
-            final long whiteGuardedPassedPawns = whitePassedPawns & (getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]));
+            final long whiteGuardedPassedPawns = whitePassedPawns & (Bitboards.getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]));
 
             blackPassedPawns =
                     board.m_pieceBitboards[RivalConstants.BP] &
                             ~Bitboards.northFill(board.m_pieceBitboards[RivalConstants.WP] | whitePawnAttacks | (board.m_pieceBitboards[RivalConstants.BP] << 8));
 
-            long blackGuardedPassedPawns = blackPassedPawns & (getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]));
+            long blackGuardedPassedPawns = blackPassedPawns & (Bitboards.getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]));
 
             whitePassedPawnScore = Long.bitCount(whiteGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN;
             blackPassedPawnScore = Long.bitCount(blackGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN;
@@ -314,7 +314,7 @@ public final class RivalSearch implements Runnable {
                                     ~((board.m_pieceBitboards[RivalConstants.WP] | board.m_pieceBitboards[RivalConstants.BP]) >>> 8) &
                                     (blackPawnAttacks >>> 8) &
                                     ~Bitboards.northFill(whitePawnAttacks) &
-                                    (getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.WP])) &
+                                    (Bitboards.getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.WP])) &
                                     ~Bitboards.northFill(blackPawnFiles)
                     ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY;
 
@@ -323,7 +323,7 @@ public final class RivalSearch implements Runnable {
                             ~((board.m_pieceBitboards[RivalConstants.BP] | board.m_pieceBitboards[RivalConstants.WP]) << 8) &
                             (whitePawnAttacks << 8) &
                             ~Bitboards.southFill(blackPawnAttacks) &
-                            (getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.BP])) &
+                            (Bitboards.getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.BP])) &
                             ~Bitboards.northFill(whitePawnFiles)
             ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY;
 
@@ -411,14 +411,6 @@ public final class RivalSearch implements Runnable {
         }
 
         return pawnScore;
-    }
-
-    private long getBlackPawnAttacks(long bitboard) {
-        return ((bitboard & ~Bitboards.FILE_A) >>> 7) | ((bitboard & ~Bitboards.FILE_H) >>> 9);
-    }
-
-    private static long getWhitePawnAttacks(long bitboard) {
-        return ((bitboard & ~Bitboards.FILE_A) << 9) | ((bitboard & ~Bitboards.FILE_H) << 7);
     }
 
     private int scoreRightWayPositions(EngineChessBoard board, int h1, int h2, int h3, int g2, int g3, int f1, int f2, int f3, int f4, int offset, int cornerColour) {
@@ -627,8 +619,8 @@ public final class RivalSearch implements Runnable {
         int blackKingAttackedCount = 0;
         long whiteAttacksBitboard = 0;
         long blackAttacksBitboard = 0;
-        final long whitePawnAttacks = getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]);
-        final long blackPawnAttacks = getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]);
+        final long whitePawnAttacks = Bitboards.getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]);
+        final long blackPawnAttacks = Bitboards.getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]);
         final long whitePieces = board.m_pieceBitboards[board.m_isWhiteToMove ? RivalConstants.FRIENDLY : RivalConstants.ENEMY];
         final long blackPieces = board.m_pieceBitboards[board.m_isWhiteToMove ? RivalConstants.ENEMY : RivalConstants.FRIENDLY];
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.m_whiteKingSquare) | (Bitboards.kingMoves.get(board.m_whiteKingSquare) << 8);
@@ -990,7 +982,7 @@ public final class RivalSearch implements Runnable {
         // Everything white attacks with pieces.  Does not include attacked pawns.
         whiteAttacksBitboard &= board.m_pieceBitboards[RivalConstants.BN] | board.m_pieceBitboards[RivalConstants.BR] | board.m_pieceBitboards[RivalConstants.BQ] | board.m_pieceBitboards[RivalConstants.BB];
         // Plus anything white attacks with pawns.
-        whiteAttacksBitboard |= getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]);
+        whiteAttacksBitboard |= Bitboards.getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]);
 
         int temp = 0;
 
@@ -1008,7 +1000,7 @@ public final class RivalSearch implements Runnable {
         int threatScore = temp + temp * (temp / RivalConstants.VALUE_QUEEN);
 
         blackAttacksBitboard &= board.m_pieceBitboards[RivalConstants.WN] | board.m_pieceBitboards[RivalConstants.WR] | board.m_pieceBitboards[RivalConstants.WQ] | board.m_pieceBitboards[RivalConstants.WB];
-        blackAttacksBitboard |= getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]);
+        blackAttacksBitboard |= Bitboards.getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]);
 
         temp = 0;
 
