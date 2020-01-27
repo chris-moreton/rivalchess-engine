@@ -157,4 +157,74 @@ public class BitboardsTest {
 
         assertEquals(expected, Bitboards.getWhitePawnAttacks(bitboard));
     }
+
+    @Test
+    public void getWhitePassedPawns() {
+        final long whitePawns = new BigInteger(
+                     "00000000" +
+                        "00100000" +
+                        "00100000" +
+                        "00000000" +
+                        "01000001" +
+                        "11001010" +
+                        "00000000" +
+                        "00000000", 2).longValue();
+
+        final long blackPawns = new BigInteger(
+                     "00000000" +
+                        "00000000" +
+                        "00000000" +
+                        "10000010" +
+                        "10100100" +
+                        "00000000" +
+                        "00000000" +
+                        "00000000", 2).longValue();
+
+        final long expected = new BigInteger(
+                     "00000000" +
+                        "00100000" +
+                        "00000000" +
+                        "00000000" +
+                        "00000000" +
+                        "00000000" +
+                        "00000000" +
+                        "00000000", 2).longValue();
+
+        assertEquals(expected, Bitboards.getWhitePassedPawns(whitePawns, blackPawns));
+    }
+
+    @Test
+    public void getBlackPassedPawns() {
+        final long whitePawns = new BigInteger(
+                     "00000000" +
+                        "00100000" +
+                        "00100000" +
+                        "00000000" +
+                        "01000001" +
+                        "11001010" +
+                        "00000000" +
+                        "00000000", 2).longValue();
+
+        final long blackPawns = new BigInteger(
+                     "00000000" +
+                        "00000000" +
+                        "00000000" +
+                        "10000010" +
+                        "10100100" +
+                        "00100100" +
+                        "00000000" +
+                        "00000000", 2).longValue();
+
+        final long expected = new BigInteger(
+                     "00000000" +
+                        "00000000" +
+                        "00000000" +
+                        "00000000" +
+                        "00000000" +
+                        "00100100" +
+                        "00000000" +
+                        "00000000", 2).longValue();
+
+        assertEquals(expected, Bitboards.getBlackPassedPawns(whitePawns, blackPawns));
+    }
 }

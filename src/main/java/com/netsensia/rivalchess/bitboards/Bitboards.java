@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.bitboards;
 
+import com.netsensia.rivalchess.engine.core.RivalConstants;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -366,15 +368,25 @@ public final class Bitboards {
         return bitboard;
     }
 
-    public static long getPawnFiles(long bitboard) {
-        return southFill(bitboard) & RANK_1;
+    public static long getPawnFiles(long pawns) {
+        return southFill(pawns) & RANK_1;
     }
 
-    public static long getBlackPawnAttacks(long bitboard) {
-        return ((bitboard & ~FILE_A) >>> 7) | ((bitboard & ~FILE_H) >>> 9);
+    public static long getBlackPawnAttacks(long blackPawns) {
+        return ((blackPawns & ~FILE_A) >>> 7) | ((blackPawns & ~FILE_H) >>> 9);
     }
 
-    public static long getWhitePawnAttacks(long bitboard) {
-        return ((bitboard & ~FILE_A) << 9) | ((bitboard & ~FILE_H) << 7);
+    public static long getWhitePawnAttacks(long whitePawns) {
+        return ((whitePawns & ~FILE_A) << 9) | ((whitePawns & ~FILE_H) << 7);
+    }
+
+    public static long getWhitePassedPawns(long whitePawns, long blackPawns) {
+        return whitePawns &
+                ~Bitboards.southFill(blackPawns | getBlackPawnAttacks(blackPawns) | (whitePawns >>> 8));
+    }
+
+    public static long getBlackPassedPawns(long whitePawns, long blackPawns) {
+        return blackPawns &
+                ~Bitboards.northFill(whitePawns |  getWhitePawnAttacks (whitePawns) | (blackPawns << 8));
     }
 }

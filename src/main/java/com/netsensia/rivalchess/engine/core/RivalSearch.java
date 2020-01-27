@@ -285,16 +285,12 @@ public final class RivalSearch implements Runnable {
 
             pawnScore = 0;
 
-            whitePassedPawns =
-                    board.m_pieceBitboards[RivalConstants.WP] &
-                            ~Bitboards.southFill(board.m_pieceBitboards[RivalConstants.BP] | blackPawnAttacks | (board.m_pieceBitboards[RivalConstants.WP] >>> 8));
+            whitePassedPawns = Bitboards.getWhitePassedPawns(board.m_pieceBitboards[RivalConstants.WP], board.m_pieceBitboards[RivalConstants.BP]);
 
             final long whiteGuardedPassedPawns = whitePassedPawns & (Bitboards.getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]));
 
-            blackPassedPawns =
-                    board.m_pieceBitboards[RivalConstants.BP] &
-                            ~Bitboards.northFill(board.m_pieceBitboards[RivalConstants.WP] | whitePawnAttacks | (board.m_pieceBitboards[RivalConstants.BP] << 8));
-
+            blackPassedPawns = Bitboards.getBlackPassedPawns(board.m_pieceBitboards[RivalConstants.WP], board.m_pieceBitboards[RivalConstants.BP]);
+          
             long blackGuardedPassedPawns = blackPassedPawns & (Bitboards.getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]));
 
             whitePassedPawnScore = Long.bitCount(whiteGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN;
