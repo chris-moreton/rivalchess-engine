@@ -38,7 +38,7 @@ public class EngineMonitor extends TimerTask {
     }
 
     public void run() {
-        m_engine.setCurrentTimeMillis(System.currentTimeMillis());
+        m_engine.setMillisSetByEngineMonitor(System.currentTimeMillis());
 
         if (m_engine.isUCIMode()) {
             if (m_engine.isOkToSendInfo()) {

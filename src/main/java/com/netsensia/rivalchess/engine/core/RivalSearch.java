@@ -24,15 +24,13 @@ public final class RivalSearch implements Runnable {
     boolean quit = false;
 
     private int nodes = 0;
-    private long currentTimeMillis;
+    private long millisSetByEngineMonitor;
 
     private final List<List<Long>> drawnPositionsAtRoot;
 
     private final int[] drawnPositionsAtRootCount = new int[2];
 
     private int aspirationLow, aspirationHigh;
-
-    private int totalMovesSearchedAtAllDepths = 0;
 
     public int m_futilityPrunes = 0;
     public int m_alwaysHashClashes = 0;
@@ -49,7 +47,8 @@ public final class RivalSearch implements Runnable {
 
     public int m_zugzwangCount = 0;
 
-    public EngineChessBoard m_board;
+    private EngineChessBoard engineChessBoard;
+
     protected int m_millisecondsToThink;
     protected int m_nodesToSearch = Integer.MAX_VALUE;
 
@@ -114,7 +113,7 @@ public final class RivalSearch implements Runnable {
 
         this.printStream = printStream;
 
-        this.setCurrentTimeMillis(System.currentTimeMillis());
+        this.setMillisSetByEngineMonitor(System.currentTimeMillis());
 
         this.m_currentPath = new SearchPath();
         this.m_currentPathString = "";
@@ -190,7 +189,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public synchronized void setBoard(EngineChessBoard engineBoard) {
-        this.m_board = engineBoard;
+        this.setEngineChessBoard(engineBoard);
         this.m_hashTableVersion++;
 
         setHashTable();
@@ -290,7 +289,7 @@ public final class RivalSearch implements Runnable {
             final long whiteGuardedPassedPawns = whitePassedPawns & (Bitboards.getWhitePawnAttacks(board.m_pieceBitboards[RivalConstants.WP]));
 
             blackPassedPawns = Bitboards.getBlackPassedPawns(board.m_pieceBitboards[RivalConstants.WP], board.m_pieceBitboards[RivalConstants.BP]);
-          
+
             long blackGuardedPassedPawns = blackPassedPawns & (Bitboards.getBlackPawnAttacks(board.m_pieceBitboards[RivalConstants.BP]));
 
             whitePassedPawnScore = Long.bitCount(whiteGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN;
@@ -407,81 +406,6 @@ public final class RivalSearch implements Runnable {
         }
 
         return pawnScore;
-    }
-
-    private int scoreRightWayPositions(EngineChessBoard board, int h1, int h2, int h3, int g2, int g3, int f1, int f2, int f3, int f4, int offset, int cornerColour) {
-        int safety = 0;
-
-        if ((board.m_pieceBitboards[RivalConstants.ALL] & (1L << h1)) == 0) {
-            if ((board.m_pieceBitboards[RivalConstants.WR + offset] & (1L << f1)) != 0) {
-                if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << f2)) != 0) {
-                    if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << g2)) != 0) {
-                        if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
-                            // (A)
-                            safety += 120;
-                        } else {
-                            if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << h3)) != 0) {
-                                if ((board.m_pieceBitboards[RivalConstants.WN + offset] & (1L << f3)) != 0) {
-                                    // (D)
-                                    safety += 70;
-                                    // check for bishop of same colour as h3
-                                    long bits = (cornerColour == RivalConstants.WHITE ? Bitboards.LIGHT_SQUARES : Bitboards.DARK_SQUARES);
-                                    if ((bits & board.m_pieceBitboards[RivalConstants.WB + offset]) != 0) {
-                                        safety -= 30;
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << g3)) != 0) {
-                            if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
-                                if ((board.m_pieceBitboards[RivalConstants.WB + offset] & (1L << g2)) != 0) {
-                                    // (B)
-                                    safety += 100;
-                                }
-                            } else {
-                                if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << h3)) != 0) {
-                                    if ((board.m_pieceBitboards[RivalConstants.WB + offset] & (1L << g2)) != 0) {
-                                        // (C)
-                                        safety += 70;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << f4)) != 0) {
-                        if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << g2)) != 0) {
-                            if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
-                                // (E)
-                                safety += 50;
-                                if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
-                                    if ((board.m_pieceBitboards[RivalConstants.WN + offset] & (1L << f3)) != 0) {
-                                        safety += 40;
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << f3)) != 0) {
-                            if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << g2)) != 0) {
-                                if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
-                                    // (F)
-                                    safety += 25;
-                                } else {
-                                    if ((board.m_pieceBitboards[RivalConstants.WP + offset] & (1L << h3)) != 0) {
-                                        // (H)
-                                        safety -= 30;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return safety / RivalConstants.KINGSAFETY_RIGHTWAY_DIVISOR;
     }
 
     private final int[] indexOfFirstAttackerInDirection = new int[8];
@@ -1024,7 +948,7 @@ public final class RivalSearch implements Runnable {
             int h1 = 0, h2 = 8, h3 = 16, g2 = 9, g3 = 17, f1 = 2, f2 = 10, f3 = 18, f4 = 26;
 
             if (board.m_whiteKingSquare == 1 || board.m_whiteKingSquare == 8) {
-                whiteKingSafety = scoreRightWayPositions(board, h1, h2, h3, g2, g3, f1, f2, f3, f4, 0, RivalConstants.WHITE);
+                whiteKingSafety = Evaluate.scoreRightWayPositions(board, h1, h2, h3, g2, g3, f1, f2, f3, f4, 0, RivalConstants.WHITE);
             }
 
             if (board.m_blackKingSquare == 57 || board.m_blackKingSquare == 48) {
@@ -1037,7 +961,7 @@ public final class RivalSearch implements Runnable {
                 f2 = 50;
                 f3 = 42;
                 f4 = 34;
-                blackKingSafety = scoreRightWayPositions(board, h1, h2, h3, g2, g3, f1, f2, f3, f4, 6, RivalConstants.BLACK);
+                blackKingSafety = Evaluate.scoreRightWayPositions(board, h1, h2, h3, g2, g3, f1, f2, f3, f4, 6, RivalConstants.BLACK);
             }
 
             int halfOpenFilePenalty = 0;
@@ -1642,7 +1566,7 @@ public final class RivalSearch implements Runnable {
     public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, int recaptureSquare, boolean isCheck) {
         if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
 
-        if (this.getCurrentTimeMillis() > this.m_searchTargetEndTime || this.getNodes() >= this.m_nodesToSearch) {
+        if (this.getMillisSetByEngineMonitor() > this.m_searchTargetEndTime || this.getNodes() >= this.m_nodesToSearch) {
             this.m_abortingSearch = true;
             this.setOkToSendInfo(false);
             return null;
@@ -1960,13 +1884,13 @@ public final class RivalSearch implements Runnable {
                         do {
                             lmrResearch = false;
                             if (scoutSearch) {
-                                newPath = search(m_board, (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
+                                newPath = search(getEngineChessBoard(), (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
                                 if (newPath != null)
                                     if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                     else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                                 if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                                     // research with normal window
-                                    newPath = search(m_board, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
+                                    newPath = search(getEngineChessBoard(), (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
                                     if (newPath != null)
                                         if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
@@ -2111,10 +2035,9 @@ public final class RivalSearch implements Runnable {
         int checkExtend, pawnExtend;
 
         while (move != 0 && !this.m_abortingSearch) {
-            if (m_board.makeMove(move)) {
+            if (getEngineChessBoard().makeMove(move)) {
                 boolean isCheck = board.isCheck();
 
-                totalMovesSearchedAtAllDepths++;
                 checkExtend = 0;
                 pawnExtend = 0;
                 if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
@@ -2139,29 +2062,29 @@ public final class RivalSearch implements Runnable {
                 m_currentDepthZeroMoveNumber = numLegalMovesAtDepthZero;
 
                 boolean canMakeNullMove = true;
-                if (isDrawnAtRoot(m_board, 1)) {
+                if (isDrawnAtRoot(getEngineChessBoard(), 1)) {
                     int hashIndex = (int) (board.m_hashValue % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
                     this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
                     this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
                     canMakeNullMove = false;
                 }
 
-                if (isDrawnAtRoot(m_board, 0)) {
+                if (isDrawnAtRoot(getEngineChessBoard(), 0)) {
                     newPath = new SearchPath();
                     newPath.score = 0;
                     newPath.setPath(move);
                 } else {
                     if (scoutSearch) {
-                        newPath = search(m_board, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, canMakeNullMove, -1, isCheck);
+                        newPath = search(getEngineChessBoard(), (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, canMakeNullMove, -1, isCheck);
                         if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                         if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
-                            newPath = search(m_board, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
+                            newPath = search(getEngineChessBoard(), (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
                             if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                             else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                         }
                     } else {
-                        newPath = search(m_board, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
+                        newPath = search(getEngineChessBoard(), (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
                         if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                     }
@@ -2193,7 +2116,7 @@ public final class RivalSearch implements Runnable {
 
                     depthZeroMoveScores[numMoves] = newPath.score;
                 }
-                m_board.unMakeMove();
+                getEngineChessBoard().unMakeMove();
             } else {
                 depthZeroMoveScores[numMoves] = -RivalConstants.INFINITY;
             }
@@ -2219,7 +2142,6 @@ public final class RivalSearch implements Runnable {
     public void go() {
         this.m_searchState = RivalConstants.SEARCHSTATE_SEARCHING;
         this.m_abortingSearch = false;
-        this.totalMovesSearchedAtAllDepths = 0;
 
         this.m_hashTableVersion++;
 
@@ -2261,9 +2183,8 @@ public final class RivalSearch implements Runnable {
         SearchPath path;
 
         try {
-            m_board.setLegalMoves(depthZeroLegalMoves);
+            getEngineChessBoard().setLegalMoves(depthZeroLegalMoves);
             int depthZeroMoveCount = 0;
-            int currentDepthZeroValidMoves = 0;
 
             int c = 0;
             int[] depth1MovesTemp = new int[RivalConstants.MAX_LEGAL_MOVES];
@@ -2274,7 +2195,7 @@ public final class RivalSearch implements Runnable {
             int bestNewbieScore = -RivalConstants.INFINITY;
 
             while (move != 0) {
-                if (m_board.makeMove(move)) {
+                if (getEngineChessBoard().makeMove(move)) {
                     boolean ply0Draw = false;
                     boolean ply1Draw = false;
 
@@ -2282,7 +2203,7 @@ public final class RivalSearch implements Runnable {
 
                     if (this.m_iterativeDeepeningCurrentDepth < 1) // super beginner mode
                     {
-                        SearchPath sp = quiesce(m_board, 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, m_board.isCheck());
+                        SearchPath sp = quiesce(getEngineChessBoard(), 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, getEngineChessBoard().isCheck());
                         sp.score = -sp.score;
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score;
@@ -2298,47 +2219,46 @@ public final class RivalSearch implements Runnable {
                         m_currentPath.score = 0;
                         m_currentPathString = "" + m_currentPath;
                     }
-                    if (m_board.previousOccurrencesOfThisPosition() == 2) {
+                    if (getEngineChessBoard().previousOccurrencesOfThisPosition() == 2) {
                         ply0Draw = true;
                     }
 
-                    m_board.setLegalMoves(depth1MovesTemp);
+                    getEngineChessBoard().setLegalMoves(depth1MovesTemp);
 
                     int c1 = 0;
                     int move1 = depth1MovesTemp[c1] & 0x00FFFFFF;
 
                     while (move1 != 0) {
-                        if (m_board.makeMove(move1)) {
-                            if (m_board.previousOccurrencesOfThisPosition() == 2) {
+                        if (getEngineChessBoard().makeMove(move1)) {
+                            if (getEngineChessBoard().previousOccurrencesOfThisPosition() == 2) {
                                 ply1Draw = true;
                             }
-                            m_board.unMakeMove();
+                            getEngineChessBoard().unMakeMove();
                         }
                         move1 = depth1MovesTemp[++c1] & 0x00FFFFFF;
                     }
 
                     if (ply0Draw) {
-                        drawnPositionsAtRoot.get(0).add(m_board.m_hashValue);
+                        drawnPositionsAtRoot.get(0).add(getEngineChessBoard().m_hashValue);
                     }
                     if (ply1Draw) {
-                        drawnPositionsAtRoot.get(1).add(m_board.m_hashValue);
+                        drawnPositionsAtRoot.get(1).add(getEngineChessBoard().m_hashValue);
                     }
 
-                    m_board.unMakeMove();
-                    currentDepthZeroValidMoves++;
+                    getEngineChessBoard().unMakeMove();
                 }
                 depthZeroMoveCount++;
 
                 move = depthZeroLegalMoves[++c] & 0x00FFFFFF;
             }
 
-            if (this.m_useOpeningBook && m_board.getFen().trim().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")) {
+            if (this.m_useOpeningBook && getEngineChessBoard().getFen().trim().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")) {
                 this.m_inBook = true;
             }
 
             if (this.m_inBook) {
-                int libraryMove = m_openingLibrary.getMove(m_board.getFen());
-                if (libraryMove > 0 && m_board.isMoveLegal(libraryMove)) {
+                int libraryMove = m_openingLibrary.getMove(getEngineChessBoard().getFen());
+                if (libraryMove > 0 && getEngineChessBoard().isMoveLegal(libraryMove)) {
                     path = new SearchPath();
                     path.setPath(libraryMove);
                     m_currentPath = path;
@@ -2352,7 +2272,7 @@ public final class RivalSearch implements Runnable {
 
             while (depthZeroLegalMoves[depthZeroMoveCount] != 0) depthZeroMoveCount++;
 
-            scoreFullWidthMoves(m_board, 0);
+            scoreFullWidthMoves(getEngineChessBoard(), 0);
 
             for (byte depth = 1; depth <= this.m_finalDepthToSearch && !this.m_abortingSearch; depth++) {
                 this.m_iterativeDeepeningCurrentDepth = depth;
@@ -2360,18 +2280,18 @@ public final class RivalSearch implements Runnable {
                 if (depth > 1) setOkToSendInfo(true);
 
                 if (RivalConstants.USE_ASPIRATION_WINDOW) {
-                    path = searchZero(m_board, depth, 0, aspirationLow, aspirationHigh);
+                    path = searchZero(getEngineChessBoard(), depth, 0, aspirationLow, aspirationHigh);
 
                     if (!this.m_abortingSearch && Objects.requireNonNull(path).score <= aspirationLow) {
                         aspirationLow = -RivalConstants.INFINITY;
-                        path = searchZero(m_board, depth, 0, aspirationLow, aspirationHigh);
+                        path = searchZero(getEngineChessBoard(), depth, 0, aspirationLow, aspirationHigh);
                     } else if (!this.m_abortingSearch && path.score >= aspirationHigh) {
                         aspirationHigh = RivalConstants.INFINITY;
-                        path = searchZero(m_board, depth, 0, aspirationLow, aspirationHigh);
+                        path = searchZero(getEngineChessBoard(), depth, 0, aspirationLow, aspirationHigh);
                     }
 
                     if (!this.m_abortingSearch && (Objects.requireNonNull(path).score <= aspirationLow || path.score >= aspirationHigh)) {
-                        path = searchZero(m_board, depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
+                        path = searchZero(getEngineChessBoard(), depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
                     }
 
                     if (!this.m_abortingSearch) {
@@ -2381,7 +2301,7 @@ public final class RivalSearch implements Runnable {
                         aspirationHigh = path.score + RivalConstants.ASPIRATION_RADIUS;
                     }
                 } else {
-                    path = searchZero(m_board, depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
+                    path = searchZero(getEngineChessBoard(), depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
                 }
 
                 if (!this.m_abortingSearch) {
@@ -2596,16 +2516,23 @@ public final class RivalSearch implements Runnable {
         this.nodes = nodes;
     }
 
-    public long getCurrentTimeMillis() {
-        return currentTimeMillis;
+    public long getMillisSetByEngineMonitor() {
+        return millisSetByEngineMonitor;
     }
 
-    public void setCurrentTimeMillis(long currentTimeMillis) {
-        this.currentTimeMillis = currentTimeMillis;
+    public void setMillisSetByEngineMonitor(long millisSetByEngineMonitor) {
+        this.millisSetByEngineMonitor = millisSetByEngineMonitor;
     }
 
     public int[] getDrawnPositionsAtRootCount() {
         return drawnPositionsAtRootCount;
     }
 
+    public EngineChessBoard getEngineChessBoard() {
+        return engineChessBoard;
+    }
+
+    public void setEngineChessBoard(EngineChessBoard engineChessBoard) {
+        this.engineChessBoard = engineChessBoard;
+    }
 }
