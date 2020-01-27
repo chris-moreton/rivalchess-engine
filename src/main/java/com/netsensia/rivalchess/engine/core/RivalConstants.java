@@ -141,7 +141,6 @@ public final class RivalConstants
 /***********************************	
  *	Search parameters              *
  ***********************************/
-	public static final boolean COUNT_NODES_IN_EVALUATE_ONLY = false;
 
 	/*
 	 * History and killers

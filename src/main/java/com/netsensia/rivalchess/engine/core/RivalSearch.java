@@ -527,7 +527,6 @@ public final class RivalSearch implements Runnable {
     }
 
     public int evaluate(EngineChessBoard board) {
-        if (RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) this.setNodes(this.getNodes() + 1);
 
         if (board.whitePieceValues + board.blackPieceValues + board.whitePawnValues + board.blackPawnValues == 0)
             return 0;
@@ -945,24 +944,9 @@ public final class RivalSearch implements Runnable {
         int blackKingSafety = 0;
         int kingSafety = 0;
         if (averagePiecesPerSide > RivalConstants.KINGSAFETY_MIN_PIECE_BALANCE) {
-            int h1 = 0, h2 = 8, h3 = 16, g2 = 9, g3 = 17, f1 = 2, f2 = 10, f3 = 18, f4 = 26;
 
-            if (board.m_whiteKingSquare == 1 || board.m_whiteKingSquare == 8) {
-                whiteKingSafety = Evaluate.scoreRightWayPositions(board, h1, h2, h3, g2, g3, f1, f2, f3, f4, 0, RivalConstants.WHITE);
-            }
-
-            if (board.m_blackKingSquare == 57 || board.m_blackKingSquare == 48) {
-                h1 = 56;
-                h2 = 48;
-                h3 = 40;
-                g2 = 49;
-                g3 = 41;
-                f1 = 58;
-                f2 = 50;
-                f3 = 42;
-                f4 = 34;
-                blackKingSafety = Evaluate.scoreRightWayPositions(board, h1, h2, h3, g2, g3, f1, f2, f3, f4, 6, RivalConstants.BLACK);
-            }
+            whiteKingSafety = Evaluate.getWhiteKingRightWayScore(board);
+            blackKingSafety = Evaluate.getBlackKingRightWayScore(board);
 
             int halfOpenFilePenalty = 0;
             int shieldValue = 0;
@@ -1342,7 +1326,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public SearchPath quiesce(EngineChessBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) {
-        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
+        setNodes(getNodes() + 1);
 
         SearchPath newPath;
         SearchPath bestPath;
@@ -1564,7 +1548,8 @@ public final class RivalSearch implements Runnable {
     final SearchPath zugPath = new SearchPath();
 
     public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, int recaptureSquare, boolean isCheck) {
-        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
+
+        setNodes(getNodes() + 1);
 
         if (this.getMillisSetByEngineMonitor() > this.m_searchTargetEndTime || this.getNodes() >= this.m_nodesToSearch) {
             this.m_abortingSearch = true;
@@ -2015,7 +2000,8 @@ public final class RivalSearch implements Runnable {
     }
 
     public SearchPath searchZero(EngineChessBoard board, byte depth, int ply, int low, int high) {
-        if (!RivalConstants.COUNT_NODES_IN_EVALUATE_ONLY) setNodes(getNodes() + 1);
+
+        setNodes(getNodes() + 1);
 
         int numMoves = 0;
         byte flag = RivalConstants.UPPERBOUND;
@@ -2032,7 +2018,8 @@ public final class RivalSearch implements Runnable {
 
         boolean scoutSearch = false;
 
-        int checkExtend, pawnExtend;
+        int checkExtend;
+        int pawnExtend;
 
         while (move != 0 && !this.m_abortingSearch) {
             if (getEngineChessBoard().makeMove(move)) {
@@ -2140,45 +2127,11 @@ public final class RivalSearch implements Runnable {
     }
 
     public void go() {
-        this.m_searchState = RivalConstants.SEARCHSTATE_SEARCHING;
-        this.m_abortingSearch = false;
 
-        this.m_hashTableVersion++;
+        initSearchVariables();
+        setupMateAndKillerMoveTables();
 
-        this.m_searchStartTime = System.currentTimeMillis();
-        this.m_searchEndTime = 0;
-        this.m_searchTargetEndTime = this.m_searchStartTime + this.m_millisecondsToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
-
-        this.m_heightHashClashes = 0;
-        this.m_alwaysHashClashes = 0;
-        this.m_alwaysHashValuesRetrieved = 0;
-        this.m_heightHashValuesRetrieved = 0;
-        this.m_alwaysHashValuesStored = 0;
-        this.m_heightHashValuesStored = 0;
-        this.m_pawnHashValuesStored = 0;
-
-        this.m_zugzwangCount = 0;
-
-        aspirationLow = -RivalConstants.INFINITY;
-        aspirationHigh = RivalConstants.INFINITY;
-        this.setNodes(0);
-
-        for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
-            this.mateKiller[i] = -1;
-            for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
-                this.killerMoves[i][j] = -1;
-            }
-        }
-
-        for (int i = 0; i < 64; i++)
-            for (int j = 0; j < 64; j++) {
-                historyMovesSuccess[0][i][j] = 0;
-                historyMovesSuccess[1][i][j] = 0;
-                historyMovesFail[0][i][j] = 0;
-                historyMovesFail[1][i][j] = 0;
-                historyPruneMoves[0][i][j] = RivalConstants.LMR_INITIAL_VALUE;
-                historyPruneMoves[1][i][j] = RivalConstants.LMR_INITIAL_VALUE;
-            }
+        setupHistoryMoveTable();
 
         SearchPath path;
 
@@ -2189,8 +2142,8 @@ public final class RivalSearch implements Runnable {
             int c = 0;
             int[] depth1MovesTemp = new int[RivalConstants.MAX_LEGAL_MOVES];
             int move = depthZeroLegalMoves[c] & 0x00FFFFFF;
-            getDrawnPositionsAtRootCount()[0] = 0;
-            getDrawnPositionsAtRootCount()[1] = 0;
+            drawnPositionsAtRootCount[0] = 0;
+            drawnPositionsAtRootCount[1] = 0;
             int legal = 0;
             int bestNewbieScore = -RivalConstants.INFINITY;
 
@@ -2338,6 +2291,52 @@ public final class RivalSearch implements Runnable {
         }
     }
 
+    private void initSearchVariables() {
+        m_searchState = RivalConstants.SEARCHSTATE_SEARCHING;
+        m_abortingSearch = false;
+
+        m_hashTableVersion++;
+
+        m_searchStartTime = System.currentTimeMillis();
+        m_searchEndTime = 0;
+        m_searchTargetEndTime = this.m_searchStartTime + this.m_millisecondsToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
+
+        m_heightHashClashes = 0;
+        m_alwaysHashClashes = 0;
+        m_alwaysHashValuesRetrieved = 0;
+        m_heightHashValuesRetrieved = 0;
+        m_alwaysHashValuesStored = 0;
+        m_heightHashValuesStored = 0;
+        m_pawnHashValuesStored = 0;
+
+        m_zugzwangCount = 0;
+
+        aspirationLow = -RivalConstants.INFINITY;
+        aspirationHigh = RivalConstants.INFINITY;
+        nodes = 0;
+    }
+
+    private void setupMateAndKillerMoveTables() {
+        for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
+            this.mateKiller[i] = -1;
+            for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+                this.killerMoves[i][j] = -1;
+            }
+        }
+    }
+
+    private void setupHistoryMoveTable() {
+        for (int i = 0; i < 64; i++)
+            for (int j = 0; j < 64; j++) {
+                historyMovesSuccess[0][i][j] = 0;
+                historyMovesSuccess[1][i][j] = 0;
+                historyMovesFail[0][i][j] = 0;
+                historyMovesFail[1][i][j] = 0;
+                historyPruneMoves[0][i][j] = RivalConstants.LMR_INITIAL_VALUE;
+                historyPruneMoves[1][i][j] = RivalConstants.LMR_INITIAL_VALUE;
+            }
+    }
+
     public synchronized int getEngineState() {
         return this.m_searchState;
     }
@@ -2355,13 +2354,10 @@ public final class RivalSearch implements Runnable {
     }
 
     public void setSearchDepth(int searchDepth) {
-        if (searchDepth == -1) {
-            Random randomGenerator = new Random();
-            searchDepth = randomGenerator.nextInt(3);
-            if (searchDepth == 2) {
-                searchDepth = 1;
-            }
+        if (searchDepth < 0) {
+            searchDepth = 1;
         }
+
         this.m_finalDepthToSearch = searchDepth;
     }
 

@@ -4,7 +4,7 @@ import com.netsensia.rivalchess.bitboards.Bitboards;
 
 public class Evaluate {
 
-    public static int scoreRightWayPositions(EngineChessBoard board, int h1, int h2, int h3, int g2, int g3, int f1, int f2, int f3, int f4, int offset, int cornerColour) {
+    private static int scoreRightWayPositions(EngineChessBoard board, int h1, int h2, int h3, int g2, int g3, int f1, int f2, int f3, int f4, int offset, int cornerColour) {
         int safety = 0;
 
         if ((board.m_pieceBitboards[RivalConstants.ALL] & (1L << h1)) == 0) {
@@ -79,4 +79,21 @@ public class Evaluate {
         return safety / RivalConstants.KINGSAFETY_RIGHTWAY_DIVISOR;
     }
 
+    public static int getWhiteKingRightWayScore(EngineChessBoard engineChessBoard) {
+        if (engineChessBoard.m_whiteKingSquare == 1 || engineChessBoard.m_whiteKingSquare == 8) {
+            int h1 = 0, h2 = 8, h3 = 16, g2 = 9, g3 = 17, f1 = 2, f2 = 10, f3 = 18, f4 = 26;
+            return scoreRightWayPositions(engineChessBoard, h1, h2, h3, g2, g3, f1, f2, f3, f4, 0, RivalConstants.WHITE);
+        }
+
+        return 0;
+    }
+
+    public static int getBlackKingRightWayScore(EngineChessBoard engineChessBoard) {
+        if (engineChessBoard.m_blackKingSquare == 57 || engineChessBoard.m_blackKingSquare == 48) {
+            int h1 = 56, h2 = 48, h3 = 40, g2 = 49, g3 = 41, f1 = 58, f2 = 50, f3 = 42, f4 = 34;
+            return scoreRightWayPositions(engineChessBoard, h1, h2, h3, g2, g3, f1, f2, f3, f4, 6, RivalConstants.BLACK);
+        }
+
+        return 0;
+    }
 }
