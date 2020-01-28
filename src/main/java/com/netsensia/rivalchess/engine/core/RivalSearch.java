@@ -547,64 +547,45 @@ public final class RivalSearch implements Runnable {
 
         final int materialDifference = board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues;
 
-        int eval =
-                (RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                        ?
-                        materialDifference
-                                + Numbers.linearScale(board.blackPieceValues, RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, board.pieceSquareValuesEndGame[RivalConstants.WP], board.pieceSquareValues[RivalConstants.WP])
-                                - Numbers.linearScale(board.whitePieceValues, RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, board.pieceSquareValuesEndGame[RivalConstants.BP], board.pieceSquareValues[RivalConstants.BP])
-                                + (board.pieceSquareValues[RivalConstants.WR] * Math.min(board.blackPawnValues / RivalConstants.VALUE_PAWN, 6) / 6)
-                                - (board.pieceSquareValues[RivalConstants.BR] * Math.min(board.whitePawnValues / RivalConstants.VALUE_PAWN, 6) / 6)
-                                + board.pieceSquareValues[RivalConstants.WB]
-                                - board.pieceSquareValues[RivalConstants.BB]
-                                + Numbers.linearScale(board.blackPieceValues + board.blackPawnValues, RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, board.pieceSquareValuesEndGame[RivalConstants.WN], board.pieceSquareValues[RivalConstants.WN])
-                                - Numbers.linearScale(board.whitePieceValues + board.whitePawnValues, RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, board.pieceSquareValuesEndGame[RivalConstants.BN], board.pieceSquareValues[RivalConstants.BN])
-                                + board.pieceSquareValues[RivalConstants.WQ]
-                                - board.pieceSquareValues[RivalConstants.BQ]
-                                + Numbers.linearScale(board.blackPieceValues, RivalConstants.VALUE_ROOK, RivalConstants.OPENING_PHASE_MATERIAL, Bitboards.pieceSquareTableKingEndGame.get(board.m_whiteKingSquare), Bitboards.pieceSquareTableKing.get(board.m_whiteKingSquare))
-                                - Numbers.linearScale(board.whitePieceValues, RivalConstants.VALUE_ROOK, RivalConstants.OPENING_PHASE_MATERIAL, Bitboards.pieceSquareTableKingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare)), Bitboards.pieceSquareTableKing.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare)))
-                        :
-                        materialDifference;
+        int eval = materialDifference;
 
         int pieceSquareTemp = 0;
         int pieceSquareTempEndGame = 0;
 
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-            bitboard = board.m_pieceBitboards[RivalConstants.WP];
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                pieceSquareTemp += Bitboards.pieceSquareTablePawn.get(sq);
-                pieceSquareTempEndGame += Bitboards.pieceSquareTablePawnEndGame.get(sq);
-            }
-
-            eval += Numbers.linearScale(board.blackPieceValues, RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
-
-            pieceSquareTemp = 0;
-            pieceSquareTempEndGame = 0;
-            bitboard = board.m_pieceBitboards[RivalConstants.BP];
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                pieceSquareTemp += Bitboards.pieceSquareTablePawn.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
-                pieceSquareTempEndGame += Bitboards.pieceSquareTablePawnEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
-            }
-
-            eval -= Numbers.linearScale(board.whitePieceValues, RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
-
-            eval += Numbers.linearScale(board.blackPieceValues, RivalConstants.VALUE_ROOK, RivalConstants.OPENING_PHASE_MATERIAL, Bitboards.pieceSquareTableKingEndGame.get(board.m_whiteKingSquare), Bitboards.pieceSquareTableKing.get(board.m_whiteKingSquare))
-                    - Numbers.linearScale(board.whitePieceValues, RivalConstants.VALUE_ROOK, RivalConstants.OPENING_PHASE_MATERIAL, Bitboards.pieceSquareTableKingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare)), Bitboards.pieceSquareTableKing.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare)));
+        bitboard = board.m_pieceBitboards[RivalConstants.WP];
+        while (bitboard != 0) {
+            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+            pieceSquareTemp += Bitboards.pieceSquareTablePawn.get(sq);
+            pieceSquareTempEndGame += Bitboards.pieceSquareTablePawnEndGame.get(sq);
         }
+
+        eval += Numbers.linearScale(board.blackPieceValues, RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+
+        pieceSquareTemp = 0;
+        pieceSquareTempEndGame = 0;
+        bitboard = board.m_pieceBitboards[RivalConstants.BP];
+        while (bitboard != 0) {
+            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+            pieceSquareTemp += Bitboards.pieceSquareTablePawn.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
+            pieceSquareTempEndGame += Bitboards.pieceSquareTablePawnEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
+        }
+
+        eval -= Numbers.linearScale(board.whitePieceValues, RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+
+        eval += Numbers.linearScale(board.blackPieceValues, RivalConstants.VALUE_ROOK, RivalConstants.OPENING_PHASE_MATERIAL, Bitboards.pieceSquareTableKingEndGame.get(board.m_whiteKingSquare), Bitboards.pieceSquareTableKing.get(board.m_whiteKingSquare))
+                - Numbers.linearScale(board.whitePieceValues, RivalConstants.VALUE_ROOK, RivalConstants.OPENING_PHASE_MATERIAL, Bitboards.pieceSquareTableKingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare)), Bitboards.pieceSquareTableKing.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare)));
 
         int lastSq = -1;
         int file = -1;
 
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) pieceSquareTemp = 0;
+        pieceSquareTemp = 0;
         bitboard = board.m_pieceBitboards[RivalConstants.WR];
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
             if (lastSq != -1 && file == (lastSq % 8)) eval += RivalConstants.VALUE_ROOKS_ON_SAME_FILE;
 
-            if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) pieceSquareTemp += Bitboards.pieceSquareTableRook.get(sq);
+            pieceSquareTemp += Bitboards.pieceSquareTableRook.get(sq);
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.m_pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
 
@@ -623,22 +604,20 @@ public final class RivalSearch implements Runnable {
             lastSq = sq;
         }
 
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-            eval += (pieceSquareTemp * Math.min(board.blackPawnValues / RivalConstants.VALUE_PAWN, 6) / 6);
+        eval += (pieceSquareTemp * Math.min(board.blackPawnValues / RivalConstants.VALUE_PAWN, 6) / 6);
 
         if (Long.bitCount(board.m_pieceBitboards[RivalConstants.WR] & Bitboards.RANK_7) > 1 && (board.m_pieceBitboards[RivalConstants.BK] & Bitboards.RANK_8) != 0)
             eval += RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
 
         bitboard = board.m_pieceBitboards[RivalConstants.BR];
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) pieceSquareTemp = 0;
+        pieceSquareTemp = 0;
         lastSq = -1;
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
             if (lastSq != -1 && file == (lastSq % 8)) eval -= RivalConstants.VALUE_ROOKS_ON_SAME_FILE;
 
-            if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                pieceSquareTemp += Bitboards.pieceSquareTableRook.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
+            pieceSquareTemp += Bitboards.pieceSquareTableRook.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
 
             file = sq % 8;
 
@@ -656,47 +635,37 @@ public final class RivalSearch implements Runnable {
             lastSq = sq;
         }
 
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-            eval -= (pieceSquareTemp * Math.min(board.whitePawnValues / RivalConstants.VALUE_PAWN, 6) / 6);
+        eval -= (pieceSquareTemp * Math.min(board.whitePawnValues / RivalConstants.VALUE_PAWN, 6) / 6);
 
         if (Long.bitCount(board.m_pieceBitboards[RivalConstants.BR] & Bitboards.RANK_2) > 1 && (board.m_pieceBitboards[RivalConstants.WK] & Bitboards.RANK_1) != 0)
             eval -= RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
 
         bitboard = board.m_pieceBitboards[RivalConstants.WN];
 
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-            pieceSquareTemp = 0;
-            pieceSquareTempEndGame = 0;
-        }
+        pieceSquareTemp = 0;
+        pieceSquareTempEndGame = 0;
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
             final long knightAttacks = Bitboards.knightMoves.get(sq);
 
-            if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                pieceSquareTemp += Bitboards.pieceSquareTableKnight.get(sq);
-                pieceSquareTempEndGame += Bitboards.pieceSquareTableKnightEndGame.get(sq);
-            }
+            pieceSquareTemp += Bitboards.pieceSquareTableKnight.get(sq);
+            pieceSquareTempEndGame += Bitboards.pieceSquareTableKnightEndGame.get(sq);
 
             whiteAttacksBitboard |= knightAttacks;
             eval -= Long.bitCount(knightAttacks & (blackPawnAttacks | board.m_pieceBitboards[RivalConstants.WP])) * RivalConstants.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY;
         }
 
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-            eval += Numbers.linearScale(board.blackPieceValues + board.blackPawnValues, RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval += Numbers.linearScale(board.blackPieceValues + board.blackPawnValues, RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
 
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-            pieceSquareTemp = 0;
-            pieceSquareTempEndGame = 0;
-        }
+        pieceSquareTemp = 0;
+        pieceSquareTempEndGame = 0;
         bitboard = board.m_pieceBitboards[RivalConstants.BN];
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
-                pieceSquareTemp += Bitboards.pieceSquareTableKnight.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
-                pieceSquareTempEndGame += Bitboards.pieceSquareTableKnightEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
-            }
+            pieceSquareTemp += Bitboards.pieceSquareTableKnight.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
+            pieceSquareTempEndGame += Bitboards.pieceSquareTableKnightEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
 
             final long knightAttacks = Bitboards.knightMoves.get(sq);
 
@@ -704,14 +673,13 @@ public final class RivalSearch implements Runnable {
             eval += Long.bitCount(knightAttacks & (whitePawnAttacks | board.m_pieceBitboards[RivalConstants.BP])) * RivalConstants.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY;
         }
 
-        if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-            eval -= Numbers.linearScale(board.whitePieceValues + board.whitePawnValues, RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval -= Numbers.linearScale(board.whitePieceValues + board.whitePawnValues, RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
 
         bitboard = board.m_pieceBitboards[RivalConstants.WQ];
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) eval += Bitboards.pieceSquareTableQueen.get(sq);
+            eval += Bitboards.pieceSquareTableQueen.get(sq);
 
             final long allAttacks =
                     Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.m_pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])] |
@@ -727,8 +695,7 @@ public final class RivalSearch implements Runnable {
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                eval -= Bitboards.pieceSquareTableQueen.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
+            eval -= Bitboards.pieceSquareTableQueen.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
 
             final long allAttacks =
                     Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.m_pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])] |
@@ -828,7 +795,7 @@ public final class RivalSearch implements Runnable {
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) eval += Bitboards.pieceSquareTableBishop.get(sq);
+            eval += Bitboards.pieceSquareTableBishop.get(sq);
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.m_pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])];
             whiteAttacksBitboard |= allAttacks;
@@ -844,8 +811,7 @@ public final class RivalSearch implements Runnable {
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES)
-                eval -= Bitboards.pieceSquareTableBishop.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
+            eval -= Bitboards.pieceSquareTableBishop.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.m_pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])];
             blackAttacksBitboard |= allAttacks;

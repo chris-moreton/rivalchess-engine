@@ -17,9 +17,7 @@ public final class RivalConstants
 	public static final int UCI_TIMER_SAFTEY_MARGIN_MILLIS = 250;
 
 	public static final boolean DEBUG_ZUGZWANGS = false;
-	
-	public static final boolean TRACK_PIECE_SQUARE_VALUES = false;
-	
+
 	public static final int MAX_GAME_MOVES = 500;
 	public static final int MAX_NODES_TO_SEARCH = Integer.MAX_VALUE;
 	public static final int MAX_LEGAL_MOVES = 220;
