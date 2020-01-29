@@ -20,9 +20,8 @@ public class PerftTest {
     private void assertPerftScore(String fen, int depth, int expectedScore) throws IllegalFenException {
 
         EngineChessBoard engineBoard = new EngineChessBoard();
-        NumberFormat nf = NumberFormat.getInstance();
-
         engineBoard.setBoard(FenUtils.getBoardModel(fen));
+
         long start = System.currentTimeMillis();
         long nodes = UCIController.getPerft(engineBoard, depth);
 
@@ -34,6 +33,7 @@ public class PerftTest {
         double nps = nodes / seconds;
 
         if (LOGGER.isInfoEnabled()) {
+            NumberFormat nf = NumberFormat.getInstance();
             String nodesPerSecond = nf.format(nps);
             LOGGER.info("Nodes per second = {}", nodesPerSecond);
         }

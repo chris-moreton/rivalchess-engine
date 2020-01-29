@@ -198,6 +198,7 @@ public final class EngineChessBoard {
         generateSliderMoves(RivalConstants.WB, RivalConstants.BB, Bitboards.magicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop);
 
         this.m_legalMoves[this.m_numLegalMoves] = 0;
+
     }
 
     private void clearLegalMovesArray() {
@@ -998,15 +999,6 @@ public final class EngineChessBoard {
         return occurrences;
     }
 
-    public String allMovesString() {
-        StringBuilder s = new StringBuilder();
-        for (int i = 0; i < this.m_movesMade; i++) {
-            s.append(ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(this.m_moveList[i].move)).append(" ");
-        }
-
-        return s.toString();
-    }
-
     public String getFen() {
         StringBuilder fen = new StringBuilder();
         char[] board = getCharBoard();
@@ -1105,41 +1097,5 @@ public final class EngineChessBoard {
         return false;
     }
 
-    public void printPreviousMoves() {
-        System.out.println(this.allMovesString());
-    }
 
-    public String toString() {
-        return getBoardString();
-    }
-
-    public String getBoardString() {
-        String newLine = System.getProperty("line.separator");
-        StringBuilder s = new StringBuilder(newLine);
-
-        s.append("*************").append(newLine);
-        s.append(m_isWhiteToMove ? "White To Move" : "Black To Move").append(newLine);
-        s.append("*************").append(newLine);
-
-        char[] board = getCharBoard();
-
-        for (int i = 63; i >= 0; i--) {
-            s.append(board[i] == 0 ? '-' : board[i]);
-            if (i % 8 == 0) {
-                s.append(newLine);
-            }
-        }
-
-        s.append(getFen());
-
-        return s.toString();
-    }
-
-    public void printBoard() {
-        System.out.println(getBoardString());
-        if (this.m_movesMade > 0) {
-            int i = this.m_movesMade - 1;
-            System.out.println("Previous Move: " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(this.m_moveList[i].move) + " (" + this.m_moveList[i] + ")");
-        }
-    }
 }

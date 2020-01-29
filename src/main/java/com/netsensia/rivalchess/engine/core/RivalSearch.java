@@ -1642,11 +1642,6 @@ public final class RivalSearch implements Runnable {
         if (RivalConstants.USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= RivalConstants.IID_MIN_DEPTH && hashMove == 0 && board.isNotOnNullMove()) {
             boolean doIt = true;
 
-            if (RivalConstants.IID_PV_NODES_ONLY) {
-                int lowCheck = (ply % 2 == 0) ? aspirationLow : -aspirationHigh;
-                int highCheck = (ply % 2 == 0) ? aspirationHigh : -aspirationLow;
-                doIt = (low == lowCheck && high == highCheck);
-            }
             if (doIt) {
                 if (depth - RivalConstants.IID_REDUCE_DEPTH > 0) {
                     newPath = search(board, (byte) (depth - RivalConstants.IID_REDUCE_DEPTH), ply, low, high, extensions, canVerifyNullMove, recaptureSquare, isCheck);
@@ -1674,20 +1669,9 @@ public final class RivalSearch implements Runnable {
                 else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                 if (!this.m_abortingSearch) {
                     if (-Objects.requireNonNull(newPath).score >= high) {
-                        if (RivalConstants.USE_VERIFIED_NULLMOVE && (board.m_isWhiteToMove ? board.whitePieceValues : board.blackPieceValues) < RivalConstants.VERIFIED_WHEN_PIECEVALUES_LESS_THAN && canVerifyNullMove) {
-                            // rather than return here as we would normally when finding a null move cutoff,
-                            // we will perform a normal search with a reduced depth (-1)
-                            // If, after the search we find that there was no cutoff, it indicates that we were right
-                            // to be cautious, so we re-search with a normal depth
-                            verifyingNullMoveDepthReduction = 1;
-                            if (RivalConstants.DEBUG_ZUGZWANGS) {
-                                zugPath.setPath(newPath);
-                            }
-                        } else {
-                            bestPath.score = -newPath.score;
-                            board.unMakeNullMove();
-                            return bestPath;
-                        }
+                        bestPath.score = -newPath.score;
+                        board.unMakeNullMove();
+                        return bestPath;
                     } else if (
                             RivalConstants.FRACTIONAL_EXTENSION_THREAT > 0 &&
                                     -newPath.score < -RivalConstants.MATE_SCORE_START &&
@@ -1927,19 +1911,6 @@ public final class RivalSearch implements Runnable {
                     bestPath.score = isMate ? -RivalConstants.VALUE_MATE : 0;
                     storeHashMove(0, board, bestPath.score, RivalConstants.EXACTSCORE, RivalConstants.MAX_SEARCH_DEPTH);
                     return bestPath;
-                }
-
-                if (RivalConstants.USE_VERIFIED_NULLMOVE && verifyingNullMoveDepthReduction == 1 && bestPath.score < high) {
-                    verifyingNullMoveDepthReduction = 0;
-                    canVerifyNullMove = true;
-                    m_zugzwangCount++;
-                    research = true;
-                    if (RivalConstants.DEBUG_ZUGZWANGS) {
-                        board.printBoard();
-                        board.printPreviousMoves();
-                        printStream.println("Null move gave a score of " + -zugPath.score + " " + zugPath + " which was better than " + high + " but the best move at a reduced depth looks like " + bestPath.score + " " + bestPath);
-                        System.exit(0);
-                    }
                 }
 
                 if (!research) {

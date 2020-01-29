@@ -51,16 +51,14 @@ public class SearchPath
 	{
 		String retString = "";
 		
-		try
-		{
+		try	{
 			for (int i=0; i<this.height; i++)
 				if (this.move[i] != 0)
 					retString += ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(this.move[i]) + " ";
 				else
 					break;
 		} 
-		catch (NullPointerException e)
-		{
+		catch (NullPointerException e) {
 			throw new RuntimeException();
 		}
 		

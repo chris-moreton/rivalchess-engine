@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.uci;
 
+import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,11 +53,39 @@ public class UciControllerTest {
         uciController.processUCICommand("position startpos");
         uciController.processUCICommand("go depth 3");
 
-        SECONDS.sleep(1);
-
-        await().atMost(10, SECONDS).until(() -> !rivalSearch.isSearching());
+        await().atMost(10, SECONDS).until(() -> outSpy.toString().contains("bestmove g1f3"));
 
         assertTrue(outSpy.toString().contains("bestmove g1f3"));
+    }
+
+    @Test
+    public void testVarCommand() {
+        uciController.processUCICommand("var VERSION");
+
+        await().atMost(10, SECONDS).until(() -> outSpy.toString().contains("VERSION"));
+
+        assertTrue(outSpy.toString().contains("VERSION = " + RivalConstants.VERSION));
+
+    }
+
+    @Test
+    public void testIsReadyCommand() {
+        uciController.processUCICommand("isready");
+
+        await().atMost(10, SECONDS).until(() -> outSpy.toString().contains("readyok"));
+
+        assertTrue(outSpy.toString().contains("readyok"));
+
+    }
+
+    @Test
+    public void testUciCommand() {
+        uciController.processUCICommand("uci");
+
+        await().atMost(10, SECONDS).until(() -> outSpy.toString().contains("Chris Moreton"));
+
+        assertTrue(outSpy.toString().contains("uciok"));
+
     }
 
 }

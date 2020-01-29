@@ -16,8 +16,6 @@ public final class RivalConstants
 	public static final int UCI_TIMER_INTERVAL_MILLIS = 50;
 	public static final int UCI_TIMER_SAFTEY_MARGIN_MILLIS = 250;
 
-	public static final boolean DEBUG_ZUGZWANGS = false;
-
 	public static final int MAX_GAME_MOVES = 500;
 	public static final int MAX_NODES_TO_SEARCH = Integer.MAX_VALUE;
 	public static final int MAX_LEGAL_MOVES = 220;
@@ -61,7 +59,6 @@ public final class RivalConstants
 
 	public static final int CASTLE_BONUS_LOW_MATERIAL = VALUE_ROOK;
 	public static final int CASTLE_BONUS_HIGH_MATERIAL = VALUE_QUEEN + (VALUE_ROOK * 2) + (VALUE_BISHOP * 2);
-
 
 	public static final int[] VALUE_BISHOP_MOBILITY = {-15,-10,-6,-2,2,6,10,13,16,18,20,22,23,24};
 	public static final int VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS = 3;
@@ -151,8 +148,6 @@ public final class RivalConstants
 	/*
 	 * Null move
 	 */
-	public static final boolean USE_VERIFIED_NULLMOVE = false;
-	public static final int VERIFIED_WHEN_PIECEVALUES_LESS_THAN = VALUE_ROOK;
 	public static final int NULLMOVE_REDUCE_DEPTH = 2;
 	public static final int NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE = 6;
 	public static final int NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES = VALUE_KNIGHT;
@@ -235,7 +230,6 @@ public final class RivalConstants
 	 * Internal Iterative Deepening
 	 */
 	public static final boolean USE_INTERNAL_ITERATIVE_DEEPENING = true;
-	public static final boolean IID_PV_NODES_ONLY = false;
 	public static final int IID_MIN_DEPTH = 5;
 	public static final int IID_REDUCE_DEPTH = 3;
 	
