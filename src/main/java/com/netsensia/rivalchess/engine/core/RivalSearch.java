@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.constants.MoveOrder;
+import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.uci.EngineMonitor;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -416,7 +417,7 @@ public final class RivalSearch implements Runnable {
 
         captureList[0] =
                 ((1L << toSquare) == board.m_pieceBitboards[RivalConstants.ENPASSANTSQUARE]) ?
-                        RivalConstants.VALUE_PAWN :
+                        Piece.PAWN.getValue() :
                         RivalConstants.PIECE_VALUES.get(board.squareContents[toSquare]);
 
         int numCaptures = 1;
@@ -604,7 +605,7 @@ public final class RivalSearch implements Runnable {
             lastSq = sq;
         }
 
-        eval += (pieceSquareTemp * Math.min(board.blackPawnValues / RivalConstants.VALUE_PAWN, 6) / 6);
+        eval += (pieceSquareTemp * Math.min(board.blackPawnValues / Piece.PAWN.getValue(), 6) / 6);
 
         if (Long.bitCount(board.m_pieceBitboards[RivalConstants.WR] & Bitboards.RANK_7) > 1 && (board.m_pieceBitboards[RivalConstants.BK] & Bitboards.RANK_8) != 0)
             eval += RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
@@ -635,7 +636,7 @@ public final class RivalSearch implements Runnable {
             lastSq = sq;
         }
 
-        eval -= (pieceSquareTemp * Math.min(board.whitePawnValues / RivalConstants.VALUE_PAWN, 6) / 6);
+        eval -= (pieceSquareTemp * Math.min(board.whitePawnValues / Piece.PAWN.getValue(), 6) / 6);
 
         if (Long.bitCount(board.m_pieceBitboards[RivalConstants.BR] & Bitboards.RANK_2) > 1 && (board.m_pieceBitboards[RivalConstants.WK] & Bitboards.RANK_1) != 0)
             eval -= RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
@@ -805,7 +806,7 @@ public final class RivalSearch implements Runnable {
         }
 
         if (whiteBishopColourCount == 2)
-            bishopScore += RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.whitePawnValues / RivalConstants.VALUE_PAWN)) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
+            bishopScore += RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.whitePawnValues / Piece.PAWN.getValue())) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
 
         bitboard = board.m_pieceBitboards[RivalConstants.BB];
         while (bitboard != 0) {
@@ -821,7 +822,7 @@ public final class RivalSearch implements Runnable {
         }
 
         if (blackBishopColourCount == 2)
-            bishopScore -= RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.blackPawnValues / RivalConstants.VALUE_PAWN)) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
+            bishopScore -= RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.blackPawnValues / Piece.PAWN.getValue())) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
 
         if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.whitePieceValues == board.blackPieceValues) {
             // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
@@ -875,7 +876,7 @@ public final class RivalSearch implements Runnable {
 
         while (bitboard != 0) {
             bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
-            if (board.squareContents[sq] == RivalConstants.BP) temp += RivalConstants.VALUE_PAWN;
+            if (board.squareContents[sq] == RivalConstants.BP) temp += Piece.PAWN.getValue();
             else if (board.squareContents[sq] == RivalConstants.BN) temp += RivalConstants.VALUE_KNIGHT;
             else if (board.squareContents[sq] == RivalConstants.BR) temp += RivalConstants.VALUE_ROOK;
             else if (board.squareContents[sq] == RivalConstants.BQ) temp += RivalConstants.VALUE_QUEEN;
@@ -893,7 +894,7 @@ public final class RivalSearch implements Runnable {
 
         while (bitboard != 0) {
             bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
-            if (board.squareContents[sq] == RivalConstants.WP) temp += RivalConstants.VALUE_PAWN;
+            if (board.squareContents[sq] == RivalConstants.WP) temp += Piece.PAWN.getValue();
             else if (board.squareContents[sq] == RivalConstants.WN) temp += RivalConstants.VALUE_KNIGHT;
             else if (board.squareContents[sq] == RivalConstants.WR) temp += RivalConstants.VALUE_ROOK;
             else if (board.squareContents[sq] == RivalConstants.WQ) temp += RivalConstants.VALUE_QUEEN;
@@ -1013,8 +1014,8 @@ public final class RivalSearch implements Runnable {
     public int endGameAdjustment(EngineChessBoard board, int currentScore) {
         int eval = currentScore;
 
-        if (rivalKPKBitbase != null && board.whitePieceValues + board.blackPieceValues == 0 && board.whitePawnValues + board.blackPawnValues == RivalConstants.VALUE_PAWN) {
-            if (board.whitePawnValues == RivalConstants.VALUE_PAWN) {
+        if (rivalKPKBitbase != null && board.whitePieceValues + board.blackPieceValues == 0 && board.whitePawnValues + board.blackPawnValues == Piece.PAWN.getValue()) {
+            if (board.whitePawnValues == Piece.PAWN.getValue()) {
                 return kpkLookup(
                         board.m_whiteKingSquare,
                         board.m_blackKingSquare,
@@ -1329,16 +1330,16 @@ public final class RivalSearch implements Runnable {
                     case 0:
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                        materialIncrease += RivalConstants.VALUE_QUEEN - RivalConstants.VALUE_PAWN;
+                        materialIncrease += RivalConstants.VALUE_QUEEN - Piece.PAWN.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                        materialIncrease += RivalConstants.VALUE_BISHOP - RivalConstants.VALUE_PAWN;
+                        materialIncrease += RivalConstants.VALUE_BISHOP - Piece.PAWN.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                        materialIncrease += RivalConstants.VALUE_KNIGHT - RivalConstants.VALUE_PAWN;
+                        materialIncrease += RivalConstants.VALUE_KNIGHT - Piece.PAWN.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                        materialIncrease += RivalConstants.VALUE_ROOK - RivalConstants.VALUE_PAWN;
+                        materialIncrease += RivalConstants.VALUE_ROOK - Piece.PAWN.getValue();
                         break;
                 }
                 if (materialIncrease + evalScore + RivalConstants.DELTA_PRUNING_MARGIN < low) continue;

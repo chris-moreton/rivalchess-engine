@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.constants.Piece;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +31,6 @@ public final class RivalConstants
 /***********************************	
  *	Evaluation function weightings *
  ***********************************/
-	public static final int VALUE_PAWN = 100;
 	public static final int VALUE_KNIGHT = 390;
 	public static final int VALUE_BISHOP = 390;
 	public static final int VALUE_ROOK = 595;
@@ -37,8 +38,8 @@ public final class RivalConstants
 	public static final int VALUE_KING = 30000;
 	
 	public static final List<Integer> PIECE_VALUES = Collections.unmodifiableList(Arrays.asList(
-		VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK,
-		VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK
+			Piece.PAWN.getValue(), VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK,
+			Piece.PAWN.getValue(), VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK
 	));
 
 	public static final int TOTAL_PIECE_VALUE_PER_SIDE_AT_START = (VALUE_KNIGHT * 2) + (VALUE_BISHOP * 2) + (VALUE_ROOK * 2) + (VALUE_QUEEN);
@@ -51,8 +52,8 @@ public final class RivalConstants
 	public static final int WRONG_COLOUR_BISHOP_MATERIAL_LOW = VALUE_BISHOP * 2;
 	public static final int WRONG_COLOUR_BISHOP_MATERIAL_HIGH = VALUE_QUEEN * 2 + VALUE_ROOK * 2 + VALUE_BISHOP * 2;
 	
-	public static final int KNIGHT_STAGE_MATERIAL_LOW = VALUE_KNIGHT + (8 * VALUE_PAWN);
-	public static final int KNIGHT_STAGE_MATERIAL_HIGH = VALUE_QUEEN + (2 * VALUE_ROOK) + (2 * VALUE_BISHOP) + (6 * VALUE_PAWN);
+	public static final int KNIGHT_STAGE_MATERIAL_LOW = VALUE_KNIGHT + (8 * Piece.PAWN.getValue());
+	public static final int KNIGHT_STAGE_MATERIAL_HIGH = VALUE_QUEEN + (2 * VALUE_ROOK) + (2 * VALUE_BISHOP) + (6 * Piece.PAWN.getValue());
 
 	public static final int PAWN_STAGE_MATERIAL_LOW = VALUE_ROOK;
 	public static final int PAWN_STAGE_MATERIAL_HIGH = VALUE_QUEEN + (2 * VALUE_ROOK) + (2 * VALUE_BISHOP);
@@ -62,8 +63,8 @@ public final class RivalConstants
 
 	public static final int[] VALUE_BISHOP_MOBILITY = {-15,-10,-6,-2,2,6,10,13,16,18,20,22,23,24};
 	public static final int VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS = 3;
-	public static final int VALUE_TRAPPED_BISHOP_PENALTY = (int)(VALUE_PAWN * 1.5);
-	public static final int VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY = VALUE_PAWN;
+	public static final int VALUE_TRAPPED_BISHOP_PENALTY = (int)(Piece.PAWN.getValue() * 1.5);
+	public static final int VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY = Piece.PAWN.getValue();
 
 	public static final int VALUE_BISHOP_PAIR = 20;
 	
@@ -199,7 +200,7 @@ public final class RivalConstants
 	 * Futility Pruning
 	 */
 	public static final boolean USE_FUTILITY_PRUNING = true;
-	public static final int FUTILITY_MARGIN_BASE = VALUE_PAWN * 2;
+	public static final int FUTILITY_MARGIN_BASE = Piece.PAWN.getValue() * 2;
 	public static final List<Integer> FUTILITY_MARGIN =
 			Collections.unmodifiableList(
 					Arrays.asList(FUTILITY_MARGIN_BASE, FUTILITY_MARGIN_BASE * 2, FUTILITY_MARGIN_BASE * 3));
