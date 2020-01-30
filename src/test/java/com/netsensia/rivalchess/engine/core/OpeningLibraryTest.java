@@ -7,7 +7,10 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 public class OpeningLibraryTest {
 
@@ -32,39 +35,12 @@ public class OpeningLibraryTest {
                     if (!fens.contains(newFen)) {
                         fens.add(newFen);
                         if (OpeningLibrary.getMove(newFen) != 0) {
-                            System.out.println("public static final String " + newPath + " = \"" + newFen + "\";");
-
-                            // remove en passant part
-                            newFen = newFen.replaceAll(" a3", " -")
-                            .replaceAll(" b3", " -")
-                            .replaceAll(" c3", " -")
-                            .replaceAll(" d3", " -")
-                            .replaceAll(" e3", " -")
-                            .replaceAll(" f3", " -")
-                            .replaceAll(" g3", " -")
-                            .replaceAll(" h3", " -")
-                            .replaceAll(" a6", " -")
-                            .replaceAll(" b6", " -")
-                            .replaceAll(" c6", " -")
-                            .replaceAll(" d6", " -")
-                            .replaceAll(" e6", " -")
-                            .replaceAll(" f6", " -")
-                            .replaceAll(" g6", " -")
-                            .replaceAll(" h6", " -");
-
-                            ProcessBuilder processBuilder = new ProcessBuilder();
-
-                            String regex = "'s/\"" + newFen.replaceAll("/","\\\\/") + "\"/" + newPath + "/g'";
-                            String command = "sed -i " + regex + " /home/chrismoreton/git/chris-moreton/rival-chess-android-engine/src/main/java/com/netsensia/rivalchess/engine/core/OpeningLibrary.java";
-                            processBuilder.command("bash", "-c", command);
-                            processBuilder.start();
-                            Thread.sleep(1000);
                             makeMove(newFen, newPath);
                         }
                     }
                     engineBoard.unMakeMove();
                 }
-            } catch (ArrayIndexOutOfBoundsException | IOException | InterruptedException e) {
+            } catch (ArrayIndexOutOfBoundsException e) {
                 System.out.println(sMove + " from  " + fen + " is dodgy!");
                 System.exit(0);
             }
@@ -72,10 +48,17 @@ public class OpeningLibraryTest {
     }
 
     @Test
-    public void getMove() throws IllegalFenException {
-
+    public void testLegalityOfMoves() throws IllegalFenException {
         makeMove(OpeningLibrary.START, "");
+    }
 
-        System.out.println(fens.size());
+    @Test
+    public void testSpecificMoves() {
+
+        for (int i=0; i<1000; i++) {
+            assertTrue(Arrays.asList(
+                    "b8c6", "g7g6", "a7a6").contains(ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(
+                    OpeningLibrary.getMove(OpeningLibrary.E2E4_C7C5_G1F3_D7D6_D2D4_C5D4_F3D4_G8F6_B1C3))));
+        }
     }
 }
