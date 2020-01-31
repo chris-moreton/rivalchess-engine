@@ -81,61 +81,40 @@ public class EngineChessBoardTest {
         final EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel("6k1/p5p1/5p2/2P2Q2/3pN2p/3PbK1P/7P/6q1 b - -"));
 
-        assertTrue(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(1,2)),
-                true));
+        boolean[][] expectedWhiteAttacks = {
+                {false,false,true,false,false,false,false,false},
+                {false,false,false,true,false,false,false,true},
+                {false,true,false,true,true,true,true,false},
+                {false,false,true,true,true,false,true,true},
+                {false,false,true,false,true,true,true,false},
+                {false,false,true,false,true,true,true,true},
+                {false,false,false,true,true,true,true,false},
+                {false,false,false,false,false,false,false,false}
+        };
 
-        assertTrue(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(3,2)),
-                true));
+        boolean[][] expectedBlackAttacks = {
+                {false,false,false,false,false,true,false,true},
+                {false,false,false,false,false,true,true,true},
+                {false,true,false,false,false,true,true,true},
+                {false,false,false,false,true,false,true,false},
+                {false,false,false,true,false,true,true,false},
+                {false,false,true,false,true,false,true,false},
+                {false,false,false,true,false,true,true,true},
+                {true,true,true,true,true,true,true,true}
+        };
 
-        assertTrue(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(2,0)),
-                true));
+        for (int y=0; y<8; y++) {
+            for (int x=0; x<8; x++) {
 
-        assertTrue(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(6,4)),
-                true));
+                assertEquals(expectedWhiteAttacks[y][x], engineChessBoard.isSquareAttacked(
+                        ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
+                        true));
 
-        assertTrue(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(6,5)),
-                true));
-
-        assertTrue(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(5,6)),
-                true));
-
-        assertTrue(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(4,4)),
-                true));
-
-        assertTrue(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(1,2)),
-                true));
-
-        assertFalse(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(3,0)),
-                true));
-
-        assertFalse(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(4,0)),
-                true));
-
-        assertFalse(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(7,0)),
-                true));
-
-        assertFalse(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(0,7)),
-                true));
-
-        assertFalse(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(1,5)),
-                true));
-
-        assertFalse(engineChessBoard.isSquareAttacked(
-                ChessBoardConversion.getBitRefFromBoardRef(new Square(7,2)),
-                true));
+                assertEquals(expectedBlackAttacks[y][x], engineChessBoard.isSquareAttacked(
+                        ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
+                        false));
+            }
+        }
 
     }
 }
