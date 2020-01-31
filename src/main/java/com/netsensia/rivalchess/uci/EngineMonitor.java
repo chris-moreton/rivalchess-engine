@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.uci;
 import java.io.PrintStream;
 import java.util.TimerTask;
 
+import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -42,8 +43,8 @@ public class EngineMonitor extends TimerTask {
 
         if (m_engine.isUCIMode()) {
             if (m_engine.isOkToSendInfo()) {
-                int state = m_engine.getEngineState();
-                if (state == RivalConstants.SEARCHSTATE_SEARCHING && !m_engine.isAbortingSearch()) {
+                SearchState state = m_engine.getEngineState();
+                if (state == SearchState.SEARCHING && !m_engine.isAbortingSearch()) {
                     printInfo();
                 }
             }

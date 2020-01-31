@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 
+import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
@@ -308,12 +309,12 @@ public class UCIController implements Runnable {
     }
 
     public void waitForSearchToComplete() {
-        int state;
+        SearchState state;
         rivalSearch.stopSearch();
         do {
             state = rivalSearch.getEngineState();
         }
-        while (state != RivalConstants.SEARCHSTATE_READY && state != RivalConstants.SEARCHSTATE_SEARCHCOMPLETE);
+        while (state != SearchState.READY && state != SearchState.COMPLETE);
     }
 
     public static long getPerft(EngineChessBoard board, int depth) {

@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.epd;
 
+import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
@@ -86,11 +87,11 @@ public class EpdTest {
         } catch (ConditionTimeoutException e) {
             rivalSearch.stopSearch();
 
-            int state;
+            SearchState state;
             do {
                 state = rivalSearch.getEngineState();
             }
-            while (state != RivalConstants.SEARCHSTATE_READY && state != RivalConstants.SEARCHSTATE_SEARCHCOMPLETE);
+            while (state != SearchState.READY && state != SearchState.COMPLETE);
         }
 
         final String move = ChessBoardConversion.getPGNMoveFromCompactMove(rivalSearch.getCurrentMove(), engineChessBoard);

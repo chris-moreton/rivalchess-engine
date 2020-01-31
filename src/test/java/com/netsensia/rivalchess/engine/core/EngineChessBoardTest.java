@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.junit.Test;
@@ -9,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class EngineChessBoardTest {
 
@@ -71,5 +74,68 @@ public class EngineChessBoardTest {
         for (String move : moves) {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
         }
+    }
+
+    @Test
+    public void isSquareAttacked() throws IllegalFenException {
+        final EngineChessBoard engineChessBoard = new EngineChessBoard();
+        engineChessBoard.setBoard(FenUtils.getBoardModel("6k1/p5p1/5p2/2P2Q2/3pN2p/3PbK1P/7P/6q1 b - -"));
+
+        assertTrue(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(1,2)),
+                true));
+
+        assertTrue(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(3,2)),
+                true));
+
+        assertTrue(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(2,0)),
+                true));
+
+        assertTrue(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(6,4)),
+                true));
+
+        assertTrue(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(6,5)),
+                true));
+
+        assertTrue(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(5,6)),
+                true));
+
+        assertTrue(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(4,4)),
+                true));
+
+        assertTrue(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(1,2)),
+                true));
+
+        assertFalse(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(3,0)),
+                true));
+
+        assertFalse(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(4,0)),
+                true));
+
+        assertFalse(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(7,0)),
+                true));
+
+        assertFalse(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(0,7)),
+                true));
+
+        assertFalse(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(1,5)),
+                true));
+
+        assertFalse(engineChessBoard.isSquareAttacked(
+                ChessBoardConversion.getBitRefFromBoardRef(new Square(7,2)),
+                true));
+
     }
 }

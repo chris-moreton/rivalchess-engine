@@ -31,35 +31,30 @@ public final class RivalConstants
 /***********************************	
  *	Evaluation function weightings *
  ***********************************/
-	public static final int VALUE_KNIGHT = 390;
-	public static final int VALUE_BISHOP = 390;
-	public static final int VALUE_ROOK = 595;
-	public static final int VALUE_QUEEN = 1175;
-	public static final int VALUE_KING = 30000;
 	
 	public static final List<Integer> PIECE_VALUES = Collections.unmodifiableList(Arrays.asList(
-			Piece.PAWN.getValue(), VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK,
-			Piece.PAWN.getValue(), VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK
+			Piece.PAWN.getValue(), Piece.KNIGHT.getValue(), Piece.BISHOP.getValue(), Piece.QUEEN.getValue(), Piece.KING.getValue(), Piece.ROOK.getValue(),
+			Piece.PAWN.getValue(), Piece.KNIGHT.getValue(), Piece.BISHOP.getValue(), Piece.QUEEN.getValue(), Piece.KING.getValue(), Piece.ROOK.getValue()
 	));
 
-	public static final int TOTAL_PIECE_VALUE_PER_SIDE_AT_START = (VALUE_KNIGHT * 2) + (VALUE_BISHOP * 2) + (VALUE_ROOK * 2) + (VALUE_QUEEN);
+	public static final int TOTAL_PIECE_VALUE_PER_SIDE_AT_START = (Piece.KNIGHT.getValue() * 2) + (Piece.BISHOP.getValue() * 2) + (Piece.ROOK.getValue() * 2) + (Piece.QUEEN.getValue());
 
 	public static final int OPENING_PHASE_MATERIAL = (int)(TOTAL_PIECE_VALUE_PER_SIDE_AT_START * 0.8);
 	
 	public static final int TRADE_BONUS_UPPER_PAWNS = 600;
 	
 	public static final int WRONG_COLOUR_BISHOP_PENALTY_DIVISOR = 2;
-	public static final int WRONG_COLOUR_BISHOP_MATERIAL_LOW = VALUE_BISHOP * 2;
-	public static final int WRONG_COLOUR_BISHOP_MATERIAL_HIGH = VALUE_QUEEN * 2 + VALUE_ROOK * 2 + VALUE_BISHOP * 2;
+	public static final int WRONG_COLOUR_BISHOP_MATERIAL_LOW = Piece.BISHOP.getValue() * 2;
+	public static final int WRONG_COLOUR_BISHOP_MATERIAL_HIGH = Piece.QUEEN.getValue() * 2 + Piece.ROOK.getValue() * 2 + Piece.BISHOP.getValue() * 2;
 	
-	public static final int KNIGHT_STAGE_MATERIAL_LOW = VALUE_KNIGHT + (8 * Piece.PAWN.getValue());
-	public static final int KNIGHT_STAGE_MATERIAL_HIGH = VALUE_QUEEN + (2 * VALUE_ROOK) + (2 * VALUE_BISHOP) + (6 * Piece.PAWN.getValue());
+	public static final int KNIGHT_STAGE_MATERIAL_LOW = Piece.KNIGHT.getValue() + (8 * Piece.PAWN.getValue());
+	public static final int KNIGHT_STAGE_MATERIAL_HIGH = Piece.QUEEN.getValue() + (2 * Piece.ROOK.getValue()) + (2 * Piece.BISHOP.getValue()) + (6 * Piece.PAWN.getValue());
 
-	public static final int PAWN_STAGE_MATERIAL_LOW = VALUE_ROOK;
-	public static final int PAWN_STAGE_MATERIAL_HIGH = VALUE_QUEEN + (2 * VALUE_ROOK) + (2 * VALUE_BISHOP);
+	public static final int PAWN_STAGE_MATERIAL_LOW = Piece.ROOK.getValue();
+	public static final int PAWN_STAGE_MATERIAL_HIGH = Piece.QUEEN.getValue() + (2 * Piece.ROOK.getValue()) + (2 * Piece.BISHOP.getValue());
 
-	public static final int CASTLE_BONUS_LOW_MATERIAL = VALUE_ROOK;
-	public static final int CASTLE_BONUS_HIGH_MATERIAL = VALUE_QUEEN + (VALUE_ROOK * 2) + (VALUE_BISHOP * 2);
+	public static final int CASTLE_BONUS_LOW_MATERIAL = Piece.ROOK.getValue();
+	public static final int CASTLE_BONUS_HIGH_MATERIAL = Piece.QUEEN.getValue() + (Piece.ROOK.getValue() * 2) + (Piece.BISHOP.getValue() * 2);
 
 	public static final int[] VALUE_BISHOP_MOBILITY = {-15,-10,-6,-2,2,6,10,13,16,18,20,22,23,24};
 	public static final int VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS = 3;
@@ -97,7 +92,7 @@ public final class RivalConstants
 	public static final int VALUE_BACKWARD_PAWN_PENALTY = 15;
 	public static final int VALUE_GUARDED_PASSED_PAWN = 15;
 	public static final int VALUE_KING_CANNOT_CATCH_PAWN = 500;
-	public static final int PAWN_ADJUST_MAX_MATERIAL = VALUE_QUEEN + VALUE_ROOK; // passed pawn bonus starts increasing once enemy material falls below this
+	public static final int PAWN_ADJUST_MAX_MATERIAL = Piece.QUEEN.getValue() + Piece.ROOK.getValue(); // passed pawn bonus starts increasing once enemy material falls below this
 	public static final int VALUE_ISOLATED_DPAWN_PENALTY = 30;
 
 	public static final int KINGSAFETY_RIGHTWAY_DIVISOR = 4;
@@ -119,12 +114,12 @@ public final class RivalConstants
 	public static final int KINGSAFETY_UNCASTLED_TRAPPED_ROOK = KINGSAFTEY_UNIT * 6; 
 	public static final int KINGSAFETY_ATTACK_MULTIPLIER = 4;
 	
-	public static final int KINGSAFETY_MIN_PIECE_BALANCE = VALUE_ROOK + VALUE_BISHOP;
+	public static final int KINGSAFETY_MIN_PIECE_BALANCE = Piece.ROOK.getValue() + Piece.BISHOP.getValue();
 	public static final int KINGSAFETY_MAX_PIECE_BALANCE = TOTAL_PIECE_VALUE_PER_SIDE_AT_START;
 	
 	public static final int THREAT_SCORE_DIVISOR = 64;
 
-	public static final int EVAL_ENDGAME_TOTAL_PIECES = VALUE_ROOK * 6;	
+	public static final int EVAL_ENDGAME_TOTAL_PIECES = Piece.ROOK.getValue() * 6;
 	public static final int ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR = 5;
 	public static final int ENDGAME_DRAW_DIVISOR = 30;
 	public static final int ENDGAME_PROBABLE_DRAW_DIVISOR = 6;
@@ -151,7 +146,7 @@ public final class RivalConstants
 	 */
 	public static final int NULLMOVE_REDUCE_DEPTH = 2;
 	public static final int NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE = 6;
-	public static final int NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES = VALUE_KNIGHT;
+	public static final int NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES = Piece.KNIGHT.getValue();
 	public static final boolean USE_NULLMOVE_PRUNING = true;
 
 	/*
