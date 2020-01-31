@@ -95,8 +95,6 @@ public final class RivalConstants
 	public static final int PAWN_ADJUST_MAX_MATERIAL = Piece.QUEEN.getValue() + Piece.ROOK.getValue(); // passed pawn bonus starts increasing once enemy material falls below this
 	public static final int VALUE_ISOLATED_DPAWN_PENALTY = 30;
 
-	public static final int KINGSAFETY_RIGHTWAY_DIVISOR = 4;
-
 	/*
 	 * King Safety
 	 */
