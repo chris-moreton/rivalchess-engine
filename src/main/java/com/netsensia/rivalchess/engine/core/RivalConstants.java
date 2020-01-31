@@ -284,18 +284,30 @@ public final class RivalConstants
 	public static final int PROMOTION_PIECE_TOSQUARE_MASK_BISHOP = 128; 
 	public static final int PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT = 256; 
 	public static final int PROMOTION_PIECE_TOSQUARE_MASK_FULL = 448;
-	
+
+	@Deprecated
 	public static final int WP = 0;
+	@Deprecated
 	public static final int WN = 1;
+	@Deprecated
 	public static final int WB = 2;
+	@Deprecated
 	public static final int WQ = 3;
+	@Deprecated
 	public static final int WK = 4;
+	@Deprecated
 	public static final int WR = 5;
+	@Deprecated
 	public static final int BP = 6;
+	@Deprecated
 	public static final int BN = 7;
+	@Deprecated
 	public static final int BB = 8;
+	@Deprecated
 	public static final int BQ = 9;
+	@Deprecated
 	public static final int BK = 10;
+	@Deprecated
 	public static final int BR = 11;
 	
 	public static final int ALL = 12;

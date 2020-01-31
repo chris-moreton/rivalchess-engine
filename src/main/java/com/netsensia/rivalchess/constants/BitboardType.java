@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.constants;
 
-public enum ColouredPiece {
+public enum BitboardType {
     NONE(-1),
     WP(0),
     WN(1),
@@ -18,7 +18,7 @@ public enum ColouredPiece {
 
     private int index;
 
-    private ColouredPiece(int index) {
+    private BitboardType(int index) {
         this.index = index;
     }
 
@@ -26,12 +26,12 @@ public enum ColouredPiece {
         return index;
     }
 
-    public static ColouredPiece fromIndex(int index){
-        for(ColouredPiece cp : ColouredPiece.values()){
+    public static BitboardType fromIndex(int index){
+        for(BitboardType cp : BitboardType.values()){
             if(cp.index == index) {
                 return cp;
             }
         }
-        return ColouredPiece.NONE;
+        return BitboardType.NONE;
     }
 }
