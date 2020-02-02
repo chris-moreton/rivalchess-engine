@@ -39,7 +39,7 @@ public class Evaluate {
             && ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << g2)) != 0)) {
                 if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
                     // (F)
-                    safety += 25;
+                    safety -= 10;
                 } else {
                     if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h3)) != 0) {
                         // (H)
@@ -56,7 +56,7 @@ public class Evaluate {
         if (((board.pieceBitboards[RivalConstants.WP + offset] & (1L << g2)) != 0)
             && ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0)) {
                 // (E)
-                safety += 50;
+                safety += 80;
                 if (((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0)
                     && ((board.pieceBitboards[RivalConstants.WN + offset] & (1L << f3)) != 0)) {
                         safety += 40;

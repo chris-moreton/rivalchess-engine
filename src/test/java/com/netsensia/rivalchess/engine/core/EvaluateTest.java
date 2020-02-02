@@ -46,13 +46,13 @@ public class EvaluateTest {
         assertRightWayScore("r4rk1/1p1n1ppp/p1p1bq2/4p3/P3Pn2/1QN2N1P/1P3PP1/3R1RK1 b - -", 17);
 
         // Strong (E)
-        assertRightWayScore("r4rk1/1p1n1ppp/p1p1bq2/4p3/P3PP2/1QN5/1P4PP/3R1RK1 b - -", 12);
+        assertRightWayScore("r4rk1/1p1n1ppp/p1p1bq2/4p3/P3PP2/1QN5/1P4PP/3R1RK1 b - -", 20);
 
         // Strong (E) + Knight on F3
-        assertRightWayScore("r4rk1/1p1n1ppp/p1p1bq2/4p3/P3PP2/1QN2N2/1P4PP/3R1RK1 b - -", 22);
+        assertRightWayScore("r4rk1/1p1n1ppp/p1p1bq2/4p3/P3PP2/1QN2N2/1P4PP/3R1RK1 b - -", 30);
 
         // Weak (F)
-        assertRightWayScore("r4rk1/1p1n1ppp/p1p1bq2/4p3/P3P3/1QN2P2/1P4PP/3R1RK1 b - -", 6);
+        assertRightWayScore("r4rk1/1p1n1ppp/p1p1bq2/4p3/P3P3/1QN2P2/1P4PP/3R1RK1 b - -", -2);
 
         // Very Weak (G)
         assertRightWayScore("r4rk1/1p1n1ppp/p1p1bq2/4p3/P3P3/1QN3P1/1P3P1P/3R1RK1 b - -", 0);
