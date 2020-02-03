@@ -104,6 +104,18 @@ public final class EngineChessBoard {
         this.m_hashValue ^= EngineChessBoard.m_moverHashValues[m_isWhiteToMove ? RivalConstants.WHITE : RivalConstants.BLACK];
     }
 
+    public boolean isGameOver() {
+        generateLegalMoves();
+
+        for (int i=0; i<m_numLegalMoves; i++) {
+            if (isMoveLegal(m_legalMoves[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public boolean isNonMoverInCheck() {
         return m_isWhiteToMove ?
                 isSquareAttacked(m_blackKingSquare, true) :
