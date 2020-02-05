@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.constants.MoveOrder;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
+import com.netsensia.rivalchess.engine.core.eval.PassedPawnStats;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.exception.IllegalSearchStateException;
 import com.netsensia.rivalchess.uci.EngineMonitor;
@@ -232,10 +233,10 @@ public final class RivalSearch implements Runnable {
     long lastBlackPassedPawns = 0;
 
     private int getPawnScore(EngineChessBoard board) {
+
+        PassedPawnStats passedPawnStats = new PassedPawnStats();
+
         int pawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-        int whitePassedPawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-        int blackPassedPawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-        long whitePassedPawns = 0, blackPassedPawns = 0;
 
         final long pawnHashValue = board.m_pawnHashValue;
 
@@ -244,18 +245,18 @@ public final class RivalSearch implements Runnable {
         if (RivalConstants.USE_PAWN_HASH) {
             if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN && lastPawnHashValue == pawnHashValue) {
                 pawnScore = lastPawnScore;
-                whitePassedPawnScore = lastWhitePassedPawnScore;
-                blackPassedPawnScore = lastBlackPassedPawnScore;
-                whitePassedPawns = lastWhitePassedPawns;
-                blackPassedPawns = lastBlackPassedPawns;
+                passedPawnStats.setWhitePassedPawnScore(lastWhitePassedPawnScore);
+                passedPawnStats.setBlackPassedPawnScore(lastBlackPassedPawnScore);
+                passedPawnStats.setWhitePassedPawnsBitboard(lastWhitePassedPawns);
+                passedPawnStats.setBlackPassedPawnsBitboard(lastBlackPassedPawns);
             } else {
                 if (this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] == pawnHashValue) {
                     pawnScore = (int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE];
                     if (pawnScore != RivalConstants.PAWNHASH_DEFAULT_SCORE) {
-                        whitePassedPawnScore = (int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE];
-                        blackPassedPawnScore = (int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE];
-                        whitePassedPawns = this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS];
-                        blackPassedPawns = this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS];
+                        passedPawnStats.setWhitePassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE]);
+                        passedPawnStats.setBlackPassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE]);
+                        passedPawnStats.setWhitePassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS]);
+                        passedPawnStats.setBlackPassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS]);
                     }
                 }
             }
@@ -269,16 +270,16 @@ public final class RivalSearch implements Runnable {
 
             pawnScore = 0;
 
-            whitePassedPawns = Bitboards.getWhitePassedPawns(board.pieceBitboards[RivalConstants.WP], board.pieceBitboards[RivalConstants.BP]);
+            passedPawnStats.setWhitePassedPawnsBitboard(Bitboards.getWhitePassedPawns(board.pieceBitboards[RivalConstants.WP], board.pieceBitboards[RivalConstants.BP]));
 
-            final long whiteGuardedPassedPawns = whitePassedPawns & (Bitboards.getWhitePawnAttacks(board.pieceBitboards[RivalConstants.WP]));
+            final long whiteGuardedPassedPawns = passedPawnStats.getWhitePassedPawnsBitboard() & (Bitboards.getWhitePawnAttacks(board.pieceBitboards[RivalConstants.WP]));
 
-            blackPassedPawns = Bitboards.getBlackPassedPawns(board.pieceBitboards[RivalConstants.WP], board.pieceBitboards[RivalConstants.BP]);
+            passedPawnStats.setBlackPassedPawnsBitboard(Bitboards.getBlackPassedPawns(board.pieceBitboards[RivalConstants.WP], board.pieceBitboards[RivalConstants.BP]));
 
-            long blackGuardedPassedPawns = blackPassedPawns & (Bitboards.getBlackPawnAttacks(board.pieceBitboards[RivalConstants.BP]));
+            long blackGuardedPassedPawns = passedPawnStats.getBlackPassedPawnsBitboard() & (Bitboards.getBlackPawnAttacks(board.pieceBitboards[RivalConstants.BP]));
 
-            whitePassedPawnScore = Long.bitCount(whiteGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN;
-            blackPassedPawnScore = Long.bitCount(blackGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN;
+            passedPawnStats.setWhitePassedPawnScore(Long.bitCount(whiteGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN);
+            passedPawnStats.setBlackPassedPawnScore(Long.bitCount(blackGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN);
 
             final long whiteIsolatedPawns = whitePawnFiles & ~(whitePawnFiles << 1) & ~(whitePawnFiles >>> 1);
             final long blackIsolatedPawns = blackPawnFiles & ~(blackPawnFiles << 1) & ~(blackPawnFiles >>> 1);
@@ -308,16 +309,16 @@ public final class RivalSearch implements Runnable {
             ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY;
 
             int sq;
-            long bitboard = whitePassedPawns;
+            long bitboard = passedPawnStats.getWhitePassedPawnsBitboard();
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                whitePassedPawnScore += RivalConstants.VALUE_PASSED_PAWN_BONUS[sq / 8];
+                passedPawnStats.addWhitePassedPawnScore(RivalConstants.VALUE_PASSED_PAWN_BONUS[sq / 8]);
             }
 
-            bitboard = blackPassedPawns;
+            bitboard = passedPawnStats.getBlackPassedPawnsBitboard();
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                blackPassedPawnScore += RivalConstants.VALUE_PASSED_PAWN_BONUS[7 - (sq / 8)];
+                passedPawnStats.addBlackPassedPawnScore(RivalConstants.VALUE_PASSED_PAWN_BONUS[7 - (sq / 8)]);
             }
 
             pawnScore -=
@@ -338,10 +339,10 @@ public final class RivalSearch implements Runnable {
 
             if (RivalConstants.USE_PAWN_HASH) {
                 this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = pawnScore;
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE] = whitePassedPawnScore;
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE] = blackPassedPawnScore;
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS] = whitePassedPawns;
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS] = blackPassedPawns;
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE] = passedPawnStats.getWhitePassedPawnScore();
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE] = passedPawnStats.getBlackPassedPawnScore();
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS] = passedPawnStats.getWhitePassedPawnsBitboard();
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS] = passedPawnStats.getBlackPassedPawnsBitboard();
                 this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] = pawnHashValue;
             }
         }
@@ -349,20 +350,20 @@ public final class RivalSearch implements Runnable {
         if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN) {
             lastPawnHashValue = pawnHashValue;
             lastPawnScore = pawnScore;
-            lastWhitePassedPawnScore = whitePassedPawnScore;
-            lastBlackPassedPawnScore = blackPassedPawnScore;
-            lastWhitePassedPawns = whitePassedPawns;
-            lastBlackPassedPawns = blackPassedPawns;
+            lastWhitePassedPawnScore = (passedPawnStats.getWhitePassedPawnScore());
+            lastBlackPassedPawnScore= (passedPawnStats.getBlackPassedPawnScore());
+            lastWhitePassedPawns = (passedPawnStats.getWhitePassedPawnsBitboard());
+            lastBlackPassedPawns = (passedPawnStats.getBlackPassedPawnsBitboard());
         }
 
         pawnScore +=
-                Numbers.linearScale(board.blackPieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, whitePassedPawnScore * 2, whitePassedPawnScore)
-                        - Numbers.linearScale(board.whitePieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, blackPassedPawnScore * 2, blackPassedPawnScore);
+                Numbers.linearScale(board.blackPieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, passedPawnStats.getWhitePassedPawnScore() * 2, passedPawnStats.getWhitePassedPawnScore())
+                        - Numbers.linearScale(board.whitePieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, passedPawnStats.getBlackPassedPawnScore() * 2, passedPawnStats.getBlackPassedPawnScore());
 
         if (board.blackPieceValues < RivalConstants.PAWN_ADJUST_MAX_MATERIAL) {
             final int kingX = board.m_blackKingSquare % 8;
             final int kingY = board.m_blackKingSquare / 8;
-            long bitboard = whitePassedPawns;
+            long bitboard = passedPawnStats.getWhitePassedPawnsBitboard();
             int sq;
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
@@ -377,7 +378,7 @@ public final class RivalSearch implements Runnable {
         if (board.whitePieceValues < RivalConstants.PAWN_ADJUST_MAX_MATERIAL) {
             final int kingX = board.m_whiteKingSquare % 8;
             final int kingY = board.m_whiteKingSquare / 8;
-            long bitboard = blackPassedPawns;
+            long bitboard = passedPawnStats.getBlackPassedPawnsBitboard();
             int sq;
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
