@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.constants;
 
-public enum BitboardType {
+public enum SquareOccupant {
     NONE(-1),
     WP(0),
     WN(1),
@@ -18,7 +18,7 @@ public enum BitboardType {
 
     private int index;
 
-    private BitboardType(int index) {
+    private SquareOccupant(int index) {
         this.index = index;
     }
 
@@ -26,12 +26,12 @@ public enum BitboardType {
         return index;
     }
 
-    public static BitboardType fromIndex(int index){
-        for(BitboardType cp : BitboardType.values()){
+    public static SquareOccupant fromIndex(int index){
+        for(SquareOccupant cp : SquareOccupant.values()){
             if(cp.index == index) {
                 return cp;
             }
         }
-        return BitboardType.NONE;
+        return SquareOccupant.NONE;
     }
 }

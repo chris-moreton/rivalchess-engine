@@ -4,15 +4,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class BitboardTypeTest {
+public class SquareOccupantTest {
 
     @Test
     public void getIndex() {
-        assertEquals(8, BitboardType.BB.getIndex());
+        assertEquals(8, SquareOccupant.BB.getIndex());
     }
 
     @Test
     public void fromIndex() {
-        assertEquals(BitboardType.BB, BitboardType.fromIndex(8));
+        assertEquals(SquareOccupant.BB, SquareOccupant.fromIndex(8));
     }
 }

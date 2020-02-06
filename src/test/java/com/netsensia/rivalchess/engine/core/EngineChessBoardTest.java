@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.constants.Piece;
+import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.util.FenUtils;
@@ -141,5 +143,33 @@ public class EngineChessBoardTest {
         engineChessBoard.setBoard(FenUtils.getBoardModel(NOT_STALEMATE));
         engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
         assertFalse(engineChessBoard.isGameOver());
+    }
+
+    @Test
+    public void getSquareOccupant() throws IllegalFenException {
+        EngineChessBoard engineChessBoard = new EngineChessBoard();
+        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+
+        assertEquals(SquareOccupant.WK, engineChessBoard.getSquareOccupant(3));
+        assertEquals(SquareOccupant.WQ, engineChessBoard.getSquareOccupant(4));
+        assertEquals(SquareOccupant.BQ, engineChessBoard.getSquareOccupant(60));
+        assertEquals(SquareOccupant.BK, engineChessBoard.getSquareOccupant(59));
+
+        assertEquals(SquareOccupant.NONE, engineChessBoard.getSquareOccupant(32));
+
+    }
+
+    @Test
+    public void getPiece() throws IllegalFenException {
+        EngineChessBoard engineChessBoard = new EngineChessBoard();
+        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+
+        assertEquals(Piece.KING, engineChessBoard.getPiece(3));
+        assertEquals(Piece.QUEEN, engineChessBoard.getPiece(4));
+        assertEquals(Piece.KING, engineChessBoard.getPiece(59));
+        assertEquals(Piece.QUEEN, engineChessBoard.getPiece(60));
+
+        assertEquals(Piece.NONE, engineChessBoard.getPiece(32));
+
     }
 }

@@ -46,8 +46,6 @@ public final class RivalSearch implements Runnable {
     protected int m_finalDepthToSearch = 1;
     protected int m_iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
 
-    private OpeningLibrary m_openingLibrary;
-
     private final int[][] killerMoves;
     private final List<Integer> mateKiller = new ArrayList<>();
     private final int[][][] historyMovesSuccess = new int[2][64][64];
@@ -131,8 +129,6 @@ public final class RivalSearch implements Runnable {
             rivalKPKBitbase = new byte[byteArraySize];
             loadBitbase(rivalKPKBitbase, byteArraySize, "/kpk.rival");
         }
-
-        if (RivalConstants.USE_INTERNAL_OPENING_BOOK) m_openingLibrary = new OpeningLibrary();
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -1189,7 +1185,8 @@ public final class RivalSearch implements Runnable {
     int[] movesForSorting;
 
     private void scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) {
-        int i, score;
+        int i;
+        int score;
         int promotionMask;
 
         int moveCount = 0;
@@ -1200,17 +1197,19 @@ public final class RivalSearch implements Runnable {
             promotionMask = (movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
             int toSquare = movesForSorting[i] & 63;
 
-            int capturePiece = board.squareContents[toSquare] % 6;
-            if (capturePiece == -1 &&
+            boolean isCapture = board.squareContents[toSquare] % 6 > -1;
+
+            if (!isCapture &&
                     ((1L << toSquare) & board.pieceBitboards[RivalConstants.ENPASSANTSQUARE]) != 0 &&
-                    board.squareContents[(movesForSorting[i] >>> 16) & 63] % 6 == RivalConstants.WP)
-                capturePiece = RivalConstants.WP;
+                    board.squareContents[(movesForSorting[i] >>> 16) & 63] % 6 == RivalConstants.WP) {
+                isCapture = true;
+            }
 
             score = 0;
 
             // clear out additional info stored with the move
             movesForSorting[i] &= 0x00FFFFFF;
-            if (capturePiece > -1) {
+            if (isCapture) {
                 int see = staticExchangeEvaluation(board, movesForSorting[i]);
                 if (see > 0) score = 100 + (int) (((double) see / Piece.QUEEN.getValue()) * 10);
                 if (promotionMask == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) score += 9;
@@ -2127,7 +2126,7 @@ public final class RivalSearch implements Runnable {
             }
 
             if (this.m_inBook) {
-                int libraryMove = m_openingLibrary.getMove(getEngineChessBoard().getFen());
+                int libraryMove = OpeningLibrary.getMove(getEngineChessBoard().getFen());
                 if (libraryMove > 0 && getEngineChessBoard().isMoveLegal(libraryMove)) {
                     path = new SearchPath();
                     path.setPath(libraryMove);

@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.constants;
 
 public enum Piece {
+    NONE (0),
     PAWN  (100),
     KNIGHT(390),
     ROOK   (595),
@@ -17,5 +18,14 @@ public enum Piece {
 
     public int getValue() {
         return value;
+    }
+
+    public static Piece fromIndex(int index){
+        for(Piece cp : Piece.values()){
+            if(cp.value == index) {
+                return cp;
+            }
+        }
+        return Piece.NONE;
     }
 }
