@@ -226,7 +226,6 @@ public final class RivalSearch implements Runnable {
     }
 
     long lastPawnHashValue = -1;
-    int lastPawnScore = 0;
     PawnHashEntry lastPawnHashEntry = new PawnHashEntry();
 
     private int getPawnScore(EngineChessBoard board) {
@@ -328,7 +327,6 @@ public final class RivalSearch implements Runnable {
 
         if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN) {
             lastPawnHashValue = board.getPawnHashValue();
-            lastPawnScore = pawnHashEntry.getPawnScore();
             lastPawnHashEntry = new PawnHashEntry(pawnHashEntry);
         }
 
@@ -1139,7 +1137,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public void storeHashMove(int move, EngineChessBoard board, int score, byte flag, int height) {
-        int hashIndex = (int) (board.m_hashValue % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+        int hashIndex = (int) (board.getHashValue() % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
 
         if (height >= this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] || this.m_hashTableVersion > this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
             if (this.m_hashTableVersion == this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
@@ -1167,8 +1165,8 @@ public final class RivalSearch implements Runnable {
             this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
             this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
             this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.m_hashValue >>> 32);
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.m_hashValue & Bitboards.LOW32);
+            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.getHashValue() >>> 32);
+            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.getHashValue() & Bitboards.LOW32);
             this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
             this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = this.m_hashTableVersion;
         } else {
@@ -1181,8 +1179,8 @@ public final class RivalSearch implements Runnable {
             this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
             this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
             this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.m_hashValue >>> 32);
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.m_hashValue & Bitboards.LOW32);
+            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.getHashValue() >>> 32);
+            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.getHashValue() & Bitboards.LOW32);
             this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
             this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_VERSION] = this.m_hashTableVersion;
         }
@@ -1533,15 +1531,15 @@ public final class RivalSearch implements Runnable {
 
         byte flag = RivalConstants.UPPERBOUND;
 
-        final int hashIndex = (int) (board.m_hashValue % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+        final int hashIndex = (int) (board.getHashValue() % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
         int hashMove = 0;
 
         if (RivalConstants.USE_HASH_TABLES) {
             if (RivalConstants.USE_HEIGHT_REPLACE_HASH &&
                     this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] >= depthRemaining &&
                     this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] != RivalConstants.EMPTY) {
-                if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] == (int) (board.m_hashValue >>> 32) &&
-                        this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] == (int) (board.m_hashValue & Bitboards.LOW32)) {
+                if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] == (int) (board.getHashValue() >>> 32) &&
+                        this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] == (int) (board.getHashValue() & Bitboards.LOW32)) {
                     boolean isLocked = this.m_hashTableVersion - this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] <= RivalConstants.MAXIMUM_HASH_AGE;
 
                     superVerifyHash(board, hashIndex, isLocked);
@@ -1570,15 +1568,15 @@ public final class RivalSearch implements Runnable {
                     hashMove == 0 &&
                     this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_HEIGHT] >= depthRemaining &&
                     this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] != RivalConstants.EMPTY) {
-                if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT1] == (int) (board.m_hashValue >>> 32) &&
-                        this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT2] == (int) (board.m_hashValue & Bitboards.LOW32)) {
+                if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT1] == (int) (board.getHashValue() >>> 32) &&
+                        this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT2] == (int) (board.getHashValue() & Bitboards.LOW32)) {
                     boolean isLocked = this.m_hashTableVersion - this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] <= RivalConstants.MAXIMUM_HASH_AGE;
                     if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
                         for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
                             if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] != (int) (board.pieceBitboards[i] >>> 32) ||
                                     this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] != (int) (board.pieceBitboards[i] & Bitboards.LOW32)) {
                                 isLocked = false;
-                                printStream.println("Always bad clash " + board.m_hashValue);
+                                printStream.println("Always bad clash " + board.getHashValue());
                                 System.exit(0);
                             }
                         }
@@ -1912,7 +1910,7 @@ public final class RivalSearch implements Runnable {
             for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
                 if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] != (int) (board.pieceBitboards[i] >>> 32) ||
                         this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] != (int) (board.pieceBitboards[i] & Bitboards.LOW32)) {
-                    throw new HashVerificationException("Height bad clash " + board.m_hashValue);
+                    throw new HashVerificationException("Height bad clash " + board.getHashValue());
                 }
             }
         }
@@ -1969,7 +1967,7 @@ public final class RivalSearch implements Runnable {
 
                 boolean canMakeNullMove = true;
                 if (isDrawnAtRoot(getEngineChessBoard(), 1)) {
-                    int hashIndex = (int) (board.m_hashValue % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+                    int hashIndex = (int) (board.getHashValue() % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
                     this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
                     this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
                     canMakeNullMove = false;
@@ -2111,10 +2109,10 @@ public final class RivalSearch implements Runnable {
                     }
 
                     if (ply0Draw) {
-                        drawnPositionsAtRoot.get(0).add(getEngineChessBoard().m_hashValue);
+                        drawnPositionsAtRoot.get(0).add(getEngineChessBoard().getHashValue());
                     }
                     if (ply1Draw) {
-                        drawnPositionsAtRoot.get(1).add(getEngineChessBoard().m_hashValue);
+                        drawnPositionsAtRoot.get(1).add(getEngineChessBoard().getHashValue());
                     }
 
                     getEngineChessBoard().unMakeMove();
@@ -2321,7 +2319,7 @@ public final class RivalSearch implements Runnable {
     private boolean isDrawnAtRoot(EngineChessBoard board, int ply) {
         int i;
         for (i = 0; i < drawnPositionsAtRootCount.get(ply); i++) {
-            if (drawnPositionsAtRoot.get(ply).get(i).equals(board.m_hashValue)) {
+            if (drawnPositionsAtRoot.get(ply).get(i).equals(board.getHashValue())) {
                 return true;
             }
         }
@@ -2432,10 +2430,6 @@ public final class RivalSearch implements Runnable {
 
     public void setMillisSetByEngineMonitor(long millisSetByEngineMonitor) {
         this.millisSetByEngineMonitor = millisSetByEngineMonitor;
-    }
-
-    public List<Integer> getDrawnPositionsAtRootCount() {
-        return drawnPositionsAtRootCount;
     }
 
     public EngineChessBoard getEngineChessBoard() {
