@@ -5,7 +5,7 @@ import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.constants.MoveOrder;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
-import com.netsensia.rivalchess.engine.core.eval.PassedPawnStats;
+import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.exception.IllegalSearchStateException;
 import com.netsensia.rivalchess.uci.EngineMonitor;
@@ -227,69 +227,48 @@ public final class RivalSearch implements Runnable {
 
     long lastPawnHashValue = -1;
     int lastPawnScore = 0;
-    int lastWhitePassedPawnScore = 0;
-    int lastBlackPassedPawnScore = 0;
-    long lastWhitePassedPawns = 0;
-    long lastBlackPassedPawns = 0;
+    PawnHashEntry lastPawnHashEntry = new PawnHashEntry();
 
     private int getPawnScore(EngineChessBoard board) {
 
-        PassedPawnStats passedPawnStats = new PassedPawnStats();
+        PawnHashEntry pawnHashEntry;
 
-        int pawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
+        final int pawnHashIndex = (int) (board.getPawnHashValue() % this.m_maxPawnHashEntries) * RivalConstants.NUM_PAWNHASH_FIELDS;
 
-        final long pawnHashValue = board.m_pawnHashValue;
+        pawnHashEntry = getPawnHashEntry(board.getPawnHashValue(), pawnHashIndex);
 
-        final int pawnHashIndex = (int) (pawnHashValue % this.m_maxPawnHashEntries) * RivalConstants.NUM_PAWNHASH_FIELDS;
-
-        if (RivalConstants.USE_PAWN_HASH) {
-            if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN && lastPawnHashValue == pawnHashValue) {
-                pawnScore = lastPawnScore;
-                passedPawnStats.setWhitePassedPawnScore(lastWhitePassedPawnScore);
-                passedPawnStats.setBlackPassedPawnScore(lastBlackPassedPawnScore);
-                passedPawnStats.setWhitePassedPawnsBitboard(lastWhitePassedPawns);
-                passedPawnStats.setBlackPassedPawnsBitboard(lastBlackPassedPawns);
-            } else {
-                if (this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] == pawnHashValue) {
-                    pawnScore = (int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE];
-                    if (pawnScore != RivalConstants.PAWNHASH_DEFAULT_SCORE) {
-                        passedPawnStats.setWhitePassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE]);
-                        passedPawnStats.setBlackPassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE]);
-                        passedPawnStats.setWhitePassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS]);
-                        passedPawnStats.setBlackPassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS]);
-                    }
-                }
-            }
-        }
-
-        if (pawnScore == RivalConstants.PAWNHASH_DEFAULT_SCORE) {
+        if (!pawnHashEntry.isPopulated()) {
             final long whitePawnAttacks = Bitboards.getWhitePawnAttacks(board.pieceBitboards[RivalConstants.WP]);
             final long blackPawnAttacks = Bitboards.getBlackPawnAttacks(board.pieceBitboards[RivalConstants.BP]);
             final long whitePawnFiles = Bitboards.getPawnFiles(board.pieceBitboards[RivalConstants.WP]);
             final long blackPawnFiles = Bitboards.getPawnFiles(board.pieceBitboards[RivalConstants.BP]);
 
-            pawnScore = 0;
+            pawnHashEntry.setPawnScore(0);
 
-            passedPawnStats.setWhitePassedPawnsBitboard(Bitboards.getWhitePassedPawns(board.pieceBitboards[RivalConstants.WP], board.pieceBitboards[RivalConstants.BP]));
+            pawnHashEntry.setWhitePassedPawnsBitboard(Bitboards.getWhitePassedPawns(board.pieceBitboards[RivalConstants.WP], board.pieceBitboards[RivalConstants.BP]));
 
-            final long whiteGuardedPassedPawns = passedPawnStats.getWhitePassedPawnsBitboard() & (Bitboards.getWhitePawnAttacks(board.pieceBitboards[RivalConstants.WP]));
+            final long whiteGuardedPassedPawns = pawnHashEntry.getWhitePassedPawnsBitboard() & (Bitboards.getWhitePawnAttacks(board.pieceBitboards[RivalConstants.WP]));
 
-            passedPawnStats.setBlackPassedPawnsBitboard(Bitboards.getBlackPassedPawns(board.pieceBitboards[RivalConstants.WP], board.pieceBitboards[RivalConstants.BP]));
+            pawnHashEntry.setBlackPassedPawnsBitboard(Bitboards.getBlackPassedPawns(board.pieceBitboards[RivalConstants.WP], board.pieceBitboards[RivalConstants.BP]));
 
-            long blackGuardedPassedPawns = passedPawnStats.getBlackPassedPawnsBitboard() & (Bitboards.getBlackPawnAttacks(board.pieceBitboards[RivalConstants.BP]));
+            long blackGuardedPassedPawns = pawnHashEntry.getBlackPassedPawnsBitboard() & (Bitboards.getBlackPawnAttacks(board.pieceBitboards[RivalConstants.BP]));
 
-            passedPawnStats.setWhitePassedPawnScore(Long.bitCount(whiteGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN);
-            passedPawnStats.setBlackPassedPawnScore(Long.bitCount(blackGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN);
+            pawnHashEntry.setWhitePassedPawnScore(Long.bitCount(whiteGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN);
+            pawnHashEntry.setBlackPassedPawnScore(Long.bitCount(blackGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN);
 
             final long whiteIsolatedPawns = whitePawnFiles & ~(whitePawnFiles << 1) & ~(whitePawnFiles >>> 1);
             final long blackIsolatedPawns = blackPawnFiles & ~(blackPawnFiles << 1) & ~(blackPawnFiles >>> 1);
-            pawnScore -= Long.bitCount(whiteIsolatedPawns) * RivalConstants.VALUE_ISOLATED_PAWN_PENALTY;
-            pawnScore += Long.bitCount(blackIsolatedPawns) * RivalConstants.VALUE_ISOLATED_PAWN_PENALTY;
+            pawnHashEntry.decPawnScore(Long.bitCount(whiteIsolatedPawns) * RivalConstants.VALUE_ISOLATED_PAWN_PENALTY);
+            pawnHashEntry.incPawnScore(Long.bitCount(blackIsolatedPawns) * RivalConstants.VALUE_ISOLATED_PAWN_PENALTY);
 
-            if ((whiteIsolatedPawns & Bitboards.FILE_D) != 0) pawnScore -= RivalConstants.VALUE_ISOLATED_DPAWN_PENALTY;
-            if ((blackIsolatedPawns & Bitboards.FILE_D) != 0) pawnScore += RivalConstants.VALUE_ISOLATED_DPAWN_PENALTY;
+            if ((whiteIsolatedPawns & Bitboards.FILE_D) != 0) {
+                pawnHashEntry.decPawnScore(RivalConstants.VALUE_ISOLATED_DPAWN_PENALTY);
+            }
+            if ((blackIsolatedPawns & Bitboards.FILE_D) != 0) {
+                pawnHashEntry.incPawnScore(RivalConstants.VALUE_ISOLATED_DPAWN_PENALTY);
+            }
 
-            pawnScore -=
+            pawnHashEntry.decPawnScore(
                     Long.bitCount(
                             board.pieceBitboards[RivalConstants.WP] &
                                     ~((board.pieceBitboards[RivalConstants.WP] | board.pieceBitboards[RivalConstants.BP]) >>> 8) &
@@ -297,100 +276,129 @@ public final class RivalSearch implements Runnable {
                                     ~Bitboards.northFill(whitePawnAttacks) &
                                     (Bitboards.getBlackPawnAttacks(board.pieceBitboards[RivalConstants.WP])) &
                                     ~Bitboards.northFill(blackPawnFiles)
-                    ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY;
+                    ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY);
 
-            pawnScore += Long.bitCount(
+            pawnHashEntry.incPawnScore(Long.bitCount(
                     board.pieceBitboards[RivalConstants.BP] &
                             ~((board.pieceBitboards[RivalConstants.BP] | board.pieceBitboards[RivalConstants.WP]) << 8) &
                             (whitePawnAttacks << 8) &
                             ~Bitboards.southFill(blackPawnAttacks) &
                             (Bitboards.getWhitePawnAttacks(board.pieceBitboards[RivalConstants.BP])) &
                             ~Bitboards.northFill(whitePawnFiles)
-            ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY;
+            ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY);
 
             int sq;
-            long bitboard = passedPawnStats.getWhitePassedPawnsBitboard();
+            long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                passedPawnStats.addWhitePassedPawnScore(RivalConstants.VALUE_PASSED_PAWN_BONUS[sq / 8]);
+                pawnHashEntry.addWhitePassedPawnScore(RivalConstants.VALUE_PASSED_PAWN_BONUS[sq / 8]);
             }
 
-            bitboard = passedPawnStats.getBlackPassedPawnsBitboard();
+            bitboard = pawnHashEntry.getBlackPassedPawnsBitboard();
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                passedPawnStats.addBlackPassedPawnScore(RivalConstants.VALUE_PASSED_PAWN_BONUS[7 - (sq / 8)]);
+                pawnHashEntry.addBlackPassedPawnScore(RivalConstants.VALUE_PASSED_PAWN_BONUS[7 - (sq / 8)]);
             }
 
-            pawnScore -=
+            pawnHashEntry.decPawnScore(
                     (Long.bitCount(board.pieceBitboards[RivalConstants.WP] & Bitboards.FILE_A) + Long.bitCount(board.pieceBitboards[RivalConstants.WP] & Bitboards.FILE_H))
-                            * RivalConstants.VALUE_SIDE_PAWN_PENALTY;
+                            * RivalConstants.VALUE_SIDE_PAWN_PENALTY);
 
-            pawnScore +=
+            pawnHashEntry.incPawnScore(
                     (Long.bitCount(board.pieceBitboards[RivalConstants.BP] & Bitboards.FILE_A) + Long.bitCount(board.pieceBitboards[RivalConstants.BP] & Bitboards.FILE_H))
-                            * RivalConstants.VALUE_SIDE_PAWN_PENALTY;
+                            * RivalConstants.VALUE_SIDE_PAWN_PENALTY);
 
             long occupiedFileMask = Bitboards.southFill(board.pieceBitboards[RivalConstants.WP]) & Bitboards.RANK_1;
-            pawnScore -= RivalConstants.VALUE_DOUBLED_PAWN_PENALTY * ((board.whitePawnValues / 100) - Long.bitCount(occupiedFileMask));
-            pawnScore -= Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * RivalConstants.VALUE_PAWN_ISLAND_PENALTY;
+            pawnHashEntry.decPawnScore(RivalConstants.VALUE_DOUBLED_PAWN_PENALTY * ((board.whitePawnValues / 100) - Long.bitCount(occupiedFileMask)));
+            pawnHashEntry.decPawnScore(Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * RivalConstants.VALUE_PAWN_ISLAND_PENALTY);
 
             occupiedFileMask = Bitboards.southFill(board.pieceBitboards[RivalConstants.BP]) & Bitboards.RANK_1;
-            pawnScore += RivalConstants.VALUE_DOUBLED_PAWN_PENALTY * ((board.blackPawnValues / 100) - Long.bitCount(occupiedFileMask));
-            pawnScore += Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * RivalConstants.VALUE_PAWN_ISLAND_PENALTY;
+            pawnHashEntry.incPawnScore(RivalConstants.VALUE_DOUBLED_PAWN_PENALTY * ((board.blackPawnValues / 100) - Long.bitCount(occupiedFileMask)));
+            pawnHashEntry.incPawnScore(Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * RivalConstants.VALUE_PAWN_ISLAND_PENALTY);
 
             if (RivalConstants.USE_PAWN_HASH) {
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = pawnScore;
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE] = passedPawnStats.getWhitePassedPawnScore();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE] = passedPawnStats.getBlackPassedPawnScore();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS] = passedPawnStats.getWhitePassedPawnsBitboard();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS] = passedPawnStats.getBlackPassedPawnsBitboard();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] = pawnHashValue;
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = pawnHashEntry.getPawnScore();
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE] = pawnHashEntry.getWhitePassedPawnScore();
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE] = pawnHashEntry.getBlackPassedPawnScore();
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS] = pawnHashEntry.getWhitePassedPawnsBitboard();
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS] = pawnHashEntry.getBlackPassedPawnsBitboard();
+                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] = board.getPawnHashValue();
             }
         }
 
         if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN) {
-            lastPawnHashValue = pawnHashValue;
-            lastPawnScore = pawnScore;
-            lastWhitePassedPawnScore = (passedPawnStats.getWhitePassedPawnScore());
-            lastBlackPassedPawnScore= (passedPawnStats.getBlackPassedPawnScore());
-            lastWhitePassedPawns = (passedPawnStats.getWhitePassedPawnsBitboard());
-            lastBlackPassedPawns = (passedPawnStats.getBlackPassedPawnsBitboard());
+            lastPawnHashValue = board.getPawnHashValue();
+            lastPawnScore = pawnHashEntry.getPawnScore();
+            lastPawnHashEntry = new PawnHashEntry(pawnHashEntry);
         }
 
-        pawnScore +=
-                Numbers.linearScale(board.blackPieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, passedPawnStats.getWhitePassedPawnScore() * 2, passedPawnStats.getWhitePassedPawnScore())
-                        - Numbers.linearScale(board.whitePieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, passedPawnStats.getBlackPassedPawnScore() * 2, passedPawnStats.getBlackPassedPawnScore());
+        pawnHashEntry.incPawnScore(
+                Numbers.linearScale(board.blackPieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore())
+                        - Numbers.linearScale(board.whitePieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()));
 
         if (board.blackPieceValues < RivalConstants.PAWN_ADJUST_MAX_MATERIAL) {
             final int kingX = board.m_blackKingSquare % 8;
             final int kingY = board.m_blackKingSquare / 8;
-            long bitboard = passedPawnStats.getWhitePassedPawnsBitboard();
+            long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
             int sq;
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
                 final int pawnDistance = Math.min(5, 7 - (sq / 8));
                 final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), Math.abs(kingY - 7));
-                pawnScore += Numbers.linearScale(board.blackPieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0);
+                pawnHashEntry.incPawnScore(Numbers.linearScale(board.blackPieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0));
                 if ((pawnDistance < (kingDistance - (board.m_isWhiteToMove ? 0 : 1))) && (board.blackPieceValues == 0))
-                    pawnScore += RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN;
+                    pawnHashEntry.incPawnScore(RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN);
             }
         }
 
         if (board.whitePieceValues < RivalConstants.PAWN_ADJUST_MAX_MATERIAL) {
             final int kingX = board.m_whiteKingSquare % 8;
             final int kingY = board.m_whiteKingSquare / 8;
-            long bitboard = passedPawnStats.getBlackPassedPawnsBitboard();
+            long bitboard = pawnHashEntry.getBlackPassedPawnsBitboard();
             int sq;
             while (bitboard != 0) {
                 bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
                 final int pawnDistance = Math.min(5, (sq / 8));
                 final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), kingY);
-                pawnScore -= Numbers.linearScale(board.whitePieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0);
+                pawnHashEntry.decPawnScore(Numbers.linearScale(board.whitePieceValues, 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0));
                 if ((pawnDistance < (kingDistance - (board.m_isWhiteToMove ? 1 : 0))) && (board.whitePieceValues == 0))
-                    pawnScore -= RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN;
+                    pawnHashEntry.decPawnScore(RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN);
             }
         }
 
-        return pawnScore;
+        return pawnHashEntry.getPawnScore();
+    }
+
+    private PawnHashEntry getPawnHashEntry(final long pawnHashValue, final int pawnHashIndex) {
+        PawnHashEntry pawnHashEntry;
+
+        if (RivalConstants.USE_PAWN_HASH) {
+            if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN && lastPawnHashValue == pawnHashValue) {
+                pawnHashEntry = new PawnHashEntry(lastPawnHashEntry);
+            } else {
+                pawnHashEntry = getPawnStatsFromHash(pawnHashValue, pawnHashIndex);
+            }
+        } else {
+            pawnHashEntry = new PawnHashEntry();
+        }
+
+        return pawnHashEntry;
+    }
+
+    private PawnHashEntry getPawnStatsFromHash(long pawnHashValue, int pawnHashIndex) {
+        PawnHashEntry pawnHashEntry = new PawnHashEntry();
+
+        if (this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] == pawnHashValue) {
+            pawnHashEntry.setPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE]);
+            if (pawnHashEntry.getPawnScore() != RivalConstants.PAWNHASH_DEFAULT_SCORE) {
+                pawnHashEntry.setWhitePassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE]);
+                pawnHashEntry.setBlackPassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE]);
+                pawnHashEntry.setWhitePassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS]);
+                pawnHashEntry.setBlackPassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS]);
+            }
+        }
+
+        return pawnHashEntry;
     }
 
     private final int[] indexOfFirstAttackerInDirection = new int[8];

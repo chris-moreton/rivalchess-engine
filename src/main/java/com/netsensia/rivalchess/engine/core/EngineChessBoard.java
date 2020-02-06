@@ -65,7 +65,7 @@ public final class EngineChessBoard {
     private static final long START_PAWN_HASH_VALUE = 5454534288458826522L;
 
     public long m_hashValue;
-    public long m_pawnHashValue;
+    public long pawnHashValue;
 
     public EngineChessBoard() {
         initArrays();
@@ -88,20 +88,28 @@ public final class EngineChessBoard {
 
     private void initHash() {
         this.m_hashValue = START_HASH_VALUE;
-        this.m_pawnHashValue = START_PAWN_HASH_VALUE;
+        this.pawnHashValue = START_PAWN_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
             for (int piece = RivalConstants.WP; piece <= RivalConstants.BR; piece++) {
                 if ((this.pieceBitboards[piece] & (1L << bitNum)) != 0) {
                     this.m_hashValue ^= EngineChessBoard.m_pieceHashValues[piece][bitNum];
                     if (piece == RivalConstants.WP || piece == RivalConstants.BP) {
-                        this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[piece][bitNum];
+                        this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[piece][bitNum];
                     }
                 }
             }
         }
 
         this.m_hashValue ^= EngineChessBoard.m_moverHashValues[m_isWhiteToMove ? RivalConstants.WHITE : RivalConstants.BLACK];
+    }
+
+    public long getPawnHashValue() {
+        return pawnHashValue;
+    }
+
+    public void setPawnHashValue(long pawnHashValue) {
+        this.pawnHashValue = pawnHashValue;
     }
 
     public boolean isGameOver() {
@@ -592,7 +600,7 @@ public final class EngineChessBoard {
         this.m_moveList[this.m_movesMade].move = compactMove;
         this.m_moveList[this.m_movesMade].hashValue = this.m_hashValue;
         this.m_moveList[this.m_movesMade].isOnNullMove = this.m_isOnNullMove;
-        this.m_moveList[this.m_movesMade].pawnHashValue = this.m_pawnHashValue;
+        this.m_moveList[this.m_movesMade].pawnHashValue = this.pawnHashValue;
         this.m_moveList[this.m_movesMade].halfMoveCount = (byte) this.m_halfMoveCount;
         this.m_moveList[this.m_movesMade].enPassantBitboard = this.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
         this.m_moveList[this.m_movesMade].castlePrivileges = (byte) this.m_castlePrivileges;
@@ -614,7 +622,7 @@ public final class EngineChessBoard {
         if (this.m_isWhiteToMove) {
             if (movePiece == RivalConstants.WP) {
                 this.m_halfMoveCount = 0;
-                this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveFrom] ^ EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
+                this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveFrom] ^ EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
 
                 if ((toMask & Bitboards.RANK_4) != 0 && (fromMask & Bitboards.RANK_2) != 0) {
                     this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = fromMask << 8L;
@@ -622,7 +630,7 @@ public final class EngineChessBoard {
                     this.pieceBitboards[RivalConstants.BP] ^= toMask >>> 8;
                     blackPawnValues -= Piece.PAWN.getValue();
                     this.m_hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo - 8];
-                    this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo - 8];
+                    this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo - 8];
                     this.m_moveList[this.m_movesMade].capturePiece = RivalConstants.BP;
                     this.squareContents[moveTo - 8] = -1;
                 } else if ((compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) != 0) {
@@ -655,7 +663,7 @@ public final class EngineChessBoard {
                     whitePawnValues -= Piece.PAWN.getValue();
                     this.pieceBitboards[RivalConstants.WP] ^= toMask;
                     this.m_hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
-                    this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
+                    this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
                 }
             } else if (movePiece == RivalConstants.WR) {
                 if (moveFrom == Bitboards.A1) this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_WQ;
@@ -685,7 +693,7 @@ public final class EngineChessBoard {
 
                 if (capturePiece == RivalConstants.BP) {
                     blackPawnValues -= Piece.PAWN.getValue();
-                    this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
+                    this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
                 } else {
                     blackPieceValues -= RivalConstants.PIECE_VALUES.get(capturePiece);
                     if (capturePiece == RivalConstants.BR) {
@@ -699,7 +707,7 @@ public final class EngineChessBoard {
         } else {
             if (movePiece == RivalConstants.BP) {
                 this.m_halfMoveCount = 0;
-                this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveFrom] ^ EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo];
+                this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveFrom] ^ EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo];
 
                 if ((toMask & Bitboards.RANK_5) != 0 && (fromMask & Bitboards.RANK_7) != 0) {
                     this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = toMask << 8L;
@@ -707,7 +715,7 @@ public final class EngineChessBoard {
                     whitePawnValues -= Piece.PAWN.getValue();
                     this.pieceBitboards[RivalConstants.WP] ^= toMask << 8;
                     this.m_hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo + 8];
-                    this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo + 8];
+                    this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo + 8];
                     this.m_moveList[this.m_movesMade].capturePiece = RivalConstants.WP;
                     this.squareContents[moveTo + 8] = -1;
                 } else if ((compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) != 0) {
@@ -740,7 +748,7 @@ public final class EngineChessBoard {
                     }
                     this.pieceBitboards[RivalConstants.BP] ^= toMask;
                     this.m_hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo];
-                    this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo];
+                    this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo];
                 }
             } else if (movePiece == RivalConstants.BR) {
                 if (moveFrom == Bitboards.A8) this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_BQ;
@@ -769,7 +777,7 @@ public final class EngineChessBoard {
                 this.m_hashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
                 if (capturePiece == RivalConstants.WP) {
                     whitePawnValues -= Piece.PAWN.getValue();
-                    this.m_pawnHashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
+                    this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
                 } else {
                     whitePieceValues -= RivalConstants.PIECE_VALUES.get(capturePiece);
                     if (capturePiece == RivalConstants.WR) {
@@ -804,7 +812,7 @@ public final class EngineChessBoard {
         this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = this.m_moveList[this.m_movesMade].enPassantBitboard;
         this.m_castlePrivileges = this.m_moveList[this.m_movesMade].castlePrivileges;
         this.m_hashValue = this.m_moveList[this.m_movesMade].hashValue;
-        this.m_pawnHashValue = this.m_moveList[this.m_movesMade].pawnHashValue;
+        this.pawnHashValue = this.m_moveList[this.m_movesMade].pawnHashValue;
         this.m_isOnNullMove = this.m_moveList[this.m_movesMade].isOnNullMove;
 
         final int fromSquare = (this.m_moveList[this.m_movesMade].move >>> 16) & 63;
