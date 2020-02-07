@@ -1197,8 +1197,8 @@ public final class RivalSearch implements Runnable {
             promotionMask = (movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
             int toSquare = movesForSorting[i] & 63;
 
-            boolean isCapture = board.squareContents[toSquare] % 6 > -1;
-
+            boolean isCapture = !board.isSquareEmpty(toSquare);
+            
             if (!isCapture &&
                     ((1L << toSquare) & board.pieceBitboards[RivalConstants.ENPASSANTSQUARE]) != 0 &&
                     board.squareContents[(movesForSorting[i] >>> 16) & 63] % 6 == RivalConstants.WP) {

@@ -142,6 +142,10 @@ public final class EngineChessBoard {
         }
     }
 
+    public boolean isSquareEmpty(int bitRef) {
+        return squareContents[bitRef] != -1;
+    }
+
     public boolean isGameOver() {
         generateLegalMoves();
 
