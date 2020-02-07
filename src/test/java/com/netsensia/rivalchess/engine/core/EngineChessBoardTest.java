@@ -170,6 +170,16 @@ public class EngineChessBoardTest {
         assertEquals(Piece.QUEEN, engineChessBoard.getPiece(60));
 
         assertEquals(Piece.NONE, engineChessBoard.getPiece(32));
+    }
 
+    @Test
+    public void isCapture() throws IllegalFenException {
+        EngineChessBoard engineChessBoard = new EngineChessBoard();
+        engineChessBoard.setBoard(FenUtils.getBoardModel(OpeningLibrary.E2E4_D7D5));
+        assertTrue(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e4d5")));
+        assertFalse(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e4e5")));
+        engineChessBoard.setBoard(FenUtils.getBoardModel("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6"));
+        assertTrue(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5d6")));
+        assertFalse(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5e6")));
     }
 }

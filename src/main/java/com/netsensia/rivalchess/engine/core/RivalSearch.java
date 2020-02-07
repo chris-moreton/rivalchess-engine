@@ -1182,47 +1182,50 @@ public final class RivalSearch implements Runnable {
         }
     }
 
-    int[] movesForSorting;
-
-    private void scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) {
-        int i;
-        int score;
-        int promotionMask;
+    private int[] scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) {
 
         int moveCount = 0;
 
-        movesForSorting = orderedMoves[ply];
+        int[] movesForSorting = orderedMoves[ply];
 
-        for (i = 0; movesForSorting[i] != 0; i++) {
-            promotionMask = (movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
-            int toSquare = movesForSorting[i] & 63;
+        for (int i = 0; movesForSorting[i] != 0; i++) {
 
-            boolean isCapture = !board.isSquareEmpty(toSquare);
-            
-            if (!isCapture &&
-                    ((1L << toSquare) & board.pieceBitboards[RivalConstants.ENPASSANTSQUARE]) != 0 &&
-                    board.squareContents[(movesForSorting[i] >>> 16) & 63] % 6 == RivalConstants.WP) {
-                isCapture = true;
-            }
-
-            score = 0;
+            int move = movesForSorting[i];
+            boolean isCapture = board.isCapture(move);
 
             // clear out additional info stored with the move
-            movesForSorting[i] &= 0x00FFFFFF;
-            if (isCapture) {
-                int see = staticExchangeEvaluation(board, movesForSorting[i]);
-                if (see > 0) score = 100 + (int) (((double) see / Piece.QUEEN.getValue()) * 10);
-                if (promotionMask == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) score += 9;
-            } else if (promotionMask == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
-                score = 116;
-            } else if (includeChecks) {
-                score = 100;
-            }
+            move &= 0x00FFFFFF;
 
-            if (score > 0) movesForSorting[moveCount++] = movesForSorting[i] | ((127 - score) << 24);
+            final int score = getScore(board, move, includeChecks, isCapture);
+
+            if (score > 0) {
+                movesForSorting[moveCount++] = move | ((127 - score) << 24);
+            }
         }
 
         movesForSorting[moveCount] = 0;
+
+        return movesForSorting;
+    }
+
+    private int getScore(EngineChessBoard board, int move, boolean includeChecks, boolean isCapture) {
+        int score = 0;
+
+        final int promotionMask = (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
+        if (isCapture) {
+            final int see = staticExchangeEvaluation(board, move);
+            if (see > 0) {
+                score = 100 + (int) (((double) see / Piece.QUEEN.getValue()) * 10);
+            }
+            if (promotionMask == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
+                score += 9;
+            }
+        } else if (promotionMask == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
+            score = 116;
+        } else if (includeChecks) {
+            score = 100;
+        }
+        return score;
     }
 
     final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
@@ -1357,7 +1360,7 @@ public final class RivalSearch implements Runnable {
         int i, score;
         int count = 0;
 
-        movesForSorting = orderedMoves[ply];
+        int[] movesForSorting = orderedMoves[ply];
 
         for (i = 0; movesForSorting[i] != 0; i++) {
             if (movesForSorting[i] != -1) {
@@ -1422,7 +1425,7 @@ public final class RivalSearch implements Runnable {
         int i, j, score;
         int fromSquare, toSquare;
 
-        movesForSorting = orderedMoves[ply];
+        int[] movesForSorting = orderedMoves[ply];
 
         for (i = 0; movesForSorting[i] != 0; i++) {
             if (movesForSorting[i] != -1) {

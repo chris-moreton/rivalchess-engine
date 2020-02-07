@@ -143,7 +143,20 @@ public final class EngineChessBoard {
     }
 
     public boolean isSquareEmpty(int bitRef) {
-        return squareContents[bitRef] != -1;
+        return squareContents[bitRef] == -1;
+    }
+
+    public boolean isCapture(int move) {
+        int toSquare = move & 63;
+
+        boolean isCapture = !isSquareEmpty(toSquare);
+
+        if (!isCapture &&
+                ((1L << toSquare) & pieceBitboards[RivalConstants.ENPASSANTSQUARE]) != 0 &&
+                squareContents[(move >>> 16) & 63] % 6 == RivalConstants.WP) {
+            isCapture = true;
+        }
+        return isCapture;
     }
 
     public boolean isGameOver() {
