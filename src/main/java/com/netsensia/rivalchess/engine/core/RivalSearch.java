@@ -1292,13 +1292,13 @@ public final class RivalSearch implements Runnable {
         bestPath.reset();
 
         int evalScore = evaluate(board);
-        bestPath.score = (isCheck ? -RivalConstants.VALUE_MATE : evalScore);
+        bestPath.score = isCheck ? -RivalConstants.VALUE_MATE : evalScore;
 
         if (depth == 0 || bestPath.score >= high) {
             return bestPath;
         }
 
-        if (bestPath.score > low) low = bestPath.score;
+        low = Math.max(bestPath.score, low);
 
         int[] theseMoves = orderedMoves[ply];
 
@@ -1315,24 +1315,12 @@ public final class RivalSearch implements Runnable {
         int legalMoveCount = 0;
         while ((move = getHighScoreMove(theseMoves)) != 0) {
             if (RivalConstants.USE_DELTA_PRUNING && !isCheck) {
-                int materialIncrease = board.lastCapturePiece() > -1 ? RivalConstants.PIECE_VALUES.get(board.lastCapturePiece() % 6) : 0;
-                switch (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
-                    case 0:
-                        break;
-                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                        materialIncrease += Piece.QUEEN.getValue() - Piece.PAWN.getValue();
-                        break;
-                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                        materialIncrease += Piece.BISHOP.getValue() - Piece.PAWN.getValue();
-                        break;
-                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                        materialIncrease += Piece.KNIGHT.getValue() - Piece.PAWN.getValue();
-                        break;
-                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                        materialIncrease += Piece.ROOK.getValue() - Piece.PAWN.getValue();
-                        break;
+                final int materialIncrease = (board.lastCapturePiece() > -1
+                        ? RivalConstants.PIECE_VALUES.get(board.lastCapturePiece() % 6)
+                        : 0) + getMaterialIncreaseForPromotion(move);
+                if (materialIncrease + evalScore + RivalConstants.DELTA_PRUNING_MARGIN < low) {
+                    continue;
                 }
-                if (materialIncrease + evalScore + RivalConstants.DELTA_PRUNING_MARGIN < low) continue;
             }
 
             if (board.makeMove(move)) {
@@ -1345,7 +1333,8 @@ public final class RivalSearch implements Runnable {
                     board.unMakeMove();
                     return bestPath;
                 }
-                if (newPath.score > low) low = newPath.score;
+                low = Math.max(low, newPath.score);
+
                 board.unMakeMove();
             }
         }
@@ -1354,6 +1343,23 @@ public final class RivalSearch implements Runnable {
             bestPath.score = -RivalConstants.VALUE_MATE;
         }
         return bestPath;
+    }
+
+    private int getMaterialIncreaseForPromotion(int move) {
+        switch (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
+            case 0:
+                return 0;
+            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
+                return Piece.QUEEN.getValue() - Piece.PAWN.getValue();
+            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
+                return Piece.BISHOP.getValue() - Piece.PAWN.getValue();
+            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
+                return Piece.KNIGHT.getValue() - Piece.PAWN.getValue();
+            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
+                return Piece.ROOK.getValue() - Piece.PAWN.getValue();
+            default:
+                return 0;
+        }
     }
 
     private int scoreFullWidthCaptures(EngineChessBoard board, int ply) {
