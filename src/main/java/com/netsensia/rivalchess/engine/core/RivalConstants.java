@@ -274,7 +274,16 @@ public final class RivalConstants
 /***********************************	
  *	Board and move representation  *
  ***********************************/
+	/**
+	 * @deprecated Use Colour.WHITE instead
+	 */
+	@Deprecated
 	public static final int WHITE = 0;
+
+	/**
+	 * @deprecated Use Colour.BLACK instead
+	 */
+	@Deprecated
 	public static final int BLACK = 1;
 	
 	public static final int PROMOTION_PIECE_TOSQUARE_MASK_QUEEN = 192; 

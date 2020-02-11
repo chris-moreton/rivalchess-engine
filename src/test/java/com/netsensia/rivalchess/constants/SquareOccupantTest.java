@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.constants;
 
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -19,7 +18,7 @@ public class SquareOccupantTest {
 
     @Test
     public void ofColour() {
-        assertEquals(SquareOccupant.WB.getIndex(), SquareOccupant.BB.ofColour(RivalConstants.WHITE));
-        assertEquals(SquareOccupant.BB.getIndex(), SquareOccupant.BB.ofColour(RivalConstants.BLACK));
+        assertEquals(SquareOccupant.WB.getIndex(), SquareOccupant.BB.ofColour(Colour.WHITE));
+        assertEquals(SquareOccupant.BB.getIndex(), SquareOccupant.BB.ofColour(Colour.BLACK));
     }
 }

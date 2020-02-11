@@ -28,9 +28,9 @@ public enum SquareOccupant {
         return index;
     }
 
-    public int ofColour(int colour) {
+    public int ofColour(Colour colour) {
         return index == SquareOccupant.NONE.getIndex() ? index :
-                colour == RivalConstants.WHITE
+                colour == Colour.WHITE
                 ? index % 6
                 : index % 6 + 6;
     }

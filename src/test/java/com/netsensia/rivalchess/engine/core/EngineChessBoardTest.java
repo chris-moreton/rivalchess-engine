@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -108,13 +109,13 @@ public class EngineChessBoardTest {
         for (int y=0; y<8; y++) {
             for (int x=0; x<8; x++) {
 
-                assertEquals(expectedWhiteAttacks[y][x], engineChessBoard.isSquareAttacked(
+                assertEquals(expectedWhiteAttacks[y][x], engineChessBoard.isSquareAttackedBy(
                         ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
-                        true));
+                        Colour.WHITE));
 
-                assertEquals(expectedBlackAttacks[y][x], engineChessBoard.isSquareAttacked(
+                assertEquals(expectedBlackAttacks[y][x], engineChessBoard.isSquareAttackedBy(
                         ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
-                        false));
+                        Colour.BLACK));
             }
         }
     }
@@ -181,5 +182,88 @@ public class EngineChessBoardTest {
         engineChessBoard.setBoard(FenUtils.getBoardModel("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6"));
         assertTrue(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5d6")));
         assertFalse(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5e6")));
+    }
+
+    @Test
+    public void isCheck() throws IllegalFenException {
+        final String SCHOLARS_MATE = "r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4";
+        final String SILLY_CHECK = "rnbqkbnr/pppp1ppp/8/8/8/8/PPPP1PPP/RNBKQBNR b KQkq - 0 4";
+        final String STALEMATE = "8/6b1/8/8/8/n7/PP6/K7 w - - 0 4";
+
+        EngineChessBoard engineChessBoard = new EngineChessBoard();
+
+        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        assertFalse(engineChessBoard.isCheck());
+
+        engineChessBoard.setBoard(FenUtils.getBoardModel(SILLY_CHECK));
+        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        assertTrue(engineChessBoard.isCheck());
+
+        engineChessBoard.setBoard(FenUtils.getBoardModel(SCHOLARS_MATE));
+        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        assertTrue(engineChessBoard.isCheck());
+
+        engineChessBoard.setBoard(FenUtils.getBoardModel(STALEMATE));
+        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        assertFalse(engineChessBoard.isCheck());
+    }
+
+    @Test
+    public void getWhitePieceValues() throws IllegalFenException {
+        EngineChessBoard engineChessBoard = new EngineChessBoard();
+
+        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+
+        assertEquals(
+                Piece.QUEEN.getValue()
+                + Piece.KNIGHT.getValue() * 2
+                + Piece.BISHOP.getValue() * 2
+                + Piece.ROOK.getValue() * 2,
+                engineChessBoard.getWhitePieceValues());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e2e4"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d7d6"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g1f3"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e7e5"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("f3e5"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d6e5"));
+
+        assertEquals(
+                Piece.QUEEN.getValue()
+                        + Piece.KNIGHT.getValue()
+                        + Piece.BISHOP.getValue() * 2
+                        + Piece.ROOK.getValue() * 2,
+                engineChessBoard.getWhitePieceValues());
+
+    }
+
+    @Test
+    public void getBlackPieceValues() throws IllegalFenException {
+        EngineChessBoard engineChessBoard = new EngineChessBoard();
+
+        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+
+        assertEquals(
+                Piece.QUEEN.getValue()
+                        + Piece.KNIGHT.getValue() * 2
+                        + Piece.BISHOP.getValue() * 2
+                        + Piece.ROOK.getValue() * 2,
+                engineChessBoard.getBlackPieceValues());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e2e4"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d7d6"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g1f3"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e7e5"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("f3e5"));
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d6e5"));
+
+        assertEquals(
+                Piece.QUEEN.getValue()
+                        + Piece.KNIGHT.getValue() * 2,
+                        + Piece.BISHOP.getValue() * 2
+                        + Piece.ROOK.getValue() * 2,
+                engineChessBoard.getWhitePieceValues());
+
     }
 }

@@ -84,7 +84,7 @@ public class ChessBoardConversion
 		int from = (move >>> 16) & 63;
 		int promotionPiece = move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
 		
-		switch (board.squareContents[from] % 6)
+		switch (board.getSquareOccupant(from).getIndex() % 6)
 		{
 			case RivalConstants.WN : pgnMove = "N"; break;  
 			case RivalConstants.WK : pgnMove = "K"; break;  
@@ -106,7 +106,7 @@ public class ChessBoardConversion
 			final int legalMoveFrom = (legalMove >>> 16) & 63;
 			if (legalMoveTo == to)
 			{
-				if (board.squareContents[legalMoveFrom] == board.squareContents[from])
+				if (board.getSquareOccupant(legalMoveFrom).getIndex() == board.getSquareOccupant(from).getIndex())
 				{
 					if (legalMoveFrom != from)
 					{
@@ -127,9 +127,9 @@ public class ChessBoardConversion
 		
 		if (qualifier != ' ' ) pgnMove += qualifier;
 		
-		if (board.squareContents[to] != -1)
+		if (board.getSquareOccupant(to).getIndex() != -1)
 		{
-			if (board.squareContents[from] % 6 == RivalConstants.WP)
+			if (board.getSquareOccupant(from).getIndex() % 6 == RivalConstants.WP)
 			{
 				pgnMove += (char)((int)'a' + (7-(from % 8)));
 			}

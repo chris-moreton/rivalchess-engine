@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.bitboards;
 
+import com.netsensia.rivalchess.constants.Colour;
+import com.netsensia.rivalchess.engine.core.RivalConstants;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -226,5 +228,11 @@ public class BitboardsTest {
                         "00000000", 2).longValue();
 
         assertEquals(expected, Bitboards.getBlackPassedPawns(whitePawns, blackPawns));
+    }
+
+    @Test
+    public void getPawnMovesOfCaptureColour() {
+        assertEquals(Bitboards.whitePawnMovesCapture, Bitboards.getPawnMovesCaptureOfColour(Colour.WHITE));
+        assertEquals(Bitboards.blackPawnMovesCapture, Bitboards.getPawnMovesCaptureOfColour(Colour.BLACK));
     }
 }

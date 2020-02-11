@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
+import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.model.Board;
@@ -10,15 +11,6 @@ import java.util.List;
 
 public final class EngineChessBoard {
     public static final String START_POS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-    @Deprecated
-    public int whitePieceValues = 0;
-    @Deprecated
-    public int blackPieceValues = 0;
-    @Deprecated
-    public int whitePawnValues = 0;
-    @Deprecated
-    public int blackPawnValues = 0;
 
     public final int[] pieceSquareValues = new int[12];
     public final int[] pieceSquareValuesEndGame = new int[12];
@@ -31,8 +23,7 @@ public final class EngineChessBoard {
     public byte m_blackKingSquare;
     public int m_movesMade;
 
-    @Deprecated
-    public final byte[] squareContents = new byte[64];
+    private final byte[] squareContents = new byte[64];
 
     public boolean m_isOnNullMove = false;
 
@@ -173,30 +164,28 @@ public final class EngineChessBoard {
 
     public boolean isNonMoverInCheck() {
         return m_isWhiteToMove ?
-                isSquareAttacked(m_blackKingSquare, true) :
-                isSquareAttacked(m_whiteKingSquare, false);
+                isSquareAttackedBy(m_blackKingSquare, Colour.WHITE) :
+                isSquareAttackedBy(m_whiteKingSquare, Colour.BLACK);
     }
 
     public boolean isCheck() {
         return m_isWhiteToMove ?
-                isSquareAttacked(m_whiteKingSquare, false) :
-                isSquareAttacked(m_blackKingSquare, true);
+                isSquareAttackedBy(m_whiteKingSquare, Colour.BLACK) :
+                isSquareAttackedBy(m_blackKingSquare, Colour.WHITE);
     }
 
-    public boolean isSquareAttacked(final int attackedSquare, final boolean isWhiteAttacking) {
-        final int attacker = isWhiteAttacking ? RivalConstants.WHITE : RivalConstants.BLACK;
-        final int defender = isWhiteAttacking ? RivalConstants.BLACK : RivalConstants.WHITE;
+    public boolean isSquareAttackedBy(final int attackedSquare, final Colour attacker) {
 
         if ((pieceBitboards[SquareOccupant.WN.ofColour(attacker)] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
                 (pieceBitboards[SquareOccupant.WK.ofColour(attacker)] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
                 (pieceBitboards[SquareOccupant.WP.ofColour(attacker)]
-                        & Bitboards.getPawnMovesCaptureOfColour(defender).get(attackedSquare)) != 0)
+                        & Bitboards.getPawnMovesCaptureOfColour(attacker.opponent()).get(attackedSquare)) != 0)
             return true;
-        
+
         int pieceSquare;
 
         long bitboardBishop =
-                isWhiteAttacking ? pieceBitboards[RivalConstants.WB] | pieceBitboards[RivalConstants.WQ] :
+                attacker == Colour.WHITE ? pieceBitboards[RivalConstants.WB] | pieceBitboards[RivalConstants.WQ] :
                         pieceBitboards[RivalConstants.BB] | pieceBitboards[RivalConstants.BQ];
 
         while (bitboardBishop != 0) {
@@ -206,7 +195,7 @@ public final class EngineChessBoard {
         }
 
         long bitboardRook =
-                isWhiteAttacking ? pieceBitboards[RivalConstants.WR] | pieceBitboards[RivalConstants.WQ] :
+                attacker == Colour.WHITE ? pieceBitboards[RivalConstants.WR] | pieceBitboards[RivalConstants.WQ] :
                         pieceBitboards[RivalConstants.BR] | pieceBitboards[RivalConstants.BQ];
 
         while (bitboardRook != 0) {
@@ -304,22 +293,22 @@ public final class EngineChessBoard {
 
     private void generateKingMoves(int kingSquare) {
         if (this.m_isWhiteToMove) {
-            generateKingMoves(RivalConstants.CASTLEPRIV_WK, Bitboards.WHITEKINGSIDECASTLESQUARES, 3, false, RivalConstants.CASTLEPRIV_WQ, Bitboards.WHITEQUEENSIDECASTLESQUARES, 4);
+            generateKingMoves(RivalConstants.CASTLEPRIV_WK, Bitboards.WHITEKINGSIDECASTLESQUARES, 3, Colour.BLACK, RivalConstants.CASTLEPRIV_WQ, Bitboards.WHITEQUEENSIDECASTLESQUARES, 4);
         } else {
-            generateKingMoves(RivalConstants.CASTLEPRIV_BK, Bitboards.BLACKKINGSIDECASTLESQUARES, 59, true, RivalConstants.CASTLEPRIV_BQ, Bitboards.BLACKQUEENSIDECASTLESQUARES, 60);
+            generateKingMoves(RivalConstants.CASTLEPRIV_BK, Bitboards.BLACKKINGSIDECASTLESQUARES, 59, Colour.WHITE, RivalConstants.CASTLEPRIV_BQ, Bitboards.BLACKQUEENSIDECASTLESQUARES, 60);
         }
 
         addMoves(kingSquare << 16, Bitboards.kingMoves.get(kingSquare) & ~pieceBitboards[RivalConstants.FRIENDLY]);
     }
 
-    private void generateKingMoves(final int castlePriveleges, final long kingSideCastleSquares, int i, boolean b, int castleprivWq, long whitequeensidecastlesquares, int i4) {
+    private void generateKingMoves(final int castlePriveleges, final long kingSideCastleSquares, int i, Colour opponent, int castleprivWq, long whitequeensidecastlesquares, int i4) {
         if ((m_castlePrivileges & castlePriveleges) != 0L && (pieceBitboards[RivalConstants.ALL] & kingSideCastleSquares) == 0L) {
-            if (!isSquareAttacked(i, b) && !isSquareAttacked(i-1, b)) {
+            if (!isSquareAttackedBy(i, opponent) && !isSquareAttackedBy(i-1, opponent)) {
                 this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i-2;
             }
         }
         if ((m_castlePrivileges & castleprivWq) != 0L && (pieceBitboards[RivalConstants.ALL] & whitequeensidecastlesquares) == 0L) {
-            if (!isSquareAttacked(i, b) && !isSquareAttacked(i4, b)) {
+            if (!isSquareAttackedBy(i, opponent) && !isSquareAttackedBy(i4, opponent)) {
                 this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i4+1;
             }
         }
@@ -471,11 +460,6 @@ public final class EngineChessBoard {
         int pieceIndex;
         char piece;
 
-        whitePieceValues = 0;
-        whitePawnValues = 0;
-        blackPieceValues = 0;
-        blackPawnValues = 0;
-
         this.pieceBitboards = new long[RivalConstants.NUM_BITBOARDS];
 
         for (int i = 0; i < 64; i++) {
@@ -497,52 +481,42 @@ public final class EngineChessBoard {
                     case 'P':
                         squareContents[bitNum] = RivalConstants.WP;
                         pieceIndex = RivalConstants.WP;
-                        whitePawnValues += Piece.PAWN.getValue();
                         break;
                     case 'p':
                         squareContents[bitNum] = RivalConstants.BP;
                         pieceIndex = RivalConstants.BP;
-                        blackPawnValues += Piece.PAWN.getValue();
                         break;
                     case 'N':
                         squareContents[bitNum] = RivalConstants.WN;
                         pieceIndex = RivalConstants.WN;
-                        whitePieceValues += Piece.KNIGHT.getValue();
                         break;
                     case 'n':
                         squareContents[bitNum] = RivalConstants.BN;
                         pieceIndex = RivalConstants.BN;
-                        blackPieceValues += Piece.KNIGHT.getValue();
                         break;
                     case 'B':
                         squareContents[bitNum] = RivalConstants.WB;
                         pieceIndex = RivalConstants.WB;
-                        whitePieceValues += Piece.BISHOP.getValue();
                         break;
                     case 'b':
                         squareContents[bitNum] = RivalConstants.BB;
                         pieceIndex = RivalConstants.BB;
-                        blackPieceValues += Piece.BISHOP.getValue();
                         break;
                     case 'R':
                         squareContents[bitNum] = RivalConstants.WR;
                         pieceIndex = RivalConstants.WR;
-                        whitePieceValues += Piece.ROOK.getValue();
                         break;
                     case 'r':
                         squareContents[bitNum] = RivalConstants.BR;
                         pieceIndex = RivalConstants.BR;
-                        blackPieceValues += Piece.ROOK.getValue();
                         break;
                     case 'Q':
                         squareContents[bitNum] = RivalConstants.WQ;
                         pieceIndex = RivalConstants.WQ;
-                        whitePieceValues += Piece.QUEEN.getValue();
                         break;
                     case 'q':
                         squareContents[bitNum] = RivalConstants.BQ;
                         pieceIndex = RivalConstants.BQ;
-                        blackPieceValues += Piece.QUEEN.getValue();
                         break;
                     case 'K':
                         squareContents[bitNum] = RivalConstants.WK;
@@ -674,7 +648,6 @@ public final class EngineChessBoard {
                     this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = fromMask << 8L;
                 } else if (toMask == this.m_moveList[this.m_movesMade].enPassantBitboard) {
                     this.pieceBitboards[RivalConstants.BP] ^= toMask >>> 8;
-                    blackPawnValues -= Piece.PAWN.getValue();
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo - 8];
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo - 8];
                     this.m_moveList[this.m_movesMade].capturePiece = RivalConstants.BP;
@@ -682,31 +655,26 @@ public final class EngineChessBoard {
                 } else if ((compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) != 0) {
                     switch (compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
                         case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                            whitePieceValues += Piece.QUEEN.getValue();
                             this.pieceBitboards[RivalConstants.WQ] |= toMask;
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WQ][moveTo];
                             this.squareContents[moveTo] = RivalConstants.WQ;
                             break;
                         case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                            whitePieceValues += Piece.ROOK.getValue();
                             this.pieceBitboards[RivalConstants.WR] |= toMask;
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WR][moveTo];
                             this.squareContents[moveTo] = RivalConstants.WR;
                             break;
                         case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                            whitePieceValues += Piece.KNIGHT.getValue();
                             this.pieceBitboards[RivalConstants.WN] |= toMask;
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WN][moveTo];
                             this.squareContents[moveTo] = RivalConstants.WN;
                             break;
                         case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                            whitePieceValues += Piece.BISHOP.getValue();
                             this.pieceBitboards[RivalConstants.WB] |= toMask;
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WB][moveTo];
                             this.squareContents[moveTo] = RivalConstants.WB;
                             break;
                     }
-                    whitePawnValues -= Piece.PAWN.getValue();
                     this.pieceBitboards[RivalConstants.WP] ^= toMask;
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
@@ -738,10 +706,8 @@ public final class EngineChessBoard {
                 this.hashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
 
                 if (capturePiece == RivalConstants.BP) {
-                    blackPawnValues -= Piece.PAWN.getValue();
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
                 } else {
-                    blackPieceValues -= RivalConstants.PIECE_VALUES.get(capturePiece);
                     if (capturePiece == RivalConstants.BR) {
                         if (toMask == Bitboards.BLACKKINGSIDEROOKMASK)
                             this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_BK;
@@ -758,35 +724,29 @@ public final class EngineChessBoard {
                 if ((toMask & Bitboards.RANK_5) != 0 && (fromMask & Bitboards.RANK_7) != 0) {
                     this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = toMask << 8L;
                 } else if (toMask == this.m_moveList[this.m_movesMade].enPassantBitboard) {
-                    whitePawnValues -= Piece.PAWN.getValue();
                     this.pieceBitboards[RivalConstants.WP] ^= toMask << 8;
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo + 8];
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo + 8];
                     this.m_moveList[this.m_movesMade].capturePiece = RivalConstants.WP;
                     this.squareContents[moveTo + 8] = -1;
                 } else if ((compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) != 0) {
-                    blackPawnValues -= Piece.PAWN.getValue();
                     switch (compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
                         case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                            blackPieceValues += Piece.QUEEN.getValue();
                             this.pieceBitboards[RivalConstants.BQ] |= toMask;
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BQ][moveTo];
                             this.squareContents[moveTo] = RivalConstants.BQ;
                             break;
                         case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                            blackPieceValues += Piece.ROOK.getValue();
                             this.pieceBitboards[RivalConstants.BR] |= toMask;
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BR][moveTo];
                             this.squareContents[moveTo] = RivalConstants.BR;
                             break;
                         case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                            blackPieceValues += Piece.KNIGHT.getValue();
                             this.pieceBitboards[RivalConstants.BN] |= toMask;
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BN][moveTo];
                             this.squareContents[moveTo] = RivalConstants.BN;
                             break;
                         case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                            blackPieceValues += Piece.BISHOP.getValue();
                             this.pieceBitboards[RivalConstants.BB] |= toMask;
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BB][moveTo];
                             this.squareContents[moveTo] = RivalConstants.BB;
@@ -822,10 +782,8 @@ public final class EngineChessBoard {
                 this.pieceBitboards[capturePiece] ^= toMask;
                 this.hashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
                 if (capturePiece == RivalConstants.WP) {
-                    whitePawnValues -= Piece.PAWN.getValue();
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
                 } else {
-                    whitePieceValues -= RivalConstants.PIECE_VALUES.get(capturePiece);
                     if (capturePiece == RivalConstants.WR) {
                         if (toMask == Bitboards.WHITEKINGSIDEROOKMASK)
                             this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_WK;
@@ -933,54 +891,44 @@ public final class EngineChessBoard {
         if (promotionPiece != 0) {
             if (this.m_isWhiteToMove) {
                 this.pieceBitboards[RivalConstants.WP] ^= fromMask;
-                this.whitePawnValues += Piece.PAWN.getValue();
 
                 switch (promotionPiece) {
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
 
                         this.pieceBitboards[RivalConstants.WQ] ^= toMask;
-                        this.whitePieceValues -= Piece.QUEEN.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
 
                         this.pieceBitboards[RivalConstants.WB] ^= toMask;
-                        this.whitePieceValues -= Piece.BISHOP.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
 
                         this.pieceBitboards[RivalConstants.WN] ^= toMask;
-                        this.whitePieceValues -= Piece.KNIGHT.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
 
                         this.pieceBitboards[RivalConstants.WR] ^= toMask;
-                        this.whitePieceValues -= Piece.ROOK.getValue();
                         break;
                 }
             } else {
                 this.pieceBitboards[RivalConstants.BP] ^= fromMask;
-                this.blackPawnValues += Piece.PAWN.getValue();
 
                 switch (promotionPiece) {
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
 
                         this.pieceBitboards[RivalConstants.BQ] ^= toMask;
-                        this.blackPieceValues -= Piece.QUEEN.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
 
                         this.pieceBitboards[RivalConstants.BB] ^= toMask;
-                        this.blackPieceValues -= Piece.BISHOP.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
 
                         this.pieceBitboards[RivalConstants.BN] ^= toMask;
-                        this.blackPieceValues -= Piece.KNIGHT.getValue();
                         break;
                     case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
 
                         this.pieceBitboards[RivalConstants.BR] ^= toMask;
-                        this.blackPieceValues -= Piece.ROOK.getValue();
                         break;
                 }
             }
@@ -988,7 +936,6 @@ public final class EngineChessBoard {
         }
         return false;
     }
-
 
     public int getWhitePieceValues() {
         return
@@ -1023,13 +970,6 @@ public final class EngineChessBoard {
             this.squareContents[toSquare] = capturePiece;
 
             this.pieceBitboards[capturePiece] ^= toMask;
-
-            if (capturePiece == RivalConstants.WP) this.whitePawnValues += Piece.PAWN.getValue();
-            else if (capturePiece == RivalConstants.BP) this.blackPawnValues += Piece.PAWN.getValue();
-            else if (capturePiece <= RivalConstants.WR)
-                this.whitePieceValues += RivalConstants.PIECE_VALUES.get(capturePiece);
-            else
-                this.blackPieceValues += RivalConstants.PIECE_VALUES.get(capturePiece);
         }
     }
 
@@ -1038,7 +978,6 @@ public final class EngineChessBoard {
             if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.WP) {
                 this.pieceBitboards[RivalConstants.WP] ^= toMask | fromMask;
                 this.pieceBitboards[RivalConstants.BP] ^= toMask >>> 8;
-                this.blackPawnValues += Piece.PAWN.getValue();
                 this.squareContents[toSquare - 8] = RivalConstants.BP;
 
 
@@ -1046,7 +985,6 @@ public final class EngineChessBoard {
             } else if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.BP) {
                 this.pieceBitboards[RivalConstants.BP] ^= toMask | fromMask;
                 this.pieceBitboards[RivalConstants.WP] ^= toMask << 8;
-                this.whitePawnValues += Piece.PAWN.getValue();
                 this.squareContents[toSquare + 8] = RivalConstants.WP;
 
 

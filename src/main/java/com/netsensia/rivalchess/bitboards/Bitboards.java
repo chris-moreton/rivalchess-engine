@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.bitboards;
 
+import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 
 import java.util.ArrayList;
@@ -390,8 +391,8 @@ public final class Bitboards {
                 ~Bitboards.northFill(whitePawns |  getWhitePawnAttacks (whitePawns) | (blackPawns << 8));
     }
 
-    public static List<Long> getPawnMovesCaptureOfColour(int colour) {
-        return colour == RivalConstants.WHITE
+    public static List<Long> getPawnMovesCaptureOfColour(Colour colour) {
+        return colour == Colour.WHITE
                 ? whitePawnMovesCapture
                 : blackPawnMovesCapture;
     }
