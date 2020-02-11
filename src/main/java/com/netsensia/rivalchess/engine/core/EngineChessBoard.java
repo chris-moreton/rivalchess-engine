@@ -184,18 +184,15 @@ public final class EngineChessBoard {
     }
 
     public boolean isSquareAttacked(final int attackedSquare, final boolean isWhiteAttacking) {
-        if (isWhiteAttacking) {
-            if ((pieceBitboards[RivalConstants.WN] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
-                    (pieceBitboards[RivalConstants.WK] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
-                    (pieceBitboards[RivalConstants.WP] & Bitboards.blackPawnMovesCapture.get(attackedSquare)) != 0)
-                return true;
-        } else {
-            if ((pieceBitboards[RivalConstants.BN] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
-                    (pieceBitboards[RivalConstants.BK] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
-                    (pieceBitboards[RivalConstants.BP] & Bitboards.whitePawnMovesCapture.get(attackedSquare)) != 0)
-                return true;
-        }
+        final int attacker = isWhiteAttacking ? RivalConstants.WHITE : RivalConstants.BLACK;
+        final int defender = isWhiteAttacking ? RivalConstants.BLACK : RivalConstants.WHITE;
 
+        if ((pieceBitboards[SquareOccupant.WN.ofColour(attacker)] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
+                (pieceBitboards[SquareOccupant.WK.ofColour(attacker)] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
+                (pieceBitboards[SquareOccupant.WP.ofColour(attacker)]
+                        & Bitboards.getPawnMovesCaptureOfColour(defender).get(attackedSquare)) != 0)
+            return true;
+        
         int pieceSquare;
 
         long bitboardBishop =

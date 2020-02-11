@@ -389,4 +389,10 @@ public final class Bitboards {
         return blackPawns &
                 ~Bitboards.northFill(whitePawns |  getWhitePawnAttacks (whitePawns) | (blackPawns << 8));
     }
+
+    public static List<Long> getPawnMovesCaptureOfColour(int colour) {
+        return colour == RivalConstants.WHITE
+                ? whitePawnMovesCapture
+                : blackPawnMovesCapture;
+    }
 }

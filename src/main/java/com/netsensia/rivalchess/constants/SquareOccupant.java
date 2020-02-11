@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.constants;
 
+import com.netsensia.rivalchess.engine.core.RivalConstants;
+
 public enum SquareOccupant {
     NONE(-1),
     WP(0),
@@ -24,6 +26,13 @@ public enum SquareOccupant {
 
     public int getIndex() {
         return index;
+    }
+
+    public int ofColour(int colour) {
+        return index == SquareOccupant.NONE.getIndex() ? index :
+                colour == RivalConstants.WHITE
+                ? index % 6
+                : index % 6 + 6;
     }
 
     public static SquareOccupant fromIndex(int index){
