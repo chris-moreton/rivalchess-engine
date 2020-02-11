@@ -8,7 +8,7 @@ import java.util.List;
 
 public final class RivalConstants
 {
-	public static final String VERSION = "v1.0.3";
+	public static final String VERSION = RivalConstants.class.getPackage().getImplementationVersion();
 
 	public static final String FEN_START_POS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 

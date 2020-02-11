@@ -1,7 +1,8 @@
 plugins {
-    id 'net.researchgate.release' version '2.6.0'
     id 'java'
 }
+
+version = '1.2.2'
 
 jar {
     from {
@@ -11,7 +12,9 @@ jar {
     }
     manifest {
         attributes(
-                'Main-Class': 'com.netsensia.rivalchess.uci.RivalUCI'
+                'Main-Class': 'com.netsensia.rivalchess.uci.RivalUCI',
+                'Implementation-Title': 'Gradle Quickstart',
+                'Implementation-Version': version
         )
     }
 }
