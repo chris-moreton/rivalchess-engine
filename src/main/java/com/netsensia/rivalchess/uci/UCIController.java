@@ -273,7 +273,7 @@ public class UCIController implements Runnable {
     private Board getBoardModel(String s, String[] parts) throws IllegalFenException {
         Board board;
         if (parts[1].equals("startpos")) {
-            board = FenUtils.getBoardModel(EngineChessBoard.START_POS);
+            board = FenUtils.getBoardModel(RivalConstants.FEN_START_POS);
         } else {
             board = FenUtils.getBoardModel(s.substring(12).trim());
         }

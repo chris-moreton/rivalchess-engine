@@ -26,7 +26,7 @@ public class EngineChessBoardTest {
         moves.add("e2e4");
         moves.add("e7e5");
 
-        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        board.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         for (String move : moves) {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
@@ -42,7 +42,7 @@ public class EngineChessBoardTest {
 
         assertEquals(2, board.previousOccurrencesOfThisPosition());
 
-        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        board.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         moves.add("b1c3");
         moves.add("b8a6");
@@ -53,7 +53,7 @@ public class EngineChessBoardTest {
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
 
-        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        board.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         moves.add("c3b1");
         moves.add("a6b8");
@@ -72,7 +72,7 @@ public class EngineChessBoardTest {
         moves.add("c3b1");
         moves.add("c6b8");
 
-        board.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        board.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         for (String move : moves) {
             board.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move));
@@ -129,7 +129,7 @@ public class EngineChessBoardTest {
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         
-        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
         engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
         assertFalse(engineChessBoard.isGameOver());
 
@@ -149,7 +149,7 @@ public class EngineChessBoardTest {
     @Test
     public void getSquareOccupant() throws IllegalFenException {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         assertEquals(SquareOccupant.WK, engineChessBoard.getSquareOccupant(3));
         assertEquals(SquareOccupant.WQ, engineChessBoard.getSquareOccupant(4));
@@ -163,7 +163,7 @@ public class EngineChessBoardTest {
     @Test
     public void getPiece() throws IllegalFenException {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         assertEquals(Piece.KING, engineChessBoard.getPiece(3));
         assertEquals(Piece.QUEEN, engineChessBoard.getPiece(4));
@@ -192,7 +192,7 @@ public class EngineChessBoardTest {
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
 
-        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
         engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
         assertFalse(engineChessBoard.isCheck());
 
@@ -213,7 +213,7 @@ public class EngineChessBoardTest {
     public void getWhitePieceValues() throws IllegalFenException {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
 
-        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         assertEquals(
                 Piece.QUEEN.getValue()
@@ -242,7 +242,7 @@ public class EngineChessBoardTest {
     public void getBlackPieceValues() throws IllegalFenException {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
 
-        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         assertEquals(
                 Piece.QUEEN.getValue()

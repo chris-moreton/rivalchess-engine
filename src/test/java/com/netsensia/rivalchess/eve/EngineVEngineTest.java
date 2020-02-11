@@ -34,7 +34,7 @@ public class EngineVEngineTest {
 
     @Test
     public void runGame() throws IllegalFenException {
-        engineChessBoard.setBoard(FenUtils.getBoardModel(EngineChessBoard.START_POS));
+        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
     }
 }

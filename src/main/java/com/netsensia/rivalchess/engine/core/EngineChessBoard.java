@@ -10,7 +10,6 @@ import com.netsensia.rivalchess.model.Board;
 import java.util.List;
 
 public final class EngineChessBoard {
-    public static final String START_POS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     public final int[] pieceSquareValues = new int[12];
     public final int[] pieceSquareValuesEndGame = new int[12];
