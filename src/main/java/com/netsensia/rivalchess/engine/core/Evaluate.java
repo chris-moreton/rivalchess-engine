@@ -10,19 +10,19 @@ public class Evaluate {
         int safety = 0;
         final int offset = isWhite ? 0 : 6;
 
-        if (((board.pieceBitboards[RivalConstants.ALL] & (1L << h1)) != 0) ||
-                ((board.pieceBitboards[RivalConstants.WR + offset] & (1L << f1)) == 0)) {
+        if (((board.getAllPiecesBitboard() & (1L << h1)) != 0) ||
+                ((board.getBitboardByIndex(RivalConstants.WR + offset) & (1L << f1)) == 0)) {
             return 0;
         }
 
-        if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << f2)) != 0) {
-            if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << g2)) != 0) {
+        if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << f2)) != 0) {
+            if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << g2)) != 0) {
                 safety = checkForPositions_A_or_D(board, h2, h3, f3, isWhite, cornerColour, safety);
             } else {
                 safety = checkForPositionsB_or_C(board, h2, h3, g2, g3, isWhite, safety);
             }
         } else {
-            if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << f4)) != 0) {
+            if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << f4)) != 0) {
                 safety = checkForPositionE(board, h2, g2, f3, isWhite, safety);
             } else {
                 safety = checkForPositionFOrH(board, h2, h3, g2, f3, isWhite, safety);
@@ -35,13 +35,13 @@ public class Evaluate {
     private static int checkForPositionFOrH(EngineChessBoard board, int h2, int h3, int g2, int f3, boolean isWhite, int safety) {
         final int offset = isWhite ? 0 : 6;
 
-        if (((board.pieceBitboards[RivalConstants.WP + offset] & (1L << f3)) != 0)
-            && ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << g2)) != 0)) {
-                if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
+        if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << f3)) != 0)
+            && ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << g2)) != 0)) {
+                if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0) {
                     // (F)
                     safety -= 10;
                 } else {
-                    if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h3)) != 0) {
+                    if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h3)) != 0) {
                         // (H)
                         safety -= 30;
                     }
@@ -53,12 +53,12 @@ public class Evaluate {
     private static int checkForPositionE(EngineChessBoard board, int h2, int g2, int f3, boolean isWhite, int safety) {
         final int offset = isWhite ? 0 : 6;
 
-        if (((board.pieceBitboards[RivalConstants.WP + offset] & (1L << g2)) != 0)
-            && ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0)) {
+        if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << g2)) != 0)
+            && ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0)) {
                 // (E)
                 safety += 80;
-                if (((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0)
-                    && ((board.pieceBitboards[RivalConstants.WN + offset] & (1L << f3)) != 0)) {
+                if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0)
+                    && ((board.getBitboardByIndex(RivalConstants.WN + offset) & (1L << f3)) != 0)) {
                         safety += 40;
                     }
         }
@@ -68,15 +68,15 @@ public class Evaluate {
     private static int checkForPositionsB_or_C(EngineChessBoard board, int h2, int h3, int g2, int g3, boolean isWhite, int safety) {
         final int offset = isWhite ? 0 : 6;
 
-        if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << g3)) != 0) {
-            if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
-                if ((board.pieceBitboards[RivalConstants.WB + offset] & (1L << g2)) != 0) {
+        if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << g3)) != 0) {
+            if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0) {
+                if ((board.getBitboardByIndex(RivalConstants.WB + offset) & (1L << g2)) != 0) {
                     // (B)
                     safety += 100;
                 }
             } else {
-                if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h3)) != 0) {
-                    if ((board.pieceBitboards[RivalConstants.WB + offset] & (1L << g2)) != 0) {
+                if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h3)) != 0) {
+                    if ((board.getBitboardByIndex(RivalConstants.WB + offset) & (1L << g2)) != 0) {
                         // (C)
                         safety += 70;
                     }
@@ -89,7 +89,7 @@ public class Evaluate {
     private static int checkForPositions_A_or_D(EngineChessBoard board, int h2, int h3, int f3, boolean isWhite, int cornerColour, int safety) {
         final int offset = isWhite ? 0 : 6;
 
-        if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h2)) != 0) {
+        if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0) {
             // (A)
             safety += 120;
         } else {
@@ -102,13 +102,13 @@ public class Evaluate {
     private static int checkForPosition_D(EngineChessBoard board, int h3, int f3, boolean isWhite, int cornerColour, int safety) {
         final int offset = isWhite ? 0 : 6;
 
-        if ((board.pieceBitboards[RivalConstants.WP + offset] & (1L << h3)) != 0) {
-            if ((board.pieceBitboards[RivalConstants.WN + offset] & (1L << f3)) != 0) {
+        if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h3)) != 0) {
+            if ((board.getBitboardByIndex(RivalConstants.WN + offset) & (1L << f3)) != 0) {
                 // (D)
                 safety += 70;
                 // check for bishop of same colour as h3
                 long bits = (cornerColour == RivalConstants.WHITE ? Bitboards.LIGHT_SQUARES : Bitboards.DARK_SQUARES);
-                if ((bits & board.pieceBitboards[RivalConstants.WB + offset]) != 0) {
+                if ((bits & board.getBitboardByIndex(RivalConstants.WB + offset)) != 0) {
                     safety -= 30;
                 }
             }
@@ -118,7 +118,7 @@ public class Evaluate {
 
     public static int getWhiteKingRightWayScore(EngineChessBoard engineChessBoard) {
 
-        if (engineChessBoard.m_whiteKingSquare == 1 || engineChessBoard.m_whiteKingSquare == 8) {
+        if (engineChessBoard.getWhiteKingSquare() == 1 || engineChessBoard.getWhiteKingSquare() == 8) {
             return scoreRightWayPositions(engineChessBoard,
                     0, 8, 16, 9, 17, 2, 10, 18, 26, true,
                     RivalConstants.WHITE);
@@ -128,7 +128,7 @@ public class Evaluate {
     }
 
     public static int getBlackKingRightWayScore(EngineChessBoard engineChessBoard) {
-        if (engineChessBoard.m_blackKingSquare == 57 || engineChessBoard.m_blackKingSquare == 48) {
+        if (engineChessBoard.getBlackKingSquare() == 57 || engineChessBoard.getBlackKingSquare() == 48) {
             return scoreRightWayPositions(engineChessBoard,
                     56, 48, 40, 49, 41, 58, 50, 42, 34,false,
                     RivalConstants.BLACK);

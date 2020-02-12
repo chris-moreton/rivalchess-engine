@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 
+import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
@@ -174,8 +175,8 @@ public class UCIController implements Runnable {
             rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
             rivalSearch.setNodesToSearch(maxNodes);
         } else if (whiteTime != -1) {
-            int calcTime = (engineBoard.m_isWhiteToMove ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
-            int guaranteedTime = (engineBoard.m_isWhiteToMove ? whiteInc : blackInc);
+            int calcTime = (engineBoard.getMover() == Colour.WHITE ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
+            int guaranteedTime = (engineBoard.getMover() == Colour.WHITE ? whiteInc : blackInc);
             int timeToThink = calcTime + guaranteedTime - RivalConstants.UCI_TIMER_SAFTEY_MARGIN_MILLIS;
             rivalSearch.setMillisToThink(timeToThink);
             rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);

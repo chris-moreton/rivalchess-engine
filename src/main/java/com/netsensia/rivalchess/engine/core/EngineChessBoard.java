@@ -11,27 +11,27 @@ import java.util.List;
 
 public final class EngineChessBoard {
 
-    public final int[] pieceSquareValues = new int[12];
-    public final int[] pieceSquareValuesEndGame = new int[12];
+    private final int[] pieceSquareValues = new int[12];
+    private final int[] pieceSquareValuesEndGame = new int[12];
 
-    public long[] pieceBitboards;
+    private long[] pieceBitboards;
 
-    public int m_castlePrivileges;
-    public boolean m_isWhiteToMove;
-    public byte m_whiteKingSquare;
-    public byte m_blackKingSquare;
-    public int m_movesMade;
+    private int m_castlePrivileges;
+    private boolean m_isWhiteToMove;
+    private byte m_whiteKingSquare;
+    private byte m_blackKingSquare;
+    private int m_movesMade;
 
     private final byte[] squareContents = new byte[64];
 
-    public boolean m_isOnNullMove = false;
+    private boolean m_isOnNullMove = false;
 
-    protected int[] m_legalMoves;
-    protected int m_numLegalMoves;
+    private int[] m_legalMoves;
+    private int m_numLegalMoves;
 
-    public MoveDetail[] m_moveList;
+    private MoveDetail[] m_moveList;
 
-    public int m_halfMoveCount = 0;
+    private int m_halfMoveCount = 0;
 
     private final static long[][] m_pieceHashValues =
             {
@@ -1019,6 +1019,90 @@ public final class EngineChessBoard {
         }
 
         return false;
+    }
+
+    public long getWhitePawnBitboard() {
+        return pieceBitboards[RivalConstants.WP];
+    }
+
+    public long getBlackPawnBitboard() {
+        return pieceBitboards[RivalConstants.BP];
+    }
+
+    public long getWhiteKingBitboard() {
+        return pieceBitboards[RivalConstants.WK];
+    }
+
+    public long getBlackKingBitboard() {
+        return pieceBitboards[RivalConstants.BK];
+    }
+
+    public long getWhiteQueenBitboard() {
+        return pieceBitboards[RivalConstants.WQ];
+    }
+
+    public long getBlackQueenBitboard() {
+        return pieceBitboards[RivalConstants.BQ];
+    }
+
+    public long getWhiteRookBitboard() {
+        return pieceBitboards[RivalConstants.WR];
+    }
+
+    public long getBlackRookBitboard() {
+        return pieceBitboards[RivalConstants.BR];
+    }
+
+    public long getWhiteKnightBitboard() {
+        return pieceBitboards[RivalConstants.WN];
+    }
+
+    public long getBlackKnightBitboard() {
+        return pieceBitboards[RivalConstants.BN];
+    }
+
+    public long getWhiteBishopBitboard() {
+        return pieceBitboards[RivalConstants.WB];
+    }
+
+    public long getBlackBishopBitboard() {
+        return pieceBitboards[RivalConstants.BB];
+    }
+
+    public long getAllPiecesBitboard() {
+        return pieceBitboards[RivalConstants.ALL];
+    }
+
+    public int getWhiteKingSquare() {
+        return m_whiteKingSquare;
+    }
+
+    public int getBlackKingSquare() {
+        return m_blackKingSquare;
+    }
+
+    public long getBitboardByIndex(int index) {
+        return pieceBitboards[index];
+    }
+
+    public int getHalfMoveCount() {
+        return m_halfMoveCount;
+    }
+
+    public int getCastlePrivileges() {
+        return m_castlePrivileges;
+    }
+
+    public Colour getMover() {
+        return m_isWhiteToMove ? Colour.WHITE : Colour.BLACK;
+    }
+
+    public int getNumLegalMoves() {
+        return m_numLegalMoves;
+    }
+
+    public int getLegalMoveByIndex(int index) {
+        return m_legalMoves[index];
     }
 
     public int previousOccurrencesOfThisPosition() {

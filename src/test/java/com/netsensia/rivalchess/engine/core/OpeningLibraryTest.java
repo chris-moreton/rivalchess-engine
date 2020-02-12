@@ -23,12 +23,12 @@ public class OpeningLibraryTest {
         engineBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
         engineBoard.generateLegalMoves();
 
-        for (int i=0; i<engineBoard.m_numLegalMoves; i++) {
-            String sMove = ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(engineBoard.m_legalMoves[i]);
+        for (int i=0; i<engineBoard.getNumLegalMoves(); i++) {
+            String sMove = ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(engineBoard.getLegalMoveByIndex(i));
 
             try {
-                if (engineBoard.isMoveLegal(engineBoard.m_legalMoves[i])) {
-                    engineBoard.makeMove(engineBoard.m_legalMoves[i]);
+                if (engineBoard.isMoveLegal(engineBoard.getLegalMoveByIndex(i))) {
+                    engineBoard.makeMove(engineBoard.getLegalMoveByIndex(i));
 
                     String newPath = path + (path.equals("") ? "" : "_") + sMove.toUpperCase();
                     String newFen = engineBoard.getFen();
