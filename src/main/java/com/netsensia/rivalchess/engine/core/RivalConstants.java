@@ -272,10 +272,7 @@ public final class RivalConstants
 	public static final byte LOWERBOUND = 1;
 	public static final byte EXACTSCORE = 2;
 	public static final byte EMPTY = 3;
-	
-/***********************************	
- *	Board and move representation  *
- ***********************************/
+
 	/**
 	 * @deprecated Use Colour.WHITE instead
 	 */

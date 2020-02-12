@@ -4,6 +4,8 @@ plugins {
 
 version = '1.2.2'
 
+jar.baseName("rivalchess")
+
 jar {
     from {
         configurations.compile.collect {
