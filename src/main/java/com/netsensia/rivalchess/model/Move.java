@@ -7,11 +7,10 @@ public class Move {
     protected int m_tgtXFile;
     protected int m_tgtYRank;
 
-    protected char m_promotedPieceCode;
+    protected String m_promotedPieceCode = "";
 
     public Move(Square srcBoardRef, Square tgtBoardRef) {
         this(srcBoardRef.getXFile(), srcBoardRef.getYRank(), tgtBoardRef.getXFile(), tgtBoardRef.getYRank());
-        this.m_promotedPieceCode = '#';
     }
 
     public Move(int srcXFile, int srcYRank, int tgtXFile, int tgtYRank) {
@@ -50,17 +49,31 @@ public class Move {
         this.m_tgtYRank = tgtYRank;
     }
 
-    public void setPromotedPieceCode(char promotedPieceCode) {
+    public void setPromotedPieceCode(String promotedPieceCode) {
         this.m_promotedPieceCode = promotedPieceCode;
     }
 
-    public char getPromotedPieceCode() {
+    public String getPromotedPieceCode() {
         return this.m_promotedPieceCode;
     }
 
     @Override
     public String toString() {
-        return this.getSrcBoardRef().getAlgebraic(Board.DEFAULT_BOARD_NUM_RANKS) + "-" + this.getTgtBoardRef().getAlgebraic(Board.DEFAULT_BOARD_NUM_RANKS);
+        return
+                this.getSrcBoardRef().getAlgebraic(Board.DEFAULT_BOARD_NUM_RANKS) + "-" +
+                        this.getTgtBoardRef().getAlgebraic(Board.DEFAULT_BOARD_NUM_RANKS) +
+                        this.m_promotedPieceCode == " " ? "" : this.m_promotedPieceCode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Move) {
+            Move move = (Move) o;
+            return (move.getSrcBoardRef().equals(this.getSrcBoardRef())
+                    && move.getTgtBoardRef().equals(this.getTgtBoardRef())
+                    && move.getPromotedPieceCode() == this.getPromotedPieceCode());
+            }
+        return false;
     }
 
 }

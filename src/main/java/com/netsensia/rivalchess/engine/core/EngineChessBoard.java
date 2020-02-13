@@ -1136,6 +1136,7 @@ public final class EngineChessBoard {
                     fen.append(spaces);
                     spaces = '0';
                 }
+
                 if (i > 0) {
                     fen.append('/');
                 }
@@ -1179,6 +1180,10 @@ public final class EngineChessBoard {
             fen.append('-');
         }
 
+        fen.append(' ');
+        fen.append(getHalfMoveCount());
+        fen.append(' ');
+        fen.append(m_movesMade / 2 + 1);
         return fen.toString();
     }
 

@@ -2,6 +2,8 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.exception.IllegalMoveException;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.Move;
 
@@ -34,19 +36,19 @@ public class ChessBoardConversion
 		switch (promotionPieceCode)
 		{
 			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN :
-				moveRef.setPromotedPieceCode(to >= 56 ? 'Q' : 'q');
+				moveRef.setPromotedPieceCode(to >= 56 ? "Q" : "q");
 				break;
 			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK : 
-				moveRef.setPromotedPieceCode(to >= 56 ? 'R' : 'r');
+				moveRef.setPromotedPieceCode(to >= 56 ? "R" : "r");
 				break;
 			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT : 
-				moveRef.setPromotedPieceCode(to >= 56 ? 'N' : 'n');
+				moveRef.setPromotedPieceCode(to >= 56 ? "N" : "n");
 				break;
 			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP : 
-				moveRef.setPromotedPieceCode(to >= 56 ? 'B' : 'b');
+				moveRef.setPromotedPieceCode(to >= 56 ? "B" : "b");
 				break;
 			default:
-				moveRef.setPromotedPieceCode('#');
+				moveRef.setPromotedPieceCode("");
 				break;
 		}
 		
@@ -63,9 +65,9 @@ public class ChessBoardConversion
 		int to = compactMove & 63;
 		
 		Move move = getMoveRefFromEngineMove(compactMove);
-		char pp = move.getPromotedPieceCode();
+		String pp = move.getPromotedPieceCode();
 		
-		return getSimpleAlgebraicFromBitRef(from) + getSimpleAlgebraicFromBitRef(to) + (pp == '#' || pp == ' ' ? "" : pp); 
+		return getSimpleAlgebraicFromBitRef(from) + getSimpleAlgebraicFromBitRef(to) + pp;
 	}
 
 	public static String getSimpleAlgebraicFromBitRef(int bitRef)
@@ -77,8 +79,12 @@ public class ChessBoardConversion
 		return "" + a + ((7-boardRef.getYRank()) + 1);
 	}
 
-	public static String getPGNMoveFromCompactMove(int move, EngineChessBoard board)
-	{
+	public static String getPgnMoveFromCompactMove(int move, String fen)
+			throws IllegalFenException, IllegalMoveException {
+
+		EngineChessBoard board = new EngineChessBoard();
+		board.setBoard(FenUtils.getBoardModel(fen));
+
 		String pgnMove = "";
 		int to = move & 63;
 		int from = (move >>> 16) & 63;
@@ -90,7 +96,10 @@ public class ChessBoardConversion
 			case RivalConstants.WK : pgnMove = "K"; break;  
 			case RivalConstants.WQ : pgnMove = "Q"; break;  
 			case RivalConstants.WB : pgnMove = "B"; break;  
-			case RivalConstants.WR : pgnMove = "R"; break;  
+			case RivalConstants.WR : pgnMove = "R"; break;
+			case RivalConstants.WP : break;
+			default:
+				throw new IllegalMoveException("No piece found on source square");
 		}
 		
 		char qualifier = ' ';

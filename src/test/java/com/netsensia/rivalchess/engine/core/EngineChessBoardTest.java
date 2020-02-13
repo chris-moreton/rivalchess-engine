@@ -266,4 +266,46 @@ public class EngineChessBoardTest {
                 engineChessBoard.getWhitePieceValues());
 
     }
+
+    @Test
+    public void getFen() throws IllegalFenException {
+        EngineChessBoard engineChessBoard = new EngineChessBoard();
+
+        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        assertEquals(RivalConstants.FEN_START_POS, engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e2e4"));
+        assertEquals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d7d6"));
+        assertEquals("rnbqkbnr/ppp1pppp/3p4/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g1f3"));
+        assertEquals("rnbqkbnr/ppp1pppp/3p4/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e7e5"));
+        assertEquals("rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq e6 0 3", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("f3e5"));
+        assertEquals("rnbqkbnr/ppp2ppp/3p4/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d6e5"));
+        assertEquals("rnbqkbnr/ppp2ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 0 4", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("c2c4"));
+        assertEquals("rnbqkbnr/ppp2ppp/8/4p3/2P1P3/8/PP1P1PPP/RNBQKB1R b KQkq c3 0 4", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b7b5"));
+        assertEquals("rnbqkbnr/p1p2ppp/8/1p2p3/2P1P3/8/PP1P1PPP/RNBQKB1R w KQkq b6 0 5", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("f1e2"));
+        assertEquals("rnbqkbnr/p1p2ppp/8/1p2p3/2P1P3/8/PP1PBPPP/RNBQK2R b KQkq - 1 5", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b5b4"));
+        assertEquals("rnbqkbnr/p1p2ppp/8/4p3/1pP1P3/8/PP1PBPPP/RNBQK2R w KQkq - 0 6", engineChessBoard.getFen());
+
+        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e1f1"));
+        assertEquals("rnbqkbnr/p1p2ppp/8/4p3/1pP1P3/8/PP1PBPPP/RNBQ1K1R b kq - 1 6", engineChessBoard.getFen());
+    }
+
 }

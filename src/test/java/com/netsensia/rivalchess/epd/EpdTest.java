@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.exception.IllegalMoveException;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.EpdItem;
 import com.netsensia.rivalchess.util.EpdReader;
@@ -13,7 +14,6 @@ import com.netsensia.rivalchess.util.FenUtils;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -54,16 +54,16 @@ public class EpdTest {
     ));
 
     @Test
-    public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
+    public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, IllegalMoveException {
         runEpdSuite("winAtChess.epd", "WAC.001", true);
     }
 
     @Test
-    public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
+    public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, IllegalMoveException {
         runEpdSuite("winAtChess.epd", "WAC.001", false);
     }
 
-    private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException {
+    private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException, IllegalMoveException {
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
@@ -95,20 +95,22 @@ public class EpdTest {
             while (state != SearchState.READY && state != SearchState.COMPLETE);
         }
 
-        final String move = ChessBoardConversion.getPGNMoveFromCompactMove(rivalSearch.getCurrentMove(), engineChessBoard);
+        final String move = ChessBoardConversion.getPgnMoveFromCompactMove(
+                rivalSearch.getCurrentMove(), engineChessBoard.getFen());
 
         System.out.println("Looking for " + move + " in " + epdItem.getBestMoves());
 
         if (expectedToPass) {
             Assert.assertThat(epdItem.getBestMoves(), hasItem(move));
         } else {
-            Assert.assertFalse(epdItem.getBestMoves().contains(ChessBoardConversion.getPGNMoveFromCompactMove(
-                    rivalSearch.getCurrentMove(), engineChessBoard)));
+            Assert.assertFalse(epdItem.getBestMoves().contains(
+                    ChessBoardConversion.getPgnMoveFromCompactMove(
+                        rivalSearch.getCurrentMove(), engineChessBoard.getFen())));
         }
     }
 
     public void runEpdSuite(String filename, String startAtId, boolean expectedToPass)
-            throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
+            throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, IllegalMoveException {
 
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(Objects.requireNonNull(classLoader.getResource("epd/" + filename)).getFile());
@@ -118,7 +120,7 @@ public class EpdTest {
         runEpdSuite(startAtId, epdReader, expectedToPass);
     }
 
-    private void runEpdSuite(String startAtId, EpdReader epdReader, boolean expectedToPass) throws IllegalFenException, InterruptedException {
+    private void runEpdSuite(String startAtId, EpdReader epdReader, boolean expectedToPass) throws IllegalFenException, InterruptedException, IllegalMoveException {
         boolean processTests = false;
 
         for (EpdItem epdItem : epdReader) {
