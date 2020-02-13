@@ -5,10 +5,12 @@ import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.constants.Piece;
+import com.netsensia.rivalchess.engine.core.helper.BoardHash;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 
 import java.util.List;
+import java.util.Random;
 
 public final class EngineChessBoard {
 
@@ -63,6 +65,11 @@ public final class EngineChessBoard {
         initArrays();
     }
 
+    public EngineChessBoard(Board board) {
+        initArrays();
+        setBoard(board);
+    }
+
     public void setBoard(Board board) {
         this.numMovesMade = 0;
         this.halfMoveCount = board.getHalfMoveCount();
@@ -97,16 +104,15 @@ public final class EngineChessBoard {
     }
 
     public long getPawnHashValue() {
-        initHash();
-        return pawnHashValue;
+        return BoardHash.getPawnHash(this);
     }
 
     public long getHashValue() {
-        initHash();
-        return hashValue;
+        return BoardHash.getHash(this);
     }
 
     public SquareOccupant getSquareOccupant(int bitRef) {
+
         return SquareOccupant.fromIndex(squareContents[bitRef]);
     }
 
@@ -114,7 +120,7 @@ public final class EngineChessBoard {
         switch (squareContents[bitRef]) {
             case RivalConstants.WP:
             case RivalConstants.BP:
-                 return Piece.PAWN;
+                return Piece.PAWN;
             case RivalConstants.WB:
             case RivalConstants.BB:
                 return Piece.BISHOP;
@@ -947,19 +953,19 @@ public final class EngineChessBoard {
 
     public int getWhitePieceValues() {
         return
-            Long.bitCount(pieceBitboards[SquareOccupant.WN.getIndex()]) * Piece.KNIGHT.getValue() +
-            Long.bitCount(pieceBitboards[SquareOccupant.WR.getIndex()]) * Piece.ROOK.getValue() +
-            Long.bitCount(pieceBitboards[SquareOccupant.WB.getIndex()]) * Piece.BISHOP.getValue() +
-            Long.bitCount(pieceBitboards[SquareOccupant.WQ.getIndex()]) * Piece.QUEEN.getValue();
+                Long.bitCount(pieceBitboards[SquareOccupant.WN.getIndex()]) * Piece.KNIGHT.getValue() +
+                        Long.bitCount(pieceBitboards[SquareOccupant.WR.getIndex()]) * Piece.ROOK.getValue() +
+                        Long.bitCount(pieceBitboards[SquareOccupant.WB.getIndex()]) * Piece.BISHOP.getValue() +
+                        Long.bitCount(pieceBitboards[SquareOccupant.WQ.getIndex()]) * Piece.QUEEN.getValue();
 
     }
 
     public int getBlackPieceValues() {
         return
-            Long.bitCount(pieceBitboards[SquareOccupant.BN.getIndex()]) * Piece.KNIGHT.getValue() +
-            Long.bitCount(pieceBitboards[SquareOccupant.BR.getIndex()]) * Piece.ROOK.getValue() +
-            Long.bitCount(pieceBitboards[SquareOccupant.BB.getIndex()]) * Piece.BISHOP.getValue() +
-            Long.bitCount(pieceBitboards[SquareOccupant.BQ.getIndex()]) * Piece.QUEEN.getValue();
+                Long.bitCount(pieceBitboards[SquareOccupant.BN.getIndex()]) * Piece.KNIGHT.getValue() +
+                        Long.bitCount(pieceBitboards[SquareOccupant.BR.getIndex()]) * Piece.ROOK.getValue() +
+                        Long.bitCount(pieceBitboards[SquareOccupant.BB.getIndex()]) * Piece.BISHOP.getValue() +
+                        Long.bitCount(pieceBitboards[SquareOccupant.BQ.getIndex()]) * Piece.QUEEN.getValue();
 
     }
 
