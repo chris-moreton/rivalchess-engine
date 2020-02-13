@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.constants.Piece;
+import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 
 import java.util.List;
@@ -16,22 +17,22 @@ public final class EngineChessBoard {
 
     private long[] pieceBitboards;
 
-    private int m_castlePrivileges;
-    private boolean m_isWhiteToMove;
-    private byte m_whiteKingSquare;
-    private byte m_blackKingSquare;
-    private int m_movesMade;
+    private int castlePrivileges;
+    private boolean isWhiteToMove;
+    private byte whiteKingSquare;
+    private byte blackKingSquare;
+    private int numMovesMade;
 
     private final byte[] squareContents = new byte[64];
 
-    private boolean m_isOnNullMove = false;
+    private boolean isOnNullMove = false;
 
-    private int[] m_legalMoves;
-    private int m_numLegalMoves;
+    private int[] legalMoves;
+    private int numLegalMoves;
 
-    private MoveDetail[] m_moveList;
+    private MoveDetail[] moveList;
 
-    private int m_halfMoveCount = 0;
+    private int halfMoveCount = 0;
 
     private final static long[][] m_pieceHashValues =
             {
@@ -63,17 +64,17 @@ public final class EngineChessBoard {
     }
 
     public void setBoard(Board board) {
-        this.m_movesMade = 0;
-        this.m_halfMoveCount = board.getHalfMoveCount();
+        this.numMovesMade = 0;
+        this.halfMoveCount = board.getHalfMoveCount();
         setBitboards(board);
         initHash();
     }
 
     private void initArrays() {
         int size = RivalConstants.MAX_TREE_DEPTH + RivalConstants.MAX_GAME_MOVES;
-        this.m_moveList = new MoveDetail[size];
+        this.moveList = new MoveDetail[size];
         for (int i = 0; i < size; i++) {
-            this.m_moveList[i] = new MoveDetail();
+            this.moveList[i] = new MoveDetail();
         }
     }
 
@@ -92,14 +93,16 @@ public final class EngineChessBoard {
             }
         }
 
-        this.hashValue ^= EngineChessBoard.m_moverHashValues[m_isWhiteToMove ? RivalConstants.WHITE : RivalConstants.BLACK];
+        this.hashValue ^= EngineChessBoard.m_moverHashValues[isWhiteToMove ? RivalConstants.WHITE : RivalConstants.BLACK];
     }
 
     public long getPawnHashValue() {
+        initHash();
         return pawnHashValue;
     }
 
     public long getHashValue() {
+        initHash();
         return hashValue;
     }
 
@@ -149,11 +152,11 @@ public final class EngineChessBoard {
         return isCapture;
     }
 
-    public boolean isGameOver() {
+    public boolean isGameOver() throws InvalidMoveException {
         generateLegalMoves();
 
-        for (int i=0; i<m_numLegalMoves; i++) {
-            if (isMoveLegal(m_legalMoves[i])) {
+        for (int i = 0; i< numLegalMoves; i++) {
+            if (isMoveLegal(legalMoves[i])) {
                 return false;
             }
         }
@@ -162,15 +165,15 @@ public final class EngineChessBoard {
     }
 
     public boolean isNonMoverInCheck() {
-        return m_isWhiteToMove ?
-                isSquareAttackedBy(m_blackKingSquare, Colour.WHITE) :
-                isSquareAttackedBy(m_whiteKingSquare, Colour.BLACK);
+        return isWhiteToMove ?
+                isSquareAttackedBy(blackKingSquare, Colour.WHITE) :
+                isSquareAttackedBy(whiteKingSquare, Colour.BLACK);
     }
 
     public boolean isCheck() {
-        return m_isWhiteToMove ?
-                isSquareAttackedBy(m_whiteKingSquare, Colour.BLACK) :
-                isSquareAttackedBy(m_blackKingSquare, Colour.WHITE);
+        return isWhiteToMove ?
+                isSquareAttackedBy(whiteKingSquare, Colour.BLACK) :
+                isSquareAttackedBy(blackKingSquare, Colour.WHITE);
     }
 
     public boolean isSquareAttackedBy(final int attackedSquare, final Colour attacker) {
@@ -213,14 +216,14 @@ public final class EngineChessBoard {
             bitboard ^= (1L << (toSquare = Long.numberOfTrailingZeros(bitboard)));
 
             if (toSquare >= 56 || toSquare <= 7) {
-                this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN);
+                this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN);
                 if (!queenCapturesOnly) {
-                    this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT);
-                    this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK);
-                    this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP);
+                    this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT);
+                    this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK);
+                    this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare | (RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP);
                 }
             } else {
-                this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMoveMask | toSquare;
+                this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare;
             }
         }
     }
@@ -231,7 +234,7 @@ public final class EngineChessBoard {
 
         while (bitboard != 0) {
             bitboard ^= (1L << (toSquare = Long.numberOfTrailingZeros(bitboard)));
-            this.m_legalMoves[this.m_numLegalMoves++] = fromSquareMask | toSquare;
+            this.legalMoves[this.numLegalMoves++] = fromSquareMask | toSquare;
         }
     }
 
@@ -239,31 +242,31 @@ public final class EngineChessBoard {
 
         clearLegalMovesArray();
 
-        generateKnightMoves(this.m_isWhiteToMove ? pieceBitboards[RivalConstants.WN] : pieceBitboards[RivalConstants.BN]);
+        generateKnightMoves(this.isWhiteToMove ? pieceBitboards[RivalConstants.WN] : pieceBitboards[RivalConstants.BN]);
 
-        generateKingMoves(this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare);
+        generateKingMoves(this.isWhiteToMove ? this.whiteKingSquare : this.blackKingSquare);
 
-        generatePawnMoves(this.m_isWhiteToMove ? pieceBitboards[RivalConstants.WP] : pieceBitboards[RivalConstants.BP],
-                this.m_isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
-                this.m_isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture);
+        generatePawnMoves(this.isWhiteToMove ? pieceBitboards[RivalConstants.WP] : pieceBitboards[RivalConstants.BP],
+                this.isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
+                this.isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture);
 
         generateSliderMoves(RivalConstants.WR, RivalConstants.BR, Bitboards.magicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook);
 
         generateSliderMoves(RivalConstants.WB, RivalConstants.BB, Bitboards.magicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop);
 
-        this.m_legalMoves[this.m_numLegalMoves] = 0;
+        this.legalMoves[this.numLegalMoves] = 0;
 
     }
 
     private void clearLegalMovesArray() {
-        this.m_numLegalMoves = 0;
-        this.m_legalMoves[this.m_numLegalMoves] = 0;
+        this.numLegalMoves = 0;
+        this.legalMoves[this.numLegalMoves] = 0;
     }
 
     private void generateSliderMoves(final int whitePieceConstant, final int blackPieceConstant, long[][] magicMovesRook, long[] occupancyMaskRook, long[] magicNumberRook, int[] magicNumberShiftsRook) {
         long rookBitboard;
         rookBitboard =
-                this.m_isWhiteToMove ? pieceBitboards[whitePieceConstant] | pieceBitboards[RivalConstants.WQ]
+                this.isWhiteToMove ? pieceBitboards[whitePieceConstant] | pieceBitboards[RivalConstants.WQ]
                         : pieceBitboards[blackPieceConstant] | pieceBitboards[RivalConstants.BQ];
 
         while (rookBitboard != 0) {
@@ -291,7 +294,7 @@ public final class EngineChessBoard {
     }
 
     private void generateKingMoves(int kingSquare) {
-        if (this.m_isWhiteToMove) {
+        if (this.isWhiteToMove) {
             generateKingMoves(RivalConstants.CASTLEPRIV_WK, Bitboards.WHITEKINGSIDECASTLESQUARES, 3, Colour.BLACK, RivalConstants.CASTLEPRIV_WQ, Bitboards.WHITEQUEENSIDECASTLESQUARES, 4);
         } else {
             generateKingMoves(RivalConstants.CASTLEPRIV_BK, Bitboards.BLACKKINGSIDECASTLESQUARES, 59, Colour.WHITE, RivalConstants.CASTLEPRIV_BQ, Bitboards.BLACKQUEENSIDECASTLESQUARES, 60);
@@ -301,14 +304,14 @@ public final class EngineChessBoard {
     }
 
     private void generateKingMoves(final int castlePriveleges, final long kingSideCastleSquares, int i, Colour opponent, int castleprivWq, long whitequeensidecastlesquares, int i4) {
-        if ((m_castlePrivileges & castlePriveleges) != 0L && (pieceBitboards[RivalConstants.ALL] & kingSideCastleSquares) == 0L) {
+        if ((castlePrivileges & castlePriveleges) != 0L && (pieceBitboards[RivalConstants.ALL] & kingSideCastleSquares) == 0L) {
             if (!isSquareAttackedBy(i, opponent) && !isSquareAttackedBy(i-1, opponent)) {
-                this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i-2;
+                this.legalMoves[this.numLegalMoves++] = (i << 16) | i-2;
             }
         }
-        if ((m_castlePrivileges & castleprivWq) != 0L && (pieceBitboards[RivalConstants.ALL] & whitequeensidecastlesquares) == 0L) {
+        if ((castlePrivileges & castleprivWq) != 0L && (pieceBitboards[RivalConstants.ALL] & whitequeensidecastlesquares) == 0L) {
             if (!isSquareAttackedBy(i, opponent) && !isSquareAttackedBy(i4, opponent)) {
-                this.m_legalMoves[this.m_numLegalMoves++] = (i << 16) | i4+1;
+                this.legalMoves[this.numLegalMoves++] = (i << 16) | i4+1;
             }
         }
     }
@@ -324,7 +327,7 @@ public final class EngineChessBoard {
     private long getBitboardPawnCaptureMoves(int bitRef, List<Long> bitboardMaskCapturePawnMoves, long bitboardPawnMoves) {
         bitboardPawnMoves |= bitboardMaskCapturePawnMoves.get(bitRef) & pieceBitboards[RivalConstants.ENEMY];
 
-        if (this.m_isWhiteToMove) {
+        if (this.isWhiteToMove) {
             if ((pieceBitboards[RivalConstants.ENPASSANTSQUARE] & Bitboards.RANK_6) != 0) {
                 bitboardPawnMoves |= bitboardMaskCapturePawnMoves.get(bitRef) & pieceBitboards[RivalConstants.ENPASSANTSQUARE];
             }
@@ -339,7 +342,7 @@ public final class EngineChessBoard {
     private long getBitboardPawnJumpMoves(long bitboardPawnMoves) {
         long bitboardJumpMoves;
 
-        if (this.m_isWhiteToMove) {
+        if (this.isWhiteToMove) {
             bitboardJumpMoves = bitboardPawnMoves << 8L; // if we can move one, maybe we can move two
             bitboardJumpMoves &= Bitboards.RANK_4; // only counts if move is to fourth rank
         } else {
@@ -358,26 +361,26 @@ public final class EngineChessBoard {
 
         clearLegalMovesArray();
 
-        final int kingSquare = this.m_isWhiteToMove ? this.m_whiteKingSquare : this.m_blackKingSquare;
-        final int enemyKingSquare = this.m_isWhiteToMove ? this.m_blackKingSquare : this.m_whiteKingSquare;
+        final int kingSquare = this.isWhiteToMove ? this.whiteKingSquare : this.blackKingSquare;
+        final int enemyKingSquare = this.isWhiteToMove ? this.blackKingSquare : this.whiteKingSquare;
 
         generateQuiesceKnightMoves(includeChecks,
                 enemyKingSquare,
-                this.m_isWhiteToMove ? pieceBitboards[RivalConstants.WN] : pieceBitboards[RivalConstants.BN]);
+                this.isWhiteToMove ? pieceBitboards[RivalConstants.WN] : pieceBitboards[RivalConstants.BN]);
 
         addMoves(kingSquare << 16, Bitboards.kingMoves.get(kingSquare) & possibleDestinations);
 
         generateQuiescePawnMoves(includeChecks,
-                this.m_isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
-                this.m_isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture,
+                this.isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
+                this.isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture,
                 enemyKingSquare,
-                this.m_isWhiteToMove ? pieceBitboards[RivalConstants.WP] : pieceBitboards[RivalConstants.BP]);
+                this.isWhiteToMove ? pieceBitboards[RivalConstants.WP] : pieceBitboards[RivalConstants.BP]);
 
         generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Bitboards.magicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook, RivalConstants.WR, RivalConstants.BR);
 
         generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Bitboards.magicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop, RivalConstants.WB, RivalConstants.BB);
 
-        this.m_legalMoves[this.m_numLegalMoves] = 0;
+        this.legalMoves[this.numLegalMoves] = 0;
     }
 
     private void generateQuiesceSliderMoves(boolean includeChecks, int enemyKingSquare, long[][] magicMovesRook, long[] occupancyMaskRook, long[] magicNumberRook, int[] magicNumberShiftsRook, final int whiteSliderConstant, final int blackSliderConstant) {
@@ -386,7 +389,7 @@ public final class EngineChessBoard {
         long rookCheckSquares = magicMovesRook[enemyKingSquare][(int) (((pieceBitboards[RivalConstants.ALL] & occupancyMaskRook[enemyKingSquare]) * magicNumberRook[enemyKingSquare]) >>> magicNumberShiftsRook[enemyKingSquare])];
 
         rookBitboard =
-                this.m_isWhiteToMove ? pieceBitboards[whiteSliderConstant] | pieceBitboards[RivalConstants.WQ]
+                this.isWhiteToMove ? pieceBitboards[whiteSliderConstant] | pieceBitboards[RivalConstants.WQ]
                         : pieceBitboards[blackSliderConstant] | pieceBitboards[RivalConstants.BQ];
 
         while (rookBitboard != 0) {
@@ -413,7 +416,7 @@ public final class EngineChessBoard {
 
                 bitboardPawnMoves = getBitboardPawnJumpMoves(bitboardPawnMoves);
 
-                if (this.m_isWhiteToMove) {
+                if (this.isWhiteToMove) {
                     bitboardPawnMoves &= Bitboards.blackPawnMovesCapture.get(enemyKingSquare);
                 } else {
                     bitboardPawnMoves &= Bitboards.whitePawnMovesCapture.get(enemyKingSquare);
@@ -444,12 +447,12 @@ public final class EngineChessBoard {
     }
 
     public void setLegalQuiesceMoves(int[] moveArray, boolean includeChecks) {
-        this.m_legalMoves = moveArray;
+        this.legalMoves = moveArray;
         generateLegalQuiesceMoves(includeChecks);
     }
 
     public void setLegalMoves(int[] moveArray) {
-        this.m_legalMoves = moveArray;
+        this.legalMoves = moveArray;
         generateLegalMoves();
     }
 
@@ -520,12 +523,12 @@ public final class EngineChessBoard {
                     case 'K':
                         squareContents[bitNum] = RivalConstants.WK;
                         pieceIndex = RivalConstants.WK;
-                        this.m_whiteKingSquare = bitNum;
+                        this.whiteKingSquare = bitNum;
                         break;
                     case 'k':
                         squareContents[bitNum] = RivalConstants.BK;
                         pieceIndex = RivalConstants.BK;
-                        this.m_blackKingSquare = bitNum;
+                        this.blackKingSquare = bitNum;
                         break;
                     default:
                         pieceIndex = -1;
@@ -536,7 +539,7 @@ public final class EngineChessBoard {
             }
         }
 
-        this.m_isWhiteToMove = board.isWhiteToMove();
+        this.isWhiteToMove = board.isWhiteToMove();
 
         int ep = board.getEnPassantFile();
         if (ep == -1) {
@@ -549,17 +552,17 @@ public final class EngineChessBoard {
             }
         }
 
-        this.m_castlePrivileges = 0;
-        this.m_castlePrivileges |= (board.isWhiteKingSideCastleAvailable() ? RivalConstants.CASTLEPRIV_WK : 0);
-        this.m_castlePrivileges |= (board.isWhiteQueenSideCastleAvailable() ? RivalConstants.CASTLEPRIV_WQ : 0);
-        this.m_castlePrivileges |= (board.isBlackKingSideCastleAvailable() ? RivalConstants.CASTLEPRIV_BK : 0);
-        this.m_castlePrivileges |= (board.isBlackQueenSideCastleAvailable() ? RivalConstants.CASTLEPRIV_BQ : 0);
+        this.castlePrivileges = 0;
+        this.castlePrivileges |= (board.isWhiteKingSideCastleAvailable() ? RivalConstants.CASTLEPRIV_WK : 0);
+        this.castlePrivileges |= (board.isWhiteQueenSideCastleAvailable() ? RivalConstants.CASTLEPRIV_WQ : 0);
+        this.castlePrivileges |= (board.isBlackKingSideCastleAvailable() ? RivalConstants.CASTLEPRIV_BK : 0);
+        this.castlePrivileges |= (board.isBlackQueenSideCastleAvailable() ? RivalConstants.CASTLEPRIV_BQ : 0);
 
         calculateSupplementaryBitboards();
     }
 
     public void calculateSupplementaryBitboards() {
-        if (this.m_isWhiteToMove) {
+        if (this.isWhiteToMove) {
             pieceBitboards[RivalConstants.FRIENDLY] =
                     pieceBitboards[RivalConstants.WP] | pieceBitboards[RivalConstants.WN] |
                             pieceBitboards[RivalConstants.WB] | pieceBitboards[RivalConstants.WQ] |
@@ -585,11 +588,11 @@ public final class EngineChessBoard {
     }
 
     public boolean isNotOnNullMove() {
-        return !this.m_isOnNullMove;
+        return !this.isOnNullMove;
     }
 
     public void makeNullMove() {
-        this.m_isWhiteToMove = !this.m_isWhiteToMove;
+        this.isWhiteToMove = !this.isWhiteToMove;
 
         long t = this.pieceBitboards[RivalConstants.FRIENDLY];
         this.pieceBitboards[RivalConstants.FRIENDLY] = this.pieceBitboards[RivalConstants.ENEMY];
@@ -597,15 +600,15 @@ public final class EngineChessBoard {
 
         this.hashValue ^= EngineChessBoard.m_hashSwitchMovers;
 
-        this.m_isOnNullMove = true;
+        this.isOnNullMove = true;
     }
 
     public void unMakeNullMove() {
         makeNullMove();
-        this.m_isOnNullMove = false;
+        this.isOnNullMove = false;
     }
 
-    public boolean makeMove(int compactMove) {
+    public boolean makeMove(int compactMove) throws InvalidMoveException {
         final byte moveFrom = (byte) (compactMove >>> 16);
         final byte moveTo = (byte) (compactMove & 63);
 
@@ -615,22 +618,22 @@ public final class EngineChessBoard {
         final int capturePiece = this.squareContents[moveTo];
         final int movePiece = this.squareContents[moveFrom];
 
-        this.m_moveList[this.m_movesMade].capturePiece = -1;
-        this.m_moveList[this.m_movesMade].move = compactMove;
-        this.m_moveList[this.m_movesMade].hashValue = this.hashValue;
-        this.m_moveList[this.m_movesMade].isOnNullMove = this.m_isOnNullMove;
-        this.m_moveList[this.m_movesMade].pawnHashValue = this.pawnHashValue;
-        this.m_moveList[this.m_movesMade].halfMoveCount = (byte) this.m_halfMoveCount;
-        this.m_moveList[this.m_movesMade].enPassantBitboard = this.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
-        this.m_moveList[this.m_movesMade].castlePrivileges = (byte) this.m_castlePrivileges;
+        this.moveList[this.numMovesMade].capturePiece = -1;
+        this.moveList[this.numMovesMade].move = compactMove;
+        this.moveList[this.numMovesMade].hashValue = this.hashValue;
+        this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
+        this.moveList[this.numMovesMade].pawnHashValue = this.pawnHashValue;
+        this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
+        this.moveList[this.numMovesMade].enPassantBitboard = this.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
+        this.moveList[this.numMovesMade].castlePrivileges = (byte) this.castlePrivileges;
 
-        this.m_isOnNullMove = false;
+        this.isOnNullMove = false;
 
-        this.m_halfMoveCount++;
+        this.halfMoveCount++;
 
         this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 0;
 
-        this.m_moveList[this.m_movesMade].movePiece = (byte) movePiece;
+        this.moveList[this.numMovesMade].movePiece = (byte) movePiece;
         this.pieceBitboards[movePiece] ^= fromMask | toMask;
 
         this.squareContents[moveFrom] = -1;
@@ -638,18 +641,18 @@ public final class EngineChessBoard {
 
         this.hashValue ^= EngineChessBoard.m_pieceHashValues[movePiece][moveFrom] ^ EngineChessBoard.m_pieceHashValues[movePiece][moveTo];
 
-        if (this.m_isWhiteToMove) {
+        if (this.isWhiteToMove) {
             if (movePiece == RivalConstants.WP) {
-                this.m_halfMoveCount = 0;
+                this.halfMoveCount = 0;
                 this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveFrom] ^ EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
 
                 if ((toMask & Bitboards.RANK_4) != 0 && (fromMask & Bitboards.RANK_2) != 0) {
                     this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = fromMask << 8L;
-                } else if (toMask == this.m_moveList[this.m_movesMade].enPassantBitboard) {
+                } else if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
                     this.pieceBitboards[RivalConstants.BP] ^= toMask >>> 8;
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo - 8];
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo - 8];
-                    this.m_moveList[this.m_movesMade].capturePiece = RivalConstants.BP;
+                    this.moveList[this.numMovesMade].capturePiece = RivalConstants.BP;
                     this.squareContents[moveTo - 8] = -1;
                 } else if ((compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) != 0) {
                     switch (compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
@@ -673,17 +676,20 @@ public final class EngineChessBoard {
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WB][moveTo];
                             this.squareContents[moveTo] = RivalConstants.WB;
                             break;
+                        default:
+                            throw new InvalidMoveException(
+                                    "compactMove " + compactMove + " produced invalid promotion piece");
                     }
                     this.pieceBitboards[RivalConstants.WP] ^= toMask;
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo];
                 }
             } else if (movePiece == RivalConstants.WR) {
-                if (moveFrom == Bitboards.A1) this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_WQ;
-                else if (moveFrom == Bitboards.H1) this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_WK;
+                if (moveFrom == Bitboards.A1) this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_WQ;
+                else if (moveFrom == Bitboards.H1) this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_WK;
             } else if (movePiece == RivalConstants.WK) {
-                this.m_whiteKingSquare = moveTo;
-                this.m_castlePrivileges &= RivalConstants.CASTLEPRIV_WNONE;
+                this.whiteKingSquare = moveTo;
+                this.castlePrivileges &= RivalConstants.CASTLEPRIV_WNONE;
                 if ((toMask | fromMask) == Bitboards.WHITEKINGSIDECASTLEMOVEMASK) {
                     this.pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEKINGSIDECASTLEROOKMOVE;
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WR][Bitboards.H1] ^ EngineChessBoard.m_pieceHashValues[RivalConstants.WR][Bitboards.F1];
@@ -699,8 +705,8 @@ public final class EngineChessBoard {
             }
 
             if (capturePiece >= RivalConstants.BP) {
-                this.m_moveList[this.m_movesMade].capturePiece = (byte) capturePiece;
-                this.m_halfMoveCount = 0;
+                this.moveList[this.numMovesMade].capturePiece = (byte) capturePiece;
+                this.halfMoveCount = 0;
                 this.pieceBitboards[capturePiece] ^= toMask;
                 this.hashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
 
@@ -709,24 +715,24 @@ public final class EngineChessBoard {
                 } else {
                     if (capturePiece == RivalConstants.BR) {
                         if (toMask == Bitboards.BLACKKINGSIDEROOKMASK)
-                            this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_BK;
+                            this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_BK;
                         else if (toMask == Bitboards.BLACKQUEENSIDEROOKMASK)
-                            this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_BQ;
+                            this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_BQ;
                     }
                 }
             }
         } else {
             if (movePiece == RivalConstants.BP) {
-                this.m_halfMoveCount = 0;
+                this.halfMoveCount = 0;
                 this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveFrom] ^ EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo];
 
                 if ((toMask & Bitboards.RANK_5) != 0 && (fromMask & Bitboards.RANK_7) != 0) {
                     this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = toMask << 8L;
-                } else if (toMask == this.m_moveList[this.m_movesMade].enPassantBitboard) {
+                } else if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
                     this.pieceBitboards[RivalConstants.WP] ^= toMask << 8;
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo + 8];
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.WP][moveTo + 8];
-                    this.m_moveList[this.m_movesMade].capturePiece = RivalConstants.WP;
+                    this.moveList[this.numMovesMade].capturePiece = RivalConstants.WP;
                     this.squareContents[moveTo + 8] = -1;
                 } else if ((compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) != 0) {
                     switch (compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
@@ -750,17 +756,19 @@ public final class EngineChessBoard {
                             this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BB][moveTo];
                             this.squareContents[moveTo] = RivalConstants.BB;
                             break;
+                        default: throw new InvalidMoveException(
+                                "compactMove " + compactMove + " produced invalid promotion piece");
                     }
                     this.pieceBitboards[RivalConstants.BP] ^= toMask;
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo];
                     this.pawnHashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BP][moveTo];
                 }
             } else if (movePiece == RivalConstants.BR) {
-                if (moveFrom == Bitboards.A8) this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_BQ;
-                else if (moveFrom == Bitboards.H8) this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_BK;
+                if (moveFrom == Bitboards.A8) this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_BQ;
+                else if (moveFrom == Bitboards.H8) this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_BK;
             } else if (movePiece == RivalConstants.BK) {
-                this.m_castlePrivileges &= RivalConstants.CASTLEPRIV_BNONE;
-                this.m_blackKingSquare = moveTo;
+                this.castlePrivileges &= RivalConstants.CASTLEPRIV_BNONE;
+                this.blackKingSquare = moveTo;
                 if ((toMask | fromMask) == Bitboards.BLACKKINGSIDECASTLEMOVEMASK) {
                     this.pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKKINGSIDECASTLEROOKMOVE;
                     this.hashValue ^= EngineChessBoard.m_pieceHashValues[RivalConstants.BR][Bitboards.H8] ^ EngineChessBoard.m_pieceHashValues[RivalConstants.BR][Bitboards.F8];
@@ -775,9 +783,9 @@ public final class EngineChessBoard {
             }
 
             if (capturePiece != -1) {
-                this.m_moveList[this.m_movesMade].capturePiece = (byte) capturePiece;
+                this.moveList[this.numMovesMade].capturePiece = (byte) capturePiece;
 
-                this.m_halfMoveCount = 0;
+                this.halfMoveCount = 0;
                 this.pieceBitboards[capturePiece] ^= toMask;
                 this.hashValue ^= EngineChessBoard.m_pieceHashValues[capturePiece][moveTo];
                 if (capturePiece == RivalConstants.WP) {
@@ -785,17 +793,17 @@ public final class EngineChessBoard {
                 } else {
                     if (capturePiece == RivalConstants.WR) {
                         if (toMask == Bitboards.WHITEKINGSIDEROOKMASK)
-                            this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_WK;
+                            this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_WK;
                         else if (toMask == Bitboards.WHITEQUEENSIDEROOKMASK)
-                            this.m_castlePrivileges &= ~RivalConstants.CASTLEPRIV_WQ;
+                            this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_WQ;
                     }
                 }
             }
         }
 
-        this.m_isWhiteToMove = !this.m_isWhiteToMove;
+        this.isWhiteToMove = !this.isWhiteToMove;
         this.hashValue ^= m_hashSwitchMovers;
-        this.m_movesMade++;
+        this.numMovesMade++;
 
         calculateSupplementaryBitboards();
 
@@ -807,38 +815,36 @@ public final class EngineChessBoard {
         }
     }
 
-    public void unMakeMove() {
-        this.m_movesMade--;
+    public void unMakeMove() throws InvalidMoveException {
+        this.numMovesMade--;
 
-        this.m_halfMoveCount = this.m_moveList[this.m_movesMade].halfMoveCount;
-        this.m_isWhiteToMove = !this.m_isWhiteToMove;
-        this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = this.m_moveList[this.m_movesMade].enPassantBitboard;
-        this.m_castlePrivileges = this.m_moveList[this.m_movesMade].castlePrivileges;
-        this.hashValue = this.m_moveList[this.m_movesMade].hashValue;
-        this.pawnHashValue = this.m_moveList[this.m_movesMade].pawnHashValue;
-        this.m_isOnNullMove = this.m_moveList[this.m_movesMade].isOnNullMove;
+        this.halfMoveCount = this.moveList[this.numMovesMade].halfMoveCount;
+        this.isWhiteToMove = !this.isWhiteToMove;
+        this.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = this.moveList[this.numMovesMade].enPassantBitboard;
+        this.castlePrivileges = this.moveList[this.numMovesMade].castlePrivileges;
+        this.hashValue = this.moveList[this.numMovesMade].hashValue;
+        this.pawnHashValue = this.moveList[this.numMovesMade].pawnHashValue;
+        this.isOnNullMove = this.moveList[this.numMovesMade].isOnNullMove;
 
-        final int fromSquare = (this.m_moveList[this.m_movesMade].move >>> 16) & 63;
-        final int toSquare = this.m_moveList[this.m_movesMade].move & 63;
-        final int flippedFromSquare = Bitboards.bitFlippedHorizontalAxis.get(fromSquare);
-        final int flippedToSquare = Bitboards.bitFlippedHorizontalAxis.get(toSquare);
+        final int fromSquare = (this.moveList[this.numMovesMade].move >>> 16) & 63;
+        final int toSquare = this.moveList[this.numMovesMade].move & 63;
         final long fromMask = (1L << fromSquare);
         final long toMask = (1L << toSquare);
 
-        this.squareContents[fromSquare] = this.m_moveList[this.m_movesMade].movePiece;
+        this.squareContents[fromSquare] = this.moveList[this.numMovesMade].movePiece;
         this.squareContents[toSquare] = -1;
 
         // deal with en passants first, they are special moves and capture moves, so just get them out of the way
-        if (!unMakeEnPassants(fromSquare, toSquare, flippedFromSquare, flippedToSquare, fromMask, toMask)) {
+        if (!unMakeEnPassants(toSquare, fromMask, toMask)) {
 
             // put capture piece back on toSquare, we don't get here if an en passant has just been unmade
             replaceCapturedPiece(toSquare, toMask);
 
             // for promotions, remove promotion piece from toSquare
-            if (!removePromotionPiece(fromSquare, toSquare, flippedFromSquare, flippedToSquare, fromMask, toMask)) {
+            if (!removePromotionPiece(fromMask, toMask)) {
 
                 // now that promotions are out of the way, we can remove the moving piece from toSquare and put it back on fromSquare
-                final byte movePiece = replaceMovedPiece(fromSquare, toSquare, fromMask, toMask);
+                final byte movePiece = replaceMovedPiece(fromSquare, fromMask, toMask);
 
                 // for castles, replace the rook
                 replaceCastledRook(fromMask, toMask, movePiece);
@@ -848,11 +854,11 @@ public final class EngineChessBoard {
         calculateSupplementaryBitboards();
     }
 
-    private byte replaceMovedPiece(int fromSquare, int toSquare, long fromMask, long toMask) {
-        final byte movePiece = this.m_moveList[this.m_movesMade].movePiece;
+    private byte replaceMovedPiece(int fromSquare, long fromMask, long toMask) {
+        final byte movePiece = this.moveList[this.numMovesMade].movePiece;
         this.pieceBitboards[movePiece] ^= toMask | fromMask;
-        if (movePiece == RivalConstants.WK) this.m_whiteKingSquare = (byte) fromSquare;
-        else if (movePiece == RivalConstants.BK) this.m_blackKingSquare = (byte) fromSquare;
+        if (movePiece == RivalConstants.WK) this.whiteKingSquare = (byte) fromSquare;
+        else if (movePiece == RivalConstants.BK) this.blackKingSquare = (byte) fromSquare;
 
         return movePiece;
     }
@@ -884,11 +890,10 @@ public final class EngineChessBoard {
         }
     }
 
-    private boolean removePromotionPiece(int fromSquare, int toSquare, int flippedFromSquare, int flippedToSquare, long fromMask, long toMask) {
-        boolean done;
-        final int promotionPiece = this.m_moveList[this.m_movesMade].move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
+    private boolean removePromotionPiece(long fromMask, long toMask) throws InvalidMoveException {
+        final int promotionPiece = this.moveList[this.numMovesMade].move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
         if (promotionPiece != 0) {
-            if (this.m_isWhiteToMove) {
+            if (this.isWhiteToMove) {
                 this.pieceBitboards[RivalConstants.WP] ^= fromMask;
 
                 switch (promotionPiece) {
@@ -908,6 +913,8 @@ public final class EngineChessBoard {
 
                         this.pieceBitboards[RivalConstants.WR] ^= toMask;
                         break;
+                    default:
+                        throw new InvalidMoveException("Illegal promotion piece " + promotionPiece);
                 }
             } else {
                 this.pieceBitboards[RivalConstants.BP] ^= fromMask;
@@ -929,6 +936,8 @@ public final class EngineChessBoard {
 
                         this.pieceBitboards[RivalConstants.BR] ^= toMask;
                         break;
+                    default:
+                        throw new InvalidMoveException("Invalid promotionPiece " + promotionPiece);
                 }
             }
             return true;
@@ -964,7 +973,7 @@ public final class EngineChessBoard {
     }
 
     private void replaceCapturedPiece(int toSquare, long toMask) {
-        final byte capturePiece = this.m_moveList[this.m_movesMade].capturePiece;
+        final byte capturePiece = this.moveList[this.numMovesMade].capturePiece;
         if (capturePiece != -1) {
             this.squareContents[toSquare] = capturePiece;
 
@@ -972,16 +981,16 @@ public final class EngineChessBoard {
         }
     }
 
-    private boolean unMakeEnPassants(int fromSquare, int toSquare, int flippedFromSquare, int flippedToSquare, long fromMask, long toMask) {
-        if (toMask == this.m_moveList[this.m_movesMade].enPassantBitboard) {
-            if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.WP) {
+    private boolean unMakeEnPassants(int toSquare, long fromMask, long toMask) {
+        if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
+            if (this.moveList[this.numMovesMade].movePiece == RivalConstants.WP) {
                 this.pieceBitboards[RivalConstants.WP] ^= toMask | fromMask;
                 this.pieceBitboards[RivalConstants.BP] ^= toMask >>> 8;
                 this.squareContents[toSquare - 8] = RivalConstants.BP;
 
 
                 return true;
-            } else if (this.m_moveList[this.m_movesMade].movePiece == RivalConstants.BP) {
+            } else if (this.moveList[this.numMovesMade].movePiece == RivalConstants.BP) {
                 this.pieceBitboards[RivalConstants.BP] ^= toMask | fromMask;
                 this.pieceBitboards[RivalConstants.WP] ^= toMask << 8;
                 this.squareContents[toSquare + 8] = RivalConstants.WP;
@@ -994,22 +1003,22 @@ public final class EngineChessBoard {
     }
 
     public int lastCapturePiece() {
-        return this.m_moveList[this.m_movesMade - 1].capturePiece;
+        return this.moveList[this.numMovesMade - 1].capturePiece;
     }
 
     public boolean wasCapture() {
-        return this.m_moveList[this.m_movesMade - 1].capturePiece == -1;
+        return this.moveList[this.numMovesMade - 1].capturePiece == -1;
     }
 
     public boolean wasPawnPush() {
-        int toSquare = this.m_moveList[this.m_movesMade - 1].move & 63;
-        int movePiece = this.m_moveList[this.m_movesMade - 1].movePiece;
+        int toSquare = this.moveList[this.numMovesMade - 1].move & 63;
+        int movePiece = this.moveList[this.numMovesMade - 1].movePiece;
 
         if (movePiece % 6 != RivalConstants.WP) return false;
 
         if (toSquare >= 48 || toSquare <= 15) return true;
 
-        if (!m_isWhiteToMove) // white made the last move
+        if (!isWhiteToMove) // white made the last move
         {
             if (toSquare >= 40)
                 return (Long.bitCount(Bitboards.whitePassedPawnMask.get(toSquare) & pieceBitboards[RivalConstants.BP]) == 0);
@@ -1074,11 +1083,11 @@ public final class EngineChessBoard {
     }
 
     public int getWhiteKingSquare() {
-        return m_whiteKingSquare;
+        return whiteKingSquare;
     }
 
     public int getBlackKingSquare() {
-        return m_blackKingSquare;
+        return blackKingSquare;
     }
 
     public long getBitboardByIndex(int index) {
@@ -1086,29 +1095,29 @@ public final class EngineChessBoard {
     }
 
     public int getHalfMoveCount() {
-        return m_halfMoveCount;
+        return halfMoveCount;
     }
 
     public int getCastlePrivileges() {
-        return m_castlePrivileges;
+        return castlePrivileges;
     }
 
     public Colour getMover() {
-        return m_isWhiteToMove ? Colour.WHITE : Colour.BLACK;
+        return isWhiteToMove ? Colour.WHITE : Colour.BLACK;
     }
 
     public int getNumLegalMoves() {
-        return m_numLegalMoves;
+        return numLegalMoves;
     }
 
     public int getLegalMoveByIndex(int index) {
-        return m_legalMoves[index];
+        return legalMoves[index];
     }
 
     public int previousOccurrencesOfThisPosition() {
         int occurrences = 0;
-        for (int i = this.m_movesMade - 2; i >= 0 && i >= this.m_movesMade - this.m_halfMoveCount; i -= 2) {
-            if (this.m_moveList[i].hashValue == this.hashValue) {
+        for (int i = this.numMovesMade - 2; i >= 0 && i >= this.numMovesMade - this.halfMoveCount; i -= 2) {
+            if (this.moveList[i].hashValue == this.hashValue) {
                 occurrences++;
             }
         }
@@ -1117,51 +1126,28 @@ public final class EngineChessBoard {
     }
 
     public String getFen() {
-        StringBuilder fen = new StringBuilder();
-        char[] board = getCharBoard();
 
-        char spaces = '0';
-        for (int i = 63; i >= 0; i--) {
-            if (board[i] == 0) {
-                spaces++;
-            } else {
-                if (spaces > '0') {
-                    fen.append(spaces);
-                    spaces = '0';
-                }
-                fen.append(board[i]);
-            }
-            if (i % 8 == 0) {
-                if (spaces > '0') {
-                    fen.append(spaces);
-                    spaces = '0';
-                }
-
-                if (i > 0) {
-                    fen.append('/');
-                }
-            }
-        }
+        StringBuilder fen = getFenBoard();
 
         fen.append(' ');
-        fen.append(m_isWhiteToMove ? 'w' : 'b');
+        fen.append(isWhiteToMove ? 'w' : 'b');
         fen.append(' ');
 
         boolean noPrivs = true;
 
-        if ((m_castlePrivileges & RivalConstants.CASTLEPRIV_WK) != 0) {
+        if ((castlePrivileges & RivalConstants.CASTLEPRIV_WK) != 0) {
             fen.append('K');
             noPrivs = false;
         }
-        if ((m_castlePrivileges & RivalConstants.CASTLEPRIV_WQ) != 0) {
+        if ((castlePrivileges & RivalConstants.CASTLEPRIV_WQ) != 0) {
             fen.append('Q');
             noPrivs = false;
         }
-        if ((m_castlePrivileges & RivalConstants.CASTLEPRIV_BK) != 0) {
+        if ((castlePrivileges & RivalConstants.CASTLEPRIV_BK) != 0) {
             fen.append('k');
             noPrivs = false;
         }
-        if ((m_castlePrivileges & RivalConstants.CASTLEPRIV_BQ) != 0) {
+        if ((castlePrivileges & RivalConstants.CASTLEPRIV_BQ) != 0) {
             fen.append('q');
             noPrivs = false;
         }
@@ -1183,8 +1169,41 @@ public final class EngineChessBoard {
         fen.append(' ');
         fen.append(getHalfMoveCount());
         fen.append(' ');
-        fen.append(m_movesMade / 2 + 1);
+        fen.append(numMovesMade / 2 + 1);
         return fen.toString();
+    }
+
+    private StringBuilder getFenBoard() {
+
+        char[] board = getCharBoard();
+        StringBuilder fen = new StringBuilder();
+
+        char spaces = '0';
+        for (int i = 63; i >= 0; i--) {
+
+            if (board[i] == 0) {
+                spaces++;
+            } else {
+                if (spaces > '0') {
+                    fen.append(spaces);
+                    spaces = '0';
+                }
+                fen.append(board[i]);
+            }
+
+            if (i % 8 == 0) {
+                if (spaces > '0') {
+                    fen.append(spaces);
+                    spaces = '0';
+                }
+
+                if (i > 0) {
+                    fen.append('/');
+                }
+            }
+        }
+
+        return fen;
     }
 
     private char[] getCharBoard() {
@@ -1200,7 +1219,7 @@ public final class EngineChessBoard {
         return board;
     }
 
-    public boolean isMoveLegal(int moveToVerify) {
+    public boolean isMoveLegal(int moveToVerify) throws InvalidMoveException {
         moveToVerify &= 0x00FFFFFF;
         int[] moves = new int[RivalConstants.MAX_GAME_MOVES];
         this.setLegalMoves(moves);

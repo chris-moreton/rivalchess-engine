@@ -9,6 +9,7 @@ import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.exception.IllegalSearchStateException;
+import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.uci.EngineMonitor;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.Numbers;
@@ -399,7 +400,7 @@ public final class RivalSearch implements Runnable {
     private final int[] indexOfFirstAttackerInDirection = new int[8];
     private final int[] captureList = new int[32];
 
-    final public int staticExchangeEvaluation(EngineChessBoard board, int move) {
+    final public int staticExchangeEvaluation(EngineChessBoard board, int move) throws InvalidMoveException {
         final int toSquare = move & 63;
 
         captureList[0] =
@@ -1183,7 +1184,7 @@ public final class RivalSearch implements Runnable {
         }
     }
 
-    private int[] scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) {
+    private int[] scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
 
         int moveCount = 0;
 
@@ -1209,7 +1210,7 @@ public final class RivalSearch implements Runnable {
         return movesForSorting;
     }
 
-    private int getScore(EngineChessBoard board, int move, boolean includeChecks, boolean isCapture) {
+    private int getScore(EngineChessBoard board, int move, boolean includeChecks, boolean isCapture) throws InvalidMoveException {
         int score = 0;
 
         final int promotionMask = (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
@@ -1231,7 +1232,7 @@ public final class RivalSearch implements Runnable {
 
     final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
 
-    private int getHighScoreMove(EngineChessBoard board, int ply, int hashMove) {
+    private int getHighScoreMove(EngineChessBoard board, int ply, int hashMove) throws InvalidMoveException {
         if (moveOrderStatus[ply] == MoveOrder.NONE && hashMove != 0) {
             for (int c = 0; orderedMoves[ply][c] != 0; c++) {
                 if (orderedMoves[ply][c] == hashMove) {
@@ -1283,7 +1284,7 @@ public final class RivalSearch implements Runnable {
         return bestMove & 0x00FFFFFF;
     }
 
-    public SearchPath quiesce(EngineChessBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) {
+    public SearchPath quiesce(EngineChessBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) throws InvalidMoveException {
         setNodes(getNodes() + 1);
 
         SearchPath newPath;
@@ -1363,7 +1364,7 @@ public final class RivalSearch implements Runnable {
         }
     }
 
-    private int scoreFullWidthCaptures(EngineChessBoard board, int ply) {
+    private int scoreFullWidthCaptures(EngineChessBoard board, int ply) throws InvalidMoveException {
         int i, score;
         int count = 0;
 
@@ -1511,7 +1512,7 @@ public final class RivalSearch implements Runnable {
 
     final SearchPath zugPath = new SearchPath();
 
-    public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, int recaptureSquare, boolean isCheck) {
+    public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, int recaptureSquare, boolean isCheck) throws InvalidMoveException {
 
         nodes++;
 
@@ -1925,7 +1926,7 @@ public final class RivalSearch implements Runnable {
         }
     }
 
-    public SearchPath searchZero(EngineChessBoard board, byte depth, int ply, int low, int high) {
+    public SearchPath searchZero(EngineChessBoard board, byte depth, int ply, int low, int high) throws InvalidMoveException {
 
         setNodes(getNodes() + 1);
 

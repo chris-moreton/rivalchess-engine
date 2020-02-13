@@ -12,6 +12,7 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -249,14 +250,14 @@ public class UCIController implements Runnable {
 
                 playMovesFromPosition(parts);
 
-            } catch (IllegalFenException e) {
+            } catch (IllegalFenException | InvalidMoveException e) {
                 this.printStream.println("Illegal fen");
             }
 
         }
     }
 
-    private void playMovesFromPosition(String[] parts) {
+    private void playMovesFromPosition(String[] parts) throws InvalidMoveException {
         final int l = parts.length;
 
         if (l > 2) {
@@ -318,7 +319,7 @@ public class UCIController implements Runnable {
         while (state != SearchState.READY && state != SearchState.COMPLETE);
     }
 
-    public static long getPerft(EngineChessBoard board, int depth) {
+    public static long getPerft(EngineChessBoard board, int depth) throws InvalidMoveException {
         if (depth == 0) return 1;
         long nodes = 0;
         int moveNum = 0;

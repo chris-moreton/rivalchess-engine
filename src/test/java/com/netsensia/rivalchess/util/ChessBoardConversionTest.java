@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.exception.IllegalMoveException;
+import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.Square;
 import org.junit.Test;
@@ -67,7 +67,7 @@ public class ChessBoardConversionTest {
     }
 
     @Test
-    public void getPgnMoveFromCompactMove() throws IllegalFenException, IllegalMoveException {
+    public void getPgnMoveFromCompactMove() throws IllegalFenException, InvalidMoveException {
         assertEquals("e4",
                 ChessBoardConversion.getPgnMoveFromCompactMove(720923, RivalConstants.FEN_START_POS));
         assertEquals("Nf3",
@@ -77,8 +77,8 @@ public class ChessBoardConversionTest {
                         3473726, "rnbqkb1r/ppP1pppp/21p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq -"));
     }
 
-    @Test(expected = IllegalMoveException.class)
-    public void getPgnMoveFromCompactMoveIllegalMoveException() throws IllegalFenException, IllegalMoveException {
+    @Test(expected = InvalidMoveException.class)
+    public void getPgnMoveFromCompactMoveIllegalMoveException() throws IllegalFenException, InvalidMoveException {
         assertEquals("Nf3",
                 ChessBoardConversion.getPgnMoveFromCompactMove(1835044, RivalConstants.FEN_START_POS));
     }

@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.util;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.exception.IllegalMoveException;
+import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.Move;
 
@@ -80,7 +80,7 @@ public class ChessBoardConversion
 	}
 
 	public static String getPgnMoveFromCompactMove(int move, String fen)
-			throws IllegalFenException, IllegalMoveException {
+			throws IllegalFenException, InvalidMoveException {
 
 		EngineChessBoard board = new EngineChessBoard();
 		board.setBoard(FenUtils.getBoardModel(fen));
@@ -99,7 +99,7 @@ public class ChessBoardConversion
 			case RivalConstants.WR : pgnMove = "R"; break;
 			case RivalConstants.WP : break;
 			default:
-				throw new IllegalMoveException("No piece found on source square");
+				throw new InvalidMoveException("No piece found on source square");
 		}
 		
 		char qualifier = ' ';

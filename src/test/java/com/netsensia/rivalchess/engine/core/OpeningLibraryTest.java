@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
@@ -40,7 +41,7 @@ public class OpeningLibraryTest {
                     }
                     engineBoard.unMakeMove();
                 }
-            } catch (ArrayIndexOutOfBoundsException e) {
+            } catch (ArrayIndexOutOfBoundsException | InvalidMoveException e) {
                 System.out.println(sMove + " from  " + fen + " is dodgy!");
                 System.exit(0);
             }

@@ -4,6 +4,7 @@ import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -19,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 public class EngineChessBoardTest {
 
     @Test
-    public void canRecognisePreviousPositions() throws IllegalFenException {
+    public void canRecognisePreviousPositions() throws IllegalFenException, InvalidMoveException {
         final EngineChessBoard board = new EngineChessBoard();
         final List<String> moves = new ArrayList<>();
 
@@ -66,7 +67,7 @@ public class EngineChessBoardTest {
 
     }
 
-    private void moveKnightsBackAndForth(EngineChessBoard board, List<String> moves) throws IllegalFenException {
+    private void moveKnightsBackAndForth(EngineChessBoard board, List<String> moves) throws IllegalFenException, InvalidMoveException {
         moves.add("b1c3");
         moves.add("b8c6");
         moves.add("c3b1");
@@ -121,7 +122,7 @@ public class EngineChessBoardTest {
     }
 
     @Test
-    public void isGameOver() throws IllegalFenException {
+    public void isGameOver() throws IllegalFenException, InvalidMoveException {
 
         final String SCHOLARS_MATE = "r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4";
         final String STALEMATE = "8/6b1/8/8/8/n7/PP6/K7 w - - 0 4";
@@ -210,7 +211,7 @@ public class EngineChessBoardTest {
     }
 
     @Test
-    public void getWhitePieceValues() throws IllegalFenException {
+    public void getWhitePieceValues() throws IllegalFenException, InvalidMoveException {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
@@ -239,7 +240,7 @@ public class EngineChessBoardTest {
     }
 
     @Test
-    public void getBlackPieceValues() throws IllegalFenException {
+    public void getBlackPieceValues() throws IllegalFenException, InvalidMoveException {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
@@ -268,7 +269,7 @@ public class EngineChessBoardTest {
     }
 
     @Test
-    public void getFen() throws IllegalFenException {
+    public void getFen() throws IllegalFenException, InvalidMoveException {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
