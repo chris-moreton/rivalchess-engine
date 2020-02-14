@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.constants.MoveOrder;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;
+import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.exception.IllegalSearchStateException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
@@ -14,8 +15,6 @@ import com.netsensia.rivalchess.uci.EngineMonitor;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.Numbers;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +35,15 @@ public final class RivalSearch implements Runnable {
 
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
 
-    private int aspirationLow, aspirationHigh;
+    private int aspirationLow;
+    private int aspirationHigh;
 
     private EngineChessBoard engineChessBoard;
 
     protected int m_millisecondsToThink;
     protected int m_nodesToSearch = Integer.MAX_VALUE;
+
+    private BoardHash boardHash = new BoardHash();
 
     protected boolean m_abortingSearch = true;
     public long m_searchStartTime = -1, m_searchTargetEndTime, m_searchEndTime = 0;
@@ -66,13 +68,6 @@ public final class RivalSearch implements Runnable {
     public int recaptureExtensionAttempts = 0;
 
     private SearchState searchState;
-    private int m_hashTableVersion;
-    private int[] hashTableHeight;
-    private int[] hashTableAlways;
-    private long[] pawnHashTable;
-    public int m_maxHashEntries;
-    private int m_maxPawnHashEntries;
-    private int m_lastHashSizeCreated;
 
     public int m_currentDepthZeroMove;
     public int m_currentDepthZeroMoveNumber;
@@ -109,7 +104,7 @@ public final class RivalSearch implements Runnable {
 
         searchState = SearchState.READY;
 
-        this.m_hashTableVersion = 0;
+        boardHash.setHashTableVersion(0);
 
         this.searchPath = new SearchPath[RivalConstants.MAX_TREE_DEPTH];
         this.killerMoves = new int[RivalConstants.MAX_TREE_DEPTH][RivalConstants.NUM_KILLER_MOVES];
@@ -123,31 +118,9 @@ public final class RivalSearch implements Runnable {
         depthZeroLegalMoves = orderedMoves[0];
         depthZeroMoveScores = new int[RivalConstants.MAX_LEGAL_MOVES];
 
-        setHashSizeMB(RivalConstants.DEFAULT_HASHTABLE_SIZE_MB);
+        boardHash.setHashSizeMB(RivalConstants.DEFAULT_HASHTABLE_SIZE_MB);
 
         int byteArraySize = (64 * 48 * 32 * 2) / 8;
-
-        if (!RivalConstants.IS_ANDROID_VERSION) {
-            rivalKPKBitbase = new byte[byteArraySize];
-            loadBitbase(rivalKPKBitbase, byteArraySize, "/kpk.rival");
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private void loadBitbase(byte[] byteArray, int byteArraySize, String fileLoc) {
-        InputStream inStream;
-        inStream = getClass().getResourceAsStream(fileLoc);
-        try {
-            int fileSize = inStream.read(byteArray);
-            if (fileSize != byteArraySize) {
-                printStream.println("Error: " + fileLoc + " file size is " + fileSize);
-                System.exit(0);
-            }
-            inStream.close();
-        } catch (IOException e) {
-            printStream.println("Could not load " + fileLoc + " file");
-            System.exit(0);
-        }
     }
 
     public void startEngineTimer(boolean isUCIMode) {
@@ -161,24 +134,18 @@ public final class RivalSearch implements Runnable {
     }
 
     public synchronized void setHashSizeMB(int hashSizeMB) {
-        if (hashSizeMB < 1) {
-            this.m_maxHashEntries = 1;
-            this.m_maxPawnHashEntries = 1;
-        } else {
-            int mainHashTableSize = ((hashSizeMB * 1024 * 1024) / 14) * 6; // two of these
-            int pawnHashTableSize = ((hashSizeMB * 1024 * 1024) / 14) * 2; // one of these
-            this.m_maxHashEntries = mainHashTableSize / RivalConstants.HASHPOSITION_SIZE_BYTES;
-            this.m_maxPawnHashEntries = pawnHashTableSize / RivalConstants.PAWNHASHENTRY_SIZE_BYTES;
-        }
-
-        setHashTable();
+        boardHash.setHashSizeMB(hashSizeMB);
     }
 
     public synchronized void setBoard(EngineChessBoard engineBoard) {
         this.setEngineChessBoard(engineBoard);
-        this.m_hashTableVersion++;
+        boardHash.incVersion();
 
-        setHashTable();
+        boardHash.setHashTable();
+    }
+
+    public synchronized void clearHash() {
+        boardHash.clearHash();
     }
 
     public synchronized void newGame() {
@@ -186,147 +153,14 @@ public final class RivalSearch implements Runnable {
             printStream.println("Getting ready for a new game");
         }
         m_inBook = this.m_useOpeningBook;
-        clearHash();
+        boardHash.clearHash();
     }
-
-    public synchronized void clearHash() {
-        for (int i = 0; i < m_maxHashEntries; i++) {
-            this.hashTableHeight[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
-            this.hashTableHeight[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_HEIGHT] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
-            this.hashTableAlways[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
-            this.hashTableAlways[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_HEIGHT] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
-            if (RivalConstants.USE_PAWN_HASH) {
-                this.pawnHashTable[i * RivalConstants.NUM_PAWNHASH_FIELDS + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-            }
-        }
-    }
-
-    private synchronized void setHashTable() {
-        if (m_maxHashEntries != m_lastHashSizeCreated) {
-            this.hashTableHeight = new int[m_maxHashEntries * RivalConstants.NUM_HASH_FIELDS];
-            this.hashTableAlways = new int[m_maxHashEntries * RivalConstants.NUM_HASH_FIELDS];
-            if (RivalConstants.USE_PAWN_HASH) {
-                this.pawnHashTable = new long[m_maxHashEntries * RivalConstants.NUM_PAWNHASH_FIELDS];
-            }
-            m_lastHashSizeCreated = m_maxHashEntries;
-            for (int i = 0; i < m_maxHashEntries; i++) {
-                this.hashTableHeight[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
-                this.hashTableHeight[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_HEIGHT] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
-                this.hashTableHeight[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_VERSION] = 1;
-                this.hashTableAlways[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
-                this.hashTableAlways[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_HEIGHT] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
-                this.hashTableAlways[i * RivalConstants.NUM_HASH_FIELDS + RivalConstants.HASHENTRY_VERSION] = 1;
-                if (RivalConstants.USE_PAWN_HASH) {
-                    this.pawnHashTable[i * RivalConstants.NUM_PAWNHASH_FIELDS + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-                }
-            }
-        }
-    }
-
-    long lastPawnHashValue = -1;
-    PawnHashEntry lastPawnHashEntry = new PawnHashEntry();
 
     private int getPawnScore(EngineChessBoard board) {
 
         PawnHashEntry pawnHashEntry;
 
-        final int pawnHashIndex = (int) (board.getPawnHashValue() % this.m_maxPawnHashEntries) * RivalConstants.NUM_PAWNHASH_FIELDS;
-
-        pawnHashEntry = getPawnHashEntry(board.getPawnHashValue(), pawnHashIndex);
-
-        if (!pawnHashEntry.isPopulated()) {
-            final long whitePawnAttacks = Bitboards.getWhitePawnAttacks(board.getWhitePawnBitboard());
-            final long blackPawnAttacks = Bitboards.getBlackPawnAttacks(board.getBlackPawnBitboard());
-            final long whitePawnFiles = Bitboards.getPawnFiles(board.getWhitePawnBitboard());
-            final long blackPawnFiles = Bitboards.getPawnFiles(board.getBlackPawnBitboard());
-
-            pawnHashEntry.setPawnScore(0);
-
-            pawnHashEntry.setWhitePassedPawnsBitboard(Bitboards.getWhitePassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
-
-            final long whiteGuardedPassedPawns = pawnHashEntry.getWhitePassedPawnsBitboard() & (Bitboards.getWhitePawnAttacks(board.getWhitePawnBitboard()));
-
-            pawnHashEntry.setBlackPassedPawnsBitboard(Bitboards.getBlackPassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
-
-            long blackGuardedPassedPawns = pawnHashEntry.getBlackPassedPawnsBitboard() & (Bitboards.getBlackPawnAttacks(board.getBlackPawnBitboard()));
-
-            pawnHashEntry.setWhitePassedPawnScore(Long.bitCount(whiteGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN);
-            pawnHashEntry.setBlackPassedPawnScore(Long.bitCount(blackGuardedPassedPawns) * RivalConstants.VALUE_GUARDED_PASSED_PAWN);
-
-            final long whiteIsolatedPawns = whitePawnFiles & ~(whitePawnFiles << 1) & ~(whitePawnFiles >>> 1);
-            final long blackIsolatedPawns = blackPawnFiles & ~(blackPawnFiles << 1) & ~(blackPawnFiles >>> 1);
-            pawnHashEntry.decPawnScore(Long.bitCount(whiteIsolatedPawns) * RivalConstants.VALUE_ISOLATED_PAWN_PENALTY);
-            pawnHashEntry.incPawnScore(Long.bitCount(blackIsolatedPawns) * RivalConstants.VALUE_ISOLATED_PAWN_PENALTY);
-
-            if ((whiteIsolatedPawns & Bitboards.FILE_D) != 0) {
-                pawnHashEntry.decPawnScore(RivalConstants.VALUE_ISOLATED_DPAWN_PENALTY);
-            }
-            if ((blackIsolatedPawns & Bitboards.FILE_D) != 0) {
-                pawnHashEntry.incPawnScore(RivalConstants.VALUE_ISOLATED_DPAWN_PENALTY);
-            }
-
-            pawnHashEntry.decPawnScore(
-                    Long.bitCount(
-                            board.getWhitePawnBitboard() &
-                                    ~((board.getWhitePawnBitboard() | board.getBlackPawnBitboard()) >>> 8) &
-                                    (blackPawnAttacks >>> 8) &
-                                    ~Bitboards.northFill(whitePawnAttacks) &
-                                    (Bitboards.getBlackPawnAttacks(board.getWhitePawnBitboard())) &
-                                    ~Bitboards.northFill(blackPawnFiles)
-                    ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY);
-
-            pawnHashEntry.incPawnScore(Long.bitCount(
-                    board.getBlackPawnBitboard() &
-                            ~((board.getBlackPawnBitboard() | board.getWhitePawnBitboard()) << 8) &
-                            (whitePawnAttacks << 8) &
-                            ~Bitboards.southFill(blackPawnAttacks) &
-                            (Bitboards.getWhitePawnAttacks(board.getBlackPawnBitboard())) &
-                            ~Bitboards.northFill(whitePawnFiles)
-            ) * RivalConstants.VALUE_BACKWARD_PAWN_PENALTY);
-
-            int sq;
-            long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                pawnHashEntry.addWhitePassedPawnScore(RivalConstants.VALUE_PASSED_PAWN_BONUS[sq / 8]);
-            }
-
-            bitboard = pawnHashEntry.getBlackPassedPawnsBitboard();
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                pawnHashEntry.addBlackPassedPawnScore(RivalConstants.VALUE_PASSED_PAWN_BONUS[7 - (sq / 8)]);
-            }
-
-            pawnHashEntry.decPawnScore(
-                    (Long.bitCount(board.getWhitePawnBitboard() & Bitboards.FILE_A) + Long.bitCount(board.getWhitePawnBitboard() & Bitboards.FILE_H))
-                            * RivalConstants.VALUE_SIDE_PAWN_PENALTY);
-
-            pawnHashEntry.incPawnScore(
-                    (Long.bitCount(board.getBlackPawnBitboard() & Bitboards.FILE_A) + Long.bitCount(board.getBlackPawnBitboard() & Bitboards.FILE_H))
-                            * RivalConstants.VALUE_SIDE_PAWN_PENALTY);
-
-            long occupiedFileMask = Bitboards.southFill(board.getWhitePawnBitboard()) & Bitboards.RANK_1;
-            pawnHashEntry.decPawnScore(RivalConstants.VALUE_DOUBLED_PAWN_PENALTY * ((board.getWhitePawnValues() / 100) - Long.bitCount(occupiedFileMask)));
-            pawnHashEntry.decPawnScore(Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * RivalConstants.VALUE_PAWN_ISLAND_PENALTY);
-
-            occupiedFileMask = Bitboards.southFill(board.getBlackPawnBitboard()) & Bitboards.RANK_1;
-            pawnHashEntry.incPawnScore(RivalConstants.VALUE_DOUBLED_PAWN_PENALTY * ((board.getBlackPawnValues() / 100) - Long.bitCount(occupiedFileMask)));
-            pawnHashEntry.incPawnScore(Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * RivalConstants.VALUE_PAWN_ISLAND_PENALTY);
-
-            if (RivalConstants.USE_PAWN_HASH) {
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = pawnHashEntry.getPawnScore();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE] = pawnHashEntry.getWhitePassedPawnScore();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE] = pawnHashEntry.getBlackPassedPawnScore();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS] = pawnHashEntry.getWhitePassedPawnsBitboard();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS] = pawnHashEntry.getBlackPassedPawnsBitboard();
-                this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] = board.getPawnHashValue();
-            }
-        }
-
-        if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN) {
-            lastPawnHashValue = board.getPawnHashValue();
-            lastPawnHashEntry = new PawnHashEntry(pawnHashEntry);
-        }
+        pawnHashEntry = boardHash.getPawnHashEntry(board);
 
         pawnHashEntry.incPawnScore(
                 Numbers.linearScale(board.getBlackPieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore())
@@ -363,38 +197,6 @@ public final class RivalSearch implements Runnable {
         }
 
         return pawnHashEntry.getPawnScore();
-    }
-
-    private PawnHashEntry getPawnHashEntry(final long pawnHashValue, final int pawnHashIndex) {
-        PawnHashEntry pawnHashEntry;
-
-        if (RivalConstants.USE_PAWN_HASH) {
-            if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN && lastPawnHashValue == pawnHashValue) {
-                pawnHashEntry = new PawnHashEntry(lastPawnHashEntry);
-            } else {
-                pawnHashEntry = getPawnStatsFromHash(pawnHashValue, pawnHashIndex);
-            }
-        } else {
-            pawnHashEntry = new PawnHashEntry();
-        }
-
-        return pawnHashEntry;
-    }
-
-    private PawnHashEntry getPawnStatsFromHash(long pawnHashValue, int pawnHashIndex) {
-        PawnHashEntry pawnHashEntry = new PawnHashEntry();
-
-        if (this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] == pawnHashValue) {
-            pawnHashEntry.setPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE]);
-            if (pawnHashEntry.getPawnScore() != RivalConstants.PAWNHASH_DEFAULT_SCORE) {
-                pawnHashEntry.setWhitePassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE]);
-                pawnHashEntry.setBlackPassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE]);
-                pawnHashEntry.setWhitePassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS]);
-                pawnHashEntry.setBlackPassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS]);
-            }
-        }
-
-        return pawnHashEntry;
     }
 
     private final int[] indexOfFirstAttackerInDirection = new int[8];
@@ -1134,56 +936,6 @@ public final class RivalSearch implements Runnable {
         return Piece.QUEEN.getValue() - RivalConstants.ENDGAME_KPK_PAWN_PENALTY_PER_SQUARE * pawnDistanceFromPromotion;
     }
 
-    public void storeHashMove(int move, EngineChessBoard board, int score, byte flag, int height) {
-        int hashIndex = (int) (board.getHashValue() % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
-
-        if (height >= this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] || this.m_hashTableVersion > this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
-            if (this.m_hashTableVersion == this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
-                // move this entry to the always replace table, but not if it is an entry from a previous search
-                this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_MOVE] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_MOVE];
-                this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_SCORE] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_SCORE];
-                this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG];
-                this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT1] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1];
-                this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT2] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2];
-                this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT];
-                this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_VERSION] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION];
-            }
-
-            if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-                for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-                    if (this.m_hashTableVersion == this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
-                        this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i];
-                        this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12];
-                    }
-                    this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = (int) (board.getBitboardByIndex(i) >>> 32);
-                    this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = (int) (board.getBitboardByIndex(i) & Bitboards.LOW32);
-                }
-            }
-
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.getHashValue() >>> 32);
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.getHashValue() & Bitboards.LOW32);
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
-            this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = this.m_hashTableVersion;
-        } else {
-            if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-                for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-                    this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = (int) (board.getBitboardByIndex(i) >>> 32);
-                    this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = (int) (board.getBitboardByIndex(i) & Bitboards.LOW32);
-                }
-            }
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.getHashValue() >>> 32);
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.getHashValue() & Bitboards.LOW32);
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
-            this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_VERSION] = this.m_hashTableVersion;
-        }
-    }
-
     private int[] scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
 
         int moveCount = 0;
@@ -1541,32 +1293,35 @@ public final class RivalSearch implements Runnable {
 
         byte flag = RivalConstants.UPPERBOUND;
 
-        final int hashIndex = (int) (board.getHashValue() % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+        final int hashIndex = boardHash.getHashIndex(board);
         int hashMove = 0;
 
         if (RivalConstants.USE_HASH_TABLES) {
             if (RivalConstants.USE_HEIGHT_REPLACE_HASH &&
-                    this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] >= depthRemaining &&
-                    this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] != RivalConstants.EMPTY) {
-                if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] == (int) (board.getHashValue() >>> 32) &&
-                        this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] == (int) (board.getHashValue() & Bitboards.LOW32)) {
-                    boolean isLocked = this.m_hashTableVersion - this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] <= RivalConstants.MAXIMUM_HASH_AGE;
+                    boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
+                    boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY) {
+                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (boardHash.getHash(board) >>> 32) &&
+                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (boardHash.getHash(board) & Bitboards.LOW32)) {
+                    boolean isLocked =
+                            boardHash.getHashTableVersion()
+                                    - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION)
+                                    <= RivalConstants.MAXIMUM_HASH_AGE;
 
                     superVerifyHash(board, hashIndex, isLocked);
 
                     if (isLocked) {
-                        this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = this.m_hashTableVersion;
-                        hashMove = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_MOVE];
-                        if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] == RivalConstants.LOWERBOUND) {
-                            if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] > low)
-                                low = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_SCORE];
-                        } else if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] == RivalConstants.UPPERBOUND) {
-                            if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] < high)
-                                high = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_SCORE];
+                        boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION, boardHash.getHashTableVersion());
+                        hashMove = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
+                        if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
+                            if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low)
+                                low = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                        } else if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
+                            if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high)
+                                high = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
                         }
 
-                        if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] == RivalConstants.EXACTSCORE || low >= high) {
-                            bestPath.score = this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_SCORE];
+                        if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
+                            bestPath.score = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
                             bestPath.setPath(hashMove);
                             return bestPath;
                         }
@@ -1576,34 +1331,34 @@ public final class RivalSearch implements Runnable {
 
             if (RivalConstants.USE_ALWAYS_REPLACE_HASH &&
                     hashMove == 0 &&
-                    this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_HEIGHT] >= depthRemaining &&
-                    this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] != RivalConstants.EMPTY) {
-                if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT1] == (int) (board.getHashValue() >>> 32) &&
-                        this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_64BIT2] == (int) (board.getHashValue() & Bitboards.LOW32)) {
-                    boolean isLocked = this.m_hashTableVersion - this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] <= RivalConstants.MAXIMUM_HASH_AGE;
+                    boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
+                    boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY) {
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (boardHash.getHash(board) >>> 32) &&
+                        boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (boardHash.getHash(board) & Bitboards.LOW32)) {
+                    boolean isLocked = boardHash.getHashTableVersion() - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION) <= RivalConstants.MAXIMUM_HASH_AGE;
                     if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
                         for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
-                            if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] != (int) (board.getBitboardByIndex(i) >>> 32) ||
-                                    this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
+                            if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
+                                    boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
                                 isLocked = false;
-                                printStream.println("Always bad clash " + board.getHashValue());
+                                printStream.println("Always bad clash " + boardHash.getHash(board));
                                 System.exit(0);
                             }
                         }
                     }
 
                     if (isLocked) {
-                        hashMove = this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_MOVE];
-                        if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] == RivalConstants.LOWERBOUND) {
-                            if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_SCORE] > low)
-                                low = this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_SCORE];
-                        } else if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] == RivalConstants.UPPERBOUND) {
-                            if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_SCORE] < high)
-                                high = this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_SCORE];
+                        hashMove = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
+                        if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
+                            if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low)
+                                low = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                        } else if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
+                            if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high)
+                                high = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
                         }
 
-                        if (this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] == RivalConstants.EXACTSCORE || low >= high) {
-                            bestPath.score = this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_SCORE];
+                        if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
+                            bestPath.score = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
                             bestPath.setPath(hashMove);
                             return bestPath;
                         }
@@ -1627,7 +1382,7 @@ public final class RivalSearch implements Runnable {
             else
                 flag = RivalConstants.EXACTSCORE;
 
-            storeHashMove(0, board, bestPath.score, flag, 0);
+            boardHash.storeHashMove(0, board, bestPath.score, flag, 0);
             return bestPath;
         }
 
@@ -1846,7 +1601,7 @@ public final class RivalSearch implements Runnable {
 
                             board.unMakeMove();
                             bestPath.setPath(move, newPath);
-                            storeHashMove(move, board, newPath.score, RivalConstants.LOWERBOUND, depthRemaining);
+                            boardHash.storeHashMove(move, board, newPath.score, RivalConstants.LOWERBOUND, depthRemaining);
 
                             if (RivalConstants.NUM_KILLER_MOVES > 0) {
                                 if ((board.getBitboardByIndex(RivalConstants.ENEMY) & (move & 63)) == 0 || (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == 0) {
@@ -1900,12 +1655,12 @@ public final class RivalSearch implements Runnable {
                 if (legalMoveCount == 0) {
                     boolean isMate = board.getMover() == Colour.WHITE ? board.isSquareAttackedBy(board.getWhiteKingSquare(), Colour.BLACK) : board.isSquareAttackedBy(board.getBlackKingSquare(), Colour.WHITE);
                     bestPath.score = isMate ? -RivalConstants.VALUE_MATE : 0;
-                    storeHashMove(0, board, bestPath.score, RivalConstants.EXACTSCORE, RivalConstants.MAX_SEARCH_DEPTH);
+                    boardHash.storeHashMove(0, board, bestPath.score, RivalConstants.EXACTSCORE, RivalConstants.MAX_SEARCH_DEPTH);
                     return bestPath;
                 }
 
                 if (!research) {
-                    storeHashMove(bestMoveForHash, board, bestPath.score, flag, depthRemaining);
+                    boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag, depthRemaining);
                     return bestPath;
                 }
             }
@@ -1918,9 +1673,9 @@ public final class RivalSearch implements Runnable {
     private void superVerifyHash(EngineChessBoard board, int hashIndex, boolean isLocked) {
         if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
             for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
-                if (this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] != (int) (board.getBitboardByIndex(i) >>> 32) ||
-                        this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
-                    throw new HashVerificationException("Height bad clash " + board.getHashValue());
+                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
+                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
+                    throw new HashVerificationException("Height bad clash " + boardHash.getHash(board));
                 }
             }
         }
@@ -1977,9 +1732,9 @@ public final class RivalSearch implements Runnable {
 
                 boolean canMakeNullMove = true;
                 if (isDrawnAtRoot(getEngineChessBoard(), 1)) {
-                    int hashIndex = (int) (board.getHashValue() % this.m_maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
-                    this.hashTableAlways[hashIndex + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
-                    this.hashTableHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = RivalConstants.EMPTY;
+                    int hashIndex = (int) (boardHash.getHash(board) % boardHash.getMaxHashEntries()) * RivalConstants.NUM_HASH_FIELDS;
+                    boardHash.setHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG, RivalConstants.EMPTY);
+                    boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG, RivalConstants.EMPTY);
                     canMakeNullMove = false;
                 }
 
@@ -2009,7 +1764,7 @@ public final class RivalSearch implements Runnable {
                     if (newPath.score >= high) {
                         board.unMakeMove();
                         bestPath.setPath(move, newPath);
-                        storeHashMove(move, board, newPath.score, RivalConstants.LOWERBOUND, depth);
+                        boardHash.storeHashMove(move, board, newPath.score, RivalConstants.LOWERBOUND, depth);
                         depthZeroMoveScores[numMoves] = newPath.score;
                         return bestPath;
                     }
@@ -2044,7 +1799,7 @@ public final class RivalSearch implements Runnable {
                 m_currentPath.setPath(bestPath); // otherwise we will crash!
                 m_currentPathString = "" + m_currentPath;
             } else {
-                storeHashMove(bestMoveForHash, board, bestPath.score, flag, depth);
+                boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag, depth);
             }
 
             return bestPath;
@@ -2119,10 +1874,10 @@ public final class RivalSearch implements Runnable {
                     }
 
                     if (ply0Draw) {
-                        drawnPositionsAtRoot.get(0).add(getEngineChessBoard().getHashValue());
+                        drawnPositionsAtRoot.get(0).add(boardHash.getHash(getEngineChessBoard()));
                     }
                     if (ply1Draw) {
-                        drawnPositionsAtRoot.get(1).add(getEngineChessBoard().getHashValue());
+                        drawnPositionsAtRoot.get(1).add(boardHash.getHash(getEngineChessBoard()));
                     }
 
                     getEngineChessBoard().unMakeMove();
@@ -2222,7 +1977,7 @@ public final class RivalSearch implements Runnable {
         searchState = SearchState.SEARCHING;
         m_abortingSearch = false;
 
-        m_hashTableVersion++;
+        boardHash.incVersion();
 
         m_searchStartTime = System.currentTimeMillis();
         m_searchEndTime = 0;
@@ -2329,7 +2084,7 @@ public final class RivalSearch implements Runnable {
     private boolean isDrawnAtRoot(EngineChessBoard board, int ply) {
         int i;
         for (i = 0; i < drawnPositionsAtRootCount.get(ply); i++) {
-            if (drawnPositionsAtRoot.get(ply).get(i).equals(board.getHashValue())) {
+            if (drawnPositionsAtRoot.get(ply).get(i).equals(boardHash.getHash(board))) {
                 return true;
             }
         }

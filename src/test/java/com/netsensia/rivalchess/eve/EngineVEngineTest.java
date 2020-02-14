@@ -15,6 +15,9 @@ public class EngineVEngineTest {
 
     private EngineChessBoard engineChessBoard = new EngineChessBoard();
 
+    public EngineVEngineTest() throws IllegalFenException {
+    }
+
     private void makeMove() throws IllegalFenException, InterruptedException {
 
         RivalSearch rivalSearch = new RivalSearch();
@@ -35,6 +38,5 @@ public class EngineVEngineTest {
     @Test
     public void runGame() throws IllegalFenException {
         engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
-
     }
 }

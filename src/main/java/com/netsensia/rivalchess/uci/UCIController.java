@@ -37,7 +37,7 @@ public class UCIController implements Runnable {
     private final int timeMultiple;
     private final PrintStream printStream;
 
-    private final EngineChessBoard engineBoard = new EngineChessBoard();
+    private EngineChessBoard engineBoard;
 
     public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
         rivalSearch = engine;
@@ -245,7 +245,7 @@ public class UCIController implements Runnable {
             waitForSearchToComplete();
 
             try {
-                engineBoard.setBoard(getBoardModel(s, parts));
+                EngineChessBoard engineBoard = new EngineChessBoard(getBoardModel(s, parts));
                 rivalSearch.setBoard(engineBoard);
 
                 playMovesFromPosition(parts);

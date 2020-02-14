@@ -1,10 +1,10 @@
-package com.netsensia.rivalchess.engine.core.helper;
+package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 
-public class BoardHash {
+public class BoardHashHelper {
 
     private static final long START_HASH_VALUE = 1427869295504964227L;
     private static final long START_PAWN_HASH_VALUE = 5454534288458826522L;
@@ -26,7 +26,6 @@ public class BoardHash {
             };
 
     private final static long[] moverHashValues = {6612194290785701391L, 7796428774704130372L};
-    private final static long hashSwitchMovers = moverHashValues[RivalConstants.WHITE] ^ moverHashValues[RivalConstants.BLACK];
 
     public static long getHash(EngineChessBoard engineChessBoard) {
         long hashValue = START_HASH_VALUE;
@@ -39,8 +38,10 @@ public class BoardHash {
             }
         }
 
-        return hashValue ^ moverHashValues[engineChessBoard.getMover() == Colour.WHITE
+        hashValue ^= moverHashValues[engineChessBoard.getMover() == Colour.WHITE
                 ? RivalConstants.WHITE : RivalConstants.BLACK];
+
+        return hashValue;
     }
 
     public static long getPawnHash(EngineChessBoard engineChessBoard) {
