@@ -65,10 +65,7 @@ public class EpdTest {
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException, InvalidMoveException {
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
-
-        rivalSearch.setBoard(engineChessBoard);
+        rivalSearch.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
         rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
         rivalSearch.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
 
@@ -96,7 +93,7 @@ public class EpdTest {
         }
 
         final String move = ChessBoardConversion.getPgnMoveFromCompactMove(
-                rivalSearch.getCurrentMove(), engineChessBoard.getFen());
+                rivalSearch.getCurrentMove(), rivalSearch.getFen());
 
         System.out.println("Looking for " + move + " in " + epdItem.getBestMoves());
 
@@ -105,7 +102,7 @@ public class EpdTest {
         } else {
             Assert.assertFalse(epdItem.getBestMoves().contains(
                     ChessBoardConversion.getPgnMoveFromCompactMove(
-                        rivalSearch.getCurrentMove(), engineChessBoard.getFen())));
+                        rivalSearch.getCurrentMove(), rivalSearch.getFen())));
         }
     }
 

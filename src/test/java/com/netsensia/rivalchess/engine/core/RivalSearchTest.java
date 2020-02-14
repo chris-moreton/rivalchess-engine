@@ -41,13 +41,10 @@ public class RivalSearchTest {
 
     private void assertBestMove(String fen, String expectedMove) throws IllegalFenException, InterruptedException {
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
-        RivalSearch rivalSearch = new RivalSearch();
+        RivalSearch rivalSearch = new RivalSearch(FenUtils.getBoardModel(fen));
 
         new Thread(rivalSearch).start();
 
-        rivalSearch.setBoard(engineChessBoard);
         rivalSearch.setSearchDepth(4);
         rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
         rivalSearch.startSearch();
@@ -61,13 +58,11 @@ public class RivalSearchTest {
 
     private void assertNodeCount(String fen, long expectedNodes) throws IllegalFenException, InterruptedException {
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
         RivalSearch rivalSearch = new RivalSearch();
 
         new Thread(rivalSearch).start();
 
-        rivalSearch.setBoard(engineChessBoard);
+        rivalSearch.setBoard(FenUtils.getBoardModel(fen));
         rivalSearch.setSearchDepth(6);
         rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
         rivalSearch.startSearch();

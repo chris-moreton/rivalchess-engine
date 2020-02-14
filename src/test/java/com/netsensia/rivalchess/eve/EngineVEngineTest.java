@@ -24,7 +24,6 @@ public class EngineVEngineTest {
 
         new Thread(rivalSearch).start();
 
-        rivalSearch.setBoard(engineChessBoard);
         rivalSearch.setSearchDepth(6);
         rivalSearch.setNodesToSearch(10000);
         rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
