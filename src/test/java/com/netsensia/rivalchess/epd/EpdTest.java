@@ -33,7 +33,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 @SuppressWarnings("squid:S106")
 public class EpdTest {
 
-    private static final int MAX_SEARCH_SECONDS = 300;
+    private static final int MAX_SEARCH_SECONDS = 1000;
     private static RivalSearch rivalSearch;
 
     @BeforeClass

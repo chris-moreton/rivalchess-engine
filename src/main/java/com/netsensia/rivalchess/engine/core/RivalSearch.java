@@ -156,49 +156,6 @@ public final class RivalSearch implements Runnable {
         boardHash.clearHash();
     }
 
-    private int getPawnScore(EngineChessBoard board) {
-
-        PawnHashEntry pawnHashEntry;
-
-        pawnHashEntry = boardHash.getPawnHashEntry(board);
-
-        pawnHashEntry.incPawnScore(
-                Numbers.linearScale(board.getBlackPieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore())
-                        - Numbers.linearScale(board.getWhitePieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()));
-
-        if (board.getBlackPieceValues() < RivalConstants.PAWN_ADJUST_MAX_MATERIAL) {
-            final int kingX = board.getBlackKingSquare() % 8;
-            final int kingY = board.getBlackKingSquare() / 8;
-            long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
-            int sq;
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                final int pawnDistance = Math.min(5, 7 - (sq / 8));
-                final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), Math.abs(kingY - 7));
-                pawnHashEntry.incPawnScore(Numbers.linearScale(board.getBlackPieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0));
-                if ((pawnDistance < (kingDistance - (board.getMover() == Colour.WHITE ? 0 : 1))) && (board.getBlackPieceValues() == 0))
-                    pawnHashEntry.incPawnScore(RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN);
-            }
-        }
-
-        if (board.getWhitePieceValues() < RivalConstants.PAWN_ADJUST_MAX_MATERIAL) {
-            final int kingX = board.getWhiteKingSquare() % 8;
-            final int kingY = board.getWhiteKingSquare() / 8;
-            long bitboard = pawnHashEntry.getBlackPassedPawnsBitboard();
-            int sq;
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                final int pawnDistance = Math.min(5, (sq / 8));
-                final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), kingY);
-                pawnHashEntry.decPawnScore(Numbers.linearScale(board.getWhitePieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0));
-                if ((pawnDistance < (kingDistance - (board.getMover() == Colour.WHITE ? 1 : 0))) && (board.getWhitePieceValues() == 0))
-                    pawnHashEntry.decPawnScore(RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN);
-            }
-        }
-
-        return pawnHashEntry.getPawnScore();
-    }
-
     private final int[] indexOfFirstAttackerInDirection = new int[8];
     private final int[] captureList = new int[32];
 
@@ -498,7 +455,7 @@ public final class RivalSearch implements Runnable {
             eval -= RivalConstants.VALUE_QUEEN_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
         }
 
-        eval += getPawnScore(board);
+        eval += boardHash.getPawnHashEntry(board).getPawnScore();
 
         eval +=
                 Numbers.linearScale((materialDifference > 0) ? board.getWhitePawnValues() : board.getBlackPawnValues(), 0, RivalConstants.TRADE_BONUS_UPPER_PAWNS, -30 * materialDifference / 100, 0) +
