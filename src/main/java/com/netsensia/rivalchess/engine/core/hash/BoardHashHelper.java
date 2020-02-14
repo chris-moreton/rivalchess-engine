@@ -39,7 +39,7 @@ public class BoardHashHelper {
         }
 
         hashValue ^= moverHashValues[engineChessBoard.getMover() == Colour.WHITE
-                ? RivalConstants.WHITE : RivalConstants.BLACK];
+                ? Colour.WHITE.getValue() : Colour.BLACK.getValue()];
 
         return hashValue;
     }
