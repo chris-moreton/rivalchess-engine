@@ -338,32 +338,16 @@ public class BoardHash {
         this.maxHashEntries = maxHashEntries;
     }
 
-    public int getMaxPawnHashEntries() {
-        return maxPawnHashEntries;
-    }
-
     public void setMaxPawnHashEntries(int maxPawnHashEntries) {
         this.maxPawnHashEntries = maxPawnHashEntries;
-    }
-
-    public int getLastHashSizeCreated() {
-        return lastHashSizeCreated;
     }
 
     public void setLastHashSizeCreated(int lastHashSizeCreated) {
         this.lastHashSizeCreated = lastHashSizeCreated;
     }
 
-    public long getLastPawnHashValue() {
-        return lastPawnHashValue;
-    }
-
     public void setLastPawnHashValue(long lastPawnHashValue) {
         this.lastPawnHashValue = lastPawnHashValue;
-    }
-
-    public PawnHashEntry getLastPawnHashEntry() {
-        return lastPawnHashEntry;
     }
 
     public void setLastPawnHashEntry(PawnHashEntry lastPawnHashEntry) {

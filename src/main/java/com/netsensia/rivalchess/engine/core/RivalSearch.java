@@ -149,9 +149,6 @@ public final class RivalSearch implements Runnable {
     }
 
     public synchronized void newGame() {
-        if (RivalConstants.UCI_DEBUG) {
-            printStream.println("Getting ready for a new game");
-        }
         m_inBook = this.m_useOpeningBook;
         boardHash.clearHash();
     }
@@ -1924,9 +1921,6 @@ public final class RivalSearch implements Runnable {
             e.printStackTrace();
         } finally {
             setSearchComplete();
-            if (RivalConstants.UCI_DEBUG) {
-                printStream.println("My search is finally complete");
-            }
         }
     }
 
@@ -2062,29 +2056,9 @@ public final class RivalSearch implements Runnable {
 
     public synchronized void startSearch() {
         searchState = SearchState.REQUESTED;
-        if (RivalConstants.UCI_DEBUG) {
-            printStream.println("My search has been requested");
-        }
     }
 
     public synchronized void stopSearch() {
-        if (isSearching()) {
-            if (RivalConstants.UCI_DEBUG) {
-                if (this.m_abortingSearch) {
-                    printStream.println("My current search is no longer wanted, I know, I'm already aborting");
-                } else {
-                    printStream.println("My current search is no longer wanted, I'll abort then");
-                }
-            }
-        } else {
-            if (RivalConstants.UCI_DEBUG) {
-                if (this.m_abortingSearch) {
-                    printStream.println("I'm not even searching but am being asked to stop, and I'm already aborting");
-                } else {
-                    printStream.println("I'm not even searching but am being asked to stop, and weirdly m_abortingSearch is false");
-                }
-            }
-        }
         this.m_abortingSearch = true;
     }
 

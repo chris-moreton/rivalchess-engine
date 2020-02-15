@@ -15,8 +15,7 @@ public final class RivalConstants
 	public static final boolean IS_ANDROID_VERSION = false;
 
 	public static final int INFINITY = 20000000;
-	
-	public static final boolean UCI_DEBUG = false;
+
 	public static final int UCI_TIMER_INTERVAL_MILLIS = 50;
 	public static final int UCI_TIMER_SAFTEY_MARGIN_MILLIS = 250;
 
@@ -228,14 +227,6 @@ public final class RivalConstants
 	public static final boolean USE_INTERNAL_ITERATIVE_DEEPENING = true;
 	public static final int IID_MIN_DEPTH = 5;
 	public static final int IID_REDUCE_DEPTH = 3;
-	
-/***********************************	
- *	Engine flags                   *
- ***********************************/	
-	public static final int SEARCHSTATE_READY = 0;
-	public static final int SEARCHSTATE_SEARCHING = 1;
-	public static final int SEARCHSTATE_SEARCHCOMPLETE = 2;
-	public static final int SEARCHSTATE_SEARCHREQUESTED = 4;
 
 /***********************************	
  *	Hash table settings            *
@@ -273,18 +264,6 @@ public final class RivalConstants
 	public static final byte EXACTSCORE = 2;
 	public static final byte EMPTY = 3;
 
-	/**
-	 * @deprecated Use Colour.WHITE instead
-	 */
-	@Deprecated
-	public static final int WHITE = 0;
-
-	/**
-	 * @deprecated Use Colour.BLACK instead
-	 */
-	@Deprecated
-	public static final int BLACK = 1;
-	
 	public static final int PROMOTION_PIECE_TOSQUARE_MASK_QUEEN = 192; 
 	public static final int PROMOTION_PIECE_TOSQUARE_MASK_ROOK = 64; 
 	public static final int PROMOTION_PIECE_TOSQUARE_MASK_BISHOP = 128; 
