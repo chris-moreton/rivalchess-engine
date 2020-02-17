@@ -6,13 +6,15 @@ import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.MoveOrder;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
-import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.exception.HashVerificationException;
+import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.IllegalSearchStateException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
+import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.uci.EngineMonitor;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
+import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.Numbers;
 
 import java.io.PrintStream;
@@ -23,38 +25,45 @@ import java.util.Timer;
 
 public final class RivalSearch implements Runnable {
     private final PrintStream printStream;
+    private final BoardHash boardHash = new BoardHash();
+    private final List<List<Long>> drawnPositionsAtRoot;
+    private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
+    private EngineChessBoard engineChessBoard
+            = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+    private final List<Integer> mateKiller = new ArrayList<>();
+
+    private final int[] indexOfFirstAttackerInDirection = new int[8];
+    private final int[] captureList = new int[32];
+    private final int[][] killerMoves;
+
+    private final int[][][] historyMovesSuccess = new int[2][64][64];
+    private final int[][][] historyMovesFail = new int[2][64][64];
+    private final int[][][] historyPruneMoves = new int[2][64][64];
+    private final int[][] orderedMoves;
+    private final SearchPath[] searchPath;
+
+    private final int[] depthZeroLegalMoves;
+    private final int[] depthZeroMoveScores;
 
     private boolean isOkToSendInfo = false;
+
+    private SearchState searchState;
 
     boolean quit = false;
 
     private int nodes = 0;
     private long millisSetByEngineMonitor;
 
-    private final List<List<Long>> drawnPositionsAtRoot;
-
-    private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
-
     private int aspirationLow;
     private int aspirationHigh;
 
-    private EngineChessBoard engineChessBoard;
-
     protected int m_millisecondsToThink;
     protected int m_nodesToSearch = Integer.MAX_VALUE;
-
-    private BoardHash boardHash = new BoardHash();
 
     protected boolean m_abortingSearch = true;
     public long m_searchStartTime = -1, m_searchTargetEndTime, m_searchEndTime = 0;
     protected int m_finalDepthToSearch = 1;
     protected int m_iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
-
-    private final int[][] killerMoves;
-    private final List<Integer> mateKiller = new ArrayList<>();
-    private final int[][][] historyMovesSuccess = new int[2][64][64];
-    private final int[][][] historyMovesFail = new int[2][64][64];
-    private final int[][][] historyPruneMoves = new int[2][64][64];
 
     private boolean m_useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK;
     private boolean m_inBook = m_useOpeningBook;
@@ -67,19 +76,11 @@ public final class RivalSearch implements Runnable {
     public int recaptureExtensions = 0;
     public int recaptureExtensionAttempts = 0;
 
-    private SearchState searchState;
-
     public int m_currentDepthZeroMove;
     public int m_currentDepthZeroMoveNumber;
 
     public SearchPath m_currentPath;
     private String m_currentPathString;
-
-    private final int[][] orderedMoves;
-    private final SearchPath[] searchPath;
-
-    private final int[] depthZeroLegalMoves;
-    private final int[] depthZeroMoveScores;
 
     private boolean m_isUCIMode = false;
 
@@ -152,9 +153,6 @@ public final class RivalSearch implements Runnable {
         m_inBook = this.m_useOpeningBook;
         boardHash.clearHash();
     }
-
-    private final int[] indexOfFirstAttackerInDirection = new int[8];
-    private final int[] captureList = new int[32];
 
     final public int staticExchangeEvaluation(EngineChessBoard board, int move) throws InvalidMoveException {
         final int toSquare = move & 63;
