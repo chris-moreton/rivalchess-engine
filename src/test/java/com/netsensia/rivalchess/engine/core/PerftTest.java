@@ -18,13 +18,32 @@ public class PerftTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PerftTest.class);
 
+    public static long getPerft(EngineChessBoard board, int depth) throws InvalidMoveException {
+        if (depth == 0) return 1;
+        long nodes = 0;
+        int moveNum = 0;
+
+        int[] legalMoves = new int[RivalConstants.MAX_LEGAL_MOVES];
+
+        board.setLegalMoves(legalMoves);
+        while (legalMoves[moveNum] != 0) {
+            if (board.makeMove(legalMoves[moveNum])) {
+                nodes += getPerft(board, depth - 1);
+                board.unMakeMove();
+            }
+            moveNum++;
+        }
+
+        return nodes;
+    }
+
     private void assertPerftScore(String fen, int depth, int expectedScore) throws IllegalFenException, InvalidMoveException {
 
         EngineChessBoard engineBoard = new EngineChessBoard();
         engineBoard.setBoard(FenUtils.getBoardModel(fen));
 
         long start = System.currentTimeMillis();
-        long nodes = UCIController.getPerft(engineBoard, depth);
+        long nodes = getPerft(engineBoard, depth);
 
         assertEquals(expectedScore, nodes);
 

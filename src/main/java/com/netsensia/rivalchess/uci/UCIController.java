@@ -8,7 +8,6 @@ import java.lang.reflect.Field;
 
 import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.SearchState;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -36,8 +35,6 @@ public class UCIController implements Runnable {
     private final RivalSearch rivalSearch;
     private final int timeMultiple;
     private final PrintStream printStream;
-
-    private EngineChessBoard engineBoard;
 
     public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
         rivalSearch = engine;
@@ -176,8 +173,8 @@ public class UCIController implements Runnable {
             rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
             rivalSearch.setNodesToSearch(maxNodes);
         } else if (whiteTime != -1) {
-            int calcTime = (engineBoard.getMover() == Colour.WHITE ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
-            int guaranteedTime = (engineBoard.getMover() == Colour.WHITE ? whiteInc : blackInc);
+            int calcTime = (rivalSearch.getMover() == Colour.WHITE ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
+            int guaranteedTime = (rivalSearch.getMover() == Colour.WHITE ? whiteInc : blackInc);
             int timeToThink = calcTime + guaranteedTime - RivalConstants.UCI_TIMER_SAFTEY_MARGIN_MILLIS;
             rivalSearch.setMillisToThink(timeToThink);
             rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
@@ -245,8 +242,7 @@ public class UCIController implements Runnable {
             waitForSearchToComplete();
 
             try {
-                EngineChessBoard engineBoard = new EngineChessBoard(getBoardModel(s, parts));
-                rivalSearch.setBoard(engineBoard);
+                rivalSearch.setBoard(getBoardModel(s, parts));
 
                 playMovesFromPosition(parts);
 
@@ -264,7 +260,7 @@ public class UCIController implements Runnable {
             for (int pos = 2; pos < l; pos++) {
                 if (parts[pos].equals("moves")) {
                     for (int i = pos + 1; i < l; i++) {
-                        rivalSearch.getEngineChessBoard().makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(parts[i]));
+                        rivalSearch.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(parts[i]));
                     }
                     break;
                 }
@@ -317,25 +313,6 @@ public class UCIController implements Runnable {
             state = rivalSearch.getEngineState();
         }
         while (state != SearchState.READY && state != SearchState.COMPLETE);
-    }
-
-    public static long getPerft(EngineChessBoard board, int depth) throws InvalidMoveException {
-        if (depth == 0) return 1;
-        long nodes = 0;
-        int moveNum = 0;
-
-        int[] legalMoves = new int[RivalConstants.MAX_LEGAL_MOVES];
-
-        board.setLegalMoves(legalMoves);
-        while (legalMoves[moveNum] != 0) {
-            if (board.makeMove(legalMoves[moveNum])) {
-                nodes += getPerft(board, depth - 1);
-                board.unMakeMove();
-            }
-            moveNum++;
-        }
-
-        return nodes;
     }
 
     public void showEngineVar(String varName) {

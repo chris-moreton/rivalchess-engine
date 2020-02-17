@@ -1,9 +1,11 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
+import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;
+import com.netsensia.rivalchess.util.Numbers;
 
 public class BoardHash {
 
@@ -244,6 +246,40 @@ public class BoardHash {
             }
         }
 
+        pawnHashEntry.incPawnScore(
+                Numbers.linearScale(board.getBlackPieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore())
+                        - Numbers.linearScale(board.getWhitePieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()));
+
+        if (board.getBlackPieceValues() < RivalConstants.PAWN_ADJUST_MAX_MATERIAL) {
+            final int kingX = board.getBlackKingSquare() % 8;
+            final int kingY = board.getBlackKingSquare() / 8;
+            long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
+            int sq;
+            while (bitboard != 0) {
+                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+                final int pawnDistance = Math.min(5, 7 - (sq / 8));
+                final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), Math.abs(kingY - 7));
+                pawnHashEntry.incPawnScore(Numbers.linearScale(board.getBlackPieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0));
+                if ((pawnDistance < (kingDistance - (board.getMover() == Colour.WHITE ? 0 : 1))) && (board.getBlackPieceValues() == 0))
+                    pawnHashEntry.incPawnScore(RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN);
+            }
+        }
+
+        if (board.getWhitePieceValues() < RivalConstants.PAWN_ADJUST_MAX_MATERIAL) {
+            final int kingX = board.getWhiteKingSquare() % 8;
+            final int kingY = board.getWhiteKingSquare() / 8;
+            long bitboard = pawnHashEntry.getBlackPassedPawnsBitboard();
+            int sq;
+            while (bitboard != 0) {
+                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+                final int pawnDistance = Math.min(5, (sq / 8));
+                final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), kingY);
+                pawnHashEntry.decPawnScore(Numbers.linearScale(board.getWhitePieceValues(), 0, RivalConstants.PAWN_ADJUST_MAX_MATERIAL, kingDistance * 4, 0));
+                if ((pawnDistance < (kingDistance - (board.getMover() == Colour.WHITE ? 1 : 0))) && (board.getWhitePieceValues() == 0))
+                    pawnHashEntry.decPawnScore(RivalConstants.VALUE_KING_CANNOT_CATCH_PAWN);
+            }
+        }
+
         setLastPawnHashValueAndEntry(board, pawnHashEntry);
 
         return pawnHashEntry;
@@ -302,32 +338,16 @@ public class BoardHash {
         this.maxHashEntries = maxHashEntries;
     }
 
-    public int getMaxPawnHashEntries() {
-        return maxPawnHashEntries;
-    }
-
     public void setMaxPawnHashEntries(int maxPawnHashEntries) {
         this.maxPawnHashEntries = maxPawnHashEntries;
-    }
-
-    public int getLastHashSizeCreated() {
-        return lastHashSizeCreated;
     }
 
     public void setLastHashSizeCreated(int lastHashSizeCreated) {
         this.lastHashSizeCreated = lastHashSizeCreated;
     }
 
-    public long getLastPawnHashValue() {
-        return lastPawnHashValue;
-    }
-
     public void setLastPawnHashValue(long lastPawnHashValue) {
         this.lastPawnHashValue = lastPawnHashValue;
-    }
-
-    public PawnHashEntry getLastPawnHashEntry() {
-        return lastPawnHashEntry;
     }
 
     public void setLastPawnHashEntry(PawnHashEntry lastPawnHashEntry) {
