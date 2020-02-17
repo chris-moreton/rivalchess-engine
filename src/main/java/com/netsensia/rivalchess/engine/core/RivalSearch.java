@@ -1754,7 +1754,7 @@ public final class RivalSearch implements Runnable {
 
                     depthZeroMoveScores[numMoves] = newPath.score;
                 }
-                getEngineChessBoard().unMakeMove();
+                engineChessBoard.unMakeMove();
             } else {
                 depthZeroMoveScores[numMoves] = -RivalConstants.INFINITY;
             }
@@ -1777,6 +1777,14 @@ public final class RivalSearch implements Runnable {
         }
     }
 
+    public Colour getMover() {
+        return engineChessBoard.getMover();
+    }
+
+    public void makeMove(int move) throws InvalidMoveException {
+        engineChessBoard.makeMove(move);
+    }
+
     public void go() {
 
         initSearchVariables();
@@ -1787,7 +1795,7 @@ public final class RivalSearch implements Runnable {
         SearchPath path;
 
         try {
-            getEngineChessBoard().setLegalMoves(depthZeroLegalMoves);
+            engineChessBoard.setLegalMoves(depthZeroLegalMoves);
             int depthZeroMoveCount = 0;
 
             int c = 0;
@@ -1799,7 +1807,7 @@ public final class RivalSearch implements Runnable {
             int bestNewbieScore = -RivalConstants.INFINITY;
 
             while (move != 0) {
-                if (getEngineChessBoard().makeMove(move)) {
+                if (engineChessBoard.makeMove(move)) {
                     boolean ply0Draw = false;
                     boolean ply1Draw = false;
 
@@ -1807,7 +1815,7 @@ public final class RivalSearch implements Runnable {
 
                     if (this.m_iterativeDeepeningCurrentDepth < 1) // super beginner mode
                     {
-                        SearchPath sp = quiesce(getEngineChessBoard(), 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, getEngineChessBoard().isCheck());
+                        SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, engineChessBoard.isCheck());
                         sp.score = -sp.score;
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score;
@@ -1823,11 +1831,11 @@ public final class RivalSearch implements Runnable {
                         m_currentPath.score = 0;
                         m_currentPathString = "" + m_currentPath;
                     }
-                    if (getEngineChessBoard().previousOccurrencesOfThisPosition() == 2) {
+                    if (engineChessBoard.previousOccurrencesOfThisPosition() == 2) {
                         ply0Draw = true;
                     }
 
-                    getEngineChessBoard().setLegalMoves(depth1MovesTemp);
+                    engineChessBoard.setLegalMoves(depth1MovesTemp);
 
                     int c1 = 0;
                     int move1 = depth1MovesTemp[c1] & 0x00FFFFFF;
