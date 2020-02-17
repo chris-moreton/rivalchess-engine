@@ -37,10 +37,6 @@ public class BoardHash {
         hashTableIgnoreHeight[index] = value;
     }
 
-    public long getPawnHashTable(int index) {
-        return pawnHashTable[index];
-    }
-
     public void setPawnHashTable(int index, long value) {
         pawnHashTable[index] = value;
     }
@@ -130,11 +126,19 @@ public class BoardHash {
     }
 
     public int getPawnHashIndex(EngineChessBoard engineChessBoard) {
-        return (int) (BoardHashHelper.getPawnHash(engineChessBoard) % this.maxPawnHashEntries) * RivalConstants.NUM_PAWNHASH_FIELDS;
+        return getPawnHashIndex(engineChessBoard, BoardHashHelper.getPawnHash(engineChessBoard));
+    }
+
+    public int getPawnHashIndex(EngineChessBoard engineChessBoard, long pawnHashValue) {
+        return (int) (pawnHashValue % this.maxPawnHashEntries) * RivalConstants.NUM_PAWNHASH_FIELDS;
     }
 
     public int getHashIndex(EngineChessBoard engineChessBoard) {
-        return (int) (BoardHashHelper.getHash(engineChessBoard) % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+        return getHashIndex(engineChessBoard, BoardHashHelper.getHash(engineChessBoard));
+    }
+
+    public int getHashIndex(EngineChessBoard engineChessBoard, long hashValue) {
+        return (int) (hashValue % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
     }
 
     public long getHash(EngineChessBoard engineChessBoard) {
@@ -145,7 +149,7 @@ public class BoardHash {
         PawnHashEntry pawnHashEntry;
 
         final long pawnHashValue = BoardHashHelper.getPawnHash(board);
-        final int pawnHashIndex = getPawnHashIndex(board);
+        final int pawnHashIndex = getPawnHashIndex(board, pawnHashValue);
 
         if (RivalConstants.USE_PAWN_HASH) {
             if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN && lastPawnHashValue == pawnHashValue) {

@@ -1262,15 +1262,16 @@ public final class RivalSearch implements Runnable {
 
         byte flag = RivalConstants.UPPERBOUND;
 
-        final int hashIndex = boardHash.getHashIndex(board);
+        final long hashValue = boardHash.getHash(engineChessBoard);
+        final int hashIndex = boardHash.getHashIndex(board, hashValue);
         int hashMove = 0;
 
         if (RivalConstants.USE_HASH_TABLES) {
             if (RivalConstants.USE_HEIGHT_REPLACE_HASH &&
                     boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
                     boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY) {
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (boardHash.getHash(board) >>> 32) &&
-                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (boardHash.getHash(board) & Bitboards.LOW32)) {
+                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
+                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
                     boolean isLocked =
                             boardHash.getHashTableVersion()
                                     - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION)
@@ -1302,15 +1303,15 @@ public final class RivalSearch implements Runnable {
                     hashMove == 0 &&
                     boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
                     boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY) {
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (boardHash.getHash(board) >>> 32) &&
-                        boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (boardHash.getHash(board) & Bitboards.LOW32)) {
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
+                        boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
                     boolean isLocked = boardHash.getHashTableVersion() - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION) <= RivalConstants.MAXIMUM_HASH_AGE;
                     if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
                         for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
                             if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
                                     boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
                                 isLocked = false;
-                                printStream.println("Always bad clash " + boardHash.getHash(board));
+                                printStream.println("Always bad clash " + hashValue);
                                 System.exit(0);
                             }
                         }
@@ -1701,7 +1702,7 @@ public final class RivalSearch implements Runnable {
 
                 boolean canMakeNullMove = true;
                 if (isDrawnAtRoot(engineChessBoard, 1)) {
-                    int hashIndex = (int) (boardHash.getHash(board) % boardHash.getMaxHashEntries()) * RivalConstants.NUM_HASH_FIELDS;
+                    final int hashIndex = boardHash.getHashIndex(board);
                     boardHash.setHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG, RivalConstants.EMPTY);
                     boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG, RivalConstants.EMPTY);
                     canMakeNullMove = false;
@@ -2153,10 +2154,6 @@ public final class RivalSearch implements Runnable {
 
     public void setMillisSetByEngineMonitor(long millisSetByEngineMonitor) {
         this.millisSetByEngineMonitor = millisSetByEngineMonitor;
-    }
-
-    public EngineChessBoard getEngineChessBoard() {
-        return engineChessBoard;
     }
 
     public void setEngineChessBoard(EngineChessBoard engineChessBoard) {
