@@ -1523,13 +1523,13 @@ public final class RivalSearch implements Runnable {
                         do {
                             lmrResearch = false;
                             if (scoutSearch) {
-                                newPath = search(getEngineChessBoard(), (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
+                                newPath = search(engineChessBoard, (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
                                 if (newPath != null)
                                     if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                     else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                                 if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                                     // research with normal window
-                                    newPath = search(getEngineChessBoard(), (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
+                                    newPath = search(engineChessBoard, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, canVerifyNullMove, newRecaptureSquare, isCheck);
                                     if (newPath != null)
                                         if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
@@ -1673,7 +1673,7 @@ public final class RivalSearch implements Runnable {
         int pawnExtend;
 
         while (move != 0 && !this.m_abortingSearch) {
-            if (getEngineChessBoard().makeMove(move)) {
+            if (engineChessBoard.makeMove(move)) {
                 final boolean isCheck = board.isCheck();
 
                 checkExtend = 0;
@@ -1700,14 +1700,14 @@ public final class RivalSearch implements Runnable {
                 m_currentDepthZeroMoveNumber = numLegalMovesAtDepthZero;
 
                 boolean canMakeNullMove = true;
-                if (isDrawnAtRoot(getEngineChessBoard(), 1)) {
+                if (isDrawnAtRoot(engineChessBoard, 1)) {
                     int hashIndex = (int) (boardHash.getHash(board) % boardHash.getMaxHashEntries()) * RivalConstants.NUM_HASH_FIELDS;
                     boardHash.setHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG, RivalConstants.EMPTY);
                     boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG, RivalConstants.EMPTY);
                     canMakeNullMove = false;
                 }
 
-                if (isDrawnAtRoot(getEngineChessBoard(), 0)) {
+                if (isDrawnAtRoot(engineChessBoard, 0)) {
                     newPath = new SearchPath();
                     newPath.score = 0;
                     newPath.setPath(move);
