@@ -86,11 +86,21 @@ public final class RivalSearch implements Runnable {
 
     private static byte[] rivalKPKBitbase = null;
 
-    public RivalSearch() {
-        this(System.out);
+    public RivalSearch() throws IllegalFenException {
+        this(System.out, FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
     }
 
-    public RivalSearch(PrintStream printStream) {
+    public RivalSearch(PrintStream printStream) throws IllegalFenException {
+        this(printStream, FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+    }
+
+    public RivalSearch(Board board) throws IllegalFenException {
+        this(System.out, board);
+    }
+
+    public RivalSearch(PrintStream printStream, Board board) throws IllegalFenException {
+
+        this.engineChessBoard.setBoard(board);
 
         drawnPositionsAtRoot = new ArrayList<>();
         drawnPositionsAtRoot.add(new ArrayList<>());
