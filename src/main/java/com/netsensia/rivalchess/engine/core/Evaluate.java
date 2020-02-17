@@ -39,16 +39,16 @@ public class Evaluate {
         final int offset = isWhite ? 0 : 6;
 
         if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << f3)) != 0)
-                && ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << g2)) != 0)) {
-            if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0) {
-                // (F)
-                safety -= 10;
-            } else {
-                if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h3)) != 0) {
-                    // (H)
-                    safety -= 30;
+            && ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << g2)) != 0)) {
+                if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0) {
+                    // (F)
+                    safety -= 10;
+                } else {
+                    if ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h3)) != 0) {
+                        // (H)
+                        safety -= 30;
+                    }
                 }
-            }
         }
         return safety;
     }
@@ -57,13 +57,13 @@ public class Evaluate {
         final int offset = isWhite ? 0 : 6;
 
         if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << g2)) != 0)
-                && ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0)) {
-            // (E)
-            safety += 80;
-            if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0)
+            && ((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0)) {
+                // (E)
+                safety += 80;
+                if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h2)) != 0)
                     && ((board.getBitboardByIndex(RivalConstants.WN + offset) & (1L << f3)) != 0)) {
-                safety += 40;
-            }
+                        safety += 40;
+                    }
         }
         return safety;
     }
@@ -79,9 +79,9 @@ public class Evaluate {
                 }
             } else {
                 if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h3)) != 0)
-                        && ((board.getBitboardByIndex(RivalConstants.WB + offset) & (1L << g2)) != 0)) {
-                    // (C)
-                    safety += 70;
+                    && ((board.getBitboardByIndex(RivalConstants.WB + offset) & (1L << g2)) != 0)) {
+                        // (C)
+                        safety += 70;
                 }
             }
         }
@@ -105,13 +105,13 @@ public class Evaluate {
         final int offset = isWhite ? 0 : 6;
 
         if (((board.getBitboardByIndex(RivalConstants.WP + offset) & (1L << h3)) != 0)
-                && ((board.getBitboardByIndex(RivalConstants.WN + offset) & (1L << f3)) != 0)) {
-            // (D)
-            safety += 70;
-            // check for bishop of same colour as h3
-            long bits = (cornerColour == Colour.WHITE.getValue() ? Bitboards.LIGHT_SQUARES : Bitboards.DARK_SQUARES);
-            if ((bits & board.getBitboardByIndex(RivalConstants.WB + offset)) != 0) {
-                safety -= 30;
+            && ((board.getBitboardByIndex(RivalConstants.WN + offset) & (1L << f3)) != 0)) {
+                // (D)
+                safety += 70;
+                // check for bishop of same colour as h3
+                long bits = (cornerColour == Colour.WHITE.getValue() ? Bitboards.LIGHT_SQUARES : Bitboards.DARK_SQUARES);
+                if ((bits & board.getBitboardByIndex(RivalConstants.WB + offset)) != 0) {
+                    safety -= 30;
             }
         }
         return safety;
