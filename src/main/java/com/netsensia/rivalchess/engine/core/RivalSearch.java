@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Timer;
 
 public final class RivalSearch implements Runnable {
+
     private final PrintStream printStream;
     private final BoardHash boardHash = new BoardHash();
     private final List<List<Long>> drawnPositionsAtRoot;
@@ -146,6 +147,12 @@ public final class RivalSearch implements Runnable {
 
     public synchronized void setHashSizeMB(int hashSizeMB) {
         boardHash.setHashSizeMB(hashSizeMB);
+    }
+
+    public synchronized void setBoard(Board board) {
+        engineChessBoard = new EngineChessBoard();
+        engineChessBoard.setBoard(board);
+        setBoard(engineChessBoard);
     }
 
     public synchronized void setBoard(EngineChessBoard engineBoard) {
@@ -2146,5 +2153,9 @@ public final class RivalSearch implements Runnable {
 
     public void setEngineChessBoard(EngineChessBoard engineChessBoard) {
         this.engineChessBoard = engineChessBoard;
+    }
+
+    public String getFen() {
+        return engineChessBoard.getFen();
     }
 }
