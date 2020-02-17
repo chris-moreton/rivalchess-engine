@@ -1713,22 +1713,22 @@ public final class RivalSearch implements Runnable {
                     newPath.setPath(move);
                 } else {
                     if (scoutSearch) {
-                        newPath = search(getEngineChessBoard(), (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, canMakeNullMove, -1, isCheck);
+                        newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, canMakeNullMove, -1, isCheck);
                         if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                         if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
-                            newPath = search(getEngineChessBoard(), (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
+                            newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
                             if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                             else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                         }
                     } else {
-                        newPath = search(getEngineChessBoard(), (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
+                        newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
                         if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
                         else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
                     }
                 }
                 if (!this.m_abortingSearch) {
-                    Objects.requireNonNull(newPath).score = -newPath.score;
+                    Objects.requireNonNull(newPath).score = -Objects.requireNonNull(newPath).score;
 
                     if (newPath.score >= high) {
                         board.unMakeMove();
