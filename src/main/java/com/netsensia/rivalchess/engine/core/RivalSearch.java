@@ -2002,6 +2002,10 @@ public final class RivalSearch implements Runnable {
         return "cp " + score;
     }
 
+    public int getCurrentScore() {
+        return this.m_currentPath.getScore();
+    }
+
     public long getSearchDuration() {
         long timePassed = 0;
         switch (searchState) {
