@@ -1,12 +1,12 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +29,7 @@ public class OpeningLibraryTest {
 
             try {
                 if (engineBoard.isMoveLegal(engineBoard.getLegalMoveByIndex(i))) {
-                    engineBoard.makeMove(engineBoard.getLegalMoveByIndex(i));
+                    engineBoard.makeMove(new EngineMove(engineBoard.getLegalMoveByIndex(i)));
 
                     String newPath = path + (path.equals("") ? "" : "_") + sMove.toUpperCase();
                     String newFen = engineBoard.getFen();

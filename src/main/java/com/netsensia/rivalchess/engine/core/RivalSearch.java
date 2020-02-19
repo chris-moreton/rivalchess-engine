@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.constants.MoveOrder;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
+import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.IllegalSearchStateException;
@@ -181,7 +182,7 @@ public final class RivalSearch implements Runnable {
 
         int numCaptures = 1;
 
-        if (board.makeMove(move & ~RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL)) {
+        if (board.makeMove(new EngineMove(move & ~RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL))) {
             int currentPieceOnSquare = board.getSquareOccupant(toSquare).getIndex();
             int currentSquareValue = RivalConstants.PIECE_VALUES.get(currentPieceOnSquare);
 
@@ -1046,7 +1047,7 @@ public final class RivalSearch implements Runnable {
                 }
             }
 
-            if (board.makeMove(move)) {
+            if (board.makeMove(new EngineMove(move))) {
                 legalMoveCount++;
 
                 newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck()));
@@ -1459,7 +1460,7 @@ public final class RivalSearch implements Runnable {
                     }
                 }
 
-                if (board.makeMove(move)) {
+                if (board.makeMove(new EngineMove(move))) {
                     legalMoveCount++;
 
                     isCheck = board.isCheck();
@@ -1674,7 +1675,7 @@ public final class RivalSearch implements Runnable {
         int pawnExtend;
 
         while (move != 0 && !this.m_abortingSearch) {
-            if (engineChessBoard.makeMove(move)) {
+            if (engineChessBoard.makeMove(new EngineMove(move))) {
                 final boolean isCheck = board.isCheck();
 
                 checkExtend = 0;
@@ -1782,8 +1783,8 @@ public final class RivalSearch implements Runnable {
         return engineChessBoard.getMover();
     }
 
-    public void makeMove(int move) throws InvalidMoveException {
-        engineChessBoard.makeMove(move);
+    public void makeMove(EngineMove engineMove) throws InvalidMoveException {
+        engineChessBoard.makeMove(engineMove);
     }
 
     public void go() {
@@ -1808,7 +1809,7 @@ public final class RivalSearch implements Runnable {
             int bestNewbieScore = -RivalConstants.INFINITY;
 
             while (move != 0) {
-                if (engineChessBoard.makeMove(move)) {
+                if (engineChessBoard.makeMove(new EngineMove(move))) {
                     boolean ply0Draw = false;
                     boolean ply1Draw = false;
 
@@ -1838,17 +1839,15 @@ public final class RivalSearch implements Runnable {
 
                     engineChessBoard.setLegalMoves(depth1MovesTemp);
 
-                    int c1 = 0;
-                    int move1 = depth1MovesTemp[c1] & 0x00FFFFFF;
+                    int c1 = -1;
 
-                    while (move1 != 0) {
-                        if (engineChessBoard.makeMove(move1)) {
+                    while ((depth1MovesTemp[++c1] & 0x00FFFFFF) != 0) {
+                        if (engineChessBoard.makeMove(new EngineMove(depth1MovesTemp[c1] & 0x00FFFFFF))) {
                             if (engineChessBoard.previousOccurrencesOfThisPosition() == 2) {
                                 ply1Draw = true;
                             }
                             engineChessBoard.unMakeMove();
                         }
-                        move1 = depth1MovesTemp[++c1] & 0x00FFFFFF;
                     }
 
                     if (ply0Draw) {

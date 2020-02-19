@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.text.NumberFormat;
 
+import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.FenUtils;
@@ -11,8 +12,6 @@ import org.junit.Test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.netsensia.rivalchess.uci.UCIController;
 
 public class PerftTest {
 
@@ -27,7 +26,7 @@ public class PerftTest {
 
         board.setLegalMoves(legalMoves);
         while (legalMoves[moveNum] != 0) {
-            if (board.makeMove(legalMoves[moveNum])) {
+            if (board.makeMove(new EngineMove(legalMoves[moveNum]))) {
                 nodes += getPerft(board, depth - 1);
                 board.unMakeMove();
             }

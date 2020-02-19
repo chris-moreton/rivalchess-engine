@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Square;
@@ -155,7 +156,7 @@ public class ChessBoardConversion
 			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK : pgnMove += "=R"; break; 
 		}
 		
-		if (board.makeMove(move))
+		if (board.makeMove(new EngineMove(move)))
 		{
 			if (board.isCheck()) pgnMove += "+";
 			board.unMakeMove();
@@ -164,7 +165,7 @@ public class ChessBoardConversion
 		return pgnMove;
 	}
 	
-	public static int getCompactMoveFromSimpleAlgebraic(String s)
+	public static EngineMove getCompactMoveFromSimpleAlgebraic(String s)
 	{
 		int fromX = s.toUpperCase().charAt(0) - 65;
 		int fromY = 7 - (s.toUpperCase().charAt(1) - 49);
@@ -188,6 +189,6 @@ public class ChessBoardConversion
 			}
 		}
 		
-		return (fromBitRef << 16) | toBitRef;
+		return new EngineMove((fromBitRef << 16) | toBitRef);
 	}
 }

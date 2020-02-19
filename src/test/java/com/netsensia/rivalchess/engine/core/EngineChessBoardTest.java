@@ -175,11 +175,11 @@ public class EngineChessBoardTest {
     @Test
     public void isCapture() throws IllegalFenException {
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(OpeningLibrary.E2E4_D7D5));
-        assertTrue(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e4d5")));
-        assertFalse(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e4e5")));
+        assertTrue(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e4d5").compact));
+        assertFalse(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e4e5").compact));
         engineChessBoard.setBoard(FenUtils.getBoardModel("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6"));
-        assertTrue(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5d6")));
-        assertFalse(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5e6")));
+        assertTrue(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5d6").compact));
+        assertFalse(engineChessBoard.isCapture(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e5e6").compact));
     }
 
     @Test

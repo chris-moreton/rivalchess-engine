@@ -391,7 +391,7 @@ public class OpeningLibrary
 				range += position.frequency;
 				if (movePositionInRange < range)
 				{
-					return ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(position.move);		
+					return ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(position.move).compact;
 				}
 			}
 		}
