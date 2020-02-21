@@ -17,7 +17,7 @@ public class BoardHash {
     private int[] hashTableUseHeight;
     private int[] hashTableIgnoreHeight;
     private long[] pawnHashTable;
-    public int maxHashEntries;
+    private int maxHashEntries;
     private int maxPawnHashEntries;
     private int lastHashSizeCreated;
 
@@ -76,7 +76,7 @@ public class BoardHash {
     }
 
     public void storeHashMove(int move, EngineChessBoard board, int score, byte flag, int height) {
-        int hashIndex = (int) (BoardHashHelper.getHash(board) % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+        int hashIndex = (int) (board.boardHashCode() % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
 
         if (height >= this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] || hashTableVersion > this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
             if (hashTableVersion == this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
@@ -104,8 +104,8 @@ public class BoardHash {
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
-            this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (BoardHashHelper.getHash(board) >>> 32);
-            this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (BoardHashHelper.getHash(board) & Bitboards.LOW32);
+            this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.boardHashCode() >>> 32);
+            this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.boardHashCode() & Bitboards.LOW32);
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = hashTableVersion;
         } else {
@@ -118,15 +118,15 @@ public class BoardHash {
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
-            this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (BoardHashHelper.getHash(board) >>> 32);
-            this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (BoardHashHelper.getHash(board) & Bitboards.LOW32);
+            this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.boardHashCode() >>> 32);
+            this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.boardHashCode() & Bitboards.LOW32);
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = hashTableVersion;
         }
     }
 
     public int getPawnHashIndex(EngineChessBoard engineChessBoard) {
-        return getPawnHashIndex(engineChessBoard, BoardHashHelper.getPawnHash(engineChessBoard));
+        return getPawnHashIndex(engineChessBoard, engineChessBoard.pawnHashCode());
     }
 
     public int getPawnHashIndex(EngineChessBoard engineChessBoard, long pawnHashValue) {
@@ -134,7 +134,7 @@ public class BoardHash {
     }
 
     public int getHashIndex(EngineChessBoard engineChessBoard) {
-        return getHashIndex(engineChessBoard, BoardHashHelper.getHash(engineChessBoard));
+        return getHashIndex(engineChessBoard, engineChessBoard.boardHashCode());
     }
 
     public int getHashIndex(EngineChessBoard engineChessBoard, long hashValue) {
@@ -142,13 +142,13 @@ public class BoardHash {
     }
 
     public long getHash(EngineChessBoard engineChessBoard) {
-        return BoardHashHelper.getHash(engineChessBoard);
+        return engineChessBoard.boardHashCode();
     }
 
     public PawnHashEntry getPawnHashEntry(EngineChessBoard board) {
         PawnHashEntry pawnHashEntry;
 
-        final long pawnHashValue = BoardHashHelper.getPawnHash(board);
+        final long pawnHashValue = board.pawnHashCode();
         final int pawnHashIndex = getPawnHashIndex(board, pawnHashValue);
 
         if (RivalConstants.USE_PAWN_HASH) {
@@ -246,7 +246,7 @@ public class BoardHash {
                 setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE, pawnHashEntry.getBlackPassedPawnScore());
                 setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS, pawnHashEntry.getWhitePassedPawnsBitboard());
                 setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS, pawnHashEntry.getBlackPassedPawnsBitboard());
-                setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK, BoardHashHelper.getPawnHash(board));
+                setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK, board.pawnHashCode());
             }
         }
 
@@ -307,7 +307,7 @@ public class BoardHash {
 
     public void setLastPawnHashValueAndEntry(EngineChessBoard board, PawnHashEntry pawnHashEntry) {
         if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN) {
-            setLastPawnHashValue(BoardHashHelper.getPawnHash(board));
+            setLastPawnHashValue(board.pawnHashCode());
             setLastPawnHashEntry(new PawnHashEntry(pawnHashEntry));
         }
     }
@@ -334,20 +334,12 @@ public class BoardHash {
         this.hashTableVersion = hashTableVersion;
     }
 
-    public int getMaxHashEntries() {
-        return maxHashEntries;
-    }
-
     public void setMaxHashEntries(int maxHashEntries) {
         this.maxHashEntries = maxHashEntries;
     }
 
     public void setMaxPawnHashEntries(int maxPawnHashEntries) {
         this.maxPawnHashEntries = maxPawnHashEntries;
-    }
-
-    public void setLastHashSizeCreated(int lastHashSizeCreated) {
-        this.lastHashSizeCreated = lastHashSizeCreated;
     }
 
     public void setLastPawnHashValue(long lastPawnHashValue) {

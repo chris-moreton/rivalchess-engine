@@ -6,7 +6,8 @@ import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.engine.core.bitboards.EngineBitboards;
-import com.netsensia.rivalchess.engine.core.hash.BoardHashHelper;
+import com.netsensia.rivalchess.engine.core.hash.BoardHashCalculator;
+import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.engine.core.type.MoveDetail;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -19,6 +20,7 @@ import java.util.List;
 public final class EngineChessBoard {
 
     private EngineBitboards engineBitboards = new EngineBitboards();
+    private BoardHashCalculator hashCalculator = new ZorbristHashCalculator();
 
     private int castlePrivileges;
     private boolean isWhiteToMove;
@@ -573,9 +575,9 @@ public final class EngineChessBoard {
 
         this.moveList[this.numMovesMade].capturePiece = -1;
         this.moveList[this.numMovesMade].move = compactMove;
-        this.moveList[this.numMovesMade].hashValue = BoardHashHelper.getHash(this);
+        this.moveList[this.numMovesMade].hashValue = hashCalculator.getHash(this);
         this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
-        this.moveList[this.numMovesMade].pawnHashValue = BoardHashHelper.getPawnHash(this);
+        this.moveList[this.numMovesMade].pawnHashValue = hashCalculator.getPawnHash(this);
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
         this.moveList[this.numMovesMade].enPassantBitboard = this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
         this.moveList[this.numMovesMade].castlePrivileges = (byte) this.castlePrivileges;
@@ -1037,7 +1039,7 @@ public final class EngineChessBoard {
     public int previousOccurrencesOfThisPosition() {
         int occurrences = 0;
         for (int i = this.numMovesMade - 2; i >= 0 && i >= this.numMovesMade - this.halfMoveCount; i -= 2) {
-            if (this.moveList[i].hashValue == BoardHashHelper.getHash(this)) {
+            if (this.moveList[i].hashValue == hashCalculator.getHash(this)) {
                 occurrences++;
             }
         }
@@ -1158,9 +1160,17 @@ public final class EngineChessBoard {
         return false;
     }
 
+    public long pawnHashCode() {
+        return hashCalculator.getPawnHash(this);
+    }
+
+    public long boardHashCode() {
+        return hashCalculator.getHash(this);
+    }
+
     @Override
     public int hashCode() {
-        return (int)BoardHashHelper.getHash(this);
+        return squareContents.hashCode() + (this.getMover() == Colour.WHITE ? 1 : 0);
     }
 
 }

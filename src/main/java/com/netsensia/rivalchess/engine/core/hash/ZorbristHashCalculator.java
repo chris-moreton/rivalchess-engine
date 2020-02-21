@@ -4,7 +4,7 @@ import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 
-public class BoardHashHelper {
+public class ZorbristHashCalculator implements BoardHashCalculator {
 
     private static final long START_HASH_VALUE = 1427869295504964227L;
     private static final long START_PAWN_HASH_VALUE = 5454534288458826522L;
@@ -27,7 +27,7 @@ public class BoardHashHelper {
 
     private final static long[] moverHashValues = {6612194290785701391L, 7796428774704130372L};
 
-    public static long getHash(EngineChessBoard engineChessBoard) {
+    public long getHash(EngineChessBoard engineChessBoard) {
         long hashValue = START_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
@@ -44,7 +44,7 @@ public class BoardHashHelper {
         return hashValue;
     }
 
-    public static long getPawnHash(EngineChessBoard engineChessBoard) {
+    public long getPawnHash(EngineChessBoard engineChessBoard) {
         long pawnHashValue = START_PAWN_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {

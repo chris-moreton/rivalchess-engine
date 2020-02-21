@@ -4,7 +4,6 @@ import java.io.PrintStream;
 import java.util.TimerTask;
 
 import com.netsensia.rivalchess.constants.SearchState;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
@@ -28,8 +27,9 @@ public class EngineMonitor extends TimerTask {
         int depth = m_engine.getIterativeDeepeningDepth();
         sendUCI(
                 "info" +
-                        " currmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(m_engine.m_currentDepthZeroMove) +
-                        " currmovenumber " + m_engine.m_currentDepthZeroMoveNumber +
+                        " currmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(
+                                m_engine.getCurrentDepthZeroMove()) +
+                        " currmovenumber " + m_engine.getCurrentDepthZeroMoveNumber() +
                         " depth " + depth +
                         " score " + m_engine.getCurrentScoreHuman() +
                         " pv " + m_engine.getCurrentPathString().trim() +

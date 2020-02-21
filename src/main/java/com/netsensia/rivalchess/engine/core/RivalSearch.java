@@ -28,6 +28,7 @@ public final class RivalSearch implements Runnable {
 
     private final PrintStream printStream;
     private final BoardHash boardHash = new BoardHash();
+
     private final List<List<Long>> drawnPositionsAtRoot;
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
     private EngineChessBoard engineChessBoard
@@ -63,25 +64,21 @@ public final class RivalSearch implements Runnable {
     protected int m_nodesToSearch = Integer.MAX_VALUE;
 
     protected boolean m_abortingSearch = true;
-    public long m_searchStartTime = -1, m_searchTargetEndTime, m_searchEndTime = 0;
+
+    private long searchStartTime = -1;
+    private long searchTargetEndTime;
+    private long searchEndTime = 0;
+
     protected int m_finalDepthToSearch = 1;
-    protected int m_iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
+    protected int iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
 
     private boolean m_useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK;
     private boolean m_inBook = m_useOpeningBook;
 
-    public int checkExtensions = 0;
-    public int threatExtensions = 0;
-    public int pawnExtensions = 0;
-    public int lateMoveReductions = 0;
-    public int lateMoveDoubleReductions = 0;
-    public int recaptureExtensions = 0;
-    public int recaptureExtensionAttempts = 0;
+    private int currentDepthZeroMove;
+    private int currentDepthZeroMoveNumber;
 
-    public int m_currentDepthZeroMove;
-    public int m_currentDepthZeroMoveNumber;
-
-    public SearchPath m_currentPath;
+    private SearchPath m_currentPath;
     private String m_currentPathString;
 
     private boolean m_isUCIMode = false;
@@ -1238,7 +1235,7 @@ public final class RivalSearch implements Runnable {
 
         nodes++;
 
-        if (this.getMillisSetByEngineMonitor() > this.m_searchTargetEndTime || nodes >= this.m_nodesToSearch) {
+        if (this.getMillisSetByEngineMonitor() > this.searchTargetEndTime || nodes >= this.m_nodesToSearch) {
             this.m_abortingSearch = true;
             this.setOkToSendInfo(false);
             return null;
@@ -1342,7 +1339,6 @@ public final class RivalSearch implements Runnable {
         if ((extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
             if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
                 checkExtend = 1;
-                checkExtensions++;
             }
         }
 
@@ -1394,7 +1390,6 @@ public final class RivalSearch implements Runnable {
                             RivalConstants.FRACTIONAL_EXTENSION_THREAT > 0 &&
                                     -newPath.score < -RivalConstants.MATE_SCORE_START &&
                                     (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
-                        threatExtensions++;
                         threatExtend = 1;
                     } else {
                         threatExtend = 0;
@@ -1441,7 +1436,6 @@ public final class RivalSearch implements Runnable {
 
                 int currentSEEValue = -RivalConstants.INFINITY;
                 if (RivalConstants.FRACTIONAL_EXTENSION_RECAPTURE > 0 && (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
-                    recaptureExtensionAttempts++;
                     recaptureExtend = 0;
 
                     if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece).equals(RivalConstants.PIECE_VALUES.get(targetPiece))) {
@@ -1455,7 +1449,6 @@ public final class RivalSearch implements Runnable {
                             currentSEEValue = staticExchangeEvaluation(board, move);
                         if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(recaptureSquare).getIndex()) - RivalConstants.RECAPTURE_EXTENSION_MARGIN) {
                             recaptureExtend = 1;
-                            recaptureExtensions++;
                         }
                     }
                 }
@@ -1475,12 +1468,11 @@ public final class RivalSearch implements Runnable {
                             if (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0) {
                                 if (board.wasPawnPush()) {
                                     pawnExtend = 1;
-                                    pawnExtensions++;
                                 }
                             }
                         }
 
-                        int partOfTree = ply / this.m_iterativeDeepeningCurrentDepth;
+                        int partOfTree = ply / this.iterativeDeepeningCurrentDepth;
                         int maxNewExtensionsInThisPart = RivalConstants.MAX_NEW_EXTENSIONS_TREE_PART.get(Math.min(partOfTree, RivalConstants.LAST_EXTENSION_LAYER));
 
                         newExtensions =
@@ -1505,7 +1497,6 @@ public final class RivalSearch implements Runnable {
                                         (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0 || !board.wasPawnPush())) {
                             if (-evaluate(board) <= low + RivalConstants.LMR_CUT_MARGIN) {
                                 lateMoveReduction = 1;
-                                lateMoveReductions++;
                                 historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] = RivalConstants.LMR_REPLACE_VALUE_AFTER_CUT;
                             }
                         }
@@ -1514,7 +1505,6 @@ public final class RivalSearch implements Runnable {
                         if (RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION > -1) {
                             lateMoveReductionsMade += lateMoveReduction;
                             if (lateMoveReductionsMade > RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION && depthRemaining > 3) {
-                                lateMoveDoubleReductions++;
                                 lateMoveReduction = 2;
                             }
                         }
@@ -1682,11 +1672,9 @@ public final class RivalSearch implements Runnable {
                 pawnExtend = 0;
                 if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
                     checkExtend = 1;
-                    checkExtensions++;
                 } else if (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0) {
                     if (board.wasPawnPush()) {
                         pawnExtend = 1;
-                        pawnExtensions++;
                     }
                 }
 
@@ -1698,8 +1686,8 @@ public final class RivalSearch implements Runnable {
 
                 numLegalMovesAtDepthZero++;
 
-                m_currentDepthZeroMove = move;
-                m_currentDepthZeroMoveNumber = numLegalMovesAtDepthZero;
+                currentDepthZeroMove = move;
+                currentDepthZeroMoveNumber = numLegalMovesAtDepthZero;
 
                 boolean canMakeNullMove = true;
                 if (isDrawnAtRoot(engineChessBoard, 1)) {
@@ -1716,17 +1704,34 @@ public final class RivalSearch implements Runnable {
                 } else {
                     if (scoutSearch) {
                         newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, canMakeNullMove, -1, isCheck);
-                        if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                        else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                        if (newPath != null) {
+                            if (newPath.score > RivalConstants.MATE_SCORE_START) {
+                                newPath.score--;
+                            }
+                            else if (newPath.score < -RivalConstants.MATE_SCORE_START) {
+                                newPath.score++;
+                            }
+                        }
                         if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                             newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
-                            if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                            else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                            if (newPath != null) {
+                                if (newPath.score > RivalConstants.MATE_SCORE_START) {
+                                    newPath.score--;
+                                } else {
+                                    if (newPath.score < -RivalConstants.MATE_SCORE_START) {
+                                        newPath.score++;
+                                    }
+                                }
+                            }
                         }
                     } else {
                         newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, canMakeNullMove, -1, isCheck);
-                        if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                        else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                        if (newPath != null) {
+                            if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
+                            else {
+                                if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                            }
+                        }
                     }
                 }
                 if (!this.m_abortingSearch) {
@@ -1810,12 +1815,14 @@ public final class RivalSearch implements Runnable {
 
             while (move != 0) {
                 if (engineChessBoard.makeMove(new EngineMove(move))) {
-                    boolean ply0Draw = false;
-                    boolean ply1Draw = false;
+
+                    List<Boolean> plyDraw = new ArrayList<>();
+                    plyDraw.add(false);
+                    plyDraw.add(false);
 
                     legal++;
 
-                    if (this.m_iterativeDeepeningCurrentDepth < 1) // super beginner mode
+                    if (this.iterativeDeepeningCurrentDepth < 1) // super beginner mode
                     {
                         SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, engineChessBoard.isCheck());
                         sp.score = -sp.score;
@@ -1824,17 +1831,17 @@ public final class RivalSearch implements Runnable {
                             m_currentPath.reset();
                             m_currentPath.setPath(move);
                             m_currentPath.score = sp.score;
-                            m_currentPathString = "" + m_currentPath;
+                            m_currentPathString = m_currentPath.toString();
                         }
                     } else if (legal == 1) {
                         // use this opportunity to set a move in the odd event that there is no time to search
                         m_currentPath.reset();
                         m_currentPath.setPath(move);
                         m_currentPath.score = 0;
-                        m_currentPathString = "" + m_currentPath;
+                        m_currentPathString = m_currentPath.toString();
                     }
                     if (engineChessBoard.previousOccurrencesOfThisPosition() == 2) {
-                        ply0Draw = true;
+                        plyDraw.set(0, true);
                     }
 
                     engineChessBoard.setLegalMoves(depth1MovesTemp);
@@ -1844,17 +1851,16 @@ public final class RivalSearch implements Runnable {
                     while ((depth1MovesTemp[++c1] & 0x00FFFFFF) != 0) {
                         if (engineChessBoard.makeMove(new EngineMove(depth1MovesTemp[c1] & 0x00FFFFFF))) {
                             if (engineChessBoard.previousOccurrencesOfThisPosition() == 2) {
-                                ply1Draw = true;
+                                plyDraw.set(1, true);
                             }
                             engineChessBoard.unMakeMove();
                         }
                     }
 
-                    if (ply0Draw) {
-                        drawnPositionsAtRoot.get(0).add(boardHash.getHash(engineChessBoard));
-                    }
-                    if (ply1Draw) {
-                        drawnPositionsAtRoot.get(1).add(boardHash.getHash(engineChessBoard));
+                    for (int i=0; i<=1; i++) {
+                        if (Boolean.TRUE.equals(plyDraw.get(i))) {
+                            drawnPositionsAtRoot.get(i).add(boardHash.getHash(engineChessBoard));
+                        }
                     }
 
                     engineChessBoard.unMakeMove();
@@ -1887,7 +1893,7 @@ public final class RivalSearch implements Runnable {
             scoreFullWidthMoves(engineChessBoard, 0);
 
             for (byte depth = 1; depth <= this.m_finalDepthToSearch && !this.m_abortingSearch; depth++) {
-                this.m_iterativeDeepeningCurrentDepth = depth;
+                this.iterativeDeepeningCurrentDepth = depth;
 
                 if (depth > 1) setOkToSendInfo(true);
 
@@ -1941,7 +1947,7 @@ public final class RivalSearch implements Runnable {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            printStream.println(e.getStackTrace());
         } finally {
             setSearchComplete();
         }
@@ -1953,9 +1959,9 @@ public final class RivalSearch implements Runnable {
 
         boardHash.incVersion();
 
-        m_searchStartTime = System.currentTimeMillis();
-        m_searchEndTime = 0;
-        m_searchTargetEndTime = this.m_searchStartTime + this.m_millisecondsToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
+        searchStartTime = System.currentTimeMillis();
+        searchEndTime = 0;
+        searchTargetEndTime = this.searchStartTime + this.m_millisecondsToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
 
         aspirationLow = -RivalConstants.INFINITY;
         aspirationHigh = RivalConstants.INFINITY;
@@ -2036,10 +2042,10 @@ public final class RivalSearch implements Runnable {
                 timePassed = 0;
                 break;
             case SEARCHING:
-                timePassed = System.currentTimeMillis() - this.m_searchStartTime;
+                timePassed = System.currentTimeMillis() - this.searchStartTime;
                 break;
             case COMPLETE:
-                timePassed = this.m_searchEndTime - this.m_searchStartTime;
+                timePassed = this.searchEndTime - this.searchStartTime;
                 break;
             case REQUESTED:
                 timePassed = 0;
@@ -2070,7 +2076,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public int getIterativeDeepeningDepth() {
-        return this.m_iterativeDeepeningCurrentDepth;
+        return this.iterativeDeepeningCurrentDepth;
     }
 
     public int getCurrentMove() {
@@ -2090,7 +2096,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public synchronized void setSearchComplete() {
-        this.m_searchEndTime = System.currentTimeMillis();
+        this.searchEndTime = System.currentTimeMillis();
         searchState = SearchState.COMPLETE;
     }
 
@@ -2118,8 +2124,8 @@ public final class RivalSearch implements Runnable {
                 if (m_isUCIMode) {
                     String s1 =
                             "info" +
-                                    " currmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(m_currentDepthZeroMove) +
-                                    " currmovenumber " + m_currentDepthZeroMoveNumber +
+                                    " currmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(currentDepthZeroMove) +
+                                    " currmovenumber " + currentDepthZeroMoveNumber +
                                     " depth " + getIterativeDeepeningDepth() +
                                     " score " + getCurrentScoreHuman() +
                                     " pv " + getCurrentPathString() +
@@ -2161,5 +2167,21 @@ public final class RivalSearch implements Runnable {
 
     public String getFen() {
         return engineChessBoard.getFen();
+    }
+
+    public int getCurrentDepthZeroMoveNumber() {
+        return currentDepthZeroMoveNumber;
+    }
+
+    public void setCurrentDepthZeroMoveNumber(int currentDepthZeroMoveNumber) {
+        this.currentDepthZeroMoveNumber = currentDepthZeroMoveNumber;
+    }
+
+    public int getCurrentDepthZeroMove() {
+        return currentDepthZeroMove;
+    }
+
+    public void setCurrentDepthZeroMove(int currentDepthZeroMove) {
+        this.currentDepthZeroMove = currentDepthZeroMove;
     }
 }

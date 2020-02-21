@@ -47,7 +47,7 @@ public class UciControllerTest {
     }
 
     @Test
-    public void testGenerateMove() throws InterruptedException {
+    public void testGenerateMove() {
 
         uciController.processUCICommand("ucinewgame");
         uciController.processUCICommand("position startpos");

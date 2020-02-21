@@ -18,7 +18,9 @@ public class PerftTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerftTest.class);
 
     public static long getPerft(EngineChessBoard board, int depth) throws InvalidMoveException {
-        if (depth == 0) return 1;
+        if (depth == 0) {
+            return 1;
+        }
         long nodes = 0;
         int moveNum = 0;
 
