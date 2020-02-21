@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.util.Numbers;
 public class BoardHash {
 
     private long lastPawnHashValue = -1;
+    private ZorbristHashCalculator hashCalculator = new ZorbristHashCalculator();
 
     private PawnHashEntry lastPawnHashEntry = new PawnHashEntry();
 
@@ -125,31 +126,15 @@ public class BoardHash {
         }
     }
 
-    public int getPawnHashIndex(EngineChessBoard engineChessBoard) {
-        return getPawnHashIndex(engineChessBoard, engineChessBoard.pawnHashCode());
-    }
-
-    public int getPawnHashIndex(EngineChessBoard engineChessBoard, long pawnHashValue) {
+    public int getPawnHashIndex(long pawnHashValue) {
         return (int) (pawnHashValue % this.maxPawnHashEntries) * RivalConstants.NUM_PAWNHASH_FIELDS;
-    }
-
-    public int getHashIndex(EngineChessBoard engineChessBoard) {
-        return getHashIndex(engineChessBoard, engineChessBoard.boardHashCode());
-    }
-
-    public int getHashIndex(EngineChessBoard engineChessBoard, long hashValue) {
-        return (int) (hashValue % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
-    }
-
-    public long getHash(EngineChessBoard engineChessBoard) {
-        return engineChessBoard.boardHashCode();
     }
 
     public PawnHashEntry getPawnHashEntry(EngineChessBoard board) {
         PawnHashEntry pawnHashEntry;
 
         final long pawnHashValue = board.pawnHashCode();
-        final int pawnHashIndex = getPawnHashIndex(board, pawnHashValue);
+        final int pawnHashIndex = getPawnHashIndex(pawnHashValue);
 
         if (RivalConstants.USE_PAWN_HASH) {
             if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN && lastPawnHashValue == pawnHashValue) {
@@ -324,6 +309,22 @@ public class BoardHash {
         }
 
         setHashTable();
+    }
+
+    public long pawnHashCode(EngineChessBoard engineChessBoard) {
+        return hashCalculator.initPawnHash(engineChessBoard);
+    }
+
+    public long boardHashCode(EngineChessBoard engineChessBoard) {
+        return hashCalculator.initHash(engineChessBoard);
+    }
+
+    public int getHashIndex(EngineChessBoard engineChessBoard) {
+        return getHashIndex(engineChessBoard.boardHashCode());
+    }
+
+    public int getHashIndex(long hashValue) {
+        return (int) (hashValue % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
     }
 
     public int getHashTableVersion() {

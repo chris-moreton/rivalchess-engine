@@ -15,4 +15,8 @@ public class EngineBitboards {
     public long getPieceBitboard(int i) {
         return pieceBitboards[i];
     }
+
+    public void xorPieceBitboard(int i, long xorBy) {
+        this.pieceBitboards[i] ^= xorBy;
+    }
 }

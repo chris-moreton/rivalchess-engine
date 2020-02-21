@@ -1,13 +1,21 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.constants.Colour;
+import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.engine.core.type.EngineMove;
+import com.netsensia.rivalchess.engine.core.type.MoveDetail;
+import com.netsensia.rivalchess.model.Move;
+import com.netsensia.rivalchess.model.Square;
+import com.netsensia.rivalchess.util.ChessBoardConversion;
 
-public class ZorbristHashCalculator implements BoardHashCalculator {
+public class ZorbristHashCalculator {
 
     private static final long START_HASH_VALUE = 1427869295504964227L;
     private static final long START_PAWN_HASH_VALUE = 5454534288458826522L;
+
+    private long trackedBoardHash;
 
     private final static long[][] pieceHashValues =
             {
@@ -27,7 +35,7 @@ public class ZorbristHashCalculator implements BoardHashCalculator {
 
     private final static long[] moverHashValues = {6612194290785701391L, 7796428774704130372L};
 
-    public long getHash(EngineChessBoard engineChessBoard) {
+    public long initHash(EngineChessBoard engineChessBoard) {
         long hashValue = START_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
@@ -44,7 +52,7 @@ public class ZorbristHashCalculator implements BoardHashCalculator {
         return hashValue;
     }
 
-    public long getPawnHash(EngineChessBoard engineChessBoard) {
+    public long initPawnHash(EngineChessBoard engineChessBoard) {
         long pawnHashValue = START_PAWN_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
@@ -59,4 +67,41 @@ public class ZorbristHashCalculator implements BoardHashCalculator {
 
         return pawnHashValue;
     }
+
+    private void replaceWithEmptySquare(SquareOccupant piece, int bitRef) {
+        trackedBoardHash ^= pieceHashValues[piece.getIndex()][bitRef];
+    }
+
+    private void placePieceOnEmptySquare(SquareOccupant piece, int bitRef) {
+        trackedBoardHash ^= pieceHashValues[piece.getIndex()][bitRef];
+    }
+
+    private void replaceWithAnotherPiece(SquareOccupant movedPiece, SquareOccupant capturedPiece, int bitRef) {
+        trackedBoardHash ^= pieceHashValues[capturedPiece.getIndex()][bitRef];
+        trackedBoardHash ^= pieceHashValues[movedPiece.getIndex()][bitRef];
+    }
+
+    public void move(EngineChessBoard board, EngineMove engineMove) {
+        Move move = ChessBoardConversion.getMoveRefFromEngineMove(engineMove.compact);
+        int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
+        SquareOccupant movedPiece = board.getSquareOccupant(bitRefFrom);
+        int bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.getTgtBoardRef());
+        SquareOccupant capturedPiece = board.getSquareOccupant(bitRefTo);
+        replaceWithEmptySquare(movedPiece, bitRefFrom);
+
+        if (capturedPiece != SquareOccupant.NONE) {
+            replaceWithAnotherPiece(movedPiece, capturedPiece, bitRefTo);
+        } else {
+            placePieceOnEmptySquare(movedPiece, bitRefTo);
+        }
+    }
+
+    public void unmakeMove(EngineChessBoard engineChessBoard, MoveDetail moveDetail) {
+
+    }
+
+    public long getTrackedBoarHashValue() {
+        return trackedBoardHash;
+    }
+
 }

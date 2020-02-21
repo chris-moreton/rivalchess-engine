@@ -61,6 +61,11 @@ public class PerftTest {
     }
 
     @Test
+    public void testPerftScoreSuperShort() throws IllegalFenException, InvalidMoveException {
+        assertPerftScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", 2, 169);
+    }
+
+    @Test
     public void testPerftScoreShort() throws IllegalFenException, InvalidMoveException {
         assertPerftScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", 4, 20541);
         assertPerftScore("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 5, 4865609);

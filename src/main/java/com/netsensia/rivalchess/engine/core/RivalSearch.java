@@ -1260,8 +1260,8 @@ public final class RivalSearch implements Runnable {
 
         byte flag = RivalConstants.UPPERBOUND;
 
-        final long hashValue = boardHash.getHash(engineChessBoard);
-        final int hashIndex = boardHash.getHashIndex(board, hashValue);
+        final long hashValue = boardHash.boardHashCode(engineChessBoard);
+        final int hashIndex = boardHash.getHashIndex(board);
         int hashMove = 0;
 
         if (RivalConstants.USE_HASH_TABLES) {
@@ -1636,7 +1636,7 @@ public final class RivalSearch implements Runnable {
             for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
                 if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
                         boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
-                    throw new HashVerificationException("Height bad clash " + boardHash.getHash(board));
+                    throw new HashVerificationException("Height bad clash " + boardHash.boardHashCode(board));
                 }
             }
         }
@@ -1859,7 +1859,7 @@ public final class RivalSearch implements Runnable {
 
                     for (int i=0; i<=1; i++) {
                         if (Boolean.TRUE.equals(plyDraw.get(i))) {
-                            drawnPositionsAtRoot.get(i).add(boardHash.getHash(engineChessBoard));
+                            drawnPositionsAtRoot.get(i).add(boardHash.boardHashCode(engineChessBoard));
                         }
                     }
 
@@ -2068,7 +2068,7 @@ public final class RivalSearch implements Runnable {
     private boolean isDrawnAtRoot(EngineChessBoard board, int ply) {
         int i;
         for (i = 0; i < drawnPositionsAtRootCount.get(ply); i++) {
-            if (drawnPositionsAtRoot.get(ply).get(i).equals(boardHash.getHash(board))) {
+            if (drawnPositionsAtRoot.get(ply).get(i).equals(boardHash.boardHashCode(board))) {
                 return true;
             }
         }
@@ -2173,15 +2173,8 @@ public final class RivalSearch implements Runnable {
         return currentDepthZeroMoveNumber;
     }
 
-    public void setCurrentDepthZeroMoveNumber(int currentDepthZeroMoveNumber) {
-        this.currentDepthZeroMoveNumber = currentDepthZeroMoveNumber;
-    }
-
     public int getCurrentDepthZeroMove() {
         return currentDepthZeroMove;
     }
 
-    public void setCurrentDepthZeroMove(int currentDepthZeroMove) {
-        this.currentDepthZeroMove = currentDepthZeroMove;
-    }
 }
