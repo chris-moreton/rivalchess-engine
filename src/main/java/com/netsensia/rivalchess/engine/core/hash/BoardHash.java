@@ -332,6 +332,10 @@ public class BoardHash {
         hashCalculator.move(engineChessBoard, move);
     }
 
+    public long getTrackedHashValue() {
+        return hashCalculator.getTrackedBoardHashValue();
+    }
+
     public int getHashTableVersion() {
         return hashTableVersion;
     }

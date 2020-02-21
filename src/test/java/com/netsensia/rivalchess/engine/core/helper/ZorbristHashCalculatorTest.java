@@ -94,19 +94,17 @@ public class ZorbristHashCalculatorTest {
 
     @Test
     public void zorbristTracker() throws InvalidMoveException {
-        ZorbristHashCalculator hashCalculator = new ZorbristHashCalculator();
 
         EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
-        hashCalculator.initHash(ecb);
-        long thv = hashCalculator.getTrackedBoardHashValue();
-        long chv = hashCalculator.initHash(ecb);
+        long thv = ecb.trackedBoardHashCode();
+        long chv = ecb.boardHashCode();
         assertEquals(thv, chv);
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e2e4").compact));
 
-        thv = hashCalculator.getTrackedBoardHashValue();
-        chv = hashCalculator.initHash(ecb);
+        thv = ecb.trackedBoardHashCode();
+        chv = ecb.boardHashCode();
 
         assertEquals(thv, chv);
 

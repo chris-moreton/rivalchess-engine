@@ -45,6 +45,7 @@ public final class EngineChessBoard {
     public EngineChessBoard(Board board) {
         initArrays();
         setBoard(board);
+        boardHashCode();
     }
 
     public void setBoard(Board board) {
@@ -573,8 +574,6 @@ public final class EngineChessBoard {
         final int capturePiece = this.squareContents[moveTo];
         final int movePiece = this.squareContents[moveFrom];
 
-        boardHash.move(this, engineMove);
-
         this.moveList[this.numMovesMade].capturePiece = -1;
         this.moveList[this.numMovesMade].move = compactMove;
         this.moveList[this.numMovesMade].hashValue = boardHash.boardHashCode(this);
@@ -583,6 +582,8 @@ public final class EngineChessBoard {
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
         this.moveList[this.numMovesMade].enPassantBitboard = this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
         this.moveList[this.numMovesMade].castlePrivileges = (byte) this.castlePrivileges;
+
+        boardHash.move(this, engineMove);
 
         this.isOnNullMove = false;
 
@@ -1168,6 +1169,10 @@ public final class EngineChessBoard {
 
     public long boardHashCode() {
         return boardHash.boardHashCode(this);
+    }
+
+    public long trackedBoardHashCode() {
+        return boardHash.getTrackedHashValue();
     }
 
     @Override
