@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.engine.core.type.MoveDetail;
+import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -82,17 +83,94 @@ public class ZorbristHashCalculator {
     }
 
     public void move(EngineChessBoard board, EngineMove engineMove) {
-        Move move = ChessBoardConversion.getMoveRefFromEngineMove(engineMove.compact);
-        int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
-        SquareOccupant movedPiece = board.getSquareOccupant(bitRefFrom);
-        int bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.getTgtBoardRef());
-        SquareOccupant capturedPiece = board.getSquareOccupant(bitRefTo);
-        replaceWithEmptySquare(movedPiece, bitRefFrom);
 
-        if (capturedPiece != SquareOccupant.NONE) {
-            replaceWithAnotherPiece(movedPiece, capturedPiece, bitRefTo);
-        } else {
+        final Move move = ChessBoardConversion.getMoveRefFromEngineMove(engineMove.compact);
+        final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
+        final SquareOccupant movedPiece = board.getSquareOccupant(bitRefFrom);
+        final int bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.getTgtBoardRef());
+        final SquareOccupant capturedPiece = board.getSquareOccupant(bitRefTo);
+
+        replaceWithEmptySquare(movedPiece, bitRefFrom);
+        processPossibleCapture(movedPiece, capturedPiece, bitRefTo);
+
+        if (movedPiece == SquareOccupant.WP) {
+            processPossibleWhitePawnEnPassantCapture(move, capturedPiece);
+        }
+
+        if (movedPiece == SquareOccupant.BP) {
+            processPossibleBlackPawnEnPassantCapture(move, capturedPiece);
+        }
+
+        if (movedPiece == SquareOccupant.WK && bitRefFrom == 3) {
+            processPossibleWhiteKingSideCastle(bitRefTo);
+            processPossibleWhiteQueenSideCastle(bitRefTo);
+        }
+
+        if (movedPiece == SquareOccupant.BK) {
+            processPossibleBlackKingSideCastle(bitRefTo);
+            processPossibleBlackQueenSideCastle(bitRefTo);
+        }
+
+
+    }
+
+    private void processPossibleWhiteKingSideCastle(int bitRefTo) {
+        if (bitRefTo == 1) {
+            replaceWithEmptySquare(SquareOccupant.WR, 0);
+            placePieceOnEmptySquare(SquareOccupant.WR, 2);
+        }
+    }
+
+    private void processPossibleWhiteQueenSideCastle(int bitRefTo) {
+        if (bitRefTo == 5) {
+            replaceWithEmptySquare(SquareOccupant.WR, 7);
+            placePieceOnEmptySquare(SquareOccupant.WR, 4);
+        }
+    }
+
+    private void processPossibleBlackKingSideCastle(int bitRefTo) {
+        if (bitRefTo == 61) {
+            replaceWithEmptySquare(SquareOccupant.WR, 56);
+            placePieceOnEmptySquare(SquareOccupant.WR, 58);
+        }
+    }
+
+    private void processPossibleBlackQueenSideCastle(int bitRefTo) {
+        if (bitRefTo == 57) {
+            replaceWithEmptySquare(SquareOccupant.WR, 63);
+            placePieceOnEmptySquare(SquareOccupant.WR, 60);
+        }
+    }
+
+    private void processPossibleWhitePawnEnPassantCapture(Move move, SquareOccupant capturedPiece) {
+        if (movedPiece == SquareOccupant.WP
+                && move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
+
+            final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
+                        new Square(move.getTgtXFile(), move.getTgtYRank() + 1
+                    ));
+
+            replaceWithEmptySquare(SquareOccupant.BP, capturedPawnBitRef);
+        }
+    }
+
+    private void processPossibleBlackPawnEnPassantCapture(Move move, SquareOccupant capturedPiece) {
+        if (movedPiece == SquareOccupant.BP
+                && move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
+
+            final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
+                    new Square(move.getTgtXFile(), move.getTgtYRank() - 1
+                    ));
+
+            replaceWithEmptySquare(SquareOccupant.WP, capturedPawnBitRef);
+        }
+    }
+
+    private void processPossibleCapture(SquareOccupant movedPiece, SquareOccupant capturedPiece, int bitRefTo) {
+        if (capturedPiece == SquareOccupant.NONE) {
             placePieceOnEmptySquare(movedPiece, bitRefTo);
+        } else {
+            replaceWithAnotherPiece(movedPiece, capturedPiece, bitRefTo);
         }
     }
 
