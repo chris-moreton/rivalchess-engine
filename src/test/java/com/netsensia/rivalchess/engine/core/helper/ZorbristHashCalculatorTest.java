@@ -1,8 +1,12 @@
 package com.netsensia.rivalchess.engine.core.helper;
 
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
+import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.exception.InvalidMoveException;
+import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
 
@@ -85,6 +89,26 @@ public class ZorbristHashCalculatorTest {
         assertEquals(2857364192485741149L, hashCalculator.initPawnHash(new EngineChessBoard(FenUtils.getBoardModel("1r3r1k/6b1/p2p1pp1/Q1n4p/1NP1P3/5P1B/PR2q2P/2K5 w - - 4 5"))));
         assertEquals(4737023572921181958L, hashCalculator.initPawnHash(new EngineChessBoard(FenUtils.getBoardModel("r1bq4/1pp2p1p/p2p2p1/5N1k/Q7/8/PPPPrPPP/R1B3K1 w - - 0 6"))));
         assertEquals(4737023572921181958L, hashCalculator.initPawnHash(new EngineChessBoard(FenUtils.getBoardModel("r1bq1rN1/1pp2pkp/p2p2p1/2n3Q1/4R3/8/PPPP1PPP/R1B3K1 b - - 5 3"))));
+
+    }
+
+    @Test
+    public void zorbristTracker() throws InvalidMoveException {
+        ZorbristHashCalculator hashCalculator = new ZorbristHashCalculator();
+
+        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+
+        hashCalculator.initHash(ecb);
+        long thv = hashCalculator.getTrackedBoardHashValue();
+        long chv = hashCalculator.initHash(ecb);
+        assertEquals(thv, chv);
+
+        ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e2e4").compact));
+
+        thv = hashCalculator.getTrackedBoardHashValue();
+        chv = hashCalculator.initHash(ecb);
+
+        assertEquals(thv, chv);
 
     }
 }

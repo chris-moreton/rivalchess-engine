@@ -561,6 +561,7 @@ public final class EngineChessBoard {
     }
 
     public boolean makeMove(EngineMove engineMove) throws InvalidMoveException {
+
         final int compactMove = engineMove.compact;
 
         final byte moveFrom = (byte) (compactMove >>> 16);
@@ -571,6 +572,8 @@ public final class EngineChessBoard {
 
         final int capturePiece = this.squareContents[moveTo];
         final int movePiece = this.squareContents[moveFrom];
+
+        boardHash.move(this, engineMove);
 
         this.moveList[this.numMovesMade].capturePiece = -1;
         this.moveList[this.numMovesMade].move = compactMove;

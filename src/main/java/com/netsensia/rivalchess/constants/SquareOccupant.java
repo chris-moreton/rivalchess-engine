@@ -43,4 +43,28 @@ public enum SquareOccupant {
         }
         return SquareOccupant.NONE;
     }
+
+    public static SquareOccupant fromString(String piece){
+        switch (piece.trim()) {
+            case "q":
+                return SquareOccupant.BQ;
+            case "r":
+                return SquareOccupant.BR;
+            case "n":
+                return SquareOccupant.BN;
+            case "b":
+                return SquareOccupant.BB;
+            case "Q":
+                return SquareOccupant.WQ;
+            case "R":
+                return SquareOccupant.WR;
+            case "N":
+                return SquareOccupant.WN;
+            case "B":
+                return SquareOccupant.WB;
+            default:
+                return SquareOccupant.NONE;
+        }
+
+    }
 }

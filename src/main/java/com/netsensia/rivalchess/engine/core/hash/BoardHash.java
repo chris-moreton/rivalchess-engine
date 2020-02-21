@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;
+import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.util.Numbers;
 
 public class BoardHash {
@@ -325,6 +326,10 @@ public class BoardHash {
 
     public int getHashIndex(long hashValue) {
         return (int) (hashValue % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+    }
+
+    public void move(EngineChessBoard engineChessBoard, EngineMove move) {
+        hashCalculator.move(engineChessBoard, move);
     }
 
     public int getHashTableVersion() {

@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.engine.core.type.MoveDetail;
-import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -50,6 +49,7 @@ public class ZorbristHashCalculator {
         hashValue ^= moverHashValues[engineChessBoard.getMover() == Colour.WHITE
                 ? Colour.WHITE.getValue() : Colour.BLACK.getValue()];
 
+        trackedBoardHash = hashValue;
         return hashValue;
     }
 
@@ -95,10 +95,18 @@ public class ZorbristHashCalculator {
 
         if (movedPiece == SquareOccupant.WP) {
             processPossibleWhitePawnEnPassantCapture(move, capturedPiece);
+            final SquareOccupant promotionPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
+            if (promotionPiece != SquareOccupant.NONE) {
+                replaceWithAnotherPiece(promotionPiece, SquareOccupant.WP, bitRefTo);
+            }
         }
 
         if (movedPiece == SquareOccupant.BP) {
             processPossibleBlackPawnEnPassantCapture(move, capturedPiece);
+            final SquareOccupant promotionPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
+            if (promotionPiece != SquareOccupant.NONE) {
+                replaceWithAnotherPiece(promotionPiece, SquareOccupant.BP, bitRefTo);
+            }
         }
 
         if (movedPiece == SquareOccupant.WK && bitRefFrom == 3) {
@@ -110,7 +118,6 @@ public class ZorbristHashCalculator {
             processPossibleBlackKingSideCastle(bitRefTo);
             processPossibleBlackQueenSideCastle(bitRefTo);
         }
-
 
     }
 
@@ -143,8 +150,7 @@ public class ZorbristHashCalculator {
     }
 
     private void processPossibleWhitePawnEnPassantCapture(Move move, SquareOccupant capturedPiece) {
-        if (movedPiece == SquareOccupant.WP
-                && move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
+        if (move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
 
             final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
                         new Square(move.getTgtXFile(), move.getTgtYRank() + 1
@@ -155,8 +161,7 @@ public class ZorbristHashCalculator {
     }
 
     private void processPossibleBlackPawnEnPassantCapture(Move move, SquareOccupant capturedPiece) {
-        if (movedPiece == SquareOccupant.BP
-                && move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
+        if (move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
 
             final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
                     new Square(move.getTgtXFile(), move.getTgtYRank() - 1
@@ -178,7 +183,7 @@ public class ZorbristHashCalculator {
 
     }
 
-    public long getTrackedBoarHashValue() {
+    public long getTrackedBoardHashValue() {
         return trackedBoardHash;
     }
 
