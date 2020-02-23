@@ -119,6 +119,9 @@ public class ZorbristHashCalculator {
             processPossibleBlackQueenSideCastle(bitRefTo);
         }
 
+        trackedBoardHash ^= moverHashValues[Colour.WHITE.getValue()];
+        trackedBoardHash ^= moverHashValues[Colour.BLACK.getValue()];
+
     }
 
     private void processPossibleWhiteKingSideCastle(int bitRefTo) {
@@ -135,17 +138,17 @@ public class ZorbristHashCalculator {
         }
     }
 
-    private void processPossibleBlackKingSideCastle(int bitRefTo) {
+    private void processPossibleBlackQueenSideCastle(int bitRefTo) {
         if (bitRefTo == 61) {
-            replaceWithEmptySquare(SquareOccupant.WR, 56);
-            placePieceOnEmptySquare(SquareOccupant.WR, 58);
+            replaceWithEmptySquare(SquareOccupant.BR, 63);
+            placePieceOnEmptySquare(SquareOccupant.BR, 60);
         }
     }
 
-    private void processPossibleBlackQueenSideCastle(int bitRefTo) {
+    private void processPossibleBlackKingSideCastle(int bitRefTo) {
         if (bitRefTo == 57) {
-            replaceWithEmptySquare(SquareOccupant.WR, 63);
-            placePieceOnEmptySquare(SquareOccupant.WR, 60);
+            replaceWithEmptySquare(SquareOccupant.BR, 56);
+            placePieceOnEmptySquare(SquareOccupant.BR, 58);
         }
     }
 

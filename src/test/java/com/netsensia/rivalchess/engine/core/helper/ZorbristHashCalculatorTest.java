@@ -93,22 +93,47 @@ public class ZorbristHashCalculatorTest {
 
     }
 
+    private void compareCalculatedHashWithTrackedHash(EngineChessBoard ecb, String move) throws InvalidMoveException {
+        ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
+        final long thv = ecb.trackedBoardHashCode();
+        final long chv = ecb.boardHashCode();
+        assertEquals(chv, thv);
+    }
+
     @Test
-    @Ignore
     public void zorbristTracker() throws InvalidMoveException {
 
         EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
-        long thv = ecb.trackedBoardHashCode();
-        long chv = ecb.boardHashCode();
-        assertEquals(thv, chv);
+        compareCalculatedHashWithTrackedHash(ecb, "e2e4");
+        compareCalculatedHashWithTrackedHash(ecb, "c7c5");
+        compareCalculatedHashWithTrackedHash(ecb, "e4e5");
+        compareCalculatedHashWithTrackedHash(ecb, "d7d5");
+        compareCalculatedHashWithTrackedHash(ecb, "e5d6");
+        compareCalculatedHashWithTrackedHash(ecb, "d8d6");
+        compareCalculatedHashWithTrackedHash(ecb, "f1c4");
+        compareCalculatedHashWithTrackedHash(ecb, "g8f6");
+        compareCalculatedHashWithTrackedHash(ecb, "g1f3");
+        compareCalculatedHashWithTrackedHash(ecb, "b8c6");
+        compareCalculatedHashWithTrackedHash(ecb, "e1g1");
+        compareCalculatedHashWithTrackedHash(ecb, "c8g4");
+        compareCalculatedHashWithTrackedHash(ecb, "d1e2");
+        compareCalculatedHashWithTrackedHash(ecb, "e8c8");
+        compareCalculatedHashWithTrackedHash(ecb, "d2d4");
+        compareCalculatedHashWithTrackedHash(ecb, "e7e5");
+        compareCalculatedHashWithTrackedHash(ecb, "d4d5");
+        compareCalculatedHashWithTrackedHash(ecb, "e5e4");
+        compareCalculatedHashWithTrackedHash(ecb, "d5c6");
+        compareCalculatedHashWithTrackedHash(ecb, "e4f3");
+        compareCalculatedHashWithTrackedHash(ecb, "c6c7");
+        compareCalculatedHashWithTrackedHash(ecb, "c8d7");
+        compareCalculatedHashWithTrackedHash(ecb, "c7d8N");
+        compareCalculatedHashWithTrackedHash(ecb, "f3e2");
+        compareCalculatedHashWithTrackedHash(ecb, "d8b7");
+        compareCalculatedHashWithTrackedHash(ecb, "e2e1q");
 
-        ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e2e4").compact));
+        assertEquals("5b1r/pN1k1ppp/3q1n2/2p5/2B3b1/8/PPP2PPP/RNB1qRK1 w - - 0 14", ecb.getFen());
 
-        thv = ecb.trackedBoardHashCode();
-        chv = ecb.boardHashCode();
+    };
 
-        assertEquals(thv, chv);
-
-    }
 }
