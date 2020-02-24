@@ -547,6 +547,9 @@ public final class EngineChessBoard {
     }
 
     public void makeNullMove() {
+
+        boardHash.makeNullMove();
+
         this.isWhiteToMove = !this.isWhiteToMove;
 
         long t = this.engineBitboards.pieceBitboards[RivalConstants.FRIENDLY];
@@ -557,6 +560,9 @@ public final class EngineChessBoard {
     }
 
     public void unMakeNullMove() {
+
+        boardHash.unMakeNullMove();
+
         makeNullMove();
         this.isOnNullMove = false;
     }
@@ -576,7 +582,7 @@ public final class EngineChessBoard {
 
         this.moveList[this.numMovesMade].capturePiece = -1;
         this.moveList[this.numMovesMade].move = compactMove;
-        this.moveList[this.numMovesMade].hashValue = boardHash.boardHashCode(this);
+        this.moveList[this.numMovesMade].hashValue = boardHash.getTrackedHashValue();
         this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
         this.moveList[this.numMovesMade].pawnHashValue = boardHash.pawnHashCode(this);
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
@@ -1048,7 +1054,7 @@ public final class EngineChessBoard {
     public int previousOccurrencesOfThisPosition() {
         int occurrences = 0;
         for (int i = this.numMovesMade - 2; i >= 0 && i >= this.numMovesMade - this.halfMoveCount; i -= 2) {
-            if (this.moveList[i].hashValue == boardHash.boardHashCode(this)) {
+            if (this.moveList[i].hashValue == boardHash.getTrackedHashValue()) {
                 occurrences++;
             }
         }

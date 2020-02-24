@@ -36,6 +36,9 @@ public class ZorbristHashCalculator {
     private final static long[] moverHashValues = {6612194290785701391L, 7796428774704130372L};
 
     public long initHash(EngineChessBoard engineChessBoard) {
+
+        final long trackedHashAtStart = engineChessBoard.trackedBoardHashCode();
+
         long hashValue = START_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
@@ -50,6 +53,12 @@ public class ZorbristHashCalculator {
                 ? Colour.WHITE.getValue() : Colour.BLACK.getValue()];
 
         trackedBoardHash = hashValue;
+
+        if (trackedHashAtStart != 0 && trackedHashAtStart != trackedBoardHash) {
+//            System.out.println(trackedHashAtStart + " != " + trackedBoardHash);
+//            System.exit(0);
+        }
+
         return hashValue;
     }
 
@@ -151,7 +160,7 @@ public class ZorbristHashCalculator {
             processPossibleWhiteQueenSideCastle(bitRefTo);
         }
 
-        if (movedPiece == SquareOccupant.BK) {
+        if (movedPiece == SquareOccupant.BK && bitRefFrom == 59) {
             processPossibleBlackKingSideCastle(bitRefTo);
             processPossibleBlackQueenSideCastle(bitRefTo);
         }
@@ -175,15 +184,26 @@ public class ZorbristHashCalculator {
         }
     }
 
-    private boolean unMakeEnPassants(int bitRefTo, MoveDetail moveDetail) {
+    private boolean unMakeEnPassant(int bitRefTo, MoveDetail moveDetail) {
         if ((1L << bitRefTo) == moveDetail.enPassantBitboard) {
             if (moveDetail.movePiece == RivalConstants.WP) {
+                placePieceOnEmptySquare(SquareOccupant.BP, bitRefTo-8);
                 return true;
             } else if (moveDetail.movePiece == RivalConstants.BP) {
+                placePieceOnEmptySquare(SquareOccupant.WP, bitRefTo+8);
                 return true;
+
             }
         }
         return false;
+    }
+
+    public void nullMove() {
+        switchMover();
+    }
+
+    public void unNullMove() {
+        switchMover();
     }
 
     public void move(EngineChessBoard board, EngineMove engineMove) {
@@ -204,16 +224,65 @@ public class ZorbristHashCalculator {
 
     }
 
-    public void unMove(EngineChessBoard board, MoveDetail moveDetail) {
+    public boolean unMakeCapture(int bitRefTo, MoveDetail moveDetail) {
+        if (moveDetail.capturePiece != -1) {
+            placePieceOnEmptySquare(SquareOccupant.fromIndex(moveDetail.capturePiece), bitRefTo);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean unMakeCastle(int bitRefTo) {
+        switch (bitRefTo) {
+            case 1:
+                replaceWithEmptySquare(SquareOccupant.WR, 2);
+                placePieceOnEmptySquare(SquareOccupant.WR, 0);
+                return true;
+            case 5:
+                replaceWithEmptySquare(SquareOccupant.WR, 4);
+                placePieceOnEmptySquare(SquareOccupant.WR, 7);
+                return true;
+            case 61:
+                replaceWithEmptySquare(SquareOccupant.BR, 60);
+                placePieceOnEmptySquare(SquareOccupant.BR, 63);
+                return true;
+            case 57:
+                replaceWithEmptySquare(SquareOccupant.BR, 58);
+                placePieceOnEmptySquare(SquareOccupant.BR, 56);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public boolean unMakePromotion(int bitRefFrom, int bitRefTo, MoveDetail moveDetail) {
+        final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
+        final SquareOccupant movedPiece = SquareOccupant.fromIndex(moveDetail.movePiece);
+        SquareOccupant promotedPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
+        if (promotedPiece != SquareOccupant.NONE) {
+            placePieceOnEmptySquare(movedPiece, bitRefFrom);
+            replaceWithEmptySquare(promotedPiece, bitRefTo);
+            unMakeCapture(bitRefTo, moveDetail);
+            return true;
+        }
+        return false;
+    }
+
+    public void unMove(MoveDetail moveDetail) {
 
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
         final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
         final int bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.getTgtBoardRef());
 
-        placePieceOnEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefFrom);
-        replaceWithEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefTo);
-
-        unMakeEnPassants(bitRefTo, moveDetail);
+        if (!unMakePromotion(bitRefFrom, bitRefTo, moveDetail)) {
+            placePieceOnEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefFrom);
+            replaceWithEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefTo);
+            if (!unMakeEnPassant(bitRefTo, moveDetail)) {
+                if (!unMakeCapture(bitRefTo, moveDetail)) {
+                    unMakeCastle(bitRefTo);
+                }
+            }
+        }
 
         switchMover();
 

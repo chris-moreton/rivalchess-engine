@@ -95,19 +95,36 @@ public class ZorbristHashCalculatorTest {
 
     private void compareCalculatedHashWithTrackedHash(EngineChessBoard ecb, String move) throws InvalidMoveException {
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
-        long thv = ecb.trackedBoardHashCode();
-        long chv = ecb.boardHashCode();
-        assertEquals(chv, thv);
+        final long originalTrackedHashCode = ecb.trackedBoardHashCode();
+        final long originalCalculatedHashCode = ecb.boardHashCode();
+        assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
         ecb.unMakeMove();
-        thv = ecb.trackedBoardHashCode();
-        chv = ecb.boardHashCode();
-        assertEquals(chv, thv);
+        final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
+        final long unmadeCalculatedHashCode = ecb.boardHashCode();
+        assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
-        thv = ecb.trackedBoardHashCode();
-        chv = ecb.boardHashCode();
-        assertEquals(chv, thv);
+        assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
+        assertEquals(ecb.boardHashCode(), originalCalculatedHashCode);
+
+    }
+
+    private void compareCalculatedHashWithTrackedHashOnNullMove(EngineChessBoard ecb) throws InvalidMoveException {
+        ecb.makeNullMove();
+        final long originalTrackedHashCode = ecb.trackedBoardHashCode();
+        final long originalCalculatedHashCode = ecb.boardHashCode();
+        assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
+
+        ecb.unMakeNullMove();
+        final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
+        final long unmadeCalculatedHashCode = ecb.boardHashCode();
+        assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
+
+        ecb.makeNullMove();
+        assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
+        assertEquals(ecb.boardHashCode(), originalCalculatedHashCode);
+
     }
 
     @Test
@@ -143,6 +160,23 @@ public class ZorbristHashCalculatorTest {
         compareCalculatedHashWithTrackedHash(ecb, "e2e1q");
 
         assertEquals("5b1r/pN1k1ppp/3q1n2/2p5/2B3b1/8/PPP2PPP/RNB1qRK1 w - - 0 14", ecb.getFen());
+
+        ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+
+        compareCalculatedHashWithTrackedHash(ecb, "e2e4");
+        compareCalculatedHashWithTrackedHash(ecb, "e7e5");
+        compareCalculatedHashWithTrackedHash(ecb, "d1e2");
+        compareCalculatedHashWithTrackedHash(ecb, "f8e7");
+        compareCalculatedHashWithTrackedHash(ecb, "b1c3");
+        compareCalculatedHashWithTrackedHash(ecb, "g8f7");
+        compareCalculatedHashWithTrackedHash(ecb, "d2d3");
+        compareCalculatedHashWithTrackedHash(ecb, "e8g8");
+        compareCalculatedHashWithTrackedHash(ecb, "c1d2");
+        compareCalculatedHashWithTrackedHash(ecb, "h7h6");
+        compareCalculatedHashWithTrackedHash(ecb, "e1c1");
+        compareCalculatedHashWithTrackedHash(ecb, "a7a6");
+
+        compareCalculatedHashWithTrackedHashOnNullMove(ecb);
 
     };
 
