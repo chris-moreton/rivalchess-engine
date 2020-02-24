@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.FenUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class PerftTest {
         long end = System.currentTimeMillis();
         long elapsed = end - start;
         double seconds = elapsed / 1000.0;
-        double nps = nodes / seconds;
+        double nps = nodes / (seconds < 1 ? 1 : seconds);
 
         if (LOGGER.isInfoEnabled()) {
             NumberFormat nf = NumberFormat.getInstance();
@@ -74,6 +75,7 @@ public class PerftTest {
     }
 
     @Test
+    @Ignore
     public void testPerftScoreLong() throws IllegalFenException, InvalidMoveException {
         assertPerftScore("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", 6, 38633283);
         assertPerftScore("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 5, 11139762);
