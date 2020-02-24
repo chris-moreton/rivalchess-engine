@@ -560,9 +560,6 @@ public final class EngineChessBoard {
     }
 
     public void unMakeNullMove() {
-
-        boardHash.unMakeNullMove();
-
         makeNullMove();
         this.isOnNullMove = false;
     }
