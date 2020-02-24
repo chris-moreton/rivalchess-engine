@@ -582,6 +582,7 @@ public final class EngineChessBoard {
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
         this.moveList[this.numMovesMade].enPassantBitboard = this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
         this.moveList[this.numMovesMade].castlePrivileges = (byte) this.castlePrivileges;
+        this.moveList[this.numMovesMade].movePiece = (byte) movePiece;
 
         boardHash.move(this, engineMove);
 
@@ -591,7 +592,6 @@ public final class EngineChessBoard {
 
         this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 0;
 
-        this.moveList[this.numMovesMade].movePiece = (byte) movePiece;
         this.engineBitboards.pieceBitboards[movePiece] ^= fromMask | toMask;
 
         this.squareContents[moveFrom] = -1;
@@ -742,6 +742,10 @@ public final class EngineChessBoard {
         }
     }
 
+    public MoveDetail getLastMoveMade() {
+        return moveList[numMovesMade];
+    }
+
     public void unMakeMove() throws InvalidMoveException {
         this.numMovesMade--;
 
@@ -755,6 +759,8 @@ public final class EngineChessBoard {
         final int toSquare = this.moveList[this.numMovesMade].move & 63;
         final long fromMask = (1L << fromSquare);
         final long toMask = (1L << toSquare);
+
+        boardHash.unMove(this);
 
         this.squareContents[fromSquare] = this.moveList[this.numMovesMade].movePiece;
         this.squareContents[toSquare] = -1;

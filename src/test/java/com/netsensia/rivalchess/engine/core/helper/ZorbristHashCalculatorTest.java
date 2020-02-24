@@ -95,8 +95,18 @@ public class ZorbristHashCalculatorTest {
 
     private void compareCalculatedHashWithTrackedHash(EngineChessBoard ecb, String move) throws InvalidMoveException {
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
-        final long thv = ecb.trackedBoardHashCode();
-        final long chv = ecb.boardHashCode();
+        long thv = ecb.trackedBoardHashCode();
+        long chv = ecb.boardHashCode();
+        assertEquals(chv, thv);
+
+        ecb.unMakeMove();
+        thv = ecb.trackedBoardHashCode();
+        chv = ecb.boardHashCode();
+        assertEquals(chv, thv);
+
+        ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
+        thv = ecb.trackedBoardHashCode();
+        chv = ecb.boardHashCode();
         assertEquals(chv, thv);
     }
 
