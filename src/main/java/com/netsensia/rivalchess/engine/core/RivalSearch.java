@@ -1254,7 +1254,7 @@ public final class RivalSearch implements Runnable {
         byte flag = RivalConstants.UPPERBOUND;
 
         final BoardHash boardHash = engineChessBoard.getBoardHash();
-        final long hashValue = boardHash.initialiseHashCode(engineChessBoard);
+        final long hashValue = boardHash.getTrackedHashValue();
         final int hashIndex = boardHash.getHashIndex(board);
         int hashMove = 0;
 
