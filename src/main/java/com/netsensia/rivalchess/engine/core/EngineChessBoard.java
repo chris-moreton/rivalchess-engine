@@ -52,6 +52,8 @@ public final class EngineChessBoard {
         this.numMovesMade = 0;
         this.halfMoveCount = board.getHalfMoveCount();
         setBitboards(board);
+        boardHash.setHashTableVersion(0);
+        boardHash.setHashSizeMB(RivalConstants.DEFAULT_HASHTABLE_SIZE_MB);
     }
 
     private void initArrays() {

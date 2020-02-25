@@ -114,8 +114,6 @@ public final class RivalSearch implements Runnable {
 
         searchState = SearchState.READY;
 
-        boardHash.setHashTableVersion(0);
-
         this.searchPath = new SearchPath[RivalConstants.MAX_TREE_DEPTH];
         this.killerMoves = new int[RivalConstants.MAX_TREE_DEPTH][RivalConstants.NUM_KILLER_MOVES];
         for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
@@ -127,9 +125,7 @@ public final class RivalSearch implements Runnable {
 
         depthZeroLegalMoves = orderedMoves[0];
         depthZeroMoveScores = new int[RivalConstants.MAX_LEGAL_MOVES];
-
-        boardHash.setHashSizeMB(RivalConstants.DEFAULT_HASHTABLE_SIZE_MB);
-
+        
         int byteArraySize = (64 * 48 * 32 * 2) / 8;
     }
 
