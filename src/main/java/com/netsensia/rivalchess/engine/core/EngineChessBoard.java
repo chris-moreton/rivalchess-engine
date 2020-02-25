@@ -62,6 +62,10 @@ public final class EngineChessBoard {
         }
     }
 
+    public BoardHash getBoardHash() {
+        return boardHash;
+    }
+
     public SquareOccupant getSquareOccupant(int bitRef) {
 
         return SquareOccupant.fromIndex(squareContents[bitRef]);
@@ -1049,9 +1053,11 @@ public final class EngineChessBoard {
     }
 
     public int previousOccurrencesOfThisPosition() {
+        final long boardHashCode = boardHash.boardHashCode(this);
+
         int occurrences = 0;
         for (int i = this.numMovesMade - 2; i >= 0 && i >= this.numMovesMade - this.halfMoveCount; i -= 2) {
-            if (this.moveList[i].hashValue == boardHash.boardHashCode(this)) {
+            if (this.moveList[i].hashValue == boardHashCode) {
                 occurrences++;
             }
         }
