@@ -8,7 +8,6 @@ import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.FenUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -96,34 +95,34 @@ public class ZorbristHashCalculatorTest {
     private void compareCalculatedHashWithTrackedHash(EngineChessBoard ecb, String move) throws InvalidMoveException {
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
-        final long originalCalculatedHashCode = ecb.boardHashCode();
+        final long originalCalculatedHashCode = ecb.intialiseHashCode();
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
         ecb.unMakeMove();
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
-        final long unmadeCalculatedHashCode = ecb.boardHashCode();
+        final long unmadeCalculatedHashCode = ecb.intialiseHashCode();
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
-        assertEquals(ecb.boardHashCode(), originalCalculatedHashCode);
+        assertEquals(ecb.intialiseHashCode(), originalCalculatedHashCode);
 
     }
 
     private void compareCalculatedHashWithTrackedHashOnNullMove(EngineChessBoard ecb) throws InvalidMoveException {
         ecb.makeNullMove();
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
-        final long originalCalculatedHashCode = ecb.boardHashCode();
+        final long originalCalculatedHashCode = ecb.intialiseHashCode();
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
         ecb.unMakeNullMove();
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
-        final long unmadeCalculatedHashCode = ecb.boardHashCode();
+        final long unmadeCalculatedHashCode = ecb.intialiseHashCode();
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
         ecb.makeNullMove();
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
-        assertEquals(ecb.boardHashCode(), originalCalculatedHashCode);
+        assertEquals(ecb.intialiseHashCode(), originalCalculatedHashCode);
 
     }
 
