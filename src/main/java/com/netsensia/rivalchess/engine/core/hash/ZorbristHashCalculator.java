@@ -54,11 +54,6 @@ public class ZorbristHashCalculator {
 
         trackedBoardHash = hashValue;
 
-        if (trackedHashAtStart != 0 && trackedHashAtStart != trackedBoardHash) {
-//            System.out.println(trackedHashAtStart + " != " + trackedBoardHash);
-//            System.exit(0);
-        }
-
         return hashValue;
     }
 

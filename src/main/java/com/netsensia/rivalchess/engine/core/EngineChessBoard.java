@@ -45,13 +45,15 @@ public final class EngineChessBoard {
     public EngineChessBoard(Board board) {
         initArrays();
         setBoard(board);
-        boardHashCode();
     }
 
     public void setBoard(Board board) {
         this.numMovesMade = 0;
         this.halfMoveCount = board.getHalfMoveCount();
         setBitboards(board);
+        boardHash.setHashTableVersion(0);
+        boardHash.setHashSizeMB(RivalConstants.DEFAULT_HASHTABLE_SIZE_MB);
+        boardHash.initialiseHashCode(this);
     }
 
     private void initArrays() {
@@ -60,6 +62,10 @@ public final class EngineChessBoard {
         for (int i = 0; i < size; i++) {
             this.moveList[i] = new MoveDetail();
         }
+    }
+
+    public BoardHash getBoardHash() {
+        return boardHash;
     }
 
     public SquareOccupant getSquareOccupant(int bitRef) {
@@ -579,7 +585,7 @@ public final class EngineChessBoard {
 
         this.moveList[this.numMovesMade].capturePiece = -1;
         this.moveList[this.numMovesMade].move = compactMove;
-        this.moveList[this.numMovesMade].hashValue = boardHash.boardHashCode(this);;
+        this.moveList[this.numMovesMade].hashValue = boardHash.initialiseHashCode(this);;
         this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
         this.moveList[this.numMovesMade].pawnHashValue = boardHash.pawnHashCode(this);
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
@@ -1049,9 +1055,11 @@ public final class EngineChessBoard {
     }
 
     public int previousOccurrencesOfThisPosition() {
+        final long boardHashCode = boardHash.initialiseHashCode(this);
+
         int occurrences = 0;
         for (int i = this.numMovesMade - 2; i >= 0 && i >= this.numMovesMade - this.halfMoveCount; i -= 2) {
-            if (this.moveList[i].hashValue == boardHash.boardHashCode(this)) {
+            if (this.moveList[i].hashValue == boardHashCode) {
                 occurrences++;
             }
         }
@@ -1176,8 +1184,8 @@ public final class EngineChessBoard {
         return boardHash.pawnHashCode(this);
     }
 
-    public long boardHashCode() {
-        return boardHash.boardHashCode(this);
+    public long intialiseHashCode() {
+        return boardHash.initialiseHashCode(this);
     }
 
     public long trackedBoardHashCode() {

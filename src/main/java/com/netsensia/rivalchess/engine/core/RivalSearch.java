@@ -27,7 +27,6 @@ import java.util.Timer;
 public final class RivalSearch implements Runnable {
 
     private final PrintStream printStream;
-    private final BoardHash boardHash = new BoardHash();
 
     private final List<List<Long>> drawnPositionsAtRoot;
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
@@ -114,8 +113,6 @@ public final class RivalSearch implements Runnable {
 
         searchState = SearchState.READY;
 
-        boardHash.setHashTableVersion(0);
-
         this.searchPath = new SearchPath[RivalConstants.MAX_TREE_DEPTH];
         this.killerMoves = new int[RivalConstants.MAX_TREE_DEPTH][RivalConstants.NUM_KILLER_MOVES];
         for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
@@ -127,10 +124,6 @@ public final class RivalSearch implements Runnable {
 
         depthZeroLegalMoves = orderedMoves[0];
         depthZeroMoveScores = new int[RivalConstants.MAX_LEGAL_MOVES];
-
-        boardHash.setHashSizeMB(RivalConstants.DEFAULT_HASHTABLE_SIZE_MB);
-
-        int byteArraySize = (64 * 48 * 32 * 2) / 8;
     }
 
     public void startEngineTimer(boolean isUCIMode) {
@@ -144,7 +137,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public synchronized void setHashSizeMB(int hashSizeMB) {
-        boardHash.setHashSizeMB(hashSizeMB);
+        engineChessBoard.getBoardHash().setHashSizeMB(hashSizeMB);
     }
 
     public synchronized void setBoard(Board board) {
@@ -155,18 +148,17 @@ public final class RivalSearch implements Runnable {
 
     public synchronized void setBoard(EngineChessBoard engineBoard) {
         this.setEngineChessBoard(engineBoard);
-        boardHash.incVersion();
-
-        boardHash.setHashTable();
+        engineChessBoard.getBoardHash().incVersion();
+        engineChessBoard.getBoardHash().setHashTable();
     }
 
     public synchronized void clearHash() {
-        boardHash.clearHash();
+        engineChessBoard.getBoardHash().clearHash();
     }
 
     public synchronized void newGame() {
         m_inBook = this.m_useOpeningBook;
-        boardHash.clearHash();
+        engineChessBoard.getBoardHash().clearHash();
     }
 
     final public int staticExchangeEvaluation(EngineChessBoard board, int move) throws InvalidMoveException {
@@ -465,6 +457,7 @@ public final class RivalSearch implements Runnable {
             eval -= RivalConstants.VALUE_QUEEN_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
         }
 
+        final BoardHash boardHash = engineChessBoard.getBoardHash();
         eval += boardHash.getPawnHashEntry(board).getPawnScore();
 
         eval +=
@@ -1260,7 +1253,8 @@ public final class RivalSearch implements Runnable {
 
         byte flag = RivalConstants.UPPERBOUND;
 
-        final long hashValue = boardHash.boardHashCode(engineChessBoard);
+        final BoardHash boardHash = engineChessBoard.getBoardHash();
+        final long hashValue = boardHash.getTrackedHashValue();
         final int hashIndex = boardHash.getHashIndex(board);
         int hashMove = 0;
 
@@ -1632,11 +1626,13 @@ public final class RivalSearch implements Runnable {
     }
 
     private void superVerifyHash(EngineChessBoard board, int hashIndex, boolean isLocked) {
+        final BoardHash boardHash = engineChessBoard.getBoardHash();
+
         if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
             for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
                 if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
                         boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
-                    throw new HashVerificationException("Height bad clash " + boardHash.boardHashCode(board));
+                    throw new HashVerificationException("Height bad clash " + boardHash.initialiseHashCode(board));
                 }
             }
         }
@@ -1688,6 +1684,8 @@ public final class RivalSearch implements Runnable {
 
                 currentDepthZeroMove = move;
                 currentDepthZeroMoveNumber = numLegalMovesAtDepthZero;
+
+                final BoardHash boardHash = engineChessBoard.getBoardHash();
 
                 boolean canMakeNullMove = true;
                 if (isDrawnAtRoot(engineChessBoard, 1)) {
@@ -1775,6 +1773,7 @@ public final class RivalSearch implements Runnable {
                 m_currentPath.setPath(bestPath); // otherwise we will crash!
                 m_currentPathString = "" + m_currentPath;
             } else {
+                final BoardHash boardHash = engineChessBoard.getBoardHash();
                 boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag, depth);
             }
 
@@ -1857,9 +1856,10 @@ public final class RivalSearch implements Runnable {
                         }
                     }
 
+                    final BoardHash boardHash = engineChessBoard.getBoardHash();
                     for (int i=0; i<=1; i++) {
                         if (Boolean.TRUE.equals(plyDraw.get(i))) {
-                            drawnPositionsAtRoot.get(i).add(boardHash.boardHashCode(engineChessBoard));
+                            drawnPositionsAtRoot.get(i).add(boardHash.initialiseHashCode(engineChessBoard));
                         }
                     }
 
@@ -1957,6 +1957,7 @@ public final class RivalSearch implements Runnable {
         searchState = SearchState.SEARCHING;
         m_abortingSearch = false;
 
+        final BoardHash boardHash = engineChessBoard.getBoardHash();
         boardHash.incVersion();
 
         searchStartTime = System.currentTimeMillis();
@@ -2067,8 +2068,9 @@ public final class RivalSearch implements Runnable {
 
     private boolean isDrawnAtRoot(EngineChessBoard board, int ply) {
         int i;
+        final BoardHash boardHash = engineChessBoard.getBoardHash();
         for (i = 0; i < drawnPositionsAtRootCount.get(ply); i++) {
-            if (drawnPositionsAtRoot.get(ply).get(i).equals(boardHash.boardHashCode(board))) {
+            if (drawnPositionsAtRoot.get(ply).get(i).equals(boardHash.initialiseHashCode(board))) {
                 return true;
             }
         }
