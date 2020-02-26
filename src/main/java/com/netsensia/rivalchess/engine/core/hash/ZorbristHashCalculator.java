@@ -195,11 +195,7 @@ public class ZorbristHashCalculator {
         switchMover();
     }
 
-    public void unNullMove() {
-        switchMover();
-    }
-
-    public void move(EngineChessBoard board, EngineMove engineMove) {
+    public void makeMove(EngineChessBoard board, EngineMove engineMove) {
 
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(engineMove.compact);
         final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
@@ -225,7 +221,7 @@ public class ZorbristHashCalculator {
         return false;
     }
 
-    public boolean unMakeCastle(int bitRefTo) {
+    public boolean unMakeWhiteCastle(int bitRefTo) {
         switch (bitRefTo) {
             case 1:
                 replaceWithEmptySquare(SquareOccupant.WR, 2);
@@ -235,6 +231,13 @@ public class ZorbristHashCalculator {
                 replaceWithEmptySquare(SquareOccupant.WR, 4);
                 placePieceOnEmptySquare(SquareOccupant.WR, 7);
                 return true;
+            default:
+                return false;
+        }
+    }
+
+    public boolean unMakeBlackCastle(int bitRefTo) {
+        switch (bitRefTo) {
             case 61:
                 replaceWithEmptySquare(SquareOccupant.BR, 60);
                 placePieceOnEmptySquare(SquareOccupant.BR, 63);
@@ -261,7 +264,7 @@ public class ZorbristHashCalculator {
         return false;
     }
 
-    public void unMove(MoveDetail moveDetail) {
+    public void unMakeMove(MoveDetail moveDetail) {
 
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
         final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
@@ -272,7 +275,12 @@ public class ZorbristHashCalculator {
             replaceWithEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefTo);
             if (!unMakeEnPassant(bitRefTo, moveDetail)) {
                 if (!unMakeCapture(bitRefTo, moveDetail)) {
-                    unMakeCastle(bitRefTo);
+                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.WK) {
+                        unMakeWhiteCastle(bitRefTo);
+                    }
+                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.BK) {
+                        unMakeBlackCastle(bitRefTo);
+                    }
                 }
             }
         }

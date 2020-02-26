@@ -11,7 +11,7 @@ public class Assertions {
         final long av = boardHash.initialiseHashCode(board);
 
         if (tv != av) {
-            System.out.println("What the hell!");
+            System.out.println("What the hell! " + board.getFen());
             System.exit(1);
         }
 

@@ -329,11 +329,11 @@ public class BoardHash {
     }
 
     public void move(EngineChessBoard engineChessBoard, EngineMove move) {
-        hashCalculator.move(engineChessBoard, move);
+        hashCalculator.makeMove(engineChessBoard, move);
     }
 
     public void unMove(EngineChessBoard engineChessBoard) {
-        hashCalculator.unMove(engineChessBoard.getLastMoveMade());
+        hashCalculator.unMakeMove(engineChessBoard.getLastMoveMade());
     }
 
     public void makeNullMove() {
