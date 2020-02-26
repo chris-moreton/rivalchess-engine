@@ -755,7 +755,7 @@ public final class EngineChessBoard {
             }
             unMakeMove();
             if (Assertions.checkTrackedHash(this)) {
-                System.out.println("All good");
+               // System.out.println("All good");
             }
             // 8/p4kp1/5p2/2P2QN1/3p3p/3PbK1P/7P/6q1 b - - 2 2
             return false;

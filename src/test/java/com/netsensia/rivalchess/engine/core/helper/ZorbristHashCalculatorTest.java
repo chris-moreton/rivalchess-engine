@@ -10,6 +10,8 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
 
+import java.util.Random;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -210,6 +212,31 @@ public class ZorbristHashCalculatorTest {
         final long trackedCode = ecb.trackedBoardHashCode();
         final long calculatedHashCode = ecb.initialiseHashCode();
         assertEquals(calculatedHashCode, trackedCode);
+
+    }
+
+    @Test
+    public void multipleRandomMovesTest() throws InvalidMoveException {
+        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+
+        Random r = new Random();
+        r.setSeed(1);
+
+        int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
+        ecb.setLegalMoves(legalMoves);
+        ecb.generateLegalMoves();
+
+        while (!ecb.isGameOver() && ecb.getHalfMoveCount() < 100) {
+            int move = ecb.getLegalMoveByIndex(r.nextInt(ecb.getNumLegalMoves()));
+            ecb.makeMove(new EngineMove(move));
+
+            final long trackedCode = ecb.trackedBoardHashCode();
+            final long calculatedHashCode = ecb.initialiseHashCode();
+            assertEquals(calculatedHashCode, trackedCode);
+
+            ecb.generateLegalMoves();
+
+        }
 
     }
 
