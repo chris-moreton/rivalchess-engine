@@ -78,7 +78,7 @@ public class BoardHash {
     }
 
     public void storeHashMove(int move, EngineChessBoard board, int score, byte flag, int height) {
-        int hashIndex = (int) (board.initialiseHashCode() % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+        int hashIndex = (int) (board.trackedBoardHashCode() % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
 
         if (height >= this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] || hashTableVersion > this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
             if (hashTableVersion == this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
@@ -106,8 +106,8 @@ public class BoardHash {
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
-            this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.initialiseHashCode() >>> 32);
-            this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.initialiseHashCode() & Bitboards.LOW32);
+            this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.trackedBoardHashCode() >>> 32);
+            this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.trackedBoardHashCode() & Bitboards.LOW32);
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = hashTableVersion;
         } else {
@@ -120,8 +120,8 @@ public class BoardHash {
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
-            this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.initialiseHashCode() >>> 32);
-            this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.initialiseHashCode() & Bitboards.LOW32);
+            this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT1] = (int) (board.trackedBoardHashCode() >>> 32);
+            this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.trackedBoardHashCode() & Bitboards.LOW32);
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = hashTableVersion;
         }

@@ -12,7 +12,6 @@ import com.netsensia.rivalchess.engine.core.type.MoveDetail;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
-import com.netsensia.rivalchess.util.Assertions;
 import com.netsensia.rivalchess.util.FenUtils;
 
 import java.util.List;
@@ -573,8 +572,6 @@ public final class EngineChessBoard {
 
     public boolean makeMove(EngineMove engineMove) throws InvalidMoveException {
 
-        Assertions.checkTrackedHash(this);
-
         final int compactMove = engineMove.compact;
 
         final byte moveFrom = (byte) (compactMove >>> 16);
@@ -589,9 +586,7 @@ public final class EngineChessBoard {
         this.moveList[this.numMovesMade].capturePiece = -1;
         this.moveList[this.numMovesMade].move = compactMove;
 
-        Assertions.checkTrackedHash(this);
-
-        this.moveList[this.numMovesMade].hashValue = boardHash.initialiseHashCode(this);
+        this.moveList[this.numMovesMade].hashValue = boardHash.getTrackedHashValue();
         this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
         this.moveList[this.numMovesMade].pawnHashValue = boardHash.pawnHashCode(this);
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
@@ -754,10 +749,6 @@ public final class EngineChessBoard {
                 System.out.println("Ok");
             }
             unMakeMove();
-            if (Assertions.checkTrackedHash(this)) {
-               // System.out.println("All good");
-            }
-            // 8/p4kp1/5p2/2P2QN1/3p3p/3PbK1P/7P/6q1 b - - 2 2
             return false;
         } else {
             return true;
@@ -769,13 +760,10 @@ public final class EngineChessBoard {
     }
 
     public void unMakeMove() throws InvalidMoveException {
-        Assertions.checkTrackedHash(this);
 
         this.numMovesMade--;
 
         this.halfMoveCount = this.moveList[this.numMovesMade].halfMoveCount;
-
-        Assertions.checkTrackedHash(this);
 
         this.isWhiteToMove = !this.isWhiteToMove;
 
@@ -811,8 +799,6 @@ public final class EngineChessBoard {
         }
 
         calculateSupplementaryBitboards();
-
-        Assertions.checkTrackedHash(this, fromSquare + " " + toSquare);
 
     }
 
@@ -1077,7 +1063,7 @@ public final class EngineChessBoard {
     }
 
     public int previousOccurrencesOfThisPosition() {
-        final long boardHashCode = boardHash.initialiseHashCode(this);
+        final long boardHashCode = boardHash.getTrackedHashValue();
 
         int occurrences = 0;
         for (int i = this.numMovesMade - 2; i >= 0 && i >= this.numMovesMade - this.halfMoveCount; i -= 2) {
