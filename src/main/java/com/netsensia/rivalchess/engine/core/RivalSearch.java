@@ -14,6 +14,7 @@ import com.netsensia.rivalchess.exception.IllegalSearchStateException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.uci.EngineMonitor;
+import com.netsensia.rivalchess.util.Assertions;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.Numbers;
@@ -997,6 +998,8 @@ public final class RivalSearch implements Runnable {
     }
 
     public SearchPath quiesce(EngineChessBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) throws InvalidMoveException {
+        Assertions.checkTrackedHash(board);
+
         setNodes(getNodes() + 1);
 
         SearchPath newPath;
@@ -1016,6 +1019,8 @@ public final class RivalSearch implements Runnable {
 
         int[] theseMoves = orderedMoves[ply];
 
+        Assertions.checkTrackedHash(board);
+
         if (isCheck) {
             board.setLegalMoves(theseMoves);
             scoreFullWidthMoves(board, ply);
@@ -1024,10 +1029,15 @@ public final class RivalSearch implements Runnable {
             scoreQuiesceMoves(board, ply, quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY);
         }
 
+        Assertions.checkTrackedHash(board);
+
+
         int move;
 
         int legalMoveCount = 0;
         while ((move = getHighScoreMove(theseMoves)) != 0) {
+            Assertions.checkTrackedHash(board);
+
             if (RivalConstants.USE_DELTA_PRUNING && !isCheck) {
                 final int materialIncrease = (board.lastCapturePiece() > -1
                         ? RivalConstants.PIECE_VALUES.get(board.lastCapturePiece() % 6)
@@ -1037,8 +1047,11 @@ public final class RivalSearch implements Runnable {
                 }
             }
 
+            Assertions.checkTrackedHash(board);
+
             if (board.makeMove(new EngineMove(move))) {
                 legalMoveCount++;
+                Assertions.checkTrackedHash(board);
 
                 newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck()));
                 newPath.score = -newPath.score;
@@ -1048,9 +1061,12 @@ public final class RivalSearch implements Runnable {
                     return bestPath;
                 }
                 low = Math.max(low, newPath.score);
+                Assertions.checkTrackedHash(board);
 
                 board.unMakeMove();
             }
+            Assertions.checkTrackedHash(board);
+
         }
 
         if (isCheck && legalMoveCount == 0) {
@@ -1801,6 +1817,8 @@ public final class RivalSearch implements Runnable {
         SearchPath path;
 
         try {
+            Assertions.checkTrackedHash(engineChessBoard);
+
             engineChessBoard.setLegalMoves(depthZeroLegalMoves);
             int depthZeroMoveCount = 0;
 
@@ -1864,10 +1882,13 @@ public final class RivalSearch implements Runnable {
                     }
 
                     engineChessBoard.unMakeMove();
+
                 }
+
                 depthZeroMoveCount++;
 
                 move = depthZeroLegalMoves[++c] & 0x00FFFFFF;
+
             }
 
             if (this.m_useOpeningBook && getFen().trim().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")) {

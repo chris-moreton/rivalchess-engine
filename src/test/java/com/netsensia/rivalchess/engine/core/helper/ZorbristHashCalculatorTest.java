@@ -11,6 +11,7 @@ import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class ZorbristHashCalculatorTest {
 
@@ -95,34 +96,34 @@ public class ZorbristHashCalculatorTest {
     private void compareCalculatedHashWithTrackedHash(EngineChessBoard ecb, String move) throws InvalidMoveException {
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
-        final long originalCalculatedHashCode = ecb.intialiseHashCode();
+        final long originalCalculatedHashCode = ecb.initialiseHashCode();
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
         ecb.unMakeMove();
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
-        final long unmadeCalculatedHashCode = ecb.intialiseHashCode();
+        final long unmadeCalculatedHashCode = ecb.initialiseHashCode();
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
-        assertEquals(ecb.intialiseHashCode(), originalCalculatedHashCode);
+        assertEquals(ecb.initialiseHashCode(), originalCalculatedHashCode);
 
     }
 
     private void compareCalculatedHashWithTrackedHashOnNullMove(EngineChessBoard ecb) throws InvalidMoveException {
         ecb.makeNullMove();
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
-        final long originalCalculatedHashCode = ecb.intialiseHashCode();
+        final long originalCalculatedHashCode = ecb.initialiseHashCode();
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
         ecb.unMakeNullMove();
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
-        final long unmadeCalculatedHashCode = ecb.intialiseHashCode();
+        final long unmadeCalculatedHashCode = ecb.initialiseHashCode();
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
         ecb.makeNullMove();
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
-        assertEquals(ecb.intialiseHashCode(), originalCalculatedHashCode);
+        assertEquals(ecb.initialiseHashCode(), originalCalculatedHashCode);
 
     }
 
@@ -178,5 +179,27 @@ public class ZorbristHashCalculatorTest {
         compareCalculatedHashWithTrackedHashOnNullMove(ecb);
 
     };
+
+    @Test
+    public void testTrackerWhenMakeMoveLeavesMoverInCheck() throws InvalidMoveException {
+        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+
+        compareCalculatedHashWithTrackedHash(ecb, "e2e4");
+        compareCalculatedHashWithTrackedHash(ecb, "e7e5");
+        compareCalculatedHashWithTrackedHash(ecb, "d2d4");
+        compareCalculatedHashWithTrackedHash(ecb, "f8b4");
+        final long originalTrackedHashCode = ecb.trackedBoardHashCode();
+        final long originalCalculatedHashCode = ecb.initialiseHashCode();
+        assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
+
+        ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("h2h3").compact));
+        final long hashCodeAfterIllegalMove = ecb.initialiseHashCode();
+        assertEquals(originalCalculatedHashCode, hashCodeAfterIllegalMove);
+
+        ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e1e2").compact));
+        final long hashCodeAfterLegalMove = ecb.initialiseHashCode();
+        assertNotEquals(originalCalculatedHashCode, hashCodeAfterLegalMove);
+
+    }
 
 }

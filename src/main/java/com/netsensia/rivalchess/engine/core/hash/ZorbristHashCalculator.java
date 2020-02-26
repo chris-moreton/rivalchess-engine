@@ -37,8 +37,6 @@ public class ZorbristHashCalculator {
 
     public long initHash(EngineChessBoard engineChessBoard) {
 
-        final long trackedHashAtStart = engineChessBoard.trackedBoardHashCode();
-
         long hashValue = START_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
