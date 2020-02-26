@@ -2,14 +2,15 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
+import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
 
 public class Assertions {
 
     public static boolean checkTrackedHash(EngineChessBoard board, String message) {
-        final BoardHash boardHash = board.getBoardHash();
+        final BoardHash boardHash = board.getBoardHashObject();
 
         final long tv = boardHash.getTrackedHashValue();
-        final long av = boardHash.initialiseHashCode(board);
+        final long av = ZorbristHashCalculator.calculateHash(board);
 
         if (tv != av) {
             System.out.println("What the hell!");

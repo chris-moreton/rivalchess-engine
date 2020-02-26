@@ -35,8 +35,7 @@ public class ZorbristHashCalculator {
 
     private final static long[] moverHashValues = {6612194290785701391L, 7796428774704130372L};
 
-    public long initHash(EngineChessBoard engineChessBoard) {
-
+    public static long calculateHash(EngineChessBoard engineChessBoard) {
         long hashValue = START_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
@@ -50,12 +49,14 @@ public class ZorbristHashCalculator {
         hashValue ^= moverHashValues[engineChessBoard.getMover() == Colour.WHITE
                 ? Colour.WHITE.getValue() : Colour.BLACK.getValue()];
 
-        trackedBoardHash = hashValue;
-
         return hashValue;
     }
 
-    public long initPawnHash(EngineChessBoard engineChessBoard) {
+    public void initHash(EngineChessBoard engineChessBoard) {
+        trackedBoardHash = calculateHash(engineChessBoard);
+    }
+
+    public static long initPawnHash(EngineChessBoard engineChessBoard) {
         long pawnHashValue = START_PAWN_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {

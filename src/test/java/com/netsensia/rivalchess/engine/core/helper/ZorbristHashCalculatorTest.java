@@ -21,33 +21,33 @@ public class ZorbristHashCalculatorTest {
     public void initHash() throws IllegalFenException {
         ZorbristHashCalculator hashCalculator = new ZorbristHashCalculator();
 
-        assertEquals(8377675270202223558L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("2R2k2/p7/7K/8/6p1/6P1/8/8 b - - 6 5"))));
-        assertEquals(7804811707366554848L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("6rk/p7/7K/8/6p1/6P1/8/4R3 w - - 5 3"))));
-        assertEquals(1075668445979296707L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("r3k2r/3bbppp/pB2pn2/2N5/1p3P2/8/PPP3PP/R2Q1RK1 w k - 3 4"))));
-        assertEquals(1028767795214117555L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("2b5/2RR2p1/4p2p/p3Pp2/k7/6P1/6P1/6K1 w - - 1 6"))));
-        assertEquals(2350594996101438936L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("r1b2rk1/pp3ppp/1nP1p3/7Q/3P4/N4N2/5PPb/R1B2RK1 w - - 0 3"))));
-        assertEquals(811907097101711232L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("6k1/3n1pbp/pN4p1/5b2/1P6/4Q3/P5PP/4B1K1 b - - 0 3"))));
-        assertEquals(7064742042700254627L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("6k1/1b1nqp1p/pp4p1/1P3P2/3b4/N3Q3/P5PP/1B2B1K1 b - - 1 2"))));
-        assertEquals(2836738026196834385L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("6k1/1b3p1p/pp3n2/5p2/1P5q/4N3/P5PP/1B2BK2 w - - 1 5"))));
-        assertEquals(5824754335603279097L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("3r2k1/1p3qp1/p6p/5p2/3N1P2/2PQ3P/PP6/7K b - - 0 6"))));
-        assertEquals(7155541581696875541L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("2r3k1/1p3pp1/p6p/8/1P1NP3/2q4P/P5P1/1Q4K1 w - - 0 5"))));
-        assertEquals(4332303940081334316L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("3r2k1/1p3pp1/p6p/q7/2PNb3/1P1Q3P/P4PP1/6K1 w - - 0 3"))));
-        assertEquals(1983338724879014299L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("r2q2k1/pp1rbppp/4pn2/2P5/1P3B1P/5PP1/P3Q1B1/1R3RK1 b - h3 0 2"))));
-        assertEquals(2598232094144017073L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("1r6/5rkp/b1QR4/5pp1/pP6/6P1/P3qPBP/5RK1 w - - 0 5"))));
-        assertEquals(2711610657820992228L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("5qk1/2Q2ppp/3Rp3/p7/1r6/1P3N1P/1P3PP1/6K1 b - - 3 5"))));
-        assertEquals(6130013692976895541L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("2Q5/p2R1p1p/7k/6p1/P7/1q4P1/5P1P/6K1 b - - 4 6"))));
-        assertEquals(1969183652360398898L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("7k/1b4p1/p6p/1p2qN2/4P3/3r4/P5PP/1B1R2K1 b - - 0 2"))));
-        assertEquals(9138795155598539683L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("2r5/2p2k2/1pQ2pp1/7p/1P6/P3KP2/7P/R1R5 w - - 1 7"))));
-        assertEquals(474950808986408700L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("3r4/2p2k2/1pQ2pp1/8/1P5p/P4P2/5KPP/RqR5 w - - 0 6"))));
-        assertEquals(8208020365696427452L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("r2r2k1/p3bppp/1pn1b3/3p3n/N1P5/4BP2/PQN1B1PP/3R3K w - - 0 7"))));
-        assertEquals(7861211263337003658L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("r1b1Bbk1/p1B2p1p/6p1/p1np4/3P4/4PN2/PP3PPP/R4RK1 b - - 0 6"))));
-        assertEquals(632436259894030524L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("3nb1k1/p4pbp/2Q3p1/5B2/2p5/2P3B1/Pq3PPP/6K1 b - - 2 4"))));
-        assertEquals(8552058796254150612L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("7k/2p1b1pp/8/1p1QP3/1P6/2P4r/1P5P/4q1BK w - - 5 4"))));
-        assertEquals(2043404966475344765L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("N1bq1k2/pp1nr1p1/4p2p/3p1p2/1b1P4/4PNP1/1PQR1PP1/4KB1R w K - 3 5"))));
-        assertEquals(8968902781539702392L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("r4rk1/pp2bppp/4p3/6q1/b1BNQ3/8/PP3PPP/4RRK1 b - - 2 6"))));
-        assertEquals(1798995394321752692L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("r4rk1/pp1b1ppp/4p3/7n/1bBN4/P1N5/1P3PKP/2RR4 w - - 1 6"))));
-        assertEquals(3427826734247474712L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("r1b2rk1/pp3ppp/3NNn2/6q1/2B5/8/PP2QPPP/2bR2K1 b - - 0 6"))));
-        assertEquals(3185928038993651253L, hashCalculator.initHash(new EngineChessBoard(FenUtils.getBoardModel("3q3k/2pnbrpp/2Q5/8/1r1PN1b1/8/PP3PPP/R1B2RK1 b - - 2 6"))));
+        assertEquals(8377675270202223558L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("2R2k2/p7/7K/8/6p1/6P1/8/8 b - - 6 5"))));
+        assertEquals(7804811707366554848L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("6rk/p7/7K/8/6p1/6P1/8/4R3 w - - 5 3"))));
+        assertEquals(1075668445979296707L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("r3k2r/3bbppp/pB2pn2/2N5/1p3P2/8/PPP3PP/R2Q1RK1 w k - 3 4"))));
+        assertEquals(1028767795214117555L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("2b5/2RR2p1/4p2p/p3Pp2/k7/6P1/6P1/6K1 w - - 1 6"))));
+        assertEquals(2350594996101438936L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("r1b2rk1/pp3ppp/1nP1p3/7Q/3P4/N4N2/5PPb/R1B2RK1 w - - 0 3"))));
+        assertEquals(811907097101711232L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("6k1/3n1pbp/pN4p1/5b2/1P6/4Q3/P5PP/4B1K1 b - - 0 3"))));
+        assertEquals(7064742042700254627L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("6k1/1b1nqp1p/pp4p1/1P3P2/3b4/N3Q3/P5PP/1B2B1K1 b - - 1 2"))));
+        assertEquals(2836738026196834385L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("6k1/1b3p1p/pp3n2/5p2/1P5q/4N3/P5PP/1B2BK2 w - - 1 5"))));
+        assertEquals(5824754335603279097L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("3r2k1/1p3qp1/p6p/5p2/3N1P2/2PQ3P/PP6/7K b - - 0 6"))));
+        assertEquals(7155541581696875541L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("2r3k1/1p3pp1/p6p/8/1P1NP3/2q4P/P5P1/1Q4K1 w - - 0 5"))));
+        assertEquals(4332303940081334316L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("3r2k1/1p3pp1/p6p/q7/2PNb3/1P1Q3P/P4PP1/6K1 w - - 0 3"))));
+        assertEquals(1983338724879014299L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("r2q2k1/pp1rbppp/4pn2/2P5/1P3B1P/5PP1/P3Q1B1/1R3RK1 b - h3 0 2"))));
+        assertEquals(2598232094144017073L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("1r6/5rkp/b1QR4/5pp1/pP6/6P1/P3qPBP/5RK1 w - - 0 5"))));
+        assertEquals(2711610657820992228L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("5qk1/2Q2ppp/3Rp3/p7/1r6/1P3N1P/1P3PP1/6K1 b - - 3 5"))));
+        assertEquals(6130013692976895541L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("2Q5/p2R1p1p/7k/6p1/P7/1q4P1/5P1P/6K1 b - - 4 6"))));
+        assertEquals(1969183652360398898L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("7k/1b4p1/p6p/1p2qN2/4P3/3r4/P5PP/1B1R2K1 b - - 0 2"))));
+        assertEquals(9138795155598539683L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("2r5/2p2k2/1pQ2pp1/7p/1P6/P3KP2/7P/R1R5 w - - 1 7"))));
+        assertEquals(474950808986408700L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("3r4/2p2k2/1pQ2pp1/8/1P5p/P4P2/5KPP/RqR5 w - - 0 6"))));
+        assertEquals(8208020365696427452L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("r2r2k1/p3bppp/1pn1b3/3p3n/N1P5/4BP2/PQN1B1PP/3R3K w - - 0 7"))));
+        assertEquals(7861211263337003658L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("r1b1Bbk1/p1B2p1p/6p1/p1np4/3P4/4PN2/PP3PPP/R4RK1 b - - 0 6"))));
+        assertEquals(632436259894030524L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("3nb1k1/p4pbp/2Q3p1/5B2/2p5/2P3B1/Pq3PPP/6K1 b - - 2 4"))));
+        assertEquals(8552058796254150612L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("7k/2p1b1pp/8/1p1QP3/1P6/2P4r/1P5P/4q1BK w - - 5 4"))));
+        assertEquals(2043404966475344765L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("N1bq1k2/pp1nr1p1/4p2p/3p1p2/1b1P4/4PNP1/1PQR1PP1/4KB1R w K - 3 5"))));
+        assertEquals(8968902781539702392L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("r4rk1/pp2bppp/4p3/6q1/b1BNQ3/8/PP3PPP/4RRK1 b - - 2 6"))));
+        assertEquals(1798995394321752692L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("r4rk1/pp1b1ppp/4p3/7n/1bBN4/P1N5/1P3PKP/2RR4 w - - 1 6"))));
+        assertEquals(3427826734247474712L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("r1b2rk1/pp3ppp/3NNn2/6q1/2B5/8/PP2QPPP/2bR2K1 b - - 0 6"))));
+        assertEquals(3185928038993651253L, ZorbristHashCalculator.calculateHash(new EngineChessBoard(FenUtils.getBoardModel("3q3k/2pnbrpp/2Q5/8/1r1PN1b1/8/PP3PPP/R1B2RK1 b - - 2 6"))));
     }
 
     @Test
@@ -98,34 +98,35 @@ public class ZorbristHashCalculatorTest {
     private void compareCalculatedHashWithTrackedHash(EngineChessBoard ecb, String move) throws InvalidMoveException {
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
-        final long originalCalculatedHashCode = ecb.initialiseHashCode();
+        final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
         ecb.unMakeMove();
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
-        final long unmadeCalculatedHashCode = ecb.initialiseHashCode();
+        final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
-        assertEquals(ecb.initialiseHashCode(), originalCalculatedHashCode);
+        assertEquals(ZorbristHashCalculator.calculateHash(ecb), originalCalculatedHashCode);
 
     }
 
     private void compareCalculatedHashWithTrackedHashOnNullMove(EngineChessBoard ecb) throws InvalidMoveException {
+
         ecb.makeNullMove();
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
-        final long originalCalculatedHashCode = ecb.initialiseHashCode();
+        final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
         ecb.unMakeNullMove();
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
-        final long unmadeCalculatedHashCode = ecb.initialiseHashCode();
+        final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
         ecb.makeNullMove();
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
-        assertEquals(ecb.initialiseHashCode(), originalCalculatedHashCode);
+        assertEquals(ZorbristHashCalculator.calculateHash(ecb), originalCalculatedHashCode);
 
     }
 
@@ -191,15 +192,15 @@ public class ZorbristHashCalculatorTest {
         compareCalculatedHashWithTrackedHash(ecb, "d2d4");
         compareCalculatedHashWithTrackedHash(ecb, "f8b4");
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
-        final long originalCalculatedHashCode = ecb.initialiseHashCode();
+        final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("h2h3").compact));
-        final long hashCodeAfterIllegalMove = ecb.initialiseHashCode();
+        final long hashCodeAfterIllegalMove = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, hashCodeAfterIllegalMove);
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e1e2").compact));
-        final long hashCodeAfterLegalMove = ecb.initialiseHashCode();
+        final long hashCodeAfterLegalMove = ZorbristHashCalculator.calculateHash(ecb);
         assertNotEquals(originalCalculatedHashCode, hashCodeAfterLegalMove);
 
     }
@@ -210,7 +211,7 @@ public class ZorbristHashCalculatorTest {
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("c1g1").compact));
         final long trackedCode = ecb.trackedBoardHashCode();
-        final long calculatedHashCode = ecb.initialiseHashCode();
+        final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(calculatedHashCode, trackedCode);
 
     }
@@ -233,7 +234,7 @@ public class ZorbristHashCalculatorTest {
                 ecb.makeMove(new EngineMove(move));
 
                 final long trackedCode = ecb.trackedBoardHashCode();
-                final long calculatedHashCode = ecb.initialiseHashCode();
+                final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
                 assertEquals(calculatedHashCode, trackedCode);
 
                 ecb.generateLegalMoves();

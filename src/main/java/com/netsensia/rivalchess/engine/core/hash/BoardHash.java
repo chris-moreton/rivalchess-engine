@@ -316,8 +316,8 @@ public class BoardHash {
         return hashCalculator.initPawnHash(engineChessBoard);
     }
 
-    public long initialiseHashCode(EngineChessBoard engineChessBoard) {
-        return hashCalculator.initHash(engineChessBoard);
+    public synchronized void initialiseHashCode(EngineChessBoard engineChessBoard) {
+        hashCalculator.initHash(engineChessBoard);
     }
 
     public int getHashIndex(EngineChessBoard engineChessBoard) {

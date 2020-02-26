@@ -64,7 +64,7 @@ public final class EngineChessBoard {
         }
     }
 
-    public BoardHash getBoardHash() {
+    public BoardHash getBoardHashObject() {
         return boardHash;
     }
 
@@ -1192,11 +1192,8 @@ public final class EngineChessBoard {
         return boardHash.pawnHashCode(this);
     }
 
-    public long initialiseHashCode() {
-        return boardHash.initialiseHashCode(this);
-    }
-
-    public long trackedBoardHashCode() {
+    public long trackedBoardHashCode()
+    {
         return boardHash.getTrackedHashValue();
     }
 
