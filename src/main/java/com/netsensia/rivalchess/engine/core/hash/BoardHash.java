@@ -321,7 +321,7 @@ public class BoardHash {
     }
 
     public int getHashIndex(EngineChessBoard engineChessBoard) {
-        return getHashIndex(engineChessBoard.initialiseHashCode());
+        return getHashIndex(engineChessBoard.trackedBoardHashCode());
     }
 
     public int getHashIndex(long hashValue) {
