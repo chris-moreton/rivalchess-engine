@@ -217,25 +217,28 @@ public class ZorbristHashCalculatorTest {
 
     @Test
     public void multipleRandomMovesTest() throws InvalidMoveException {
-        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
-        Random r = new Random();
-        r.setSeed(1);
+        for (int i=0; i<100; i++) {
+            EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
-        int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
-        ecb.setLegalMoves(legalMoves);
-        ecb.generateLegalMoves();
+            Random r = new Random();
+            r.setSeed(i);
 
-        while (!ecb.isGameOver() && ecb.getHalfMoveCount() < 100) {
-            int move = ecb.getLegalMoveByIndex(r.nextInt(ecb.getNumLegalMoves()));
-            ecb.makeMove(new EngineMove(move));
-
-            final long trackedCode = ecb.trackedBoardHashCode();
-            final long calculatedHashCode = ecb.initialiseHashCode();
-            assertEquals(calculatedHashCode, trackedCode);
-
+            int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
+            ecb.setLegalMoves(legalMoves);
             ecb.generateLegalMoves();
 
+            while (!ecb.isGameOver() && ecb.getHalfMoveCount() < 100) {
+                int move = ecb.getLegalMoveByIndex(r.nextInt(ecb.getNumLegalMoves()));
+                ecb.makeMove(new EngineMove(move));
+
+                final long trackedCode = ecb.trackedBoardHashCode();
+                final long calculatedHashCode = ecb.initialiseHashCode();
+                assertEquals(calculatedHashCode, trackedCode);
+
+                ecb.generateLegalMoves();
+
+            }
         }
 
     }

@@ -812,7 +812,7 @@ public final class EngineChessBoard {
 
         calculateSupplementaryBitboards();
 
-        Assertions.checkTrackedHash(this);
+        Assertions.checkTrackedHash(this, fromSquare + " " + toSquare);
 
     }
 

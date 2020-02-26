@@ -222,6 +222,7 @@ public class ZorbristHashCalculator {
     }
 
     public boolean unMakeWhiteCastle(int bitRefTo) {
+
         switch (bitRefTo) {
             case 1:
                 replaceWithEmptySquare(SquareOccupant.WR, 2);
@@ -275,10 +276,10 @@ public class ZorbristHashCalculator {
             replaceWithEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefTo);
             if (!unMakeEnPassant(bitRefTo, moveDetail)) {
                 if (!unMakeCapture(bitRefTo, moveDetail)) {
-                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.WK) {
+                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.WK && bitRefFrom == 3) {
                         unMakeWhiteCastle(bitRefTo);
                     }
-                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.BK) {
+                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.BK && bitRefFrom == 59) {
                         unMakeBlackCastle(bitRefTo);
                     }
                 }
