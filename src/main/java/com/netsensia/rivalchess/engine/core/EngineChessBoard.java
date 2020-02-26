@@ -64,7 +64,7 @@ public final class EngineChessBoard {
         }
     }
 
-    public BoardHash getBoardHash() {
+    public BoardHash getBoardHashObject() {
         return boardHash;
     }
 
@@ -585,7 +585,8 @@ public final class EngineChessBoard {
 
         this.moveList[this.numMovesMade].capturePiece = -1;
         this.moveList[this.numMovesMade].move = compactMove;
-        this.moveList[this.numMovesMade].hashValue = boardHash.initialiseHashCode(this);;
+
+        this.moveList[this.numMovesMade].hashValue = boardHash.getTrackedHashValue();
         this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
         this.moveList[this.numMovesMade].pawnHashValue = boardHash.pawnHashCode(this);
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
@@ -744,6 +745,9 @@ public final class EngineChessBoard {
         calculateSupplementaryBitboards();
 
         if (isNonMoverInCheck()) {
+            if (this.getFen().contains("8/p4kp1/5p2/2P2QN1/3p3p/3PbK1P/7P/2q5 w - -")) {
+                System.out.println("Ok");
+            }
             unMakeMove();
             return false;
         } else {
@@ -756,10 +760,13 @@ public final class EngineChessBoard {
     }
 
     public void unMakeMove() throws InvalidMoveException {
+
         this.numMovesMade--;
 
         this.halfMoveCount = this.moveList[this.numMovesMade].halfMoveCount;
+
         this.isWhiteToMove = !this.isWhiteToMove;
+
         this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = this.moveList[this.numMovesMade].enPassantBitboard;
         this.castlePrivileges = this.moveList[this.numMovesMade].castlePrivileges;
         this.isOnNullMove = this.moveList[this.numMovesMade].isOnNullMove;
@@ -792,6 +799,7 @@ public final class EngineChessBoard {
         }
 
         calculateSupplementaryBitboards();
+
     }
 
     private byte replaceMovedPiece(int fromSquare, long fromMask, long toMask) {
@@ -1055,7 +1063,7 @@ public final class EngineChessBoard {
     }
 
     public int previousOccurrencesOfThisPosition() {
-        final long boardHashCode = boardHash.initialiseHashCode(this);
+        final long boardHashCode = boardHash.getTrackedHashValue();
 
         int occurrences = 0;
         for (int i = this.numMovesMade - 2; i >= 0 && i >= this.numMovesMade - this.halfMoveCount; i -= 2) {
@@ -1184,11 +1192,8 @@ public final class EngineChessBoard {
         return boardHash.pawnHashCode(this);
     }
 
-    public long intialiseHashCode() {
-        return boardHash.initialiseHashCode(this);
-    }
-
-    public long trackedBoardHashCode() {
+    public long trackedBoardHashCode()
+    {
         return boardHash.getTrackedHashValue();
     }
 

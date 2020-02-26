@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.constants.MoveOrder;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
+import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -137,7 +138,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public synchronized void setHashSizeMB(int hashSizeMB) {
-        engineChessBoard.getBoardHash().setHashSizeMB(hashSizeMB);
+        engineChessBoard.getBoardHashObject().setHashSizeMB(hashSizeMB);
     }
 
     public synchronized void setBoard(Board board) {
@@ -148,17 +149,17 @@ public final class RivalSearch implements Runnable {
 
     public synchronized void setBoard(EngineChessBoard engineBoard) {
         this.setEngineChessBoard(engineBoard);
-        engineChessBoard.getBoardHash().incVersion();
-        engineChessBoard.getBoardHash().setHashTable();
+        engineChessBoard.getBoardHashObject().incVersion();
+        engineChessBoard.getBoardHashObject().setHashTable();
     }
 
     public synchronized void clearHash() {
-        engineChessBoard.getBoardHash().clearHash();
+        engineChessBoard.getBoardHashObject().clearHash();
     }
 
     public synchronized void newGame() {
         m_inBook = this.m_useOpeningBook;
-        engineChessBoard.getBoardHash().clearHash();
+        engineChessBoard.getBoardHashObject().clearHash();
     }
 
     final public int staticExchangeEvaluation(EngineChessBoard board, int move) throws InvalidMoveException {
@@ -457,7 +458,7 @@ public final class RivalSearch implements Runnable {
             eval -= RivalConstants.VALUE_QUEEN_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
         }
 
-        final BoardHash boardHash = engineChessBoard.getBoardHash();
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
         eval += boardHash.getPawnHashEntry(board).getPawnScore();
 
         eval +=
@@ -997,6 +998,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public SearchPath quiesce(EngineChessBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) throws InvalidMoveException {
+
         setNodes(getNodes() + 1);
 
         SearchPath newPath;
@@ -1028,6 +1030,7 @@ public final class RivalSearch implements Runnable {
 
         int legalMoveCount = 0;
         while ((move = getHighScoreMove(theseMoves)) != 0) {
+
             if (RivalConstants.USE_DELTA_PRUNING && !isCheck) {
                 final int materialIncrease = (board.lastCapturePiece() > -1
                         ? RivalConstants.PIECE_VALUES.get(board.lastCapturePiece() % 6)
@@ -1051,6 +1054,7 @@ public final class RivalSearch implements Runnable {
 
                 board.unMakeMove();
             }
+
         }
 
         if (isCheck && legalMoveCount == 0) {
@@ -1253,7 +1257,7 @@ public final class RivalSearch implements Runnable {
 
         byte flag = RivalConstants.UPPERBOUND;
 
-        final BoardHash boardHash = engineChessBoard.getBoardHash();
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
         final long hashValue = boardHash.getTrackedHashValue();
         final int hashIndex = boardHash.getHashIndex(board);
         int hashMove = 0;
@@ -1626,13 +1630,13 @@ public final class RivalSearch implements Runnable {
     }
 
     private void superVerifyHash(EngineChessBoard board, int hashIndex, boolean isLocked) {
-        final BoardHash boardHash = engineChessBoard.getBoardHash();
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
 
         if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
             for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
                 if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
                         boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
-                    throw new HashVerificationException("Height bad clash " + boardHash.initialiseHashCode(board));
+                    throw new HashVerificationException("Height bad clash " + ZorbristHashCalculator.calculateHash(board));
                 }
             }
         }
@@ -1685,7 +1689,7 @@ public final class RivalSearch implements Runnable {
                 currentDepthZeroMove = move;
                 currentDepthZeroMoveNumber = numLegalMovesAtDepthZero;
 
-                final BoardHash boardHash = engineChessBoard.getBoardHash();
+                final BoardHash boardHash = engineChessBoard.getBoardHashObject();
 
                 boolean canMakeNullMove = true;
                 if (isDrawnAtRoot(engineChessBoard, 1)) {
@@ -1773,7 +1777,7 @@ public final class RivalSearch implements Runnable {
                 m_currentPath.setPath(bestPath); // otherwise we will crash!
                 m_currentPathString = "" + m_currentPath;
             } else {
-                final BoardHash boardHash = engineChessBoard.getBoardHash();
+                final BoardHash boardHash = engineChessBoard.getBoardHashObject();
                 boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag, depth);
             }
 
@@ -1801,6 +1805,7 @@ public final class RivalSearch implements Runnable {
         SearchPath path;
 
         try {
+
             engineChessBoard.setLegalMoves(depthZeroLegalMoves);
             int depthZeroMoveCount = 0;
 
@@ -1856,18 +1861,21 @@ public final class RivalSearch implements Runnable {
                         }
                     }
 
-                    final BoardHash boardHash = engineChessBoard.getBoardHash();
+                    final BoardHash boardHash = engineChessBoard.getBoardHashObject();
                     for (int i=0; i<=1; i++) {
                         if (Boolean.TRUE.equals(plyDraw.get(i))) {
-                            drawnPositionsAtRoot.get(i).add(boardHash.initialiseHashCode(engineChessBoard));
+                            drawnPositionsAtRoot.get(i).add(boardHash.getTrackedHashValue());
                         }
                     }
 
                     engineChessBoard.unMakeMove();
+
                 }
+
                 depthZeroMoveCount++;
 
                 move = depthZeroLegalMoves[++c] & 0x00FFFFFF;
+
             }
 
             if (this.m_useOpeningBook && getFen().trim().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")) {
@@ -1957,7 +1965,7 @@ public final class RivalSearch implements Runnable {
         searchState = SearchState.SEARCHING;
         m_abortingSearch = false;
 
-        final BoardHash boardHash = engineChessBoard.getBoardHash();
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
         boardHash.incVersion();
 
         searchStartTime = System.currentTimeMillis();
@@ -2068,9 +2076,9 @@ public final class RivalSearch implements Runnable {
 
     private boolean isDrawnAtRoot(EngineChessBoard board, int ply) {
         int i;
-        final BoardHash boardHash = engineChessBoard.getBoardHash();
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
         for (i = 0; i < drawnPositionsAtRootCount.get(ply); i++) {
-            if (drawnPositionsAtRoot.get(ply).get(i).equals(boardHash.initialiseHashCode(board))) {
+            if (drawnPositionsAtRoot.get(ply).get(i).equals(boardHash.getTrackedHashValue())) {
                 return true;
             }
         }
