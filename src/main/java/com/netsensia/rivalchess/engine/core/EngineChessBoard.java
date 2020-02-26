@@ -750,6 +750,10 @@ public final class EngineChessBoard {
         calculateSupplementaryBitboards();
 
         if (isNonMoverInCheck()) {
+            if (this.getFen().contains("8/p4kp1/5p2/2P2QN1/3p3p/3PbK1P/7P/2q5 w - -")) {
+                System.out.println("Ok");
+
+            }
             unMakeMove();
             if (Assertions.checkTrackedHash(this)) {
                 System.out.println("All good");

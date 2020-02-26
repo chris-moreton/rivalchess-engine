@@ -202,4 +202,15 @@ public class ZorbristHashCalculatorTest {
 
     }
 
+    @Test
+    public void testInterestingFailure() throws InvalidMoveException {
+        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel("8/p4kp1/5p2/2P2QN1/3p3p/3PbK1P/7P/2q5 w - - 2 2"));
+
+        ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g1c1").compact));
+        final long trackedCode = ecb.trackedBoardHashCode();
+        final long calculatedHashCode = ecb.initialiseHashCode();
+        assertEquals(calculatedHashCode, trackedCode);
+
+    }
+
 }
