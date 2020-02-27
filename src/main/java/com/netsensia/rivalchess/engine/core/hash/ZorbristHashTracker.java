@@ -13,17 +13,25 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 public class ZorbristHashTracker {
 
     private long trackedBoardHash;
+    private long trackedPawnHash;
     
     public void initHash(EngineChessBoard engineChessBoard) {
         trackedBoardHash = ZorbristHashCalculator.calculateHash(engineChessBoard);
+        trackedPawnHash = ZorbristHashCalculator.calculatePawnHash(engineChessBoard);
     }
 
     private void replaceWithEmptySquare(SquareOccupant piece, int bitRef) {
         trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[piece.getIndex()][bitRef];
+        if (piece == SquareOccupant.WP || piece == SquareOccupant.BP) {
+            trackedPawnHash ^= ZorbristHashCalculator.pieceHashValues[piece.getIndex()][bitRef];
+        }
     }
 
     private void placePieceOnEmptySquare(SquareOccupant piece, int bitRef) {
         trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[piece.getIndex()][bitRef];
+        if (piece == SquareOccupant.WP || piece == SquareOccupant.BP) {
+            trackedPawnHash ^= ZorbristHashCalculator.pieceHashValues[piece.getIndex()][bitRef];
+        }
     }
 
     private void replaceWithAnotherPiece(SquareOccupant movedPiece, SquareOccupant capturedPiece, int bitRef) {
@@ -239,6 +247,10 @@ public class ZorbristHashTracker {
 
     public long getTrackedBoardHashValue() {
         return trackedBoardHash;
+    }
+
+    public long getTrackedPawnHashValue() {
+        return trackedPawnHash;
     }
 
 }

@@ -588,7 +588,7 @@ public final class EngineChessBoard {
 
         this.moveList[this.numMovesMade].hashValue = boardHash.getTrackedHashValue();
         this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
-        this.moveList[this.numMovesMade].pawnHashValue = boardHash.pawnHashCode(this);
+        this.moveList[this.numMovesMade].pawnHashValue = boardHash.getTrackedPawnHashValue();
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
         this.moveList[this.numMovesMade].enPassantBitboard = this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
         this.moveList[this.numMovesMade].castlePrivileges = (byte) this.castlePrivileges;
@@ -1185,13 +1185,14 @@ public final class EngineChessBoard {
         return false;
     }
 
-    public long pawnHashCode() {
-        return boardHash.pawnHashCode(this);
-    }
-
     public long trackedBoardHashCode()
     {
         return boardHash.getTrackedHashValue();
+    }
+
+    public long trackedPawnHashCode()
+    {
+        return boardHash.getTrackedPawnHashValue();
     }
 
     @Override

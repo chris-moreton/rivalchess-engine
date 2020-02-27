@@ -100,16 +100,24 @@ public class ZorbristHashTrackerTest {
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
         final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
+        final long originalTrackedPawnHashCode = ecb.trackedBoardHashCode();
+        final long originalCalculatedPawnHashCode = ZorbristHashCalculator.calculatePawnHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
+        assertEquals(originalTrackedPawnHashCode, originalCalculatedPawnHashCode);
 
         ecb.unMakeMove();
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
         final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
+        final long unmadeTrackedPawnHashCode = ecb.trackedPawnHashCode();
+        final long unmadeCalculatedPawnHashCode = ZorbristHashCalculator.calculatePawnHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
+        assertEquals(unmadeCalculatedPawnHashCode, unmadeTrackedPawnHashCode);
 
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
         assertEquals(ZorbristHashCalculator.calculateHash(ecb), originalCalculatedHashCode);
+        assertEquals(ecb.trackedPawnHashCode(), originalTrackedPawnHashCode);
+        assertEquals(ZorbristHashCalculator.calculatePawnHash(ecb), originalCalculatedPawnHashCode);
 
     }
 
@@ -118,17 +126,24 @@ public class ZorbristHashTrackerTest {
         ecb.makeNullMove();
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
         final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
+        final long originalTrackedPawnHashCode = ecb.trackedPawnHashCode();
+        final long originalCalculatedPawnHashCode = ZorbristHashCalculator.calculatePawnHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
+        assertEquals(originalCalculatedPawnHashCode, originalTrackedPawnHashCode);
 
         ecb.unMakeNullMove();
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
         final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
+        final long unmadeTrackedPawnHashCode = ecb.trackedPawnHashCode();
+        final long unmadeCalculatedPawnHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
+        assertEquals(unmadeCalculatedPawnHashCode, unmadeTrackedPawnHashCode);
 
         ecb.makeNullMove();
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
         assertEquals(ZorbristHashCalculator.calculateHash(ecb), originalCalculatedHashCode);
-
+        assertEquals(ecb.trackedPawnHashCode(), originalTrackedPawnHashCode);
+        assertEquals(ZorbristHashCalculator.calculatePawnHash(ecb), originalCalculatedPawnHashCode);
     }
 
     @Test

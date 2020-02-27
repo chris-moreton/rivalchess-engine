@@ -134,7 +134,7 @@ public class BoardHash {
     public PawnHashEntry getPawnHashEntry(EngineChessBoard board) {
         PawnHashEntry pawnHashEntry;
 
-        final long pawnHashValue = board.pawnHashCode();
+        final long pawnHashValue = board.trackedPawnHashCode();
         final int pawnHashIndex = getPawnHashIndex(pawnHashValue);
 
         if (RivalConstants.USE_PAWN_HASH) {
@@ -232,7 +232,7 @@ public class BoardHash {
                 setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE, pawnHashEntry.getBlackPassedPawnScore());
                 setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS, pawnHashEntry.getWhitePassedPawnsBitboard());
                 setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS, pawnHashEntry.getBlackPassedPawnsBitboard());
-                setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK, board.pawnHashCode());
+                setPawnHashTable(pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK, board.trackedPawnHashCode());
             }
         }
 
@@ -293,7 +293,7 @@ public class BoardHash {
 
     public void setLastPawnHashValueAndEntry(EngineChessBoard board, PawnHashEntry pawnHashEntry) {
         if (RivalConstants.USE_QUICK_PAWN_HASH_RETURN) {
-            setLastPawnHashValue(board.pawnHashCode());
+            setLastPawnHashValue(board.trackedPawnHashCode());
             setLastPawnHashEntry(new PawnHashEntry(pawnHashEntry));
         }
     }
@@ -342,6 +342,10 @@ public class BoardHash {
 
     public long getTrackedHashValue() {
         return hashCalculator.getTrackedBoardHashValue();
+    }
+
+    public long getTrackedPawnHashValue() {
+        return hashCalculator.getTrackedPawnHashValue();
     }
 
     public int getHashTableVersion() {
