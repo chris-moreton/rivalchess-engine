@@ -1,5 +1,9 @@
 package com.netsensia.rivalchess.engine.core.bitboards;
 
+import com.netsensia.rivalchess.engine.core.RivalConstants;
+
+import java.util.Arrays;
+
 public class EngineBitboards {
 
     /**
@@ -18,5 +22,10 @@ public class EngineBitboards {
 
     public void xorPieceBitboard(int i, long xorBy) {
         this.pieceBitboards[i] ^= xorBy;
+    }
+
+    public void reset() {
+        pieceBitboards = new long[RivalConstants.NUM_BITBOARDS];
+        Arrays.fill(pieceBitboards, 0);
     }
 }

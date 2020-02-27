@@ -14,6 +14,7 @@ import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.util.FenUtils;
 
+import java.util.Arrays;
 import java.util.List;
 
 public final class EngineChessBoard {
@@ -50,7 +51,7 @@ public final class EngineChessBoard {
     public void setBoard(Board board) {
         this.numMovesMade = 0;
         this.halfMoveCount = board.getHalfMoveCount();
-        setBitboards(board);
+        setEngineBoardVars(board);
         boardHash.setHashTableVersion(0);
         boardHash.setHashSizeMB(RivalConstants.DEFAULT_HASHTABLE_SIZE_MB);
         boardHash.initialiseHashCode(this);
@@ -419,28 +420,29 @@ public final class EngineChessBoard {
         generateLegalMoves();
     }
 
-    public void setBitboards(Board board) {
+    public void setEngineBoardVars(Board board) {
+        this.isWhiteToMove = board.isWhiteToMove();
+
+        engineBitboards.reset();
+
+        setSquareContents(board);
+        setEnPassantBitboard(board);
+        setCastlePrivileges(board);
+        calculateSupplementaryBitboards();
+    }
+
+    private void setSquareContents(Board board) {
         byte bitNum;
         long bitSet;
         int pieceIndex;
-        char piece;
 
-        this.engineBitboards.pieceBitboards = new long[RivalConstants.NUM_BITBOARDS];
-
-        for (int i = 0; i < 64; i++) {
-            squareContents[i] = -1;
-        }
-
-        for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-            engineBitboards.pieceBitboards[i] = 0;
-        }
+        Arrays.fill(squareContents, (byte)-1);
 
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
                 bitNum = (byte) (63 - (8 * y) - x);
                 bitSet = 1L << bitNum;
-                piece = board.getPieceCode(x, y);
-                switch (piece) {
+                switch (board.getPieceCode(x, y)) {
                     case 'P':
                         squareContents[bitNum] = RivalConstants.WP;
                         pieceIndex = RivalConstants.WP;
@@ -495,13 +497,13 @@ public final class EngineChessBoard {
                         pieceIndex = -1;
                 }
                 if (pieceIndex != -1) {
-                    engineBitboards.pieceBitboards[pieceIndex] = engineBitboards.pieceBitboards[pieceIndex] | bitSet;
+                    engineBitboards.pieceBitboards[pieceIndex] |= bitSet;
+                }
                 }
             }
         }
 
-        this.isWhiteToMove = board.isWhiteToMove();
-
+    private void setEnPassantBitboard(Board board) {
         int ep = board.getEnPassantFile();
         if (ep == -1) {
             engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 0;
@@ -512,14 +514,14 @@ public final class EngineChessBoard {
                 engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 1L << (16 + (7 - ep));
             }
         }
+    }
 
+    private void setCastlePrivileges(Board board) {
         this.castlePrivileges = 0;
         this.castlePrivileges |= (board.isWhiteKingSideCastleAvailable() ? RivalConstants.CASTLEPRIV_WK : 0);
         this.castlePrivileges |= (board.isWhiteQueenSideCastleAvailable() ? RivalConstants.CASTLEPRIV_WQ : 0);
         this.castlePrivileges |= (board.isBlackKingSideCastleAvailable() ? RivalConstants.CASTLEPRIV_BK : 0);
         this.castlePrivileges |= (board.isBlackQueenSideCastleAvailable() ? RivalConstants.CASTLEPRIV_BQ : 0);
-
-        calculateSupplementaryBitboards();
     }
 
     public void calculateSupplementaryBitboards() {
@@ -588,7 +590,7 @@ public final class EngineChessBoard {
 
         this.moveList[this.numMovesMade].hashValue = boardHash.getTrackedHashValue();
         this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
-        this.moveList[this.numMovesMade].pawnHashValue = boardHash.pawnHashCode(this);
+        this.moveList[this.numMovesMade].pawnHashValue = boardHash.getTrackedPawnHashValue();
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
         this.moveList[this.numMovesMade].enPassantBitboard = this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
         this.moveList[this.numMovesMade].castlePrivileges = (byte) this.castlePrivileges;
@@ -1185,13 +1187,14 @@ public final class EngineChessBoard {
         return false;
     }
 
-    public long pawnHashCode() {
-        return boardHash.pawnHashCode(this);
-    }
-
     public long trackedBoardHashCode()
     {
         return boardHash.getTrackedHashValue();
+    }
+
+    public long trackedPawnHashCode()
+    {
+        return boardHash.getTrackedPawnHashValue();
     }
 
     @Override
