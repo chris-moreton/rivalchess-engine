@@ -12,12 +12,10 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class ZorbristHashCalculator {
 
-    private static final long START_HASH_VALUE = 1427869295504964227L;
-    private static final long START_PAWN_HASH_VALUE = 5454534288458826522L;
+    public static final long START_HASH_VALUE = 1427869295504964227L;
+    public static final long START_PAWN_HASH_VALUE = 5454534288458826522L;
 
-    private long trackedBoardHash;
-
-    private final static long[][] pieceHashValues =
+    public final static long[][] pieceHashValues =
             {
                     {2757563266877852572L, 6372315729141069125L, 6531282879677255786L, 6217800311556484852L, 4028653356764102261L, 7173945121263241432L, 3140540760890330300L, 186456652255508025L, 4326822066600281601L, 1676275713585176313L, 994786814496869094L, 7266780370156599753L, 1993832195284356489L, 8906581877710625494L, 13143720840670621L, 4898713441463880900L, 2606168633944391863L, 1278377858051695283L, 1882005865304517078L, 3567997896755807464L, 2122005311604240155L, 2319007812912636961L, 4341526477626483922L, 4112961148281161054L, 1873977493594566140L, 305729391848946031L, 1737015787209404385L, 2237900801421661035L, 3194938434899723208L, 6533797044794123108L, 53098511802011562L, 3081966774796706547L, 1696652368246260792L, 2862724276072767459L, 1287517088619610318L, 2602374675812111264L, 4756084200418510689L, 5276272864338057212L, 8687878729112386221L, 4135797612500512402L, 5514543711318410338L, 5560689077408854053L, 2256144847160470449L, 4417513483083909270L, 3035972007832032975L, 7368920397373182932L, 6920167683995549487L, 6247308382891571962L, 5676121683487873905L, 9175320351448874372L, 5910720470467824693L, 907420310966211028L, 6716488881646089174L, 5928558823587778993L, 5915781820118628492L, 39463936643324408L, 5811376027078466953L, 6523428793023374251L, 5956533780815835809L, 3641790615902344529L, 7353877805870994894L, 939029069031068496L, 8125675455391727839L, 4589414129899697073L,},
                     {706413976754998224L, 5237446959228702633L, 4502343349913478046L, 4284922253622685935L, 794556809418481704L, 6752480058157658297L, 5122029621984886652L, 6882057774524096198L, 6541274272475607484L, 1574242302337288143L, 111900223082258093L, 6631459239802814568L, 526646747656935902L, 3357192273790967373L, 3598688189568699342L, 5546366303086541876L, 1726594687531813407L, 4987647731489328978L, 3580842832605597181L, 7743075973487833223L, 2776180945377874707L, 6742207452261577653L, 3524831375196424107L, 7614586915232374818L, 6115393728617541508L, 1125662212014421892L, 231458207239155535L, 2885178576595681658L, 2690121602411998221L, 3533102710711774971L, 7740701900047567421L, 1255503606430395821L, 8399862489813273836L, 1439234334975020321L, 4763417158037960862L, 4977818468183857538L, 4984644494470203422L, 4351639087268581437L, 2899815003034077612L, 9108461806324676569L, 5172153358648562244L, 2597331834528227009L, 6109954286982553472L, 2912933226757411468L, 7640543903334245893L, 2844971232928040881L, 2279605498837990134L, 3463731465304653534L, 76901528508813291L, 6280005240992472692L, 3260455415836512746L, 4131337061747131489L, 1402852472918327774L, 5102723766602758144L, 2949259100454305372L, 1944378517589392750L, 6606049276124010842L, 4945875818949224017L, 6463697859664636677L, 4563130144202493590L, 1130798484264037885L, 4668778934824795676L, 4808737661328924273L, 3266976802810975809L,},
@@ -33,7 +31,11 @@ public class ZorbristHashCalculator {
                     {9208188818834422943L, 5079652584320734989L, 5625753500461165109L, 2522764131739476098L, 922397543745308399L, 1849530567864289883L, 3565871539435181739L, 8501945789448278742L, 2834020835440806116L, 2114898699739419510L, 8156849327267637025L, 7417872299570049773L, 760442579520793625L, 8125352974898441086L, 7372747514993796401L, 4820007705677169948L, 5094849792765808884L, 8654594184840000990L, 1043002158891838519L, 30069737146852339L, 7480840281579044543L, 5617509422479735054L, 8087298089913277531L, 2732971805427057233L, 2139833233488709521L, 4021782638741383288L, 8661487598710505540L, 4811833499348751086L, 6129950681643071213L, 4462470102654327859L, 5370869476704701078L, 2247623128255100219L, 6095943374180634947L, 4932188522700420147L, 4913325323529309583L, 3493168178410901252L, 3408574234029055147L, 1781269879077519466L, 6009011768553083766L, 7359460891617983503L, 4078903063976677065L, 1891844119477713966L, 3111342753299638506L, 8498343264139653994L, 8554521356288376209L, 8647006971813776110L, 1405867315492784046L, 3261249132213245190L, 4172321625119480057L, 1422367203506234086L, 6260367524173538434L, 608749605062299397L, 2045889148659716268L, 2122806103854230142L, 8839124020569954204L, 8418931016733783342L, 5466714312773596092L, 2059608657860469959L, 1622528598239002687L, 228144609206946361L, 5588235677104977126L, 3157823198315106642L, 1729483203816602699L, 3116580019810902115L}
             };
 
-    private final static long[] moverHashValues = {6612194290785701391L, 7796428774704130372L};
+    public final static long[] moverHashValues = {6612194290785701391L, 7796428774704130372L};
+
+    private ZorbristHashCalculator() {
+        //
+    }
 
     public static long calculateHash(EngineChessBoard engineChessBoard) {
         long hashValue = START_HASH_VALUE;
@@ -52,11 +54,7 @@ public class ZorbristHashCalculator {
         return hashValue;
     }
 
-    public void initHash(EngineChessBoard engineChessBoard) {
-        trackedBoardHash = calculateHash(engineChessBoard);
-    }
-
-    public static long initPawnHash(EngineChessBoard engineChessBoard) {
+    public static long calculatePawnHash(EngineChessBoard engineChessBoard) {
         long pawnHashValue = START_PAWN_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
@@ -70,229 +68,6 @@ public class ZorbristHashCalculator {
         }
 
         return pawnHashValue;
-    }
-
-    private void replaceWithEmptySquare(SquareOccupant piece, int bitRef) {
-        trackedBoardHash ^= pieceHashValues[piece.getIndex()][bitRef];
-    }
-
-    private void placePieceOnEmptySquare(SquareOccupant piece, int bitRef) {
-        trackedBoardHash ^= pieceHashValues[piece.getIndex()][bitRef];
-    }
-
-    private void replaceWithAnotherPiece(SquareOccupant movedPiece, SquareOccupant capturedPiece, int bitRef) {
-        trackedBoardHash ^= pieceHashValues[capturedPiece.getIndex()][bitRef];
-        trackedBoardHash ^= pieceHashValues[movedPiece.getIndex()][bitRef];
-    }
-
-    private void processPossibleWhiteKingSideCastle(int bitRefTo) {
-        if (bitRefTo == 1) {
-            replaceWithEmptySquare(SquareOccupant.WR, 0);
-            placePieceOnEmptySquare(SquareOccupant.WR, 2);
-        }
-    }
-
-    private void processPossibleWhiteQueenSideCastle(int bitRefTo) {
-        if (bitRefTo == 5) {
-            replaceWithEmptySquare(SquareOccupant.WR, 7);
-            placePieceOnEmptySquare(SquareOccupant.WR, 4);
-        }
-    }
-
-    private void processPossibleBlackQueenSideCastle(int bitRefTo) {
-        if (bitRefTo == 61) {
-            replaceWithEmptySquare(SquareOccupant.BR, 63);
-            placePieceOnEmptySquare(SquareOccupant.BR, 60);
-        }
-    }
-
-    private void processPossibleBlackKingSideCastle(int bitRefTo) {
-        if (bitRefTo == 57) {
-            replaceWithEmptySquare(SquareOccupant.BR, 56);
-            placePieceOnEmptySquare(SquareOccupant.BR, 58);
-        }
-    }
-
-    private void processPossibleWhitePawnEnPassantCapture(Move move, SquareOccupant capturedPiece) {
-        if (move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
-
-            final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
-                        new Square(move.getTgtXFile(), move.getTgtYRank() + 1
-                    ));
-
-            replaceWithEmptySquare(SquareOccupant.BP, capturedPawnBitRef);
-        }
-    }
-
-    private void processPossibleBlackPawnEnPassantCapture(Move move, SquareOccupant capturedPiece) {
-        if (move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
-
-            final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
-                    new Square(move.getTgtXFile(), move.getTgtYRank() - 1
-                    ));
-
-            replaceWithEmptySquare(SquareOccupant.WP, capturedPawnBitRef);
-        }
-    }
-
-    private void processCapture(SquareOccupant movedPiece, SquareOccupant capturedPiece, int bitRefTo) {
-        if (capturedPiece == SquareOccupant.NONE) {
-            placePieceOnEmptySquare(movedPiece, bitRefTo);
-        } else {
-            replaceWithAnotherPiece(movedPiece, capturedPiece, bitRefTo);
-        }
-    }
-
-    private void switchMover() {
-        trackedBoardHash ^= moverHashValues[Colour.WHITE.getValue()];
-        trackedBoardHash ^= moverHashValues[Colour.BLACK.getValue()];
-    }
-
-    private void processCastling(int bitRefFrom, SquareOccupant movedPiece, int bitRefTo) {
-        if (movedPiece == SquareOccupant.WK && bitRefFrom == 3) {
-            processPossibleWhiteKingSideCastle(bitRefTo);
-            processPossibleWhiteQueenSideCastle(bitRefTo);
-        }
-
-        if (movedPiece == SquareOccupant.BK && bitRefFrom == 59) {
-            processPossibleBlackKingSideCastle(bitRefTo);
-            processPossibleBlackQueenSideCastle(bitRefTo);
-        }
-    }
-
-    private void processSpecialPawnMoves(Move move, SquareOccupant movedPiece, int bitRefTo, SquareOccupant capturedPiece) {
-        if (movedPiece == SquareOccupant.WP) {
-            processPossibleWhitePawnEnPassantCapture(move, capturedPiece);
-            final SquareOccupant promotionPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
-            if (promotionPiece != SquareOccupant.NONE) {
-                replaceWithAnotherPiece(promotionPiece, SquareOccupant.WP, bitRefTo);
-            }
-        }
-
-        if (movedPiece == SquareOccupant.BP) {
-            processPossibleBlackPawnEnPassantCapture(move, capturedPiece);
-            final SquareOccupant promotionPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
-            if (promotionPiece != SquareOccupant.NONE) {
-                replaceWithAnotherPiece(promotionPiece, SquareOccupant.BP, bitRefTo);
-            }
-        }
-    }
-
-    private boolean unMakeEnPassant(int bitRefTo, MoveDetail moveDetail) {
-        if ((1L << bitRefTo) == moveDetail.enPassantBitboard) {
-            if (moveDetail.movePiece == RivalConstants.WP) {
-                placePieceOnEmptySquare(SquareOccupant.BP, bitRefTo-8);
-                return true;
-            } else if (moveDetail.movePiece == RivalConstants.BP) {
-                placePieceOnEmptySquare(SquareOccupant.WP, bitRefTo+8);
-                return true;
-
-            }
-        }
-        return false;
-    }
-
-    public void nullMove() {
-        switchMover();
-    }
-
-    public void makeMove(EngineChessBoard board, EngineMove engineMove) {
-
-        final Move move = ChessBoardConversion.getMoveRefFromEngineMove(engineMove.compact);
-        final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
-        final SquareOccupant movedPiece = board.getSquareOccupant(bitRefFrom);
-        final int bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.getTgtBoardRef());
-        final SquareOccupant capturedPiece = board.getSquareOccupant(bitRefTo);
-
-        replaceWithEmptySquare(movedPiece, bitRefFrom);
-
-        processCapture(movedPiece, capturedPiece, bitRefTo);
-        processSpecialPawnMoves(move, movedPiece, bitRefTo, capturedPiece);
-        processCastling(bitRefFrom, movedPiece, bitRefTo);
-
-        switchMover();
-
-    }
-
-    public boolean unMakeCapture(int bitRefTo, MoveDetail moveDetail) {
-        if (moveDetail.capturePiece != -1) {
-            placePieceOnEmptySquare(SquareOccupant.fromIndex(moveDetail.capturePiece), bitRefTo);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean unMakeWhiteCastle(int bitRefTo) {
-
-        switch (bitRefTo) {
-            case 1:
-                replaceWithEmptySquare(SquareOccupant.WR, 2);
-                placePieceOnEmptySquare(SquareOccupant.WR, 0);
-                return true;
-            case 5:
-                replaceWithEmptySquare(SquareOccupant.WR, 4);
-                placePieceOnEmptySquare(SquareOccupant.WR, 7);
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    public boolean unMakeBlackCastle(int bitRefTo) {
-        switch (bitRefTo) {
-            case 61:
-                replaceWithEmptySquare(SquareOccupant.BR, 60);
-                placePieceOnEmptySquare(SquareOccupant.BR, 63);
-                return true;
-            case 57:
-                replaceWithEmptySquare(SquareOccupant.BR, 58);
-                placePieceOnEmptySquare(SquareOccupant.BR, 56);
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    public boolean unMakePromotion(int bitRefFrom, int bitRefTo, MoveDetail moveDetail) {
-        final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
-        final SquareOccupant movedPiece = SquareOccupant.fromIndex(moveDetail.movePiece);
-        SquareOccupant promotedPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
-        if (promotedPiece != SquareOccupant.NONE) {
-            placePieceOnEmptySquare(movedPiece, bitRefFrom);
-            replaceWithEmptySquare(promotedPiece, bitRefTo);
-            unMakeCapture(bitRefTo, moveDetail);
-            return true;
-        }
-        return false;
-    }
-
-    public void unMakeMove(MoveDetail moveDetail) {
-
-        final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
-        final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
-        final int bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.getTgtBoardRef());
-
-        if (!unMakePromotion(bitRefFrom, bitRefTo, moveDetail)) {
-            placePieceOnEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefFrom);
-            replaceWithEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefTo);
-            if (!unMakeEnPassant(bitRefTo, moveDetail)) {
-                if (!unMakeCapture(bitRefTo, moveDetail)) {
-                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.WK && bitRefFrom == 3) {
-                        unMakeWhiteCastle(bitRefTo);
-                    }
-                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.BK && bitRefFrom == 59) {
-                        unMakeBlackCastle(bitRefTo);
-                    }
-                }
-            }
-        }
-
-        switchMover();
-
-    }
-
-    public long getTrackedBoardHashValue() {
-        return trackedBoardHash;
     }
 
 }

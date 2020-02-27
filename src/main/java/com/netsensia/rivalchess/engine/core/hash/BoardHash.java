@@ -11,7 +11,7 @@ import com.netsensia.rivalchess.util.Numbers;
 public class BoardHash {
 
     private long lastPawnHashValue = -1;
-    private ZorbristHashCalculator hashCalculator = new ZorbristHashCalculator();
+    private ZorbristHashTracker hashCalculator = new ZorbristHashTracker();
 
     private PawnHashEntry lastPawnHashEntry = new PawnHashEntry();
 
@@ -313,7 +313,7 @@ public class BoardHash {
     }
 
     public long pawnHashCode(EngineChessBoard engineChessBoard) {
-        return hashCalculator.initPawnHash(engineChessBoard);
+        return ZorbristHashCalculator.calculatePawnHash(engineChessBoard);
     }
 
     public synchronized void initialiseHashCode(EngineChessBoard engineChessBoard) {

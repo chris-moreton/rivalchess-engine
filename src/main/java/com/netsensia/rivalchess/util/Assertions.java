@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.util;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
+import com.netsensia.rivalchess.engine.core.hash.ZorbristHashTracker;
 
 public class Assertions {
 
