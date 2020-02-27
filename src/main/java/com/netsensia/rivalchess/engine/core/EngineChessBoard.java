@@ -602,9 +602,9 @@ public final class EngineChessBoard {
 
         this.halfMoveCount++;
 
-        this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 0;
+        engineBitboards.setPieceBitboard(RivalConstants.ENPASSANTSQUARE, 0);
 
-        this.engineBitboards.pieceBitboards[movePiece] ^= fromMask | toMask;
+        engineBitboards.movePiece(movePiece, compactMove);
 
         this.squareContents[moveFrom] = -1;
         this.squareContents[moveTo] = (byte) movePiece;
