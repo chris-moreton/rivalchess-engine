@@ -100,7 +100,7 @@ public class ZorbristHashTrackerTest {
         ecb.makeMove(new EngineMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(move).compact));
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
         final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
-        final long originalTrackedPawnHashCode = ecb.trackedBoardHashCode();
+        final long originalTrackedPawnHashCode = ecb.trackedPawnHashCode();
         final long originalCalculatedPawnHashCode = ZorbristHashCalculator.calculatePawnHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
         assertEquals(originalTrackedPawnHashCode, originalCalculatedPawnHashCode);
@@ -135,7 +135,7 @@ public class ZorbristHashTrackerTest {
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
         final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         final long unmadeTrackedPawnHashCode = ecb.trackedPawnHashCode();
-        final long unmadeCalculatedPawnHashCode = ZorbristHashCalculator.calculateHash(ecb);
+        final long unmadeCalculatedPawnHashCode = ZorbristHashCalculator.calculatePawnHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
         assertEquals(unmadeCalculatedPawnHashCode, unmadeTrackedPawnHashCode);
 

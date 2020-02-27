@@ -37,6 +37,12 @@ public class ZorbristHashTracker {
     private void replaceWithAnotherPiece(SquareOccupant movedPiece, SquareOccupant capturedPiece, int bitRef) {
         trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[capturedPiece.getIndex()][bitRef];
         trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[movedPiece.getIndex()][bitRef];
+        if (capturedPiece == SquareOccupant.WP || capturedPiece == SquareOccupant.BP) {
+            trackedPawnHash ^= ZorbristHashCalculator.pieceHashValues[capturedPiece.getIndex()][bitRef];
+        }
+        if (movedPiece == SquareOccupant.WP || movedPiece == SquareOccupant.BP) {
+            trackedPawnHash ^= ZorbristHashCalculator.pieceHashValues[movedPiece.getIndex()][bitRef];
+        }
     }
 
     private void processPossibleWhiteKingSideCastle(int bitRefTo) {
