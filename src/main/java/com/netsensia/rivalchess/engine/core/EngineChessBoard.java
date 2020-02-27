@@ -579,9 +579,6 @@ public final class EngineChessBoard {
         final byte moveFrom = (byte) (compactMove >>> 16);
         final byte moveTo = (byte) (compactMove & 63);
 
-        final long fromMask = 1L << moveFrom;
-        final long toMask = 1L << moveTo;
-
         final int capturePiece = this.squareContents[moveTo];
         final int movePiece = this.squareContents[moveFrom];
 
@@ -608,6 +605,29 @@ public final class EngineChessBoard {
 
         this.squareContents[moveFrom] = -1;
         this.squareContents[moveTo] = (byte) movePiece;
+
+        makeNonTrivialMoveTypeAdjustments(compactMove, capturePiece, movePiece);
+
+        this.isWhiteToMove = !this.isWhiteToMove;
+        this.numMovesMade++;
+
+        calculateSupplementaryBitboards();
+
+        if (isNonMoverInCheck()) {
+            unMakeMove();
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private void makeNonTrivialMoveTypeAdjustments(int compactMove, int capturePiece, int movePiece) throws InvalidMoveException {
+
+        final byte moveFrom = (byte) (compactMove >>> 16);
+        final byte moveTo = (byte) (compactMove & 63);
+
+        final long fromMask = 1L << moveFrom;
+        final long toMask = 1L << moveTo;
 
         if (this.isWhiteToMove) {
             if (movePiece == RivalConstants.WP) {
@@ -739,18 +759,6 @@ public final class EngineChessBoard {
                     }
                 }
             }
-        }
-
-        this.isWhiteToMove = !this.isWhiteToMove;
-        this.numMovesMade++;
-
-        calculateSupplementaryBitboards();
-
-        if (isNonMoverInCheck()) {
-            unMakeMove();
-            return false;
-        } else {
-            return true;
         }
     }
 
