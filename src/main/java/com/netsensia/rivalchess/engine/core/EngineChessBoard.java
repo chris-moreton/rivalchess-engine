@@ -16,6 +16,9 @@ import com.netsensia.rivalchess.util.FenUtils;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Represents the state of a chessboard including bitboard states and the Zorbrish hash value.
+ */
 public final class EngineChessBoard {
 
     private EngineBitboards engineBitboards = new EngineBitboards();
