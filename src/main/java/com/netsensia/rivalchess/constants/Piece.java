@@ -20,6 +20,31 @@ public enum Piece {
         return value;
     }
 
+    public static Piece fromSquareOccupant(SquareOccupant squareOccupant) {
+        switch (squareOccupant) {
+            case WP:
+            case BP:
+                return Piece.PAWN;
+            case WR:
+            case BR:
+                return Piece.ROOK;
+            case WB:
+            case BB:
+                return Piece.BISHOP;
+            case WN:
+            case BN:
+                return Piece.KNIGHT;
+            case WQ:
+            case BQ:
+                return Piece.QUEEN;
+            case WK:
+            case BK:
+                return Piece.KING;
+            default:
+                return Piece.NONE;
+        }
+    }
+
     public static Piece fromIndex(int index){
         for(Piece cp : Piece.values()){
             if(cp.value == index) {

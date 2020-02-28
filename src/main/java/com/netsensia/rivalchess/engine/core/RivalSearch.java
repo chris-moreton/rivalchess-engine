@@ -1027,13 +1027,13 @@ public final class RivalSearch implements Runnable {
             scoreQuiesceMoves(board, ply, quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY);
         }
 
-        int move = getHighScoreMove(theseMoves);
+        int move;
 
         int legalMoveCount = 0;
 
-        while (move != 0) {
+        while ((move = getHighScoreMove(theseMoves)) != 0) {
 
-            if (!isCheck && shouldDeltaPrune(board, low, evalScore, move)) {
+            if (shouldDeltaPrune(board, low, evalScore, move, isCheck)) {
                 continue;
             }
 
@@ -1053,8 +1053,6 @@ public final class RivalSearch implements Runnable {
 
                 board.unMakeMove();
             }
-
-            move = getHighScoreMove(theseMoves);
         }
 
         if (isCheck && legalMoveCount == 0) {
@@ -1064,8 +1062,8 @@ public final class RivalSearch implements Runnable {
         return bestPath;
     }
 
-    private boolean shouldDeltaPrune(EngineChessBoard board, int low, int evalScore, int move) {
-        if (RivalConstants.USE_DELTA_PRUNING) {
+    private boolean shouldDeltaPrune(EngineChessBoard board, int low, int evalScore, int move, boolean isCheck) {
+        if (RivalConstants.USE_DELTA_PRUNING && !isCheck) {
             final int materialIncrease = (board.lastCapturePiece() > -1
                     ? RivalConstants.PIECE_VALUES.get(board.lastCapturePiece() % 6)
                     : 0) + getMaterialIncreaseForPromotion(move);
