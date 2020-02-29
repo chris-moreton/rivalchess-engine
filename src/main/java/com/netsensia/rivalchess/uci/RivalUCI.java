@@ -7,6 +7,7 @@ public final class RivalUCI {
     private static final RivalSearch rivalSearch = new RivalSearch(System.out);
 
     public static void main(String[] args) {
+
         int timeMultiple;
         if (args.length > 1 && args[0].equals("tm")) {
             timeMultiple = Integer.parseInt(args[1]);

@@ -15,26 +15,33 @@ public class ZorbristHashTracker {
     private long trackedBoardHash;
     private long trackedPawnHash;
 
-    public void initHash(EngineChessBoard engineChessBoard) {
+    final long switchMoverHashValue =
+            ZorbristHashCalculator.getWhiteMoverHashValue() ^ ZorbristHashCalculator.getBlackMoverHashValue();
+
+    public void initHash(final EngineChessBoard engineChessBoard) {
         trackedBoardHash = ZorbristHashCalculator.calculateHash(engineChessBoard);
         trackedPawnHash = ZorbristHashCalculator.calculatePawnHash(engineChessBoard);
     }
 
-    private void replaceWithEmptySquare(SquareOccupant piece, int bitRef) {
-        trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[piece.getIndex()][bitRef];
-        if (piece == SquareOccupant.WP || piece == SquareOccupant.BP) {
-            trackedPawnHash ^= ZorbristHashCalculator.pieceHashValues[piece.getIndex()][bitRef];
+    private void replaceWithEmptySquare(final SquareOccupant squareOccupant, final int bitRef) {
+        final int squareOccupantIndex = squareOccupant.getIndex();
+
+        trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[squareOccupantIndex][bitRef];
+        if (squareOccupant == SquareOccupant.WP || squareOccupant == SquareOccupant.BP) {
+            trackedPawnHash ^= ZorbristHashCalculator.pieceHashValues[squareOccupantIndex][bitRef];
         }
     }
 
-    private void placePieceOnEmptySquare(SquareOccupant piece, int bitRef) {
-        trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[piece.getIndex()][bitRef];
-        if (piece == SquareOccupant.WP || piece == SquareOccupant.BP) {
-            trackedPawnHash ^= ZorbristHashCalculator.pieceHashValues[piece.getIndex()][bitRef];
+    private void placePieceOnEmptySquare(final SquareOccupant squareOccupant, final int bitRef) {
+        final int squareOccupantIndex = squareOccupant.getIndex();
+
+        trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[squareOccupantIndex][bitRef];
+        if (squareOccupant == SquareOccupant.WP || squareOccupant == SquareOccupant.BP) {
+            trackedPawnHash ^= ZorbristHashCalculator.pieceHashValues[squareOccupantIndex][bitRef];
         }
     }
 
-    private void replaceWithAnotherPiece(SquareOccupant movedPiece, SquareOccupant capturedPiece, int bitRef) {
+    private void replaceWithAnotherPiece(final SquareOccupant movedPiece, final SquareOccupant capturedPiece, final int bitRef) {
         trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[capturedPiece.getIndex()][bitRef];
         trackedBoardHash ^= ZorbristHashCalculator.pieceHashValues[movedPiece.getIndex()][bitRef];
         if (capturedPiece == SquareOccupant.WP || capturedPiece == SquareOccupant.BP) {
@@ -45,35 +52,35 @@ public class ZorbristHashTracker {
         }
     }
 
-    private void processPossibleWhiteKingSideCastle(int bitRefTo) {
+    private void processPossibleWhiteKingSideCastle(final int bitRefTo) {
         if (bitRefTo == 1) {
             replaceWithEmptySquare(SquareOccupant.WR, 0);
             placePieceOnEmptySquare(SquareOccupant.WR, 2);
         }
     }
 
-    private void processPossibleWhiteQueenSideCastle(int bitRefTo) {
+    private void processPossibleWhiteQueenSideCastle(final int bitRefTo) {
         if (bitRefTo == 5) {
             replaceWithEmptySquare(SquareOccupant.WR, 7);
             placePieceOnEmptySquare(SquareOccupant.WR, 4);
         }
     }
 
-    private void processPossibleBlackQueenSideCastle(int bitRefTo) {
+    private void processPossibleBlackQueenSideCastle(final int bitRefTo) {
         if (bitRefTo == 61) {
             replaceWithEmptySquare(SquareOccupant.BR, 63);
             placePieceOnEmptySquare(SquareOccupant.BR, 60);
         }
     }
 
-    private void processPossibleBlackKingSideCastle(int bitRefTo) {
+    private void processPossibleBlackKingSideCastle(final int bitRefTo) {
         if (bitRefTo == 57) {
             replaceWithEmptySquare(SquareOccupant.BR, 56);
             placePieceOnEmptySquare(SquareOccupant.BR, 58);
         }
     }
 
-    private void processPossibleWhitePawnEnPassantCapture(Move move, SquareOccupant capturedPiece) {
+    private void processPossibleWhitePawnEnPassantCapture(final Move move, final SquareOccupant capturedPiece) {
         if (move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
 
             final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
@@ -84,7 +91,7 @@ public class ZorbristHashTracker {
         }
     }
 
-    private void processPossibleBlackPawnEnPassantCapture(Move move, SquareOccupant capturedPiece) {
+    private void processPossibleBlackPawnEnPassantCapture(final Move move, final SquareOccupant capturedPiece) {
         if (move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
 
             final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
@@ -95,7 +102,7 @@ public class ZorbristHashTracker {
         }
     }
 
-    private void processCapture(SquareOccupant movedPiece, SquareOccupant capturedPiece, int bitRefTo) {
+    private void processCapture(final SquareOccupant movedPiece, final SquareOccupant capturedPiece, int bitRefTo) {
         if (capturedPiece == SquareOccupant.NONE) {
             placePieceOnEmptySquare(movedPiece, bitRefTo);
         } else {
@@ -104,11 +111,10 @@ public class ZorbristHashTracker {
     }
 
     private void switchMover() {
-        trackedBoardHash ^= ZorbristHashCalculator.getMoverHashValues()[Colour.WHITE.getValue()];
-        trackedBoardHash ^= ZorbristHashCalculator.getMoverHashValues()[Colour.BLACK.getValue()];
+        trackedBoardHash ^= switchMoverHashValue;
     }
 
-    private void processCastling(int bitRefFrom, SquareOccupant movedPiece, int bitRefTo) {
+    private void processCastling(final int bitRefFrom, final SquareOccupant movedPiece, final int bitRefTo) {
         if (movedPiece == SquareOccupant.WK && bitRefFrom == 3) {
             processPossibleWhiteKingSideCastle(bitRefTo);
             processPossibleWhiteQueenSideCastle(bitRefTo);
@@ -120,7 +126,7 @@ public class ZorbristHashTracker {
         }
     }
 
-    private void processSpecialPawnMoves(Move move, SquareOccupant movedPiece, int bitRefTo, SquareOccupant capturedPiece) {
+    private void processSpecialPawnMoves(final Move move, final SquareOccupant movedPiece, final int bitRefTo, final SquareOccupant capturedPiece) {
         if (movedPiece == SquareOccupant.WP) {
             processPossibleWhitePawnEnPassantCapture(move, capturedPiece);
             final SquareOccupant promotionPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
@@ -138,7 +144,7 @@ public class ZorbristHashTracker {
         }
     }
 
-    private boolean unMakeEnPassant(int bitRefTo, MoveDetail moveDetail) {
+    private boolean unMakeEnPassant(final int bitRefTo, final MoveDetail moveDetail) {
         if ((1L << bitRefTo) == moveDetail.enPassantBitboard) {
             if (moveDetail.movePiece == RivalConstants.WP) {
                 placePieceOnEmptySquare(SquareOccupant.BP, bitRefTo-8);
@@ -152,7 +158,7 @@ public class ZorbristHashTracker {
         return false;
     }
 
-    public boolean unMakeCapture(int bitRefTo, MoveDetail moveDetail) {
+    public boolean unMakeCapture(final int bitRefTo, final MoveDetail moveDetail) {
         if (moveDetail.capturePiece != -1) {
             placePieceOnEmptySquare(SquareOccupant.fromIndex(moveDetail.capturePiece), bitRefTo);
             return true;
@@ -160,7 +166,7 @@ public class ZorbristHashTracker {
         return false;
     }
 
-    public boolean unMakeWhiteCastle(int bitRefTo) {
+    public boolean unMakeWhiteCastle(final int bitRefTo) {
 
         switch (bitRefTo) {
             case 1:
@@ -176,7 +182,7 @@ public class ZorbristHashTracker {
         }
     }
 
-    public boolean unMakeBlackCastle(int bitRefTo) {
+    public boolean unMakeBlackCastle(final int bitRefTo) {
         switch (bitRefTo) {
             case 61:
                 replaceWithEmptySquare(SquareOccupant.BR, 60);
@@ -191,7 +197,7 @@ public class ZorbristHashTracker {
         }
     }
 
-    public boolean unMakePromotion(int bitRefFrom, int bitRefTo, MoveDetail moveDetail) {
+    public boolean unMakePromotion(final int bitRefFrom, final int bitRefTo, final MoveDetail moveDetail) {
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
         final SquareOccupant movedPiece = SquareOccupant.fromIndex(moveDetail.movePiece);
         SquareOccupant promotedPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
@@ -208,7 +214,7 @@ public class ZorbristHashTracker {
         switchMover();
     }
 
-    public void makeMove(EngineChessBoard board, EngineMove engineMove) {
+    public void makeMove(final EngineChessBoard board, final EngineMove engineMove) {
 
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(engineMove.compact);
         final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());
@@ -226,7 +232,7 @@ public class ZorbristHashTracker {
 
     }
 
-    public void unMakeMove(MoveDetail moveDetail) {
+    public void unMakeMove(final MoveDetail moveDetail) {
 
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
         final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());

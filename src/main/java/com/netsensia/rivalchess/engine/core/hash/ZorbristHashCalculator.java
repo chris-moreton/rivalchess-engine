@@ -10,6 +10,8 @@ import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
+import java.awt.*;
+
 public class ZorbristHashCalculator {
 
     public static final long START_HASH_VALUE = 1427869295504964227L;
@@ -69,7 +71,11 @@ public class ZorbristHashCalculator {
         return pawnHashValue;
     }
 
-    public static long[] getMoverHashValues() {
-        return moverHashValues;
+    public static long getWhiteMoverHashValue() {
+        return moverHashValues[0];
+    }
+
+    public static long getBlackMoverHashValue() {
+        return moverHashValues[1];
     }
 }
