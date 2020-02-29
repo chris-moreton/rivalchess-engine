@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.MoveOrder;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
+import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashTracker;
@@ -1027,32 +1028,32 @@ public final class RivalSearch implements Runnable {
             scoreQuiesceMoves(board, ply, quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY);
         }
 
-        int move;
+        int move = getHighScoreMove(theseMoves);
 
         int legalMoveCount = 0;
 
-        while ((move = getHighScoreMove(theseMoves)) != 0) {
+        while (move != 0) {
 
-            if (shouldDeltaPrune(board, low, evalScore, move, isCheck)) {
-                continue;
-            }
+            if (!shouldDeltaPrune(board, low, evalScore, move, isCheck)) {
+                if (board.makeMove(new EngineMove(move))) {
+                    legalMoveCount++;
 
-            if (board.makeMove(new EngineMove(move))) {
-                legalMoveCount++;
+                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck()));
+                    newPath.score = -newPath.score;
+                    if (newPath.score > bestPath.score) {
+                        bestPath.setPath(move, newPath);
+                    }
+                    if (newPath.score >= high) {
+                        board.unMakeMove();
+                        return bestPath;
+                    }
+                    low = Math.max(low, newPath.score);
 
-                newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck()));
-                newPath.score = -newPath.score;
-                if (newPath.score > bestPath.score) {
-                    bestPath.setPath(move, newPath);
-                }
-                if (newPath.score >= high) {
                     board.unMakeMove();
-                    return bestPath;
                 }
-                low = Math.max(low, newPath.score);
-
-                board.unMakeMove();
             }
+
+            move = getHighScoreMove(theseMoves);
         }
 
         if (isCheck && legalMoveCount == 0) {
@@ -1101,145 +1102,170 @@ public final class RivalSearch implements Runnable {
             if (movesForSorting[i] != -1) {
                 score = 0;
 
-                int toSquare = movesForSorting[i] & 63;
-                int capturePiece = board.getSquareOccupant(toSquare).getIndex() % 6;
-                if (capturePiece == -1 &&
+                final int toSquare = movesForSorting[i] & 63;
+                Piece capturePiece = Piece.fromSquareOccupant(board.getSquareOccupant(toSquare));
+
+                if (capturePiece == Piece.NONE &&
                         ((1L << toSquare) & board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) != 0 &&
-                        board.getSquareOccupant((movesForSorting[i] >>> 16) & 63).getIndex() % 6 == RivalConstants.WP)
-                    capturePiece = RivalConstants.WP;
+                        board.getSquareOccupant((movesForSorting[i] >>> 16) & 63).getIndex() % 6 == RivalConstants.WP) {
+                    capturePiece = Piece.PAWN;
+                }
 
                 movesForSorting[i] &= 0x00FFFFFF;
 
                 if (movesForSorting[i] == mateKiller.get(ply)) {
                     score = 126;
-                } else if (capturePiece > -1) {
+                } else if (capturePiece != Piece.NONE) {
                     int see = staticExchangeEvaluation(board, movesForSorting[i]);
-                    if (see > -RivalConstants.INFINITY) see = (int) (((double) see / Piece.QUEEN.getValue()) * 10);
+                    if (see > -RivalConstants.INFINITY) {
+                        see = (int) (((double) see / Piece.QUEEN.getValue()) * 10);
+                    }
 
-                    if (see > 0) score = 110 + see;
-                    else if ((movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN)
+                    if (see > 0) {
+                        score = 110 + see;
+                    }
+                    else if ((movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
                         score = 109;
-                    else if (see == 0) score = 107;
+                    }
+                    else if (see == 0) {
+                        score = 107;
+                    }
                     else {
-                        // losing captures with a winning history
-                        int historyScore = historyScore(board.getMover() == Colour.WHITE, ((movesForSorting[i] >>> 16) & 63), toSquare);
-                        if (historyScore > 5) {
-                            score = historyScore;
-                        } else {
-                            for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
-                                if (movesForSorting[i] == killerMoves[ply][j]) {
-                                    score = 106 - j;
-                                    break;
-                                }
-                            }
-                        }
+                        score = scoreLosingCapturesWithWinningHistory(board, ply, i, score, movesForSorting, toSquare);
                     }
 
                 } else if ((movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
                     score = 108;
                 }
 
-                if (score > 0) count++;
+                if (score > 0) {
+                    count++;
+                }
                 movesForSorting[i] |= ((127 - score) << 24);
             }
         }
         return count;
     }
 
+    private int scoreLosingCapturesWithWinningHistory(EngineChessBoard board, int ply, int i, int score, int[] movesForSorting, int toSquare) {
+        final int historyScore = historyScore(board.getMover() == Colour.WHITE, ((movesForSorting[i] >>> 16) & 63), toSquare);
+
+        if (historyScore > 5) {
+            score = historyScore;
+        } else {
+            for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+                if (movesForSorting[i] == killerMoves[ply][j]) {
+                    return 106 - j;
+                }
+            }
+        }
+        return score;
+    }
+
     private int historyScore(boolean isWhite, int from, int to) {
         int success = historyMovesSuccess[isWhite ? 0 : 1][from][to];
         int fail = historyMovesFail[isWhite ? 0 : 1][from][to];
         int total = success + fail;
-        if (total > 0)
+        if (total > 0) {
             return (success * 10 / total);
-        else
-            return 0;
+        }
+
+        return 0;
     }
 
     private void scoreFullWidthMoves(EngineChessBoard board, int ply) {
-        int i, j, score;
-        int fromSquare, toSquare;
 
         int[] movesForSorting = orderedMoves[ply];
 
-        for (i = 0; movesForSorting[i] != 0; i++) {
+        for (int i = 0; movesForSorting[i] != 0; i++) {
             if (movesForSorting[i] != -1) {
-                fromSquare = ((movesForSorting[i] >>> 16) & 63);
-                toSquare = (movesForSorting[i] & 63);
-
-                score = 0;
+                final int fromSquare = ((movesForSorting[i] >>> 16) & 63);
+                final int toSquare = (movesForSorting[i] & 63);
 
                 movesForSorting[i] &= 0x00FFFFFF;
 
-                for (j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
-                    if (movesForSorting[i] == killerMoves[ply][j]) {
-                        score = 106 - j;
-                        break;
-                    }
-                }
-
-                if (score == 0 && RivalConstants.USE_HISTORY_HEURISTIC && historyMovesSuccess[board.getMover() == Colour.WHITE ? 0 : 1][fromSquare][toSquare] > 0)
-                    score = 90 + historyScore(board.getMover() == Colour.WHITE, fromSquare, toSquare);
+                int score = scoreKillerMoves(ply, i, movesForSorting);
+                score = scoreHistoryHeuristic(board, score, fromSquare, toSquare);
 
                 // must be a losing capture otherwise would have been scored in previous phase
                 // give it a score of 1 to place towards the end of the list
-                if (score == 0 && board.getSquareOccupant(toSquare).getIndex() % 6 > -1) score = 1;
+                if (score == 0 && board.getSquareOccupant(toSquare) != SquareOccupant.NONE) {
+                    score = 1;
+                }
 
                 if (score == 0 && RivalConstants.USE_PIECE_SQUARES_IN_MOVE_ORDERING) {
-                    int ps = 0;
-                    if (board.getMover() == Colour.BLACK) {
-                        fromSquare = Bitboards.bitFlippedHorizontalAxis.get(fromSquare);
-                        toSquare = Bitboards.bitFlippedHorizontalAxis.get(toSquare);
-                    }
-                    switch (board.getSquareOccupant(fromSquare).getIndex() % 6) {
-                        case RivalConstants.WP:
-                            ps =
-                                    Numbers.linearScale(
-                                            (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
-                                            RivalConstants.PAWN_STAGE_MATERIAL_LOW,
-                                            RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
-                                            Bitboards.pieceSquareTablePawnEndGame.get(toSquare) - Bitboards.pieceSquareTablePawnEndGame.get(fromSquare),
-                                            Bitboards.pieceSquareTablePawn.get(toSquare) - Bitboards.pieceSquareTablePawn.get(fromSquare));
-                            break;
-                        case RivalConstants.WN:
-                            ps =
-                                    Numbers.linearScale(
-                                            (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues()),
-                                            RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
-                                            RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
-                                            Bitboards.pieceSquareTableKnightEndGame.get(toSquare) - Bitboards.pieceSquareTableKnightEndGame.get(fromSquare),
-                                            Bitboards.pieceSquareTableKnight.get(toSquare) - Bitboards.pieceSquareTableKnight.get(fromSquare));
-                            break;
-                        case RivalConstants.WB:
-                            ps = Bitboards.pieceSquareTableBishop.get(toSquare) - Bitboards.pieceSquareTableBishop.get(fromSquare);
-                            break;
-                        case RivalConstants.WR:
-                            ps = Bitboards.pieceSquareTableRook.get(toSquare) - Bitboards.pieceSquareTableRook.get(fromSquare);
-                            break;
-                        case RivalConstants.WQ:
-                            ps = Bitboards.pieceSquareTableQueen.get(toSquare) - Bitboards.pieceSquareTableQueen.get(fromSquare);
-                            break;
-                        case RivalConstants.WK:
-                            ps =
-                                    Numbers.linearScale(
-                                            (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
-                                            Piece.ROOK.getValue(),
-                                            RivalConstants.OPENING_PHASE_MATERIAL,
-                                            Bitboards.pieceSquareTableKingEndGame.get(toSquare) - Bitboards.pieceSquareTableKingEndGame.get(fromSquare),
-                                            Bitboards.pieceSquareTableKing.get(toSquare) - Bitboards.pieceSquareTableKing.get(fromSquare));
-                            break;
-                        default:
-                            // do nothing
-                    }
-
-                    score = 50 + (ps / 2);
+                    score = 50 + (scorePieceSquareValues(board, fromSquare, toSquare) / 2);
                 }
                 movesForSorting[i] |= ((127 - score) << 24);
             }
         }
     }
 
-    final SearchPath zugPath = new SearchPath();
+    private int scorePieceSquareValues(EngineChessBoard board, int fromSquare, int toSquare) {
+        int ps = 0;
+        if (board.getMover() == Colour.BLACK) {
+            // piece square tables are set up from white's PoV
+            fromSquare = Bitboards.bitFlippedHorizontalAxis.get(fromSquare);
+            toSquare = Bitboards.bitFlippedHorizontalAxis.get(toSquare);
+        }
+        switch (board.getSquareOccupant(fromSquare).getIndex() % 6) {
+            case RivalConstants.WP:
+                ps =
+                        Numbers.linearScale(
+                                (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
+                                RivalConstants.PAWN_STAGE_MATERIAL_LOW,
+                                RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
+                                Bitboards.pieceSquareTablePawnEndGame.get(toSquare) - Bitboards.pieceSquareTablePawnEndGame.get(fromSquare),
+                                Bitboards.pieceSquareTablePawn.get(toSquare) - Bitboards.pieceSquareTablePawn.get(fromSquare));
+                break;
+            case RivalConstants.WN:
+                ps =
+                        Numbers.linearScale(
+                                (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues()),
+                                RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
+                                RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
+                                Bitboards.pieceSquareTableKnightEndGame.get(toSquare) - Bitboards.pieceSquareTableKnightEndGame.get(fromSquare),
+                                Bitboards.pieceSquareTableKnight.get(toSquare) - Bitboards.pieceSquareTableKnight.get(fromSquare));
+                break;
+            case RivalConstants.WB:
+                ps = Bitboards.pieceSquareTableBishop.get(toSquare) - Bitboards.pieceSquareTableBishop.get(fromSquare);
+                break;
+            case RivalConstants.WR:
+                ps = Bitboards.pieceSquareTableRook.get(toSquare) - Bitboards.pieceSquareTableRook.get(fromSquare);
+                break;
+            case RivalConstants.WQ:
+                ps = Bitboards.pieceSquareTableQueen.get(toSquare) - Bitboards.pieceSquareTableQueen.get(fromSquare);
+                break;
+            case RivalConstants.WK:
+                ps =
+                        Numbers.linearScale(
+                                (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
+                                Piece.ROOK.getValue(),
+                                RivalConstants.OPENING_PHASE_MATERIAL,
+                                Bitboards.pieceSquareTableKingEndGame.get(toSquare) - Bitboards.pieceSquareTableKingEndGame.get(fromSquare),
+                                Bitboards.pieceSquareTableKing.get(toSquare) - Bitboards.pieceSquareTableKing.get(fromSquare));
+                break;
+            default:
+                // do nothing
+        }
+        return ps;
+    }
+
+    private int scoreHistoryHeuristic(EngineChessBoard board, int score, int fromSquare, int toSquare) {
+        if (score == 0 && RivalConstants.USE_HISTORY_HEURISTIC && historyMovesSuccess[board.getMover() == Colour.WHITE ? 0 : 1][fromSquare][toSquare] > 0) {
+            score = 90 + historyScore(board.getMover() == Colour.WHITE, fromSquare, toSquare);
+        }
+        return score;
+    }
+
+    private int scoreKillerMoves(int ply, int i, int[] movesForSorting) {
+        for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+            if (movesForSorting[i] == killerMoves[ply][j]) {
+                return 106 - j;
+            }
+        }
+        return 0;
+    }
 
     public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, boolean canVerifyNullMove, int recaptureSquare, boolean isCheck) throws InvalidMoveException {
 

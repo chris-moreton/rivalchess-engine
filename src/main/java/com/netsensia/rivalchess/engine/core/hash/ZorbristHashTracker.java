@@ -104,8 +104,8 @@ public class ZorbristHashTracker {
     }
 
     private void switchMover() {
-        trackedBoardHash ^= ZorbristHashCalculator.moverHashValues[Colour.WHITE.getValue()];
-        trackedBoardHash ^= ZorbristHashCalculator.moverHashValues[Colour.BLACK.getValue()];
+        trackedBoardHash ^= ZorbristHashCalculator.getMoverHashValues()[Colour.WHITE.getValue()];
+        trackedBoardHash ^= ZorbristHashCalculator.getMoverHashValues()[Colour.BLACK.getValue()];
     }
 
     private void processCastling(int bitRefFrom, SquareOccupant movedPiece, int bitRefTo) {
