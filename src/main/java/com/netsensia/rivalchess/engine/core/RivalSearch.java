@@ -8,9 +8,7 @@ import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
-import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
-import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.IllegalSearchStateException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
@@ -25,6 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
+
+import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
+import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 
 public final class RivalSearch implements Runnable {
 
@@ -80,7 +81,7 @@ public final class RivalSearch implements Runnable {
     private int currentDepthZeroMoveNumber;
 
     private SearchPath m_currentPath;
-    private String m_currentPathString;
+    private String currentPathString;
 
     private boolean m_isUCIMode = false;
 
@@ -111,7 +112,7 @@ public final class RivalSearch implements Runnable {
         this.setMillisSetByEngineMonitor(System.currentTimeMillis());
 
         this.m_currentPath = new SearchPath();
-        this.m_currentPathString = "";
+        this.currentPathString = "";
 
         searchState = SearchState.READY;
 
@@ -1266,84 +1267,6 @@ public final class RivalSearch implements Runnable {
         return 0;
     }
 
-    public boolean isHeightHashTableEntryValid(int depthRemaining, EngineChessBoard board) {
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-        final long hashValue = boardHash.getTrackedHashValue();
-        final int hashIndex = boardHash.getHashIndex(board);
-
-        if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
-                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY &&
-                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
-                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
-
-            boolean isLocked =
-                    boardHash.getHashTableVersion()
-                            - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION)
-                            <= RivalConstants.MAXIMUM_HASH_AGE;
-
-            if (isLocked) {
-                superVerifyUseHeightHash(board);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    public boolean isAlwaysReplaceHashTableEntryValid(int depthRemaining, EngineChessBoard board) {
-
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-        final long hashValue = boardHash.getTrackedHashValue();
-        final int hashIndex = boardHash.getHashIndex(board);
-
-        if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
-                boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY &&
-                boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
-                boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
-
-            boolean isLocked = boardHash.getHashTableVersion() - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION) <= RivalConstants.MAXIMUM_HASH_AGE;
-
-            if (isLocked) {
-                superVerifyAlwaysReplaceHash(board);
-            }
-
-            return isLocked;
-        }
-
-        return false;
-    }
-
-    private void superVerifyUseHeightHash(EngineChessBoard board) {
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-        final int hashIndex = boardHash.getHashIndex(engineChessBoard);
-
-        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-            for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
-                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
-                    throw new HashVerificationException("Height bad clash " + ZorbristHashCalculator.calculateHash(board));
-                }
-            }
-        }
-    }
-
-    private void superVerifyAlwaysReplaceHash(EngineChessBoard board) {
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-        final long hashValue = boardHash.getTrackedHashValue();
-        final int hashIndex = boardHash.getHashIndex(engineChessBoard);
-
-        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-            for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
-                        boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
-                    printStream.println("Always replace bad clash " + hashValue);
-                    System.exit(0);
-                }
-            }
-        }
-    }
-
     public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, int recaptureSquare, boolean isCheck) throws InvalidMoveException {
 
         nodes++;
@@ -1822,7 +1745,7 @@ public final class RivalSearch implements Runnable {
 
                         scoutSearch = RivalConstants.USE_PV_SEARCH && depth + (newExtensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) >= RivalConstants.PV_MINIMUM_DISTANCE_FROM_LEAF;
                         m_currentPath.setPath(bestPath);
-                        m_currentPathString = "" + m_currentPath;
+                        currentPathString = "" + m_currentPath;
                     }
 
                     depthZeroMoveScores[numMoves] = newPath.score;
@@ -1839,7 +1762,7 @@ public final class RivalSearch implements Runnable {
             if (numLegalMovesAtDepthZero == 1 && this.m_millisecondsToThink < RivalConstants.MAX_SEARCH_MILLIS) {
                 this.m_abortingSearch = true;
                 m_currentPath.setPath(bestPath); // otherwise we will crash!
-                m_currentPathString = "" + m_currentPath;
+                currentPathString = "" + m_currentPath;
             } else {
                 final BoardHash boardHash = engineChessBoard.getBoardHashObject();
                 boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag, depth);
@@ -1899,14 +1822,14 @@ public final class RivalSearch implements Runnable {
                             m_currentPath.reset();
                             m_currentPath.setPath(move);
                             m_currentPath.score = sp.score;
-                            m_currentPathString = m_currentPath.toString();
+                            currentPathString = m_currentPath.toString();
                         }
                     } else if (legal == 1) {
                         // use this opportunity to set a move in the odd event that there is no time to search
                         m_currentPath.reset();
                         m_currentPath.setPath(move);
                         m_currentPath.score = 0;
-                        m_currentPathString = m_currentPath.toString();
+                        currentPathString = m_currentPath.toString();
                     }
                     if (engineChessBoard.previousOccurrencesOfThisPosition() == 2) {
                         plyDraw.set(0, true);
@@ -1952,7 +1875,7 @@ public final class RivalSearch implements Runnable {
                     path = new SearchPath();
                     path.setPath(libraryMove);
                     m_currentPath = path;
-                    m_currentPathString = "" + m_currentPath;
+                    currentPathString = "" + m_currentPath;
                     setSearchComplete();
                     return;
                 } else {
@@ -1986,7 +1909,7 @@ public final class RivalSearch implements Runnable {
 
                     if (!this.m_abortingSearch) {
                         m_currentPath.setPath(Objects.requireNonNull(path));
-                        m_currentPathString = "" + m_currentPath;
+                        currentPathString = "" + m_currentPath;
                         aspirationLow = path.score - RivalConstants.ASPIRATION_RADIUS;
                         aspirationHigh = path.score + RivalConstants.ASPIRATION_RADIUS;
                     }
@@ -1996,7 +1919,7 @@ public final class RivalSearch implements Runnable {
 
                 if (!this.m_abortingSearch) {
                     m_currentPath.setPath(Objects.requireNonNull(path));
-                    m_currentPathString = "" + m_currentPath;
+                    currentPathString = "" + m_currentPath;
                     if (path.score > RivalConstants.MATE_SCORE_START) {
                         setSearchComplete();
                         return;
@@ -2158,7 +2081,8 @@ public final class RivalSearch implements Runnable {
     }
 
     public String getCurrentPathString() {
-        return this.m_currentPathString; // don't want to calculate it if called from another thread
+        // don't want to calculate it if called from another thread
+        return this.currentPathString;
     }
 
     public synchronized void startSearch() {
