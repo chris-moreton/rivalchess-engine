@@ -9,7 +9,6 @@ import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
-import com.netsensia.rivalchess.engine.core.hash.ZorbristHashTracker;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -1267,6 +1266,84 @@ public final class RivalSearch implements Runnable {
         return 0;
     }
 
+    public boolean isHeightHashTableEntryValid(int depthRemaining, EngineChessBoard board) {
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+        final long hashValue = boardHash.getTrackedHashValue();
+        final int hashIndex = boardHash.getHashIndex(board);
+
+        if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
+                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY &&
+                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
+                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
+
+            boolean isLocked =
+                    boardHash.getHashTableVersion()
+                            - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION)
+                            <= RivalConstants.MAXIMUM_HASH_AGE;
+
+            if (isLocked) {
+                superVerifyUseHeightHash(board);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isAlwaysReplaceHashTableEntryValid(int depthRemaining, EngineChessBoard board) {
+
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+        final long hashValue = boardHash.getTrackedHashValue();
+        final int hashIndex = boardHash.getHashIndex(board);
+
+        if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
+                boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY &&
+                boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
+                boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
+
+            boolean isLocked = boardHash.getHashTableVersion() - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION) <= RivalConstants.MAXIMUM_HASH_AGE;
+
+            if (isLocked) {
+                superVerifyAlwaysReplaceHash(board);
+            }
+
+            return isLocked;
+        }
+
+        return false;
+    }
+
+    private void superVerifyUseHeightHash(EngineChessBoard board) {
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+        final int hashIndex = boardHash.getHashIndex(engineChessBoard);
+
+        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
+            for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
+                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
+                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
+                    throw new HashVerificationException("Height bad clash " + ZorbristHashCalculator.calculateHash(board));
+                }
+            }
+        }
+    }
+
+    private void superVerifyAlwaysReplaceHash(EngineChessBoard board) {
+        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+        final long hashValue = boardHash.getTrackedHashValue();
+        final int hashIndex = boardHash.getHashIndex(engineChessBoard);
+
+        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
+            for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
+                        boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
+                    printStream.println("Always replace bad clash " + hashValue);
+                    System.exit(0);
+                }
+            }
+        }
+    }
+
     public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, int recaptureSquare, boolean isCheck) throws InvalidMoveException {
 
         nodes++;
@@ -1296,81 +1373,47 @@ public final class RivalSearch implements Runnable {
 
         byte flag = RivalConstants.UPPERBOUND;
 
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-        final long hashValue = boardHash.getTrackedHashValue();
+        final BoardHash boardHash = board.getBoardHashObject();
         final int hashIndex = boardHash.getHashIndex(board);
         int hashMove = 0;
 
         if (RivalConstants.USE_HASH_TABLES) {
-            if (RivalConstants.USE_HEIGHT_REPLACE_HASH &&
-                    boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
-                    boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY) {
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
-                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
-                    boolean isLocked =
-                            boardHash.getHashTableVersion()
-                                    - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION)
-                                    <= RivalConstants.MAXIMUM_HASH_AGE;
+            if (RivalConstants.USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, board)) {
+                boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION, boardHash.getHashTableVersion());
+                hashMove = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
 
-                    superVerifyHash(board, hashIndex, isLocked);
-
-                    if (isLocked) {
-                        boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION, boardHash.getHashTableVersion());
-                        hashMove = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
-
-                        if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
-                            if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low) {
-                                low = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
-                            }
-                        } else if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
-                            if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high) {
-                                high = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
-                            }
-                        }
-
-                        if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
-                            bestPath.score = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
-                            bestPath.setPath(hashMove);
-                            return bestPath;
-                        }
+                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
+                    if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low) {
+                        low = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
                     }
+                } else if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
+                    if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high) {
+                        high = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                    }
+                }
+
+                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
+                    bestPath.score = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                    bestPath.setPath(hashMove);
+                    return bestPath;
                 }
             }
 
-            if (RivalConstants.USE_ALWAYS_REPLACE_HASH &&
-                    hashMove == 0 &&
-                    boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
-                    boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY) {
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
-                        boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
-                    boolean isLocked = boardHash.getHashTableVersion() - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION) <= RivalConstants.MAXIMUM_HASH_AGE;
-                    if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-                        for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
-                            if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
-                                    boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
-                                isLocked = false;
-                                printStream.println("Always replace bad clash " + hashValue);
-                                System.exit(0);
-                            }
-                        }
-                    }
+            if (RivalConstants.USE_ALWAYS_REPLACE_HASH && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
 
-                    if (isLocked) {
-                        hashMove = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
-                        if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
-                            if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low)
-                                low = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
-                        } else if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
-                            if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high)
-                                high = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
-                        }
+                hashMove = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
+                    if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low)
+                        low = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                } else if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
+                    if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high)
+                        high = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                }
 
-                        if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
-                            bestPath.score = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
-                            bestPath.setPath(hashMove);
-                            return bestPath;
-                        }
-                    }
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
+                    bestPath.score = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                    bestPath.setPath(hashMove);
+                    return bestPath;
                 }
             }
         }
@@ -1669,19 +1712,6 @@ public final class RivalSearch implements Runnable {
         while (research);
 
         return null;
-    }
-
-    private void superVerifyHash(EngineChessBoard board, int hashIndex, boolean isLocked) {
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-
-        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-            for (int i = RivalConstants.WP; i <= RivalConstants.BR && isLocked; i++) {
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
-                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
-                    throw new HashVerificationException("Height bad clash " + ZorbristHashCalculator.calculateHash(board));
-                }
-            }
-        }
     }
 
     public SearchPath searchZero(EngineChessBoard board, byte depth, int ply, int low, int high) throws InvalidMoveException {
