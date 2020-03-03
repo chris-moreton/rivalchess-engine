@@ -35,10 +35,6 @@ public class BoardHash {
         hashTableUseHeight[index] = value;
     }
 
-    public void setHashTableIgnoreHeight(int index, int value) {
-        hashTableIgnoreHeight[index] = value;
-    }
-
     public void setPawnHashTable(int index, long value) {
         pawnHashTable[index] = value;
     }
@@ -78,7 +74,7 @@ public class BoardHash {
     }
 
     public void storeHashMove(int move, EngineChessBoard board, int score, byte flag, int height) {
-        int hashIndex = (int) (board.trackedBoardHashCode() % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
+        final int hashIndex = (int) (board.trackedBoardHashCode() % maxHashEntries) * RivalConstants.NUM_HASH_FIELDS;
 
         if (height >= this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] || hashTableVersion > this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
             if (hashTableVersion == this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
@@ -92,16 +88,7 @@ public class BoardHash {
                 this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION];
             }
 
-            if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-                for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-                    if (hashTableVersion == this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
-                        this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i];
-                        this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12];
-                    }
-                    this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = (int) (board.getBitboardByIndex(i) >>> 32);
-                    this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = (int) (board.getBitboardByIndex(i) & Bitboards.LOW32);
-                }
-            }
+            storeSuperVerifyUseHeightInformation(board, hashIndex);
 
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
@@ -111,12 +98,8 @@ public class BoardHash {
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
             this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = hashTableVersion;
         } else {
-            if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-                for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-                    this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = (int) (board.getBitboardByIndex(i) >>> 32);
-                    this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = (int) (board.getBitboardByIndex(i) & Bitboards.LOW32);
-                }
-            }
+            storeSuperVerifyAlwaysReplaceInformation(board, hashIndex);
+
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_MOVE] = move;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_SCORE] = score;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_FLAG] = flag;
@@ -124,6 +107,29 @@ public class BoardHash {
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_64BIT2] = (int) (board.trackedBoardHashCode() & Bitboards.LOW32);
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_HEIGHT] = height;
             this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_VERSION] = hashTableVersion;
+        }
+    }
+
+    private void storeSuperVerifyAlwaysReplaceInformation(EngineChessBoard board, final int hashIndex) {
+        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
+            for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
+                this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = (int) (board.getBitboardByIndex(i) >>> 32);
+                this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = (int) (board.getBitboardByIndex(i) & Bitboards.LOW32);
+            }
+        }
+    }
+
+    private void storeSuperVerifyUseHeightInformation(EngineChessBoard board, final int hashIndex) {
+        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
+
+            for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
+                if (hashTableVersion == this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
+                    this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i];
+                    this.hashTableIgnoreHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12];
+                }
+                this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i] = (int) (board.getBitboardByIndex(i) >>> 32);
+                this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12] = (int) (board.getBitboardByIndex(i) & Bitboards.LOW32);
+            }
         }
     }
 

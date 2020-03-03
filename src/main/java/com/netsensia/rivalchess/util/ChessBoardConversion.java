@@ -165,7 +165,7 @@ public class ChessBoardConversion
 		return pgnMove;
 	}
 	
-	public static EngineMove getCompactMoveFromSimpleAlgebraic(String s)
+	public static EngineMove getEngineMoveFromSimpleAlgebraic(String s)
 	{
 		int fromX = s.toUpperCase().charAt(0) - 65;
 		int fromY = 7 - (s.toUpperCase().charAt(1) - 49);

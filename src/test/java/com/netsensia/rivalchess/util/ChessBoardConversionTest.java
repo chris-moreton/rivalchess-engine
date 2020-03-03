@@ -85,17 +85,17 @@ public class ChessBoardConversionTest {
 
     @Test
     public void getCompactMoveFromSimpleAlgebraic() {
-        assertEquals(720923, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e2e4").compact);
-        assertEquals(3539198, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b7b8q").compact);
-        assertEquals(3539198, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b7b8Q").compact);
-        assertEquals(3539262, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b7b8N").compact);
-        assertEquals(458767, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("a1a2").compact);
-        assertEquals(983302, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("a2b1n").compact);
-        assertEquals(3539006, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b7b8").compact);
-        assertEquals(458808, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("a1h8").compact);
-        assertEquals(65554, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g1f3").compact);
-        assertEquals(1835044, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d4d5").compact);
-        assertEquals(3473726, ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("c7b8n").compact);
+        assertEquals(720923, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4").compact);
+        assertEquals(3539198, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b8q").compact);
+        assertEquals(3539198, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b8Q").compact);
+        assertEquals(3539262, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b8N").compact);
+        assertEquals(458767, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("a1a2").compact);
+        assertEquals(983302, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("a2b1n").compact);
+        assertEquals(3539006, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b8").compact);
+        assertEquals(458808, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("a1h8").compact);
+        assertEquals(65554, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3").compact);
+        assertEquals(1835044, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d4d5").compact);
+        assertEquals(3473726, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("c7b8n").compact);
 
     }
 }

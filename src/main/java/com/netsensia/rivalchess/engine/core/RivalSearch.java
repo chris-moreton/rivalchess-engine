@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 
+import static com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluationHelper.staticExchangeEvaluation;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 
@@ -31,14 +32,14 @@ public final class RivalSearch implements Runnable {
 
     private final PrintStream printStream;
 
+    private final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
+
     private final List<List<Long>> drawnPositionsAtRoot;
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
     private EngineChessBoard engineChessBoard
             = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
     private final List<Integer> mateKiller = new ArrayList<>();
 
-    private final int[] indexOfFirstAttackerInDirection = new int[8];
-    private final int[] captureList = new int[32];
     private final int[][] killerMoves;
 
     private final int[][][] historyMovesSuccess = new int[2][64][64];
@@ -74,8 +75,8 @@ public final class RivalSearch implements Runnable {
     protected int m_finalDepthToSearch = 1;
     protected int iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
 
-    private boolean m_useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK;
-    private boolean m_inBook = m_useOpeningBook;
+    private boolean useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK;
+    private boolean m_inBook = useOpeningBook;
 
     private int currentDepthZeroMove;
     private int currentDepthZeroMoveNumber;
@@ -160,123 +161,8 @@ public final class RivalSearch implements Runnable {
     }
 
     public synchronized void newGame() {
-        m_inBook = this.m_useOpeningBook;
+        m_inBook = this.useOpeningBook;
         engineChessBoard.getBoardHashObject().clearHash();
-    }
-
-    final public int staticExchangeEvaluation(EngineChessBoard board, int move) throws InvalidMoveException {
-        final int toSquare = move & 63;
-
-        captureList[0] =
-                ((1L << toSquare) == board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) ?
-                        Piece.PAWN.getValue() :
-                        RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(toSquare).getIndex());
-
-        int numCaptures = 1;
-
-        if (board.makeMove(new EngineMove(move & ~RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL))) {
-            int currentPieceOnSquare = board.getSquareOccupant(toSquare).getIndex();
-            int currentSquareValue = RivalConstants.PIECE_VALUES.get(currentPieceOnSquare);
-
-            indexOfFirstAttackerInDirection[0] = getNextDirectionAttackerAfterIndex(board, toSquare, 0, 0);
-            indexOfFirstAttackerInDirection[1] = getNextDirectionAttackerAfterIndex(board, toSquare, 1, 0);
-            indexOfFirstAttackerInDirection[2] = getNextDirectionAttackerAfterIndex(board, toSquare, 2, 0);
-            indexOfFirstAttackerInDirection[3] = getNextDirectionAttackerAfterIndex(board, toSquare, 3, 0);
-            indexOfFirstAttackerInDirection[4] = getNextDirectionAttackerAfterIndex(board, toSquare, 4, 0);
-            indexOfFirstAttackerInDirection[5] = getNextDirectionAttackerAfterIndex(board, toSquare, 5, 0);
-            indexOfFirstAttackerInDirection[6] = getNextDirectionAttackerAfterIndex(board, toSquare, 6, 0);
-            indexOfFirstAttackerInDirection[7] = getNextDirectionAttackerAfterIndex(board, toSquare, 7, 0);
-
-            int whiteKnightAttackCount = board.getWhiteKnightBitboard() == 0 ? 0 : Long.bitCount(Bitboards.knightMoves.get(toSquare) & board.getWhiteKnightBitboard());
-            int blackKnightAttackCount = board.getBlackKnightBitboard() == 0 ? 0 : Long.bitCount(Bitboards.knightMoves.get(toSquare) & board.getBlackKnightBitboard());
-
-            boolean isWhiteToMove = board.getMover() == Colour.WHITE;
-
-            int bestDir, lowestPieceValue;
-
-            do {
-                bestDir = -1;
-                lowestPieceValue = RivalConstants.INFINITY;
-                for (int dir = 0; dir < 8; dir++) {
-                    if (indexOfFirstAttackerInDirection[dir] > 0) {
-                        int pieceType = board.getSquareOccupant(toSquare + Bitboards.bitRefIncrements.get(dir) * indexOfFirstAttackerInDirection[dir]).getIndex();
-                        if (isWhiteToMove == (pieceType <= RivalConstants.WR)) {
-                            if (RivalConstants.PIECE_VALUES.get(pieceType) < lowestPieceValue) {
-                                bestDir = dir;
-                                lowestPieceValue = RivalConstants.PIECE_VALUES.get(pieceType);
-                            }
-                        }
-                    }
-                }
-
-                if (Piece.KNIGHT.getValue() < lowestPieceValue && (isWhiteToMove ? whiteKnightAttackCount : blackKnightAttackCount) > 0) {
-                    if (isWhiteToMove) whiteKnightAttackCount--;
-                    else blackKnightAttackCount--;
-                    lowestPieceValue = Piece.KNIGHT.getValue();
-                    bestDir = 8;
-                }
-
-                if (bestDir == -1) break;
-
-                captureList[numCaptures++] = currentSquareValue;
-
-                if (currentSquareValue == RivalConstants.PIECE_VALUES.get(RivalConstants.WK)) break;
-
-                currentSquareValue = lowestPieceValue;
-
-                if (bestDir != 8)
-                    indexOfFirstAttackerInDirection[bestDir] = getNextDirectionAttackerAfterIndex(board, toSquare, bestDir, indexOfFirstAttackerInDirection[bestDir]);
-
-                isWhiteToMove = !isWhiteToMove;
-            }
-            while (true);
-
-            board.unMakeMove();
-        } else {
-            return -RivalConstants.INFINITY;
-        }
-
-        int score = 0;
-        for (int i = numCaptures - 1; i > 0; i--) score = Math.max(0, captureList[i] - score);
-        return captureList[0] - score;
-    }
-
-    private int getNextDirectionAttackerAfterIndex(EngineChessBoard board, int bitRef, int direction, int index) {
-        final int xInc = Bitboards.xIncrements.get(direction);
-        final int yInc = Bitboards.yIncrements.get(direction);
-        int pieceType;
-        index++;
-        int x = (bitRef % 8) + xInc * index;
-        if (x < 0 || x > 7) return -1;
-        int y = (bitRef / 8) + yInc * index;
-        if (y < 0 || y > 7) return -1;
-        bitRef += Bitboards.bitRefIncrements.get(direction) * index;
-        do {
-            pieceType = board.getSquareOccupant(bitRef).getIndex();
-            switch (pieceType % 6) {
-                case -1:
-                    break;
-                case RivalConstants.WK:
-                    return (index == 1) ? 1 : -1;
-                case RivalConstants.WP:
-                    return ((index == 1) && (yInc == (pieceType == RivalConstants.WP ? -1 : 1)) && (xInc != 0)) ? 1 : -1;
-                case RivalConstants.WQ:
-                    return index;
-                case RivalConstants.WR:
-                    return ((direction & 1) == 0) ? index : -1;
-                case RivalConstants.WB:
-                    return ((direction & 1) != 0) ? index : -1;
-                case RivalConstants.WN:
-                    return -1;
-            }
-            x += xInc;
-            if (x < 0 || x > 7) return -1;
-            y += yInc;
-            if (y < 0 || y > 7) return -1;
-            bitRef += Bitboards.bitRefIncrements.get(direction);
-        }
-        while (index++ > 0);
-        return -1;
     }
 
     public int evaluate(EngineChessBoard board) {
@@ -944,8 +830,6 @@ public final class RivalSearch implements Runnable {
         }
         return score;
     }
-
-    final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
 
     private int getHighScoreMove(EngineChessBoard board, int ply, int hashMove) throws InvalidMoveException {
         if (moveOrderStatus[ply] == MoveOrder.NONE && hashMove != 0) {
@@ -1865,7 +1749,7 @@ public final class RivalSearch implements Runnable {
 
             }
 
-            if (this.m_useOpeningBook && getFen().trim().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")) {
+            if (this.useOpeningBook && getFen().trim().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")) {
                 this.m_inBook = true;
             }
 
@@ -2099,8 +1983,8 @@ public final class RivalSearch implements Runnable {
     }
 
     public void setUseOpeningBook(boolean useBook) {
-        this.m_useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK && useBook;
-        this.m_inBook = this.m_useOpeningBook;
+        this.useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK && useBook;
+        this.m_inBook = this.useOpeningBook;
     }
 
     public boolean isAbortingSearch() {

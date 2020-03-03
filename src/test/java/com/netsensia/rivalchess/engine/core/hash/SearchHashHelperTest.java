@@ -13,15 +13,15 @@ public class SearchHashHelperTest extends TestCase {
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
         final BoardHash boardHash = engineChessBoard.getBoardHashObject();
 
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e2e4"));
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("e7e5"));
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g1f3"));
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g8f6"));
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b1c3"));
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b8c6"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g8f6"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b1c3"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b8c6"));
 
         boardHash.storeHashMove(
-                ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d2d4").compact,
+                ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
                 engineChessBoard, 2, RivalConstants.EXACTSCORE, 4);
 
         engineChessBoard.unMakeMove();
@@ -29,23 +29,23 @@ public class SearchHashHelperTest extends TestCase {
         engineChessBoard.unMakeMove();
         engineChessBoard.unMakeMove();
 
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b1c3"));
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("b8c6"));
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g1f3"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b1c3"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b8c6"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
 
         assertFalse(SearchHashHelper.isHeightHashTableEntryValid(2, engineChessBoard));
 
-        engineChessBoard.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("g8f6"));
+        engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g8f6"));
 
         assertTrue(SearchHashHelper.isHeightHashTableEntryValid(2, engineChessBoard));
 
         // gets correct move from use height hash table
-        assertEquals(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d2d4").compact,
+        assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
                 boardHash.getHashTableUseHeight(
                         boardHash.getHashIndex(engineChessBoard) + RivalConstants.HASHENTRY_MOVE));
 
         // has not been added to always replace table, no need as it was accepted by use height table
-        assertFalse(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d2d4").compact ==
+        assertFalse(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact ==
                 boardHash.getHashTableIgnoreHeight(
                         boardHash.getHashIndex(engineChessBoard) + RivalConstants.HASHENTRY_MOVE));
 
@@ -54,31 +54,31 @@ public class SearchHashHelperTest extends TestCase {
 
         // try to store another move with lower height
         boardHash.storeHashMove(
-                ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("h2h3").compact,
+                ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
                 engineChessBoard, 2, RivalConstants.EXACTSCORE, 3);
 
         // move from original entry still valid
-        assertEquals(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d2d4").compact,
+        assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
                 boardHash.getHashTableUseHeight(
                         boardHash.getHashIndex(engineChessBoard) + RivalConstants.HASHENTRY_MOVE));
 
         // new move valid in always replace table
-        assertEquals(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("h2h3").compact,
+        assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
                 boardHash.getHashTableIgnoreHeight(
                         boardHash.getHashIndex(engineChessBoard) + RivalConstants.HASHENTRY_MOVE));
 
         // try to store another move with heigher height
         boardHash.storeHashMove(
-                ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("h2h3").compact,
+                ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
                 engineChessBoard, 2, RivalConstants.EXACTSCORE, 6);
 
         // move from new entry now valid
-        assertEquals(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("h2h3").compact,
+        assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
                 boardHash.getHashTableUseHeight(
                         boardHash.getHashIndex(engineChessBoard) + RivalConstants.HASHENTRY_MOVE));
 
         // old entry has been added to always replace table
-        assertEquals(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("d2d4").compact,
+        assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
                 boardHash.getHashTableIgnoreHeight(
                         boardHash.getHashIndex(engineChessBoard) + RivalConstants.HASHENTRY_MOVE));
 

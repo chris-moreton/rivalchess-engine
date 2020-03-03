@@ -7,6 +7,8 @@ import com.netsensia.rivalchess.exception.HashVerificationException;
 
 public class SearchHashHelper {
 
+    private SearchHashHelper() {}
+
     public static boolean isHeightHashTableEntryValid(int depthRemaining, EngineChessBoard board) {
         final BoardHash boardHash = board.getBoardHashObject();
         final long hashValue = boardHash.getTrackedHashValue();
@@ -66,6 +68,7 @@ public class SearchHashHelper {
                     throw new HashVerificationException("Height bad clash " + ZorbristHashCalculator.calculateHash(board));
                 }
             }
+
         }
     }
 

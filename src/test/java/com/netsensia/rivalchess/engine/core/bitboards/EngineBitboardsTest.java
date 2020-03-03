@@ -30,28 +30,28 @@ public class EngineBitboardsTest {
     public void testMovePiece() {
         final String bitboardString =
                 "00000000" +
-                        "00000000" +
-                        "00000000" +
-                        "10000100" +
-                        "00000101" +
-                        "00000000" +
-                        "00000000" +
-                        "00000000";
+                "00000000" +
+                "00000000" +
+                "10000100" +
+                "00000101" +
+                "00000000" +
+                "00000000" +
+                "00000000";
 
         final String bitboardStringExpected =
                 "00010000" +
-                        "00000000" +
-                        "00000000" +
-                        "10000100" +
-                        "00000100" +
-                        "00000000" +
-                        "00000000" +
-                        "00000000";
+                "00000000" +
+                "00000000" +
+                "10000100" +
+                "00000100" +
+                "00000000" +
+                "00000000" +
+                "00000000";
 
         final long bitboard = new BigInteger(bitboardString, 2).longValue();
         final long bitboardExpected = new BigInteger(bitboardStringExpected, 2).longValue();
 
-        final EngineMove engineMove = ChessBoardConversion.getCompactMoveFromSimpleAlgebraic("h4d8");
+        final EngineMove engineMove = ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h4d8");
 
         EngineBitboards engineBitboards = new EngineBitboards();
         engineBitboards.setPieceBitboard(RivalConstants.WB, bitboard);

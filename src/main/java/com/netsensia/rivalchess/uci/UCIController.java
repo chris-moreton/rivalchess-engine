@@ -260,7 +260,7 @@ public class UCIController implements Runnable {
             for (int pos = 2; pos < l; pos++) {
                 if (parts[pos].equals("moves")) {
                     for (int i = pos + 1; i < l; i++) {
-                        rivalSearch.makeMove(ChessBoardConversion.getCompactMoveFromSimpleAlgebraic(parts[i]));
+                        rivalSearch.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(parts[i]));
                     }
                     break;
                 }
