@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core.eval;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.constants.Colour;
 import com.netsensia.rivalchess.constants.Piece;
+import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
@@ -30,16 +31,7 @@ public class StaticExchangeEvaluationHelper {
             final int currentPieceOnSquare = board.getSquareOccupant(toSquare).getIndex();
             int currentSquareValue = RivalConstants.PIECE_VALUES.get(currentPieceOnSquare);
 
-            final int[] indexOfFirstAttackerInDirection = new int[8];
-
-            indexOfFirstAttackerInDirection[0] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 0, 0);
-            indexOfFirstAttackerInDirection[1] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 1, 0);
-            indexOfFirstAttackerInDirection[2] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 2, 0);
-            indexOfFirstAttackerInDirection[3] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 3, 0);
-            indexOfFirstAttackerInDirection[4] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 4, 0);
-            indexOfFirstAttackerInDirection[5] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 5, 0);
-            indexOfFirstAttackerInDirection[6] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 6, 0);
-            indexOfFirstAttackerInDirection[7] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 7, 0);
+            final int[] indexOfFirstAttackerInDirection = getIndexesOfFirstAttackersInEachDirection(board, toSquare);
 
             int whiteKnightAttackCount = board.getWhiteKnightBitboard() == 0 ? 0 : Long.bitCount(Bitboards.knightMoves.get(toSquare) & board.getWhiteKnightBitboard());
             int blackKnightAttackCount = board.getBlackKnightBitboard() == 0 ? 0 : Long.bitCount(Bitboards.knightMoves.get(toSquare) & board.getBlackKnightBitboard());
@@ -54,12 +46,11 @@ public class StaticExchangeEvaluationHelper {
                 lowestPieceValue = RivalConstants.INFINITY;
                 for (int dir = 0; dir < 8; dir++) {
                     if (indexOfFirstAttackerInDirection[dir] > 0) {
-                        final int attackingPiece = board.getSquareOccupant(toSquare + Bitboards.bitRefIncrements.get(dir) * indexOfFirstAttackerInDirection[dir]).getIndex();
-                        final boolean isAttackingPieceSameColourAsMover = isWhiteToMove == (attackingPiece <= RivalConstants.WR);
-                        if (isAttackingPieceSameColourAsMover) {
-                            if (RivalConstants.PIECE_VALUES.get(attackingPiece) < lowestPieceValue) {
+                        final SquareOccupant attackingPiece = board.getSquareOccupant(toSquare + Bitboards.bitRefIncrements.get(dir) * indexOfFirstAttackerInDirection[dir]);
+                        if (isWhiteToMove == (attackingPiece.getColour() == Colour.WHITE)) {
+                            if (Piece.fromSquareOccupant(attackingPiece).getValue() < lowestPieceValue) {
                                 lowestPieceValueDirection = dir;
-                                lowestPieceValue = RivalConstants.PIECE_VALUES.get(attackingPiece);
+                                lowestPieceValue = Piece.fromSquareOccupant(attackingPiece).getValue();
                             }
                         }
                     }
@@ -108,6 +99,21 @@ public class StaticExchangeEvaluationHelper {
             score = Math.max(0, captureList[i] - score);
         }
         return captureList[0] - score;
+    }
+
+    private static int[] getIndexesOfFirstAttackersInEachDirection(EngineChessBoard board, int toSquare) {
+        final int[] indexOfFirstAttackerInDirection = new int[8];
+
+        indexOfFirstAttackerInDirection[0] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 0, 0);
+        indexOfFirstAttackerInDirection[1] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 1, 0);
+        indexOfFirstAttackerInDirection[2] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 2, 0);
+        indexOfFirstAttackerInDirection[3] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 3, 0);
+        indexOfFirstAttackerInDirection[4] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 4, 0);
+        indexOfFirstAttackerInDirection[5] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 5, 0);
+        indexOfFirstAttackerInDirection[6] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 6, 0);
+        indexOfFirstAttackerInDirection[7] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 7, 0);
+
+        return indexOfFirstAttackerInDirection;
     }
 
     public static int getIndexOfNextDirectionAttackerAfterIndex(EngineChessBoard board, int bitRef, int direction, int index) {

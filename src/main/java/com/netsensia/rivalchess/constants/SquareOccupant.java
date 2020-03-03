@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.constants;
 
 import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.model.Square;
 
 public enum SquareOccupant {
     NONE(-1),
@@ -42,6 +43,41 @@ public enum SquareOccupant {
             }
         }
         return SquareOccupant.NONE;
+    }
+
+    public Colour getColour() {
+        if (index == SquareOccupant.NONE.getIndex()) {
+            throw new RuntimeException("Can't get piece colour of an empty square");
+        }
+
+        return index <= SquareOccupant.WR.getIndex() ? Colour.WHITE : Colour.BLACK;
+    }
+
+    public Piece getPiece() {
+        switch (this) {
+            case NONE:
+                return Piece.NONE;
+            case WP:
+            case BP:
+                return Piece.PAWN;
+            case WK:
+            case BK:
+                return Piece.KING;
+            case WR:
+            case BR:
+                return Piece.ROOK;
+            case WB:
+            case BB:
+                return Piece.BISHOP;
+            case WN:
+            case BN:
+                return Piece.KNIGHT;
+            case WQ:
+            case BQ:
+                return Piece.QUEEN;
+            default:
+                throw new RuntimeException("Invalid SquareOccupant");
+        }
     }
 
     public static SquareOccupant fromString(String piece){

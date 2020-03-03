@@ -40,26 +40,29 @@ public class StaticExchangeEvaluationHelperTest extends TestCase {
         assertSeeScore("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", "b4f4", Piece.PAWN.getValue());
         assertSeeScore("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", "e5d7", Piece.PAWN.getValue() - Piece.KNIGHT.getValue());
         assertSeeScore("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", "f3f6", Piece.KNIGHT.getValue() - Piece.QUEEN.getValue());
-
     }
 
     private void confirmNoAttackersInDirection(EngineChessBoard board, int bitRef, int direction) {
         for (int i=0; i<=6; i++) {
-            System.out.println("BitRef=" + bitRef + " Direction=" + direction + " Index=" + i);
             assertEquals(-1, getIndexOfNextDirectionAttackerAfterIndex(board, bitRef, direction, i));
         }
     }
 
     private void confirmNoAttackers(EngineChessBoard board, int bitRef) {
         for (int direction=0; direction<=7; direction++) {
-            confirmNoAttackersInDirection(board, 63, direction);
+            confirmNoAttackersInDirection(board, bitRef, direction);
         }
     }
 
-    private void confirmAttackersAfterIndexes(EngineChessBoard board, int bitRef, int direction, List<Integer> expectedIndexes) {
+    private void confirmNoAttackersInDirections(EngineChessBoard board, int bitRef, List<Integer> directions) {
+        for (Integer direction : directions) {
+            confirmNoAttackersInDirection(board, bitRef, direction);
+        }
+    }
 
-        for (int i=0; i<=6; i++) {
-            System.out.println("BitRef=" + bitRef + " Direction=" + direction + " Index=" + i);
+    private void confirmIndexesContainingAttackerAfterIndex(EngineChessBoard board, int bitRef, int direction, List<Integer> expectedIndexes) {
+
+        for (int i=0; i<expectedIndexes.size(); i++) {
             assertEquals(expectedIndexes.get(i).intValue(), getIndexOfNextDirectionAttackerAfterIndex(board, bitRef, direction, i));
         }
     }
@@ -67,7 +70,12 @@ public class StaticExchangeEvaluationHelperTest extends TestCase {
     public void testGetNextDirectionAttackerAfterIndex() {
         EngineChessBoard board = new EngineChessBoard(FenUtils.getBoardModel("4k3/p1pprpb1/bnr1p3/3QN1n1/1p1NP1p1/7p/PPPBBPPP/R3K2R w KQ - 0 1"));
 
-        confirmNoAttackersInDirection(board, 63, 0);
-        confirmAttackersAfterIndexes(board, 63, 1, Arrays.asList(-1,-1,3,-1,-1,-1,-1));
+        confirmNoAttackersInDirections(board, 63, Arrays.asList(0,3,4,5,6,7));
+        confirmIndexesContainingAttackerAfterIndex(board, 63, 1, Arrays.asList(-1,-1,3,-1,-1,-1,-1));
+        confirmIndexesContainingAttackerAfterIndex(board, 63, 2, Arrays.asList(-1,-1,-1,-1,-1,-1,7));
+
+        confirmNoAttackersInDirections(board, 28, Arrays.asList(0,1,2,3,4,5));
+        confirmIndexesContainingAttackerAfterIndex(board, 28, 6, Arrays.asList(1,-1,-1,-1));
+        confirmIndexesContainingAttackerAfterIndex(board, 28, 7, Arrays.asList(-1,3,3,-1,-1));
     }
 }
