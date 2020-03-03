@@ -77,5 +77,9 @@ public class StaticExchangeEvaluationHelperTest extends TestCase {
         confirmNoAttackersInDirections(board, 28, Arrays.asList(0,1,2,3,4,5));
         confirmIndexesContainingAttackerAfterIndex(board, 28, 6, Arrays.asList(1,-1,-1,-1));
         confirmIndexesContainingAttackerAfterIndex(board, 28, 7, Arrays.asList(-1,3,3,-1,-1));
+
+        confirmNoAttackersInDirections(board, 36, Arrays.asList(0,2,3,4,5,6));
+        confirmIndexesContainingAttackerAfterIndex(board, 36, 1, Arrays.asList(1,-1,-1,-1));
+        confirmIndexesContainingAttackerAfterIndex(board, 36, 7, Arrays.asList(1,-1,-1));
     }
 }
