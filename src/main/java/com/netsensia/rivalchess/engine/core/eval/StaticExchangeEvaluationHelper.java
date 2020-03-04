@@ -52,48 +52,58 @@ public class StaticExchangeEvaluationHelper {
         return getScoreFromCaptureList(captureList, numCaptures);
     }
 
-    private static int getNumCaptures(int numCaptures, EngineChessBoard board, int[] captureList, int exchangeSquare, int currentSquareValue, int[] indexOfFirstAttackerInDirection, int whiteKnightAttackCount, int blackKnightAttackCount, boolean isWhiteToMove) {
-        boolean done = false;
+    private static int getNumCaptures(
+            int numCaptures,
+            EngineChessBoard board,
+            int[] captureList,
+            int exchangeSquare,
+            int currentSquareValue,
+            int[] indexOfFirstAttackerInDirection,
+            int whiteKnightAttackCount,
+            int blackKnightAttackCount,
+            boolean isWhiteToMove) {
 
-        do {
-            Map<String, Integer> lowestPieceValueDirectionAndValue =
-                    getWeakestAttackerDirectionAndValue(board, exchangeSquare, indexOfFirstAttackerInDirection, isWhiteToMove);
+        Map<String, Integer> lowestPieceValueDirectionAndValue =
+                getWeakestAttackerDirectionAndValue(board, exchangeSquare, indexOfFirstAttackerInDirection, isWhiteToMove);
 
-            if (Piece.KNIGHT.getValue() < lowestPieceValueDirectionAndValue.get(VALUE) && (isWhiteToMove ? whiteKnightAttackCount : blackKnightAttackCount) > 0) {
-                if (isWhiteToMove) {
-                    whiteKnightAttackCount--;
-                }
-                else {
-                    blackKnightAttackCount--;
-                }
-                lowestPieceValueDirectionAndValue.put(VALUE, Piece.KNIGHT.getValue());
-                lowestPieceValueDirectionAndValue.put(DIRECTION, 8);
+        if (Piece.KNIGHT.getValue() < lowestPieceValueDirectionAndValue.get(VALUE) && (isWhiteToMove ? whiteKnightAttackCount : blackKnightAttackCount) > 0) {
+            if (isWhiteToMove) {
+                whiteKnightAttackCount--;
             }
+            else {
+                blackKnightAttackCount--;
+            }
+            lowestPieceValueDirectionAndValue.put(VALUE, Piece.KNIGHT.getValue());
+            lowestPieceValueDirectionAndValue.put(DIRECTION, 8);
+        }
 
-            final int lowestPieceValueDirection = lowestPieceValueDirectionAndValue.get(DIRECTION);
-            final int lowestPieceValue = lowestPieceValueDirectionAndValue.get(VALUE);
+        final int lowestPieceValueDirection = lowestPieceValueDirectionAndValue.get(DIRECTION);
 
-            if (lowestPieceValueDirection > -1) {
-                captureList[numCaptures++] = currentSquareValue;
+        if (lowestPieceValueDirection > -1) {
+            captureList[numCaptures++] = currentSquareValue;
 
-                if (currentSquareValue != Piece.KING.getValue()) {
-                    currentSquareValue = lowestPieceValue;
+            if (currentSquareValue != Piece.KING.getValue()) {
+                currentSquareValue = lowestPieceValueDirectionAndValue.get(VALUE);
 
-                    if (lowestPieceValueDirection != 8) {
-                        indexOfFirstAttackerInDirection[lowestPieceValueDirection] =
-                                getIndexOfNextDirectionAttackerAfterIndex(
-                                        board, exchangeSquare, lowestPieceValueDirection, indexOfFirstAttackerInDirection[lowestPieceValueDirection]);
-                    }
-
-                    isWhiteToMove = !isWhiteToMove;
-                } else {
-                    done = true;
+                if (lowestPieceValueDirection != 8) {
+                    indexOfFirstAttackerInDirection[lowestPieceValueDirection] =
+                            getIndexOfNextDirectionAttackerAfterIndex(
+                                    board, exchangeSquare, lowestPieceValueDirection, indexOfFirstAttackerInDirection[lowestPieceValueDirection]);
                 }
-            } else {
-                done = true;
+
+                return getNumCaptures(
+                        numCaptures,
+                        board,
+                        captureList,
+                        exchangeSquare,
+                        currentSquareValue,
+                        indexOfFirstAttackerInDirection,
+                        whiteKnightAttackCount,
+                        blackKnightAttackCount,
+                        !isWhiteToMove);
             }
         }
-        while (!done);
+
         return numCaptures;
     }
 
