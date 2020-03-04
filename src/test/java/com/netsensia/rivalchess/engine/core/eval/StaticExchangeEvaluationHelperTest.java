@@ -67,7 +67,7 @@ public class StaticExchangeEvaluationHelperTest extends TestCase {
         }
     }
 
-    public void testGetNextDirectionAttackerAfterIndex() {
+    public void testGetIndexOfNextDirectionAttackerAfterIndex() {
         EngineChessBoard board = new EngineChessBoard(FenUtils.getBoardModel("4k3/p1pprpb1/bnr1p3/3QN1n1/1p1NP1p1/7p/PPPBBPPP/R3K2R w KQ - 0 1"));
 
         confirmNoAttackersInDirections(board, 63, Arrays.asList(0,3,4,5,6,7));

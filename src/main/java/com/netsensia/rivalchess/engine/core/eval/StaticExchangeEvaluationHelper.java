@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
+import com.netsensia.rivalchess.exception.UnexpectedEnumValue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -164,8 +165,10 @@ public class StaticExchangeEvaluationHelper {
             case KING:
                 return (movedIndex == 1) ? 1 : -1;
             case PAWN:
+                final int yIncWhereThisWouldBeAnAttackingPawn =
+                        board.getSquareOccupant(movedBitRef) == SquareOccupant.WP ? -1 : 1;
                 return ((movedIndex == 1)
-                        && (yInc == (board.getSquareOccupant(movedBitRef) == SquareOccupant.WP ? -1 : 1))
+                        && (yInc == yIncWhereThisWouldBeAnAttackingPawn)
                         && (xInc != 0)) ? 1 : -1;
             case QUEEN:
                 return movedIndex;
@@ -176,7 +179,7 @@ public class StaticExchangeEvaluationHelper {
             case KNIGHT:
                 return -1;
             default:
-                throw new RuntimeException("Unexpected Piece enum");
+                throw new UnexpectedEnumValue("Unexpected Piece enum");
         }
 
         return getIndexOfNextDirectionAttackerAfterIndex(board, bitRef, direction, movedIndex);
