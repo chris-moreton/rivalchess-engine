@@ -158,30 +158,35 @@ public class StaticExchangeEvaluationHelper {
         }
 
         final int movedBitRef = bitRef + Bitboards.bitRefIncrements.get(direction) * movedIndex;
+        final Piece piece = board.getSquareOccupant(movedBitRef).getPiece();
 
-        switch (board.getSquareOccupant(movedBitRef).getPiece()) {
-            case NONE:
-                break;
+        if (piece != Piece.NONE) {
+            return isAttacker(board, direction, xInc, yInc, movedIndex, movedBitRef, piece) ? movedIndex : -1;
+        }
+
+        return getIndexOfNextDirectionAttackerAfterIndex(board, bitRef, direction, movedIndex);
+    }
+
+    private static boolean isAttacker(EngineChessBoard board, int direction, int xInc, int yInc, int movedIndex, int movedBitRef, Piece piece) {
+        switch (piece) {
             case KING:
-                return (movedIndex == 1) ? 1 : -1;
+                return (movedIndex == 1);
             case PAWN:
                 final int yIncWhereThisWouldBeAnAttackingPawn =
                         board.getSquareOccupant(movedBitRef) == SquareOccupant.WP ? -1 : 1;
                 return ((movedIndex == 1)
                         && (yInc == yIncWhereThisWouldBeAnAttackingPawn)
-                        && (xInc != 0)) ? 1 : -1;
+                        && (xInc != 0));
             case QUEEN:
-                return movedIndex;
+                return true;
             case ROOK:
-                return ((direction & 1) == 0) ? movedIndex : -1;
+                return ((direction & 1) == 0);
             case BISHOP:
-                return ((direction & 1) != 0) ? movedIndex : -1;
+                return ((direction & 1) != 0);
             case KNIGHT:
-                return -1;
+                return false;
             default:
                 throw new UnexpectedEnumValue("Unexpected Piece enum");
         }
-
-        return getIndexOfNextDirectionAttackerAfterIndex(board, bitRef, direction, movedIndex);
     }
 }
