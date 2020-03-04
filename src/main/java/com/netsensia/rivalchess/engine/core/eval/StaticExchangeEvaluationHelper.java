@@ -10,7 +10,9 @@ import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.exception.UnexpectedEnumValue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class StaticExchangeEvaluationHelper {
@@ -22,14 +24,12 @@ public class StaticExchangeEvaluationHelper {
 
     public static int staticExchangeEvaluation(EngineChessBoard board, int move) throws InvalidMoveException {
 
-        final int[] captureList = new int[32];
+        List<Integer> captureList = new ArrayList<>();
         final int exchangeSquare = move & 63;
 
-        int numCaptures = 1;
-        captureList[0] =
-                ((1L << exchangeSquare) == board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) ?
+        captureList.add(((1L << exchangeSquare) == board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) ?
                         Piece.PAWN.getValue() :
-                        RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(exchangeSquare).getIndex());
+                        RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(exchangeSquare).getIndex()));
 
         if (!board.makeMove(new EngineMove(move & ~RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL))) {
             return -RivalConstants.INFINITY;
@@ -45,17 +45,16 @@ public class StaticExchangeEvaluationHelper {
 
         boolean isWhiteToMove = board.getMover() == Colour.WHITE;
 
-        numCaptures = getNumCaptures(numCaptures, board, captureList, exchangeSquare, currentSquareValue, indexOfFirstAttackerInDirection, whiteKnightAttackCount, blackKnightAttackCount, isWhiteToMove);
+        captureList = getCaptureList(board, captureList, exchangeSquare, currentSquareValue, indexOfFirstAttackerInDirection, whiteKnightAttackCount, blackKnightAttackCount, isWhiteToMove);
 
         board.unMakeMove();
 
-        return getScoreFromCaptureList(captureList, numCaptures);
+        return getScoreFromCaptureList(captureList);
     }
 
-    private static int getNumCaptures(
-            int numCaptures,
+    public static List<Integer> getCaptureList(
             EngineChessBoard board,
-            int[] captureList,
+            List<Integer> captureList,
             int exchangeSquare,
             int currentSquareValue,
             int[] indexOfFirstAttackerInDirection,
@@ -80,7 +79,7 @@ public class StaticExchangeEvaluationHelper {
         final int lowestPieceValueDirection = lowestPieceValueDirectionAndValue.get(DIRECTION);
 
         if (lowestPieceValueDirection > -1) {
-            captureList[numCaptures++] = currentSquareValue;
+            captureList.add(currentSquareValue);
 
             if (currentSquareValue != Piece.KING.getValue()) {
                 currentSquareValue = lowestPieceValueDirectionAndValue.get(VALUE);
@@ -91,8 +90,7 @@ public class StaticExchangeEvaluationHelper {
                                     board, exchangeSquare, lowestPieceValueDirection, indexOfFirstAttackerInDirection[lowestPieceValueDirection]);
                 }
 
-                return getNumCaptures(
-                        numCaptures,
+                return getCaptureList(
                         board,
                         captureList,
                         exchangeSquare,
@@ -104,18 +102,18 @@ public class StaticExchangeEvaluationHelper {
             }
         }
 
-        return numCaptures;
+        return captureList;
     }
 
-    private static int getScoreFromCaptureList(int[] captureList, int numCaptures) {
+    public static int getScoreFromCaptureList(List<Integer> captureList) {
         int score = 0;
-        for (int i = numCaptures - 1; i > 0; i--) {
-            score = Math.max(0, captureList[i] - score);
+        for (int i = captureList.size() - 1; i > 0; i--) {
+            score = Math.max(0, captureList.get(i) - score);
         }
-        return captureList[0] - score;
+        return captureList.get(0) - score;
     }
 
-    private static Map<String, Integer> getWeakestAttackerDirectionAndValue(EngineChessBoard board, int attackedSquare, int[] indexOfFirstAttackerInDirection, boolean isWhiteToMove) {
+    public static Map<String, Integer> getWeakestAttackerDirectionAndValue(EngineChessBoard board, int attackedSquare, int[] indexOfFirstAttackerInDirection, boolean isWhiteToMove) {
 
         Map<String, Integer> lowestPieceValueDirectionAndValue = new HashMap<>();
 
@@ -135,7 +133,7 @@ public class StaticExchangeEvaluationHelper {
         return lowestPieceValueDirectionAndValue;
     }
 
-    private static int[] getIndexesOfFirstAttackersInEachDirection(EngineChessBoard board, int toSquare) {
+    public static int[] getIndexesOfFirstAttackersInEachDirection(EngineChessBoard board, int toSquare) {
         final int[] indexOfFirstAttackerInDirection = new int[8];
 
         indexOfFirstAttackerInDirection[0] = getIndexOfNextDirectionAttackerAfterIndex(board, toSquare, 0, 0);

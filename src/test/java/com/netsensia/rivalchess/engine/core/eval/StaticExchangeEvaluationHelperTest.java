@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluationHelper.getIndexOfNextDirectionAttackerAfterIndex;
+import static com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluationHelper.getScoreFromCaptureList;
 
 public class StaticExchangeEvaluationHelperTest extends TestCase {
 
@@ -81,5 +82,27 @@ public class StaticExchangeEvaluationHelperTest extends TestCase {
         confirmNoAttackersInDirections(board, 36, Arrays.asList(0,2,3,4,5,6));
         confirmIndexesContainingAttackerAfterIndex(board, 36, 1, Arrays.asList(1,-1,-1,-1));
         confirmIndexesContainingAttackerAfterIndex(board, 36, 7, Arrays.asList(1,-1,-1));
+    }
+
+    @Test
+    public void testGetScoreFromCaptureList() {
+        // Qxr, nxQ, Pxn, rxP - white wins the rook, black takes queen with knight, white takes knight with pawn, black takes pawn with rook
+        assertEquals(-100, getScoreFromCaptureList(Arrays.asList(500, 900, 300, 100, 500)));
+
+        // Qxr, nxQ, Pxn - white wins the rook, black takes queen with knight, white takes knight with pawn
+        assertEquals(-200, getScoreFromCaptureList(Arrays.asList(500, 900, 300, 100)));
+
+        // Pxr, qxP, Pxq, rxP - white wins the rook, no follow ups expected
+        assertEquals(500, getScoreFromCaptureList(Arrays.asList(500, 100, 900, 100)));
+
+        // Pxr, qxP, Pxq - white wins the rook, no follow ups expected
+        assertEquals(500, getScoreFromCaptureList(Arrays.asList(500, 100, 900)));
+
+        // Qxr, pxQ - white wins the rook, black takes queen with pawn
+        assertEquals(-300, getScoreFromCaptureList(Arrays.asList(500, 900, 100)));
+
+        // Qxr, nxQ - white wins the rook, black takes queen with knight
+        assertEquals(-100, getScoreFromCaptureList(Arrays.asList(500, 900, 300)));
+
     }
 }
