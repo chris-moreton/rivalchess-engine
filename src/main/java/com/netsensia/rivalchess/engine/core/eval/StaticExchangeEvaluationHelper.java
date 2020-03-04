@@ -25,72 +25,76 @@ public class StaticExchangeEvaluationHelper {
         final int[] captureList = new int[32];
         final int exchangeSquare = move & 63;
 
+        int numCaptures = 1;
         captureList[0] =
                 ((1L << exchangeSquare) == board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) ?
                         Piece.PAWN.getValue() :
                         RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(exchangeSquare).getIndex());
 
-        int numCaptures = 1;
-
-        if (board.makeMove(new EngineMove(move & ~RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL))) {
-
-            final int currentPieceOnSquare = board.getSquareOccupant(exchangeSquare).getIndex();
-            int currentSquareValue = RivalConstants.PIECE_VALUES.get(currentPieceOnSquare);
-
-            final int[] indexOfFirstAttackerInDirection = getIndexesOfFirstAttackersInEachDirection(board, exchangeSquare);
-
-            int whiteKnightAttackCount = board.getWhiteKnightBitboard() == 0 ? 0 : Long.bitCount(Bitboards.knightMoves.get(exchangeSquare) & board.getWhiteKnightBitboard());
-            int blackKnightAttackCount = board.getBlackKnightBitboard() == 0 ? 0 : Long.bitCount(Bitboards.knightMoves.get(exchangeSquare) & board.getBlackKnightBitboard());
-
-            boolean isWhiteToMove = board.getMover() == Colour.WHITE;
-
-            do {
-                Map<String, Integer> lowestPieceValueDirectionAndValue =
-                        getWeakestAttackerDirectionAndValue(board, exchangeSquare, indexOfFirstAttackerInDirection, isWhiteToMove);
-
-                if (Piece.KNIGHT.getValue() < lowestPieceValueDirectionAndValue.get(VALUE) && (isWhiteToMove ? whiteKnightAttackCount : blackKnightAttackCount) > 0) {
-                    if (isWhiteToMove) {
-                        whiteKnightAttackCount--;
-                    }
-                    else {
-                        blackKnightAttackCount--;
-                    }
-                    lowestPieceValueDirectionAndValue.put(VALUE, Piece.KNIGHT.getValue());
-                    lowestPieceValueDirectionAndValue.put(DIRECTION, 8);
-
-                }
-
-                final int lowestPieceValueDirection = lowestPieceValueDirectionAndValue.get(DIRECTION);
-                final int lowestPieceValue = lowestPieceValueDirectionAndValue.get(VALUE);
-
-                if (lowestPieceValueDirection == -1) {
-                    break;
-                }
-
-                captureList[numCaptures++] = currentSquareValue;
-
-                if (currentSquareValue == RivalConstants.PIECE_VALUES.get(RivalConstants.WK)) {
-                    break;
-                }
-
-                currentSquareValue = lowestPieceValue;
-
-                if (lowestPieceValueDirection != 8) {
-                    indexOfFirstAttackerInDirection[lowestPieceValueDirection] =
-                            getIndexOfNextDirectionAttackerAfterIndex(
-                                    board, exchangeSquare, lowestPieceValueDirection, indexOfFirstAttackerInDirection[lowestPieceValueDirection]);
-                }
-
-                isWhiteToMove = !isWhiteToMove;
-            }
-            while (true);
-
-            board.unMakeMove();
-        } else {
+        if (!board.makeMove(new EngineMove(move & ~RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL))) {
             return -RivalConstants.INFINITY;
         }
 
+        final int currentPieceOnSquare = board.getSquareOccupant(exchangeSquare).getIndex();
+        int currentSquareValue = RivalConstants.PIECE_VALUES.get(currentPieceOnSquare);
+
+        final int[] indexOfFirstAttackerInDirection = getIndexesOfFirstAttackersInEachDirection(board, exchangeSquare);
+
+        int whiteKnightAttackCount = board.getWhiteKnightBitboard() == 0 ? 0 : Long.bitCount(Bitboards.knightMoves.get(exchangeSquare) & board.getWhiteKnightBitboard());
+        int blackKnightAttackCount = board.getBlackKnightBitboard() == 0 ? 0 : Long.bitCount(Bitboards.knightMoves.get(exchangeSquare) & board.getBlackKnightBitboard());
+
+        boolean isWhiteToMove = board.getMover() == Colour.WHITE;
+
+        numCaptures = getNumCaptures(numCaptures, board, captureList, exchangeSquare, currentSquareValue, indexOfFirstAttackerInDirection, whiteKnightAttackCount, blackKnightAttackCount, isWhiteToMove);
+
+        board.unMakeMove();
+
         return getScoreFromCaptureList(captureList, numCaptures);
+    }
+
+    private static int getNumCaptures(int numCaptures, EngineChessBoard board, int[] captureList, int exchangeSquare, int currentSquareValue, int[] indexOfFirstAttackerInDirection, int whiteKnightAttackCount, int blackKnightAttackCount, boolean isWhiteToMove) {
+        boolean done = false;
+
+        do {
+            Map<String, Integer> lowestPieceValueDirectionAndValue =
+                    getWeakestAttackerDirectionAndValue(board, exchangeSquare, indexOfFirstAttackerInDirection, isWhiteToMove);
+
+            if (Piece.KNIGHT.getValue() < lowestPieceValueDirectionAndValue.get(VALUE) && (isWhiteToMove ? whiteKnightAttackCount : blackKnightAttackCount) > 0) {
+                if (isWhiteToMove) {
+                    whiteKnightAttackCount--;
+                }
+                else {
+                    blackKnightAttackCount--;
+                }
+                lowestPieceValueDirectionAndValue.put(VALUE, Piece.KNIGHT.getValue());
+                lowestPieceValueDirectionAndValue.put(DIRECTION, 8);
+            }
+
+            final int lowestPieceValueDirection = lowestPieceValueDirectionAndValue.get(DIRECTION);
+            final int lowestPieceValue = lowestPieceValueDirectionAndValue.get(VALUE);
+
+            if (lowestPieceValueDirection > -1) {
+                captureList[numCaptures++] = currentSquareValue;
+
+                if (currentSquareValue != Piece.KING.getValue()) {
+                    currentSquareValue = lowestPieceValue;
+
+                    if (lowestPieceValueDirection != 8) {
+                        indexOfFirstAttackerInDirection[lowestPieceValueDirection] =
+                                getIndexOfNextDirectionAttackerAfterIndex(
+                                        board, exchangeSquare, lowestPieceValueDirection, indexOfFirstAttackerInDirection[lowestPieceValueDirection]);
+                    }
+
+                    isWhiteToMove = !isWhiteToMove;
+                } else {
+                    done = true;
+                }
+            } else {
+                done = true;
+            }
+        }
+        while (!done);
+        return numCaptures;
     }
 
     private static int getScoreFromCaptureList(int[] captureList, int numCaptures) {
