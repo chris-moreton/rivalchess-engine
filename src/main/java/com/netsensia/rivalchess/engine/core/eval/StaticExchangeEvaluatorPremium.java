@@ -15,24 +15,18 @@ public class StaticExchangeEvaluatorPremium implements StaticExchangeEvaluator {
     public int staticExchangeEvaluation(EngineChessBoard board, EngineMove move) throws InvalidMoveException {
         final int captureSquare = move.compact & 63;
 
-        final int captureValue = materialBalanceFromMoverPerspective(board) +
-                (((1L << captureSquare) == board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) ?
-                Piece.PAWN.getValue() :
-                board.getSquareOccupant(captureSquare).getPiece().getValue());
-
-        if (board.makeMove(move)) {
-            final int seeScore = captureValue - seeSearch(board, captureSquare);
-            board.unMakeMove();
-            return seeScore;
-        }
-        return -RivalConstants.INFINITY;
+        return seeSearch(board, captureSquare);
     }
 
     public int seeSearch(EngineChessBoard board, int captureSquare) throws InvalidMoveException {
 
-        final int captureValue = board.getSquareOccupant(captureSquare).getPiece().getValue();
+        final int captureValue =
+                (((1L << captureSquare) == board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) ?
+                        Piece.PAWN.getValue() :
+                        board.getSquareOccupant(captureSquare).getPiece().getValue());
 
-        int bestScore = -materialBalanceFromMoverPerspective(board);
+        final int materialBalance = materialBalanceFromMoverPerspective(board);
+        int bestScore = materialBalance;
 
         List<EngineMove> moves = getCaptureMovesOnSquare(captureSquare);
 
@@ -47,7 +41,7 @@ public class StaticExchangeEvaluatorPremium implements StaticExchangeEvaluator {
             }
         }
 
-        return bestScore;
+        return captureValue + (materialBalance - bestScore);
 
     }
 
