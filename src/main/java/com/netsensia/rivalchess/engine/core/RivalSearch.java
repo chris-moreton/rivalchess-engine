@@ -7,6 +7,8 @@ import com.netsensia.rivalchess.constants.MoveOrder;
 import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.constants.SquareOccupant;
+import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator;
+import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluatorClassic;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -24,13 +26,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 
-import static com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluationHelper.staticExchangeEvaluation;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 
 public final class RivalSearch implements Runnable {
 
     private final PrintStream printStream;
+
+    private final StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorClassic();
 
     private final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
 
@@ -63,8 +66,8 @@ public final class RivalSearch implements Runnable {
     private int aspirationLow;
     private int aspirationHigh;
 
-    protected int m_millisecondsToThink;
-    protected int m_nodesToSearch = Integer.MAX_VALUE;
+    protected int millisToThink;
+    protected int nodesToSearch = Integer.MAX_VALUE;
 
     protected boolean m_abortingSearch = true;
 
@@ -816,7 +819,7 @@ public final class RivalSearch implements Runnable {
 
         final int promotionMask = (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
         if (isCapture) {
-            final int see = staticExchangeEvaluation(board, move);
+            final int see = staticExchangeEvaluator.staticExchangeEvaluation(board, move);
             if (see > 0) {
                 score = 100 + (int) (((double) see / Piece.QUEEN.getValue()) * 10);
             }
@@ -1000,7 +1003,7 @@ public final class RivalSearch implements Runnable {
                 if (movesForSorting[i] == mateKiller.get(ply)) {
                     score = 126;
                 } else if (capturePiece != Piece.NONE) {
-                    int see = staticExchangeEvaluation(board, movesForSorting[i]);
+                    int see = staticExchangeEvaluator.staticExchangeEvaluation(board, movesForSorting[i]);
                     if (see > -RivalConstants.INFINITY) {
                         see = (int) (((double) see / Piece.QUEEN.getValue()) * 10);
                     }
@@ -1155,7 +1158,7 @@ public final class RivalSearch implements Runnable {
 
         nodes++;
 
-        if (this.getMillisSetByEngineMonitor() > this.searchTargetEndTime || nodes >= this.m_nodesToSearch) {
+        if (this.getMillisSetByEngineMonitor() > this.searchTargetEndTime || nodes >= this.nodesToSearch) {
             this.m_abortingSearch = true;
             this.setOkToSendInfo(false);
             return null;
@@ -1329,14 +1332,14 @@ public final class RivalSearch implements Runnable {
                     recaptureExtend = 0;
 
                     if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece).equals(RivalConstants.PIECE_VALUES.get(targetPiece))) {
-                        currentSEEValue = staticExchangeEvaluation(board, move);
+                        currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move);
                         if (Math.abs(currentSEEValue) <= RivalConstants.RECAPTURE_EXTENSION_MARGIN)
                             newRecaptureSquare = (move & 63);
                     }
 
                     if ((move & 63) == recaptureSquare) {
                         if (currentSEEValue == -RivalConstants.INFINITY)
-                            currentSEEValue = staticExchangeEvaluation(board, move);
+                            currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move);
                         if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(recaptureSquare).getIndex()) - RivalConstants.RECAPTURE_EXTENSION_MARGIN) {
                             recaptureExtend = 1;
                         }
@@ -1643,7 +1646,7 @@ public final class RivalSearch implements Runnable {
         }
 
         if (!this.m_abortingSearch) {
-            if (numLegalMovesAtDepthZero == 1 && this.m_millisecondsToThink < RivalConstants.MAX_SEARCH_MILLIS) {
+            if (numLegalMovesAtDepthZero == 1 && this.millisToThink < RivalConstants.MAX_SEARCH_MILLIS) {
                 this.m_abortingSearch = true;
                 m_currentPath.setPath(bestPath); // otherwise we will crash!
                 currentPathString = "" + m_currentPath;
@@ -1841,7 +1844,7 @@ public final class RivalSearch implements Runnable {
 
         searchStartTime = System.currentTimeMillis();
         searchEndTime = 0;
-        searchTargetEndTime = this.searchStartTime + this.m_millisecondsToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
+        searchTargetEndTime = this.searchStartTime + this.millisToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
 
         aspirationLow = -RivalConstants.INFINITY;
         aspirationHigh = RivalConstants.INFINITY;
@@ -1874,15 +1877,15 @@ public final class RivalSearch implements Runnable {
     }
 
     public void setMillisToThink(int millisToThink) {
-        this.m_millisecondsToThink = millisToThink;
+        this.millisToThink = millisToThink;
 
-        if (this.m_millisecondsToThink < RivalConstants.MIN_SEARCH_MILLIS) {
-            this.m_millisecondsToThink = RivalConstants.MIN_SEARCH_MILLIS;
+        if (this.millisToThink < RivalConstants.MIN_SEARCH_MILLIS) {
+            this.millisToThink = RivalConstants.MIN_SEARCH_MILLIS;
         }
     }
 
     public void setNodesToSearch(int nodesToSearch) {
-        this.m_nodesToSearch = nodesToSearch;
+        this.nodesToSearch = nodesToSearch;
     }
 
     public void setSearchDepth(int searchDepth) {

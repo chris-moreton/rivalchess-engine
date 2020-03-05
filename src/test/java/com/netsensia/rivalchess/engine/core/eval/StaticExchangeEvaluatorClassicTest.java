@@ -16,11 +16,13 @@ import java.util.List;
 import static com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluationHelper.getIndexOfNextDirectionAttackerAfterIndex;
 import static com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluationHelper.getScoreFromCaptureList;
 
-public class StaticExchangeEvaluationHelperTest extends TestCase {
+public class StaticExchangeEvaluatorClassicTest extends TestCase {
+
+    private StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorClassic();
 
     public void assertSeeScore (final String fen, final String move, final int expectedScore) throws InvalidMoveException {
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(fen));
-        assertEquals(expectedScore, StaticExchangeEvaluationHelper.staticExchangeEvaluation(
+        assertEquals(expectedScore, staticExchangeEvaluator.staticExchangeEvaluation(
                 engineChessBoard,
                 ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move).compact));
     }
