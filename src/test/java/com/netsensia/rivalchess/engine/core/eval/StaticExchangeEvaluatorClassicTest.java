@@ -33,7 +33,7 @@ public class StaticExchangeEvaluatorClassicTest extends TestCase {
 
         assertSeeScore("4k2r/p1ppqpb1/bnr1p3/3PN1n1/1p2P1p1/2N2Q1p/PPPBBPPP/R3K2R w KQk - 0 1", "d5e6", 0);
 
-        assertSeeScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -",  "f7e6", Piece.BISHOP.getValue());
+        assertSeeScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", "f7e6", Piece.BISHOP.getValue());
         assertSeeScore("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", "g2f1", Piece.KNIGHT.getValue() - Piece.PAWN.getValue());
 
         // leaves king in check

@@ -9,6 +9,7 @@ import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator;
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluatorClassic;
+import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluatorPremium;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -33,7 +34,7 @@ public final class RivalSearch implements Runnable {
 
     private final PrintStream printStream;
 
-    private final StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorClassic();
+    private final StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorPremium();
 
     private final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
 
@@ -1995,7 +1996,7 @@ public final class RivalSearch implements Runnable {
     }
 
     public void quit() {
-        this.quit = true;
+        quit = true;
     }
 
     public void run() {
