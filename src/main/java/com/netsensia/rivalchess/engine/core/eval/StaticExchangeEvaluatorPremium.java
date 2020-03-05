@@ -1,12 +1,11 @@
 package com.netsensia.rivalchess.engine.core.eval;
 
-import com.netsensia.rivalchess.constants.SquareOccupant;
+import com.netsensia.rivalchess.constants.Colour;
+import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
-import com.netsensia.rivalchess.engine.core.SearchPath;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
-import com.sun.xml.internal.ws.api.pipe.Engine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,62 +14,63 @@ public class StaticExchangeEvaluatorPremium implements StaticExchangeEvaluator {
 
     public int staticExchangeEvaluation(EngineChessBoard board, EngineMove move) throws InvalidMoveException {
         final int captureSquare = move.compact & 63;
-        final int captureValue = board.getSquareOccupant(captureSquare).getPiece().getValue();
-        board.makeMove(move);
-        final int seeScore = captureValue - seeSearch(board, captureSquare);
-        board.unMakeMove();
-        return seeScore;
+
+        final int captureValue = materialBalanceFromMoverPerspective(board) +
+                (((1L << captureSquare) == board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) ?
+                Piece.PAWN.getValue() :
+                board.getSquareOccupant(captureSquare).getPiece().getValue());
+
+        if (board.makeMove(move)) {
+            final int seeScore = captureValue - seeSearch(board, captureSquare);
+            board.unMakeMove();
+            return seeScore;
+        }
+        return -RivalConstants.INFINITY;
     }
 
     public int seeSearch(EngineChessBoard board, int captureSquare) throws InvalidMoveException {
 
-        final int evalScore = materialBalanceFromMoverPerspective(board);
+        final int captureValue = board.getSquareOccupant(captureSquare).getPiece().getValue();
+
+        int bestScore = -materialBalanceFromMoverPerspective(board);
 
         List<EngineMove> moves = getCaptureMovesOnSquare(captureSquare);
 
         for (EngineMove move : moves) {
 
-        }
-
-        int moveCount = 0;
-
-        while (move != 0) {
-
-            if (!shouldDeltaPrune(board, low, evalScore, move, isCheck)) {
-                if (board.makeMove(new EngineMove(move))) {
-                    legalMoveCount++;
-
-                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck()));
-                    newPath.score = -newPath.score;
-                    if (newPath.score > bestPath.score) {
-                        bestPath.setPath(move, newPath);
-                    }
-                    if (newPath.score >= high) {
-                        board.unMakeMove();
-                        return bestPath;
-                    }
-                    low = Math.max(low, newPath.score);
-
-                    board.unMakeMove();
+            if (board.makeMove(move)) {
+                final int seeScore = captureValue - seeSearch(board, captureSquare);
+                board.unMakeMove();
+                if (seeScore > bestScore) {
+                    bestScore = seeScore;
                 }
             }
-
-            move = getHighScoreMove(theseMoves);
         }
 
-        if (isCheck && legalMoveCount == 0) {
-            bestPath.score = -RivalConstants.VALUE_MATE;
-        }
+        return bestScore;
 
-        return bestPath;
     }
 
     public int materialBalanceFromMoverPerspective(EngineChessBoard board) {
-        return 0;
+        final int whiteMaterial = board.getWhitePawnValues() + board.getWhitePieceValues();
+        final int blackMaterial = board.getBlackPawnValues() + board.getBlackPieceValues();
+
+        if (board.getMover() == Colour.WHITE) {
+            return whiteMaterial - blackMaterial;
+        }
+
+        return blackMaterial - whiteMaterial;
     }
 
     public List<EngineMove> getCaptureMovesOnSquare(int captureSquare) {
-        return new ArrayList<>();
+        int[] moves = new int[RivalConstants.MAX_LEGAL_MOVES];
+        List<EngineMove> moveList = new ArrayList<>();
+        for (int move : moves) {
+            if ((move & 63) == captureSquare) {
+                moveList.add(new EngineMove(move));
+            }
+        }
+        return moveList;
     }
 }
 

@@ -819,7 +819,7 @@ public final class RivalSearch implements Runnable {
 
         final int promotionMask = (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
         if (isCapture) {
-            final int see = staticExchangeEvaluator.staticExchangeEvaluation(board, move);
+            final int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
             if (see > 0) {
                 score = 100 + (int) (((double) see / Piece.QUEEN.getValue()) * 10);
             }
@@ -1003,7 +1003,7 @@ public final class RivalSearch implements Runnable {
                 if (movesForSorting[i] == mateKiller.get(ply)) {
                     score = 126;
                 } else if (capturePiece != Piece.NONE) {
-                    int see = staticExchangeEvaluator.staticExchangeEvaluation(board, movesForSorting[i]);
+                    int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(movesForSorting[i]));
                     if (see > -RivalConstants.INFINITY) {
                         see = (int) (((double) see / Piece.QUEEN.getValue()) * 10);
                     }
@@ -1332,14 +1332,14 @@ public final class RivalSearch implements Runnable {
                     recaptureExtend = 0;
 
                     if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece).equals(RivalConstants.PIECE_VALUES.get(targetPiece))) {
-                        currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move);
+                        currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
                         if (Math.abs(currentSEEValue) <= RivalConstants.RECAPTURE_EXTENSION_MARGIN)
                             newRecaptureSquare = (move & 63);
                     }
 
                     if ((move & 63) == recaptureSquare) {
                         if (currentSEEValue == -RivalConstants.INFINITY)
-                            currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move);
+                            currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
                         if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(recaptureSquare).getIndex()) - RivalConstants.RECAPTURE_EXTENSION_MARGIN) {
                             recaptureExtend = 1;
                         }

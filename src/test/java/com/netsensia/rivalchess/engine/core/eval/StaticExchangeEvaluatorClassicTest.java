@@ -24,7 +24,7 @@ public class StaticExchangeEvaluatorClassicTest extends TestCase {
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(fen));
         assertEquals(expectedScore, staticExchangeEvaluator.staticExchangeEvaluation(
                 engineChessBoard,
-                ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move).compact));
+                ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move)));
     }
 
     @Test
