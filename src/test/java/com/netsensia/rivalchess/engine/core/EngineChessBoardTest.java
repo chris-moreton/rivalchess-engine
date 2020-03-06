@@ -1,11 +1,9 @@
 package com.netsensia.rivalchess.engine.core;
 
-import com.netsensia.rivalchess.constants.Colour;
-import com.netsensia.rivalchess.constants.Piece;
-import com.netsensia.rivalchess.constants.SquareOccupant;
+import com.netsensia.rivalchess.enums.Piece;
+import com.netsensia.rivalchess.enums.SquareOccupant;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
-import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.junit.Test;

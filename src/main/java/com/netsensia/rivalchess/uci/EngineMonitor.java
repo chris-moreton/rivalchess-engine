@@ -3,48 +3,48 @@ package com.netsensia.rivalchess.uci;
 import java.io.PrintStream;
 import java.util.TimerTask;
 
-import com.netsensia.rivalchess.constants.SearchState;
+import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class EngineMonitor extends TimerTask {
-    private final RivalSearch m_engine;
-    private static PrintStream m_out;
+    private final RivalSearch engine;
+    private static PrintStream out;
 
     public EngineMonitor(RivalSearch engine) {
-        m_engine = engine;
+        this.engine = engine;
     }
 
     public static void setPrintStream(PrintStream out) {
-        m_out = out;
+        EngineMonitor.out = out;
     }
 
     public static void sendUCI(String s) {
-        m_out.println(s);
+        out.println(s);
     }
 
     public void printInfo() {
-        int depth = m_engine.getIterativeDeepeningDepth();
+        int depth = engine.getIterativeDeepeningDepth();
         sendUCI(
                 "info" +
                         " currmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(
-                                m_engine.getCurrentDepthZeroMove()) +
-                        " currmovenumber " + m_engine.getCurrentDepthZeroMoveNumber() +
+                                engine.getCurrentDepthZeroMove()) +
+                        " currmovenumber " + engine.getCurrentDepthZeroMoveNumber() +
                         " depth " + depth +
-                        " score " + m_engine.getCurrentScoreHuman() +
-                        " pv " + m_engine.getCurrentPathString().trim() +
-                        " time " + m_engine.getSearchDuration() +
-                        " nodes " + m_engine.getNodes() +
-                        " nps " + m_engine.getNodesPerSecond());
+                        " score " + engine.getCurrentScoreHuman() +
+                        " pv " + engine.getCurrentPathString().trim() +
+                        " time " + engine.getSearchDuration() +
+                        " nodes " + engine.getNodes() +
+                        " nps " + engine.getNodesPerSecond());
     }
 
     public void run() {
-        m_engine.setMillisSetByEngineMonitor(System.currentTimeMillis());
+        engine.setMillisSetByEngineMonitor(System.currentTimeMillis());
 
-        if (m_engine.isUCIMode()) {
-            if (m_engine.isOkToSendInfo()) {
-                SearchState state = m_engine.getEngineState();
-                if (state == SearchState.SEARCHING && !m_engine.isAbortingSearch()) {
+        if (engine.isUCIMode()) {
+            if (engine.isOkToSendInfo()) {
+                SearchState state = engine.getEngineState();
+                if (state == SearchState.SEARCHING && !engine.isAbortingSearch()) {
                     printInfo();
                 }
             }

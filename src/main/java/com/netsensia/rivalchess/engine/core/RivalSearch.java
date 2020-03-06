@@ -2,11 +2,11 @@ package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
-import com.netsensia.rivalchess.constants.Colour;
-import com.netsensia.rivalchess.constants.MoveOrder;
-import com.netsensia.rivalchess.constants.Piece;
-import com.netsensia.rivalchess.constants.SearchState;
-import com.netsensia.rivalchess.constants.SquareOccupant;
+import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.enums.MoveOrder;
+import com.netsensia.rivalchess.enums.Piece;
+import com.netsensia.rivalchess.enums.SearchState;
+import com.netsensia.rivalchess.enums.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator;
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluatorPremium;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;

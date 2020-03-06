@@ -6,8 +6,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 
-import com.netsensia.rivalchess.constants.Colour;
-import com.netsensia.rivalchess.constants.SearchState;
+import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.exception.IllegalFenException;

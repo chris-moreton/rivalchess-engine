@@ -1,8 +1,9 @@
 package com.netsensia.rivalchess.engine.core.bitboards;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
-import com.netsensia.rivalchess.constants.Colour;
-import com.netsensia.rivalchess.constants.SquareOccupant;
+import com.netsensia.rivalchess.enums.BitboardType;
+import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.enums.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 
 import java.util.Arrays;
@@ -19,10 +20,12 @@ public class EngineBitboards {
         reset();
     }
 
+    @Deprecated
     public void setPieceBitboard(int i, long bitboard) {
         pieceBitboards[i] = bitboard;
     }
 
+    @Deprecated
     public long getPieceBitboard(int i) {
         return pieceBitboards[i];
     }
@@ -38,6 +41,14 @@ public class EngineBitboards {
     public void reset() {
         pieceBitboards = new long[RivalConstants.NUM_BITBOARDS];
         Arrays.fill(pieceBitboards, 0);
+    }
+
+    public void setPieceBitboard(BitboardType type, long bitboard) {
+        pieceBitboards[type.getIndex()] = bitboard;
+    }
+
+    public long getPieceBitboard(BitboardType type) {
+        return pieceBitboards[type.getIndex()];
     }
 
     public void movePiece(int piece, int compactMove) {

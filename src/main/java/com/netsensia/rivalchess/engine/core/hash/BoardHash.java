@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
-import com.netsensia.rivalchess.constants.Colour;
+import com.netsensia.rivalchess.enums.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;

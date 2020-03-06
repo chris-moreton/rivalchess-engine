@@ -1,16 +1,8 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
-import com.netsensia.rivalchess.constants.Colour;
-import com.netsensia.rivalchess.constants.SquareOccupant;
+import com.netsensia.rivalchess.enums.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
-import com.netsensia.rivalchess.engine.core.type.EngineMove;
-import com.netsensia.rivalchess.engine.core.type.MoveDetail;
-import com.netsensia.rivalchess.model.Move;
-import com.netsensia.rivalchess.model.Square;
-import com.netsensia.rivalchess.util.ChessBoardConversion;
-
-import java.awt.*;
 
 public class ZorbristHashCalculator {
 

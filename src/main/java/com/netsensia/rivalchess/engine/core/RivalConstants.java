@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
-import com.netsensia.rivalchess.constants.Piece;
+import com.netsensia.rivalchess.enums.Piece;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -294,19 +294,30 @@ public final class RivalConstants
 	public static final int BK = 10;
 	@Deprecated
 	public static final int BR = 11;
-	
+
+	@Deprecated
 	public static final int ALL = 12;
+	@Deprecated
 	public static final int FRIENDLY = 13;
+	@Deprecated
 	public static final int ENEMY = 14;
+	@Deprecated
 	public static final int ENPASSANTSQUARE = 15;
 
+	@Deprecated
 	public static final int NUM_BITBOARDS = 16;
-	
+
+	@Deprecated
 	public static final int CASTLEPRIV_WK = 1;
+	@Deprecated
 	public static final int CASTLEPRIV_WQ = 2;
+	@Deprecated
 	public static final int CASTLEPRIV_BK = 4;
+	@Deprecated
 	public static final int CASTLEPRIV_BQ = 8;
+	@Deprecated
 	public static final int CASTLEPRIV_BNONE = ~CASTLEPRIV_BK & ~CASTLEPRIV_BQ;
+	@Deprecated
 	public static final int CASTLEPRIV_WNONE = ~CASTLEPRIV_WK & ~CASTLEPRIV_WQ;
 
 	private static RivalConstants instance = null;

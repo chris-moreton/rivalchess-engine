@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.epd;
 
-import com.netsensia.rivalchess.constants.SearchState;
+import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
@@ -14,7 +14,6 @@ import com.netsensia.rivalchess.util.FenUtils;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;

@@ -1,4 +1,4 @@
-package com.netsensia.rivalchess.constants;
+package com.netsensia.rivalchess.enums;
 
 public enum MoveOrder {
     NONE,

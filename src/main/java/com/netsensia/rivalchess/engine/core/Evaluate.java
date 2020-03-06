@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
-import com.netsensia.rivalchess.constants.Colour;
+import com.netsensia.rivalchess.enums.Colour;
 
 public class Evaluate {
 

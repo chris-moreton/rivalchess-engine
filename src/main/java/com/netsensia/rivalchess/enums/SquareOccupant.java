@@ -1,7 +1,4 @@
-package com.netsensia.rivalchess.constants;
-
-import com.netsensia.rivalchess.engine.core.RivalConstants;
-import com.netsensia.rivalchess.model.Square;
+package com.netsensia.rivalchess.enums;
 
 public enum SquareOccupant {
     NONE(-1),

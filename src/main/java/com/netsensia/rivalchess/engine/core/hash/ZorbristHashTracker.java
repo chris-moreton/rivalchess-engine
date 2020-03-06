@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
-import com.netsensia.rivalchess.constants.Colour;
-import com.netsensia.rivalchess.constants.SquareOccupant;
+import com.netsensia.rivalchess.enums.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;

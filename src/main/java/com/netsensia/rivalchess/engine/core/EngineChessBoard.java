@@ -2,9 +2,10 @@ package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
-import com.netsensia.rivalchess.constants.Colour;
-import com.netsensia.rivalchess.constants.SquareOccupant;
-import com.netsensia.rivalchess.constants.Piece;
+import com.netsensia.rivalchess.enums.BitboardType;
+import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.enums.SquareOccupant;
+import com.netsensia.rivalchess.enums.Piece;
 import com.netsensia.rivalchess.engine.core.bitboards.EngineBitboards;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
@@ -21,8 +22,8 @@ import java.util.List;
  */
 public final class EngineChessBoard {
 
-    private EngineBitboards engineBitboards = new EngineBitboards();
-    private BoardHash boardHash = new BoardHash();
+    final private EngineBitboards engineBitboards = new EngineBitboards();
+    final private BoardHash boardHash = new BoardHash();
 
     private int castlePrivileges;
     private boolean isWhiteToMove;
@@ -112,7 +113,7 @@ public final class EngineChessBoard {
 
         if (!isCapture &&
                 ((1L << toSquare) & engineBitboards.getPieceBitboard(RivalConstants.ENPASSANTSQUARE)) != 0 &&
-                squareContents[(move >>> 16) & 63] % 6 == RivalConstants.WP) {
+                squareContents[(move >>> 16) & 63] % 6 == SquareOccupant.WP.getIndex()) {
             isCapture = true;
         }
         return isCapture;
@@ -177,7 +178,9 @@ public final class EngineChessBoard {
 
         clearLegalMovesArray();
 
-        generateKnightMoves(this.isWhiteToMove ? engineBitboards.pieceBitboards[RivalConstants.WN] : engineBitboards.pieceBitboards[RivalConstants.BN]);
+        generateKnightMoves(this.isWhiteToMove
+                ? engineBitboards.getPieceBitboard(BitboardType.WN)
+                : engineBitboards.getPieceBitboard(BitboardType.BN));
 
         generateKingMoves(this.isWhiteToMove ? this.whiteKingSquare : this.blackKingSquare);
 
