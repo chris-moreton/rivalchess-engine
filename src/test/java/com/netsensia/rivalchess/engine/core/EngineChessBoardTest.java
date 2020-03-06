@@ -82,47 +82,6 @@ public class EngineChessBoardTest {
     }
 
     @Test
-    public void isSquareAttacked() throws IllegalFenException {
-        final EngineChessBoard engineChessBoard =
-                new EngineChessBoard(FenUtils.getBoardModel("6k1/p5p1/5p2/2P2Q2/3pN2p/3PbK1P/7P/6q1 b - -"));
-
-        boolean[][] expectedWhiteAttacks = {
-                {false,false,true,false,false,false,false,false},
-                {false,false,false,true,false,false,false,true},
-                {false,true,false,true,true,true,true,false},
-                {false,false,true,true,true,false,true,true},
-                {false,false,true,false,true,true,true,false},
-                {false,false,true,false,true,true,true,true},
-                {false,false,false,true,true,true,true,false},
-                {false,false,false,false,false,false,false,false}
-        };
-
-        boolean[][] expectedBlackAttacks = {
-                {false,false,false,false,false,true,false,true},
-                {false,false,false,false,false,true,true,true},
-                {false,true,false,false,false,true,true,true},
-                {false,false,false,false,true,false,true,false},
-                {false,false,false,true,false,true,true,false},
-                {false,false,true,false,true,false,true,false},
-                {false,false,false,true,false,true,true,true},
-                {true,true,true,true,true,true,true,true}
-        };
-
-        for (int y=0; y<8; y++) {
-            for (int x=0; x<8; x++) {
-
-                assertEquals(expectedWhiteAttacks[y][x], engineChessBoard.isSquareAttackedBy(
-                        ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
-                        Colour.WHITE));
-
-                assertEquals(expectedBlackAttacks[y][x], engineChessBoard.isSquareAttackedBy(
-                        ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
-                        Colour.BLACK));
-            }
-        }
-    }
-
-    @Test
     public void isGameOver() throws IllegalFenException, InvalidMoveException {
 
         final String SCHOLARS_MATE = "r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4";

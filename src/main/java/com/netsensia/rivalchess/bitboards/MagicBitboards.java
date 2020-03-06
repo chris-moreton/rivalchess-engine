@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.bitboards;
 
+import com.netsensia.rivalchess.engine.core.RivalConstants;
+
 import java.util.List;
 
 public class MagicBitboards {

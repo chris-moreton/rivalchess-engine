@@ -132,47 +132,18 @@ public final class EngineChessBoard {
 
     public boolean isNonMoverInCheck() {
         return isWhiteToMove ?
-                isSquareAttackedBy(blackKingSquare, Colour.WHITE) :
-                isSquareAttackedBy(whiteKingSquare, Colour.BLACK);
+                engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE) :
+                engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK);
     }
 
     public boolean isCheck() {
         return isWhiteToMove ?
-                isSquareAttackedBy(whiteKingSquare, Colour.BLACK) :
-                isSquareAttackedBy(blackKingSquare, Colour.WHITE);
+                engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK) :
+                engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE);
     }
 
-    public boolean isSquareAttackedBy(final int attackedSquare, final Colour attacker) {
-
-        if ((engineBitboards.pieceBitboards[SquareOccupant.WN.ofColour(attacker)] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
-                (engineBitboards.pieceBitboards[SquareOccupant.WK.ofColour(attacker)] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
-                (engineBitboards.pieceBitboards[SquareOccupant.WP.ofColour(attacker)]
-                        & Bitboards.getPawnMovesCaptureOfColour(attacker.opponent()).get(attackedSquare)) != 0)
-            return true;
-
-        long bitboardBishop =
-                attacker == Colour.WHITE ? engineBitboards.pieceBitboards[RivalConstants.WB] | engineBitboards.pieceBitboards[RivalConstants.WQ] :
-                        engineBitboards.pieceBitboards[RivalConstants.BB] | engineBitboards.pieceBitboards[RivalConstants.BQ];
-
-        while (bitboardBishop != 0) {
-            final int pieceSquare = Long.numberOfTrailingZeros(bitboardBishop);
-            bitboardBishop ^= (1L << (pieceSquare));
-            if ((Bitboards.magicBitboards.magicMovesBishop[pieceSquare][(int) (((engineBitboards.pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskBishop[pieceSquare]) * MagicBitboards.magicNumberBishop[pieceSquare]) >>> MagicBitboards.magicNumberShiftsBishop[pieceSquare])] & (1L << attackedSquare)) != 0)
-                return true;
-        }
-
-        long bitboardRook =
-                attacker == Colour.WHITE ? engineBitboards.pieceBitboards[RivalConstants.WR] | engineBitboards.pieceBitboards[RivalConstants.WQ] :
-                        engineBitboards.pieceBitboards[RivalConstants.BR] | engineBitboards.pieceBitboards[RivalConstants.BQ];
-
-        while (bitboardRook != 0) {
-            final int pieceSquare = Long.numberOfTrailingZeros(bitboardRook);
-            bitboardRook ^= (1L << (pieceSquare));
-            if ((Bitboards.magicBitboards.magicMovesRook[pieceSquare][(int) (((engineBitboards.pieceBitboards[RivalConstants.ALL] & MagicBitboards.occupancyMaskRook[pieceSquare]) * MagicBitboards.magicNumberRook[pieceSquare]) >>> MagicBitboards.magicNumberShiftsRook[pieceSquare])] & (1L << attackedSquare)) != 0)
-                return true;
-        }
-
-        return false;
+    public EngineBitboards getEngineBitboards() {
+        return engineBitboards;
     }
 
     private void addPossiblePromotionMoves(final int fromSquareMoveMask, long bitboard, boolean queenCapturesOnly) {
@@ -276,15 +247,15 @@ public final class EngineChessBoard {
 
         if ((castlePrivileges & RivalConstants.CASTLEPRIV_WK) != 0L &&
             (engineBitboards.pieceBitboards[RivalConstants.ALL] & Bitboards.WHITEKINGSIDECASTLESQUARES) == 0L &&
-            !isSquareAttackedBy(whiteKingStartSquare, opponent) &&
-            !isSquareAttackedBy(whiteKingStartSquare-1, opponent)) {
+            !engineBitboards.isSquareAttackedBy(whiteKingStartSquare, opponent) &&
+            !engineBitboards.isSquareAttackedBy(whiteKingStartSquare-1, opponent)) {
                 this.legalMoves[this.numLegalMoves++] = (whiteKingStartSquare << 16) | whiteKingStartSquare-2;
         }
 
         if ((castlePrivileges & RivalConstants.CASTLEPRIV_WQ) != 0L &&
             (engineBitboards.pieceBitboards[RivalConstants.ALL] & Bitboards.WHITEQUEENSIDECASTLESQUARES) == 0L &&
-            !isSquareAttackedBy(whiteKingStartSquare, opponent) &&
-            !isSquareAttackedBy(whiteQueenStartSquare, opponent)) {
+            !engineBitboards.isSquareAttackedBy(whiteKingStartSquare, opponent) &&
+            !engineBitboards.isSquareAttackedBy(whiteQueenStartSquare, opponent)) {
                 this.legalMoves[this.numLegalMoves++] = (whiteKingStartSquare << 16) | whiteQueenStartSquare+1;
         }
     }
@@ -297,15 +268,15 @@ public final class EngineChessBoard {
 
         if ((castlePrivileges & RivalConstants.CASTLEPRIV_BK) != 0L &&
                 (engineBitboards.pieceBitboards[RivalConstants.ALL] & Bitboards.BLACKKINGSIDECASTLESQUARES) == 0L &&
-                !isSquareAttackedBy(blackKingStartSquare, opponent) &&
-                !isSquareAttackedBy(blackKingStartSquare-1, opponent)) {
+                !engineBitboards.isSquareAttackedBy(blackKingStartSquare, opponent) &&
+                !engineBitboards.isSquareAttackedBy(blackKingStartSquare-1, opponent)) {
             this.legalMoves[this.numLegalMoves++] = (blackKingStartSquare << 16) | blackKingStartSquare-2;
         }
 
         if ((castlePrivileges & RivalConstants.CASTLEPRIV_BQ) != 0L &&
                 (engineBitboards.pieceBitboards[RivalConstants.ALL] & Bitboards.BLACKQUEENSIDECASTLESQUARES) == 0L &&
-                !isSquareAttackedBy(blackKingStartSquare, opponent) &&
-                !isSquareAttackedBy(blackQueenStartSquare, opponent)) {
+                !engineBitboards.isSquareAttackedBy(blackKingStartSquare, opponent) &&
+                !engineBitboards.isSquareAttackedBy(blackQueenStartSquare, opponent)) {
             this.legalMoves[this.numLegalMoves++] = (blackKingStartSquare << 16) | blackQueenStartSquare+1;
         }
     }

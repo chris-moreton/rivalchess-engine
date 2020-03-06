@@ -1507,8 +1507,7 @@ public final class RivalSearch implements Runnable {
 
             if (!this.m_abortingSearch) {
                 if (legalMoveCount == 0) {
-                    boolean isMate = board.getMover() == Colour.WHITE ? board.isSquareAttackedBy(board.getWhiteKingSquare(), Colour.BLACK) : board.isSquareAttackedBy(board.getBlackKingSquare(), Colour.WHITE);
-                    bestPath.score = isMate ? -RivalConstants.VALUE_MATE : 0;
+                    bestPath.score = board.isCheck() ? -RivalConstants.VALUE_MATE : 0;
                     boardHash.storeHashMove(0, board, bestPath.score, RivalConstants.EXACTSCORE, RivalConstants.MAX_SEARCH_DEPTH);
                     return bestPath;
                 }

@@ -395,4 +395,24 @@ public final class Bitboards {
                 ? whitePawnMovesCapture
                 : blackPawnMovesCapture;
     }
+
+    public static int getFirstOccupiedSquare(long bitboard) {
+        return Long.numberOfTrailingZeros(bitboard);
+    }
+
+    public static boolean isBishopAttackingSquare(int attackedSquare, int pieceSquare, long allPieceBitboard) {
+        return (magicBitboards.magicMovesBishop[pieceSquare][getMagicIndexForBishop(pieceSquare, allPieceBitboard)] & (1L << attackedSquare)) != 0;
+    }
+
+    private static int getMagicIndexForBishop(int pieceSquare, long allPieceBitboard) {
+        return (int) (((allPieceBitboard & MagicBitboards.occupancyMaskBishop[pieceSquare]) * MagicBitboards.magicNumberBishop[pieceSquare]) >>> MagicBitboards.magicNumberShiftsBishop[pieceSquare]);
+    }
+
+    public static boolean isRookAttackingSquare(int attackedSquare, int pieceSquare, long allPieceBitboard) {
+        return (magicBitboards.magicMovesRook[pieceSquare][getMagicIndexForRook(pieceSquare, allPieceBitboard)] & (1L << attackedSquare)) != 0;
+    }
+
+    private static int getMagicIndexForRook(int pieceSquare, long allPieceBitboard) {
+        return (int) (((allPieceBitboard & MagicBitboards.occupancyMaskRook[pieceSquare]) * MagicBitboards.magicNumberRook[pieceSquare]) >>> MagicBitboards.magicNumberShiftsRook[pieceSquare]);
+    }
 }

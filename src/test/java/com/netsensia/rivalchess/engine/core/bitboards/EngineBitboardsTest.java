@@ -1,8 +1,13 @@
 package com.netsensia.rivalchess.engine.core.bitboards;
 
+import com.netsensia.rivalchess.constants.Colour;
+import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
+import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
+import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -58,5 +63,48 @@ public class EngineBitboardsTest {
         engineBitboards.movePiece(RivalConstants.WB, engineMove.compact);
 
         assertEquals(bitboardExpected, engineBitboards.getPieceBitboard(RivalConstants.WB));
+    }
+
+    @Test
+    public void isSquareAttacked() throws IllegalFenException {
+        final EngineChessBoard engineChessBoard =
+                new EngineChessBoard(FenUtils.getBoardModel("6k1/p5p1/5p2/2P2Q2/3pN2p/3PbK1P/7P/6q1 b - -"));
+
+        boolean[][] expectedWhiteAttacks = {
+                {false,false,true,false,false,false,false,false},
+                {false,false,false,true,false,false,false,true},
+                {false,true,false,true,true,true,true,false},
+                {false,false,true,true,true,false,true,true},
+                {false,false,true,false,true,true,true,false},
+                {false,false,true,false,true,true,true,true},
+                {false,false,false,true,true,true,true,false},
+                {false,false,false,false,false,false,false,false}
+        };
+
+        boolean[][] expectedBlackAttacks = {
+                {false,false,false,false,false,true,false,true},
+                {false,false,false,false,false,true,true,true},
+                {false,true,false,false,false,true,true,true},
+                {false,false,false,false,true,false,true,false},
+                {false,false,false,true,false,true,true,false},
+                {false,false,true,false,true,false,true,false},
+                {false,false,false,true,false,true,true,true},
+                {true,true,true,true,true,true,true,true}
+        };
+
+        EngineBitboards engineBitboards = engineChessBoard.getEngineBitboards();
+
+        for (int y=0; y<8; y++) {
+            for (int x=0; x<8; x++) {
+
+                assertEquals(expectedWhiteAttacks[y][x], engineBitboards.isSquareAttackedBy(
+                        ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
+                        Colour.WHITE));
+
+                assertEquals(expectedBlackAttacks[y][x], engineBitboards.isSquareAttackedBy(
+                        ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
+                        Colour.BLACK));
+            }
+        }
     }
 }
