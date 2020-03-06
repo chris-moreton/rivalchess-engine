@@ -18,7 +18,8 @@ public enum FeatureFlag {
     USE_LATE_MOVE_REDUCTIONS (true),
     LMR_RESEARCH_ON_FAIL_HIGH (true),
     USE_PV_SEARCH (true),
-    USE_INTERNAL_ITERATIVE_DEEPENING (true)
+    USE_INTERNAL_ITERATIVE_DEEPENING (true),
+    USE_SUPER_VERIFY_ON_HASH (false),
     ;
 
     private boolean active;

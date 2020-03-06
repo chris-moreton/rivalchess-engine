@@ -25,7 +25,7 @@ public enum Extensions {
         return value;
     }
 
-    public static final List<Integer> getMaxNewExtensionsTreePart() {
+    public static List<Integer> getMaxNewExtensionsTreePart() {
         return Collections.unmodifiableList(Arrays.asList(
                 Extensions.FRACTIONAL_EXTENSION_FULL.getValue(),
                 Extensions.FRACTIONAL_EXTENSION_FULL.getValue() / 4 * 3,

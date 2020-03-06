@@ -12,13 +12,17 @@ public final class RivalConstants
 	/*
 	 * Null move
 	 */
+	@Deprecated
 	public static final int NULLMOVE_REDUCE_DEPTH = 2;
+	@Deprecated
 	public static final int NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE = 6;
+	@Deprecated
 	public static final int NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES = Piece.KNIGHT.getValue();
 
 	/*
 	 * Hash
 	 */
+	@Deprecated
 	public static final int MAXIMUM_HASH_AGE = 3;
 	@Deprecated
 	public static final int ASPIRATION_RADIUS = 40;
@@ -26,44 +30,72 @@ public final class RivalConstants
 	/*
 	 * Quiesce
 	 */
+	@Deprecated
 	public static final int GENERATE_CHECKS_UNTIL_QUIESCE_PLY = 0;
+	@Deprecated
 	public static final int DELTA_PRUNING_MARGIN = 200;
 
+	@Deprecated
 	public static final int FUTILITY_MARGIN_BASE = Piece.PAWN.getValue() * 2;
+	@Deprecated
 	public static final List<Integer> FUTILITY_MARGIN =
 			Collections.unmodifiableList(
 					Arrays.asList(FUTILITY_MARGIN_BASE, FUTILITY_MARGIN_BASE * 2, FUTILITY_MARGIN_BASE * 3));
+	@Deprecated
 	public static final byte PV_MINIMUM_DISTANCE_FROM_LEAF = 2;
 
 /***********************************	
  *	Hash table settings            *
- ***********************************/	
-			
+ ***********************************/
+
+	@Deprecated
 	public static final int DEFAULT_HASHTABLE_SIZE_MB = 2;
+	@Deprecated
 	public static final int DEFAULT_SEARCH_HASH_HEIGHT = -9999;
-	
+
+	@Deprecated
 	public static final boolean USE_SUPER_VERIFY_ON_HASH = false;
 
+	@Deprecated
 	public static final int HASHENTRY_MOVE = 0;
+	@Deprecated
 	public static final int HASHENTRY_SCORE = 1;
+	@Deprecated
 	public static final int HASHENTRY_HEIGHT = 2;
+	@Deprecated
 	public static final int HASHENTRY_FLAG = 3;
+	@Deprecated
 	public static final int HASHENTRY_VERSION = 4;
+	@Deprecated
 	public static final int HASHENTRY_64BIT1 = 5;
+	@Deprecated
 	public static final int HASHENTRY_64BIT2 = 6;
+	@Deprecated
 	public static final int HASHENTRY_LOCK1 = 7;
+	@Deprecated
 	public static final int NUM_HASH_FIELDS = USE_SUPER_VERIFY_ON_HASH ? 31 : 7;
 
+	@Deprecated
 	public static final int PAWNHASHENTRY_MAIN_SCORE = 0;
+	@Deprecated
 	public static final int PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE = 1;
+	@Deprecated
 	public static final int PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE = 2;
+	@Deprecated
 	public static final int PAWNHASHENTRY_WHITE_PASSEDPAWNS = 3;
+	@Deprecated
 	public static final int PAWNHASHENTRY_BLACK_PASSEDPAWNS = 4;
+	@Deprecated
 	public static final int PAWNHASHENTRY_LOCK = 5;
+	@Deprecated
 	public static final int NUM_PAWNHASH_FIELDS = 6;
+
+	@Deprecated
 	public static final int PAWNHASH_DEFAULT_SCORE = -Integer.MAX_VALUE;
-	
+
+	@Deprecated
 	public static final int HASHPOSITION_SIZE_BYTES = 8 +  /* pointer to array */ (NUM_HASH_FIELDS * 4); /* array contents */
+	@Deprecated
 	public static final int PAWNHASHENTRY_SIZE_BYTES = 8 +  /* pointer to array */ (NUM_PAWNHASH_FIELDS * 8); /* array contents */
 
 	@Deprecated

@@ -678,7 +678,6 @@ public final class RivalSearch implements Runnable {
             return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
 
         if (eval > 0) {
-            //noinspection ConstantConditions,ConditionCoveredByFurtherCondition
             if (board.getWhitePawnValues() == 0 && (board.getWhitePieceValues() == Piece.KNIGHT.getValue() || board.getWhitePieceValues() == Piece.BISHOP.getValue()))
                 return eval - (int) (board.getWhitePieceValues() * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.getWhitePawnValues() == 0 && board.getWhitePieceValues() - Piece.BISHOP.getValue() <= board.getBlackPieceValues())
@@ -718,7 +717,6 @@ public final class RivalSearch implements Runnable {
             }
         }
         if (eval < 0) {
-            //noinspection ConstantConditions,ConditionCoveredByFurtherCondition
             if (board.getBlackPawnValues() == 0 && (board.getBlackPieceValues() == Piece.KNIGHT.getValue() || board.getBlackPieceValues() == Piece.BISHOP.getValue()))
                 return eval + (int) (board.getBlackPieceValues() * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.getBlackPawnValues() == 0 && board.getBlackPieceValues() - Piece.BISHOP.getValue() <= board.getWhitePieceValues())
@@ -952,9 +950,9 @@ public final class RivalSearch implements Runnable {
     }
 
     private boolean shouldDeltaPrune(EngineChessBoard board, int low, int evalScore, int move, boolean isCheck) {
-        if (RivalConstants.USE_DELTA_PRUNING && !isCheck) {
+        if (FeatureFlag.USE_DELTA_PRUNING.isActive() && !isCheck) {
             final int materialIncrease = (board.lastCapturePiece() > -1
-                    ? RivalConstants.PIECE_VALUES.get(board.lastCapturePiece() % 6)
+                    ? SquareOccupant.fromIndex(board.lastCapturePiece()).getPiece().getValue()
                     : 0) + getMaterialIncreaseForPromotion(move);
 
             return materialIncrease + evalScore + RivalConstants.DELTA_PRUNING_MARGIN < low;
