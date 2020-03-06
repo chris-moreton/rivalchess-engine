@@ -3,7 +3,7 @@ Rival Chess Java Engine
 
 The Rival chess Java engine as used in the Rival Chess Android App.
 
-This is a UCI-compatible engine.  The C++ UCI engine was converted to Java was an almost complete rewrite of the C++ code. 
+This is a UCI-compatible engine.  When the C++ UCI engine was converted to Java, it was an almost complete rewrite of the C++ code. 
 
 It plays about 200-300 ECO higher than the old C++ engine when compared on the same hardware.
 

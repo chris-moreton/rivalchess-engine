@@ -20,7 +20,7 @@ public enum PawnHashIndex {
         return index;
     }
 
-    public int getNumHashFields() {
+    public static int getNumHashFields() {
         return numPawnHashIndexes;
     }
 

@@ -24,7 +24,7 @@ public enum HashIndex {
         return index;
     }
 
-    public int getNumHashFields() {
+    public static int getNumHashFields() {
         return FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive() ? 31 : 7;
     }
 
