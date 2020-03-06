@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.config.FeatureFlag;
 import com.netsensia.rivalchess.enums.MoveOrder;
 import com.netsensia.rivalchess.enums.Piece;
 import com.netsensia.rivalchess.enums.SearchState;
@@ -1187,7 +1188,7 @@ public final class RivalSearch implements Runnable {
         final int hashIndex = boardHash.getHashIndex(board);
         int hashMove = 0;
 
-        if (RivalConstants.USE_HASH_TABLES) {
+        if (FeatureFlag.USE_HASH_TABLES.isActive()) {
             if (RivalConstants.USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, board)) {
                 boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION, boardHash.getHashTableVersion());
                 hashMove = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);

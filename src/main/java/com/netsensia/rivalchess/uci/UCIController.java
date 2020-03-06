@@ -4,8 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 
+import com.netsensia.rivalchess.config.BuildInfo;
 import com.netsensia.rivalchess.enums.Colour;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
@@ -68,7 +68,6 @@ public class UCIController implements Runnable {
             String[] parts = s.split(" ");
             if (parts.length > 0) {
                 handleIfUciCommand(parts);
-                handleIfVarCommand(parts);
                 handleIfIsReadyCommand(parts);
                 handleIfUciNewGameCommand(parts);
                 handleIfPositionCommand(s, parts);
@@ -293,16 +292,10 @@ public class UCIController implements Runnable {
 
     private void handleIfUciCommand(String[] parts) {
         if (parts[0].equals("uci")) {
-            EngineMonitor.sendUCI("id name Rival (build " + RivalConstants.VERSION + ")");
+            EngineMonitor.sendUCI("id name Rival (version " + BuildInfo.VERSION.getValue() + " build " + BuildInfo.BUILD.getValue() + ")");
             EngineMonitor.sendUCI("id author Chris Moreton");
             EngineMonitor.sendUCI("option name Hash type spin default 1 min 1 max 256");
             EngineMonitor.sendUCI("uciok");
-        }
-    }
-
-    private void handleIfVarCommand(String[] parts) {
-        if (parts[0].equals("var")) {
-            showEngineVar(parts[1]);
         }
     }
 
@@ -315,20 +308,5 @@ public class UCIController implements Runnable {
         while (state != SearchState.READY && state != SearchState.COMPLETE);
     }
 
-    public void showEngineVar(String varName) {
-        try {
-            Class<?> c = Class.forName("com.netsensia.rivalchess.engine.core.RivalConstants");
-            Field field = c.getDeclaredField(varName);
-
-            printStream.println("Class: " + c.getName());
-
-            printStream.println(varName + " = " + field.get(RivalConstants.getInstance()));
-
-        } catch (ClassNotFoundException | SecurityException |
-                NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
-            LOGGER.info(e.getMessage());
-        }
-
-    }
 
 }

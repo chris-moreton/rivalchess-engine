@@ -16,7 +16,7 @@ public class SearchPath
 	public synchronized void reset()
 	{
 		this.height = 0;
-		this.score = -RivalConstants.INFINITY;
+		this.score = -Integer.MAX_VALUE;
 	}
 	
 	public synchronized void setPath(int move)

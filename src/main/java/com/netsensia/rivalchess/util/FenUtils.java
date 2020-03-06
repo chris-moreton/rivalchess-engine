@@ -5,7 +5,13 @@ import com.netsensia.rivalchess.model.Board;
 
 public class FenUtils {
 
+    private static final String FEN_START_POS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
     private FenUtils() {}
+
+    public static String getStartPos() {
+        return FEN_START_POS;
+    }
 
     public static Board getBoardModel(String fenStr) throws IllegalFenException {
 
