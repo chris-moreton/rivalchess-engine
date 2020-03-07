@@ -176,33 +176,47 @@ public class BoardHash {
                         - Numbers.linearScale(board.getWhitePieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()));
 
         if (board.getBlackPieceValues() < Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue()) {
-            final int kingX = board.getBlackKingSquare() % 8;
-            final int kingY = board.getBlackKingSquare() / 8;
-            long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
-            int sq;
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                final int pawnDistance = Math.min(5, 7 - (sq / 8));
-                final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), Math.abs(kingY - 7));
-                pawnHashEntry.incPawnScore(Numbers.linearScale(board.getBlackPieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), kingDistance * 4, 0));
-                if ((pawnDistance < (kingDistance - (board.getMover() == Colour.WHITE ? 0 : 1))) && (board.getBlackPieceValues() == 0))
-                    pawnHashEntry.incPawnScore(Evaluation.VALUE_KING_CANNOT_CATCH_PAWN.getValue());
-            }
+            calculateLowBlackMaterialWhitePawnBonus(board, pawnHashEntry);
         }
 
         if (board.getWhitePieceValues() < Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue()) {
-            final int kingX = board.getWhiteKingSquare() % 8;
-            final int kingY = board.getWhiteKingSquare() / 8;
-            long bitboard = pawnHashEntry.getBlackPassedPawnsBitboard();
-            int sq;
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                final int pawnDistance = Math.min(5, (sq / 8));
-                final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), kingY);
-                pawnHashEntry.decPawnScore(Numbers.linearScale(board.getWhitePieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), kingDistance * 4, 0));
-                if ((pawnDistance < (kingDistance - (board.getMover() == Colour.WHITE ? 1 : 0))) && (board.getWhitePieceValues() == 0))
-                    pawnHashEntry.decPawnScore(Evaluation.VALUE_KING_CANNOT_CATCH_PAWN.getValue());
-            }
+            calculateLowWhiteMaterialBlackPawnBonus(Colour.WHITE, board, pawnHashEntry);
+        }
+    }
+
+    private void calculateLowWhiteMaterialBlackPawnBonus(Colour lowMaterialColour, EngineChessBoard board, PawnHashEntry pawnHashEntry) {
+        final int kingSquare = lowMaterialColour == Colour.WHITE ? board.getWhiteKingSquare() : board.getBlackKingSquare();
+        final int kingX = kingSquare % 8;
+        final int kingY = kingSquare / 8;
+
+        long bitboard = lowMaterialColour == Colour.WHITE
+                ? pawnHashEntry.getBlackPassedPawnsBitboard()
+                : pawnHashEntry.getWhitePassedPawnsBitboard();
+        
+        int sq;
+
+        while (bitboard != 0) {
+            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+            final int pawnDistance = Math.min(5, (sq / 8));
+            final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), kingY);
+            pawnHashEntry.decPawnScore(Numbers.linearScale(board.getWhitePieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), kingDistance * 4, 0));
+            if ((pawnDistance < (kingDistance - (board.getMover() == Colour.WHITE ? 1 : 0))) && (board.getWhitePieceValues() == 0))
+                pawnHashEntry.decPawnScore(Evaluation.VALUE_KING_CANNOT_CATCH_PAWN.getValue());
+        }
+    }
+
+    private void calculateLowBlackMaterialWhitePawnBonus(EngineChessBoard board, PawnHashEntry pawnHashEntry) {
+        final int kingX = board.getBlackKingSquare() % 8;
+        final int kingY = board.getBlackKingSquare() / 8;
+        long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
+        int sq;
+        while (bitboard != 0) {
+            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+            final int pawnDistance = Math.min(5, 7 - (sq / 8));
+            final int kingDistance = Math.max(Math.abs(kingX - (sq % 8)), Math.abs(kingY - 7));
+            pawnHashEntry.incPawnScore(Numbers.linearScale(board.getBlackPieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), kingDistance * 4, 0));
+            if ((pawnDistance < (kingDistance - (board.getMover() == Colour.WHITE ? 0 : 1))) && (board.getBlackPieceValues() == 0))
+                pawnHashEntry.incPawnScore(Evaluation.VALUE_KING_CANNOT_CATCH_PAWN.getValue());
         }
     }
 
