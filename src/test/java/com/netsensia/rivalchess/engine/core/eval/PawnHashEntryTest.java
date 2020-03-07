@@ -10,7 +10,7 @@ public class PawnHashEntryTest {
     public void addBlackPassedPawnScore() {
         PawnHashEntry pawnHashEntry = new PawnHashEntry();
         pawnHashEntry.setBlackPassedPawnScore(10);
-        pawnHashEntry.addBlackPassedPawnScore(5);
+        pawnHashEntry.incBlackPassedPawnScore(5);
         assertEquals(15, pawnHashEntry.getBlackPassedPawnScore());
     }
 
@@ -18,7 +18,7 @@ public class PawnHashEntryTest {
     public void addWhitePassedPawnScore() {
         PawnHashEntry pawnHashEntry = new PawnHashEntry();
         pawnHashEntry.setWhitePassedPawnScore(10);
-        pawnHashEntry.addWhitePassedPawnScore(5);
+        pawnHashEntry.incWhitePassedPawnScore(5);
         assertEquals(15, pawnHashEntry.getWhitePassedPawnScore());
     }
 

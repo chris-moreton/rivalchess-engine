@@ -160,85 +160,7 @@ public class BoardHash {
         }
 
         if (!pawnHashEntry.isPopulated()) {
-            final long whitePawnAttacks = Bitboards.getWhitePawnAttacks(board.getWhitePawnBitboard());
-            final long blackPawnAttacks = Bitboards.getBlackPawnAttacks(board.getBlackPawnBitboard());
-            final long whitePawnFiles = Bitboards.getPawnFiles(board.getWhitePawnBitboard());
-            final long blackPawnFiles = Bitboards.getPawnFiles(board.getBlackPawnBitboard());
-
-            pawnHashEntry.setPawnScore(0);
-
-            pawnHashEntry.setWhitePassedPawnsBitboard(Bitboards.getWhitePassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
-
-            final long whiteGuardedPassedPawns = pawnHashEntry.getWhitePassedPawnsBitboard() & (Bitboards.getWhitePawnAttacks(board.getWhitePawnBitboard()));
-
-            pawnHashEntry.setBlackPassedPawnsBitboard(Bitboards.getBlackPassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
-
-            long blackGuardedPassedPawns = pawnHashEntry.getBlackPassedPawnsBitboard() & (Bitboards.getBlackPawnAttacks(board.getBlackPawnBitboard()));
-
-            pawnHashEntry.setWhitePassedPawnScore(Long.bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.getValue());
-            pawnHashEntry.setBlackPassedPawnScore(Long.bitCount(blackGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.getValue());
-
-            final long whiteIsolatedPawns = whitePawnFiles & ~(whitePawnFiles << 1) & ~(whitePawnFiles >>> 1);
-            final long blackIsolatedPawns = blackPawnFiles & ~(blackPawnFiles << 1) & ~(blackPawnFiles >>> 1);
-            pawnHashEntry.decPawnScore(Long.bitCount(whiteIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.getValue());
-            pawnHashEntry.incPawnScore(Long.bitCount(blackIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.getValue());
-
-            if ((whiteIsolatedPawns & Bitboards.FILE_D) != 0) {
-                pawnHashEntry.decPawnScore(Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.getValue());
-            }
-            if ((blackIsolatedPawns & Bitboards.FILE_D) != 0) {
-                pawnHashEntry.incPawnScore(Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.getValue());
-            }
-
-            pawnHashEntry.decPawnScore(
-                    Long.bitCount(
-                            board.getWhitePawnBitboard() &
-                                    ~((board.getWhitePawnBitboard() | board.getBlackPawnBitboard()) >>> 8) &
-                                    (blackPawnAttacks >>> 8) &
-                                    ~Bitboards.northFill(whitePawnAttacks) &
-                                    (Bitboards.getBlackPawnAttacks(board.getWhitePawnBitboard())) &
-                                    ~Bitboards.northFill(blackPawnFiles)
-                    ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.getValue());
-
-            pawnHashEntry.incPawnScore(Long.bitCount(
-                    board.getBlackPawnBitboard() &
-                            ~((board.getBlackPawnBitboard() | board.getWhitePawnBitboard()) << 8) &
-                            (whitePawnAttacks << 8) &
-                            ~Bitboards.southFill(blackPawnAttacks) &
-                            (Bitboards.getWhitePawnAttacks(board.getBlackPawnBitboard())) &
-                            ~Bitboards.northFill(whitePawnFiles)
-            ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.getValue());
-
-            int sq;
-            long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                pawnHashEntry.addWhitePassedPawnScore(Evaluation.getPassedPawnBonus(sq / 8));
-            }
-
-            bitboard = pawnHashEntry.getBlackPassedPawnsBitboard();
-            while (bitboard != 0) {
-                bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-                pawnHashEntry.addBlackPassedPawnScore(Evaluation.getPassedPawnBonus(7 - (sq / 8)));
-            }
-
-            pawnHashEntry.decPawnScore(
-                    (Long.bitCount(board.getWhitePawnBitboard() & Bitboards.FILE_A) + Long.bitCount(board.getWhitePawnBitboard() & Bitboards.FILE_H))
-                            * Evaluation.VALUE_SIDE_PAWN_PENALTY.getValue());
-
-            pawnHashEntry.incPawnScore(
-                    (Long.bitCount(board.getBlackPawnBitboard() & Bitboards.FILE_A) + Long.bitCount(board.getBlackPawnBitboard() & Bitboards.FILE_H))
-                            * Evaluation.VALUE_SIDE_PAWN_PENALTY.getValue());
-
-            long occupiedFileMask = Bitboards.southFill(board.getWhitePawnBitboard()) & Bitboards.RANK_1;
-            pawnHashEntry.decPawnScore(Evaluation.VALUE_DOUBLED_PAWN_PENALTY.getValue() * ((board.getWhitePawnValues() / 100) - Long.bitCount(occupiedFileMask)));
-            pawnHashEntry.decPawnScore(Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.getValue());
-
-            occupiedFileMask = Bitboards.southFill(board.getBlackPawnBitboard()) & Bitboards.RANK_1;
-            pawnHashEntry.incPawnScore(Evaluation.VALUE_DOUBLED_PAWN_PENALTY.getValue() * ((board.getBlackPawnValues() / 100) - Long.bitCount(occupiedFileMask)));
-            pawnHashEntry.incPawnScore(Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.getValue());
-
-            storePawnHashEntry(board, pawnHashEntry, pawnHashIndex);
+            populatePawnHashEntry(board, pawnHashEntry, pawnHashIndex);
         }
 
         pawnHashEntry.incPawnScore(
@@ -278,6 +200,101 @@ public class BoardHash {
         setLastPawnHashValueAndEntry(board, pawnHashEntry);
 
         return pawnHashEntry;
+    }
+
+    private void populatePawnHashEntry(EngineChessBoard board, PawnHashEntry pawnHashEntry, int pawnHashIndex) {
+        final long whitePawnAttacks = Bitboards.getWhitePawnAttacks(board.getWhitePawnBitboard());
+        final long blackPawnAttacks = Bitboards.getBlackPawnAttacks(board.getBlackPawnBitboard());
+        final long whitePawnFiles = Bitboards.getPawnFiles(board.getWhitePawnBitboard());
+        final long blackPawnFiles = Bitboards.getPawnFiles(board.getBlackPawnBitboard());
+
+        pawnHashEntry.setPawnScore(0);
+
+        pawnHashEntry.setWhitePassedPawnsBitboard(Bitboards.getWhitePassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
+
+        final long whiteGuardedPassedPawns = pawnHashEntry.getWhitePassedPawnsBitboard() & (Bitboards.getWhitePawnAttacks(board.getWhitePawnBitboard()));
+
+        pawnHashEntry.setBlackPassedPawnsBitboard(Bitboards.getBlackPassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
+
+        long blackGuardedPassedPawns = pawnHashEntry.getBlackPassedPawnsBitboard() & (Bitboards.getBlackPawnAttacks(board.getBlackPawnBitboard()));
+
+        pawnHashEntry.setWhitePassedPawnScore(Long.bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.getValue());
+        pawnHashEntry.setBlackPassedPawnScore(Long.bitCount(blackGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.getValue());
+
+        final long whiteIsolatedPawns = whitePawnFiles & ~(whitePawnFiles << 1) & ~(whitePawnFiles >>> 1);
+        final long blackIsolatedPawns = blackPawnFiles & ~(blackPawnFiles << 1) & ~(blackPawnFiles >>> 1);
+
+        pawnHashEntry.decPawnScore(Long.bitCount(whiteIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.getValue());
+        pawnHashEntry.incPawnScore(Long.bitCount(blackIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.getValue());
+
+        if ((whiteIsolatedPawns & Bitboards.FILE_D) != 0) {
+            pawnHashEntry.decPawnScore(Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.getValue());
+        }
+        if ((blackIsolatedPawns & Bitboards.FILE_D) != 0) {
+            pawnHashEntry.incPawnScore(Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.getValue());
+        }
+
+        pawnHashEntry.decPawnScore(
+                Long.bitCount(
+                        board.getWhitePawnBitboard() &
+                                ~((board.getWhitePawnBitboard() | board.getBlackPawnBitboard()) >>> 8) &
+                                (blackPawnAttacks >>> 8) &
+                                ~Bitboards.northFill(whitePawnAttacks) &
+                                (Bitboards.getBlackPawnAttacks(board.getWhitePawnBitboard())) &
+                                ~Bitboards.northFill(blackPawnFiles)
+                ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.getValue());
+
+        pawnHashEntry.incPawnScore(Long.bitCount(
+                board.getBlackPawnBitboard() &
+                        ~((board.getBlackPawnBitboard() | board.getWhitePawnBitboard()) << 8) &
+                        (whitePawnAttacks << 8) &
+                        ~Bitboards.southFill(blackPawnAttacks) &
+                        (Bitboards.getWhitePawnAttacks(board.getBlackPawnBitboard())) &
+                        ~Bitboards.northFill(whitePawnFiles)
+        ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.getValue());
+
+        updateWhitePassedPawnScore(pawnHashEntry);
+        updateBlackPassedPawnScore(pawnHashEntry);
+
+        updatePawnScoreForSidePawnPenalty(board, pawnHashEntry);
+
+        long occupiedFileMask = Bitboards.southFill(board.getWhitePawnBitboard()) & Bitboards.RANK_1;
+        pawnHashEntry.decPawnScore(Evaluation.VALUE_DOUBLED_PAWN_PENALTY.getValue() * ((board.getWhitePawnValues() / 100) - Long.bitCount(occupiedFileMask)));
+        pawnHashEntry.decPawnScore(Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.getValue());
+
+        occupiedFileMask = Bitboards.southFill(board.getBlackPawnBitboard()) & Bitboards.RANK_1;
+        pawnHashEntry.incPawnScore(Evaluation.VALUE_DOUBLED_PAWN_PENALTY.getValue() * ((board.getBlackPawnValues() / 100) - Long.bitCount(occupiedFileMask)));
+        pawnHashEntry.incPawnScore(Long.bitCount((((~occupiedFileMask) >>> 1) & occupiedFileMask)) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.getValue());
+
+        storePawnHashEntry(board, pawnHashEntry, pawnHashIndex);
+    }
+
+    private void updatePawnScoreForSidePawnPenalty(EngineChessBoard board, PawnHashEntry pawnHashEntry) {
+        pawnHashEntry.decPawnScore(
+                (Long.bitCount(board.getWhitePawnBitboard() & Bitboards.FILE_A) + Long.bitCount(board.getWhitePawnBitboard() & Bitboards.FILE_H))
+                        * Evaluation.VALUE_SIDE_PAWN_PENALTY.getValue());
+
+        pawnHashEntry.incPawnScore(
+                (Long.bitCount(board.getBlackPawnBitboard() & Bitboards.FILE_A) + Long.bitCount(board.getBlackPawnBitboard() & Bitboards.FILE_H))
+                        * Evaluation.VALUE_SIDE_PAWN_PENALTY.getValue());
+    }
+
+    private void updateBlackPassedPawnScore(PawnHashEntry pawnHashEntry) {
+        int sq;
+        long bitboard = pawnHashEntry.getBlackPassedPawnsBitboard();
+        while (bitboard != 0) {
+            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+            pawnHashEntry.incBlackPassedPawnScore(Evaluation.getPassedPawnBonus(7 - (sq / 8)));
+        }
+    }
+
+    private void updateWhitePassedPawnScore(PawnHashEntry pawnHashEntry) {
+        int sq;
+        long bitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
+        while (bitboard != 0) {
+            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+            pawnHashEntry.incWhitePassedPawnScore(Evaluation.getPassedPawnBonus(sq / 8));
+        }
     }
 
     private void storePawnHashEntry(EngineChessBoard board, PawnHashEntry pawnHashEntry, int pawnHashIndex) {

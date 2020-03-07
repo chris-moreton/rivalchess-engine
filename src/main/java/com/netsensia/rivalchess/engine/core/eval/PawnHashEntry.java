@@ -3,16 +3,15 @@ package com.netsensia.rivalchess.engine.core.eval;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 
 public class PawnHashEntry {
-    int pawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-    int whitePassedPawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-    int blackPassedPawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-    long whitePassedPawnsBitboard = 0;
-    long blackPassedPawnsBitboard = 0;
+    private int pawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
+    private int whitePassedPawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
+    private int blackPassedPawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
+    private long whitePassedPawnsBitboard = 0;
+    private long blackPassedPawnsBitboard = 0;
 
     public PawnHashEntry() {}
 
     public PawnHashEntry(PawnHashEntry pawnHashEntry) {
-
         this.whitePassedPawnScore = pawnHashEntry.getWhitePassedPawnScore();
         this.blackPassedPawnScore = pawnHashEntry.getBlackPassedPawnScore();
         this.whitePassedPawnsBitboard = pawnHashEntry.getWhitePassedPawnsBitboard();
@@ -20,7 +19,7 @@ public class PawnHashEntry {
     }
 
     public boolean isPopulated() {
-        return pawnScore != RivalConstants.PAWNHASH_DEFAULT_SCORE;
+        return pawnScore > -Integer.MAX_VALUE;
     }
 
     public int getPawnScore() {
@@ -51,11 +50,11 @@ public class PawnHashEntry {
         pawnScore -= score;
     }
 
-    public void addBlackPassedPawnScore(int score) {
+    public void incBlackPassedPawnScore(int score) {
         blackPassedPawnScore += score;
     }
 
-    public void addWhitePassedPawnScore(int score) {
+    public void incWhitePassedPawnScore(int score) {
         whitePassedPawnScore += score;
     }
 
