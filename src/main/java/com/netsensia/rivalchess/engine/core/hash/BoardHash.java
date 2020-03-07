@@ -163,6 +163,14 @@ public class BoardHash {
             populatePawnHashEntry(board, pawnHashEntry, pawnHashIndex);
         }
 
+        calculatePawnScore(board, pawnHashEntry);
+
+        setLastPawnHashValueAndEntry(board, pawnHashEntry);
+
+        return pawnHashEntry;
+    }
+
+    private void calculatePawnScore(EngineChessBoard board, PawnHashEntry pawnHashEntry) {
         pawnHashEntry.incPawnScore(
                 Numbers.linearScale(board.getBlackPieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore())
                         - Numbers.linearScale(board.getWhitePieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()));
@@ -196,10 +204,6 @@ public class BoardHash {
                     pawnHashEntry.decPawnScore(Evaluation.VALUE_KING_CANNOT_CATCH_PAWN.getValue());
             }
         }
-
-        setLastPawnHashValueAndEntry(board, pawnHashEntry);
-
-        return pawnHashEntry;
     }
 
     private void populatePawnHashEntry(EngineChessBoard board, PawnHashEntry pawnHashEntry, int pawnHashIndex) {
