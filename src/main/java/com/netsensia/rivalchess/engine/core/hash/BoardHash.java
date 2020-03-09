@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.config.FeatureFlag;
 import com.netsensia.rivalchess.config.Hash;
 import com.netsensia.rivalchess.enums.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.enums.HashIndex;
@@ -18,7 +17,7 @@ import com.netsensia.rivalchess.util.Numbers;
 public class BoardHash {
 
     private long lastPawnHashValue = -1;
-    final private ZorbristHashTracker hashCalculator = new ZorbristHashTracker();
+    private final ZorbristHashTracker hashCalculator = new ZorbristHashTracker();
 
     private PawnHashEntry lastPawnHashEntry = new PawnHashEntry();
 
@@ -74,7 +73,7 @@ public class BoardHash {
                 this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.getValue();
                 this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_VERSION.getIndex()] = 1;
                 if (FeatureFlag.USE_PAWN_HASH.isActive()) {
-                    this.pawnHashTable[i * PawnHashIndex.getNumHashFields() + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = -Integer.MAX_VALUE;
+                    this.pawnHashTable[i * PawnHashIndex.getNumHashFields() + PawnHashIndex.PAWNHASHENTRY_MAIN_SCORE.getIndex()] = -Integer.MAX_VALUE;
                 }
             }
         }
@@ -83,7 +82,7 @@ public class BoardHash {
     public void storeHashMove(int move, EngineChessBoard board, int score, byte flag, int height) {
         final int hashIndex = (int) (board.trackedBoardHashCode() % maxHashEntries) * HashIndex.getNumHashFields();
 
-        if (height >= this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_HEIGHT.getIndex()] || hashTableVersion > this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
+        if (height >= this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_HEIGHT.getIndex()] || hashTableVersion > this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_VERSION.getIndex()]) {
             if (hashTableVersion == this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_VERSION.getIndex()]) {
                 copyEntryFromUseHeightToIgnoreHeightTable(hashIndex);
             }
