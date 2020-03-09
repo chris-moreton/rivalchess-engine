@@ -10,7 +10,7 @@ public enum HashIndex {
     HASHENTRY_VERSION(4),
     HASHENTRY_64BIT1(5),
     HASHENTRY_64BIT2(6),
-    HASHENTRY_LOCK1(6),
+    HASHENTRY_LOCK1(7),
     ;
 
     private int index;
