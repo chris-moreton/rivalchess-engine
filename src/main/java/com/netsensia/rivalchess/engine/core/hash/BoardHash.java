@@ -15,12 +15,10 @@ import com.netsensia.rivalchess.enums.PawnHashIndex;
 import com.netsensia.rivalchess.enums.SquareOccupant;
 import com.netsensia.rivalchess.util.Numbers;
 
-import static com.netsensia.rivalchess.config.Hash.DEFAULT_SEARCH_HASH_HEIGHT;
-
 public class BoardHash {
 
     private long lastPawnHashValue = -1;
-    private ZorbristHashTracker hashCalculator = new ZorbristHashTracker();
+    final private ZorbristHashTracker hashCalculator = new ZorbristHashTracker();
 
     private PawnHashEntry lastPawnHashEntry = new PawnHashEntry();
 
@@ -70,13 +68,13 @@ public class BoardHash {
             lastHashSizeCreated = maxHashEntries;
             for (int i = 0; i < maxHashEntries; i++) {
                 this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
-                this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
+                this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.getValue();
                 this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_VERSION.getIndex()] = 1;
                 this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
-                this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
+                this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.getValue();
                 this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_VERSION.getIndex()] = 1;
                 if (FeatureFlag.USE_PAWN_HASH.isActive()) {
-                    this.pawnHashTable[i * PawnHashIndex.getNumHashFields() + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = RivalConstants.PAWNHASH_DEFAULT_SCORE;
+                    this.pawnHashTable[i * PawnHashIndex.getNumHashFields() + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = -Integer.MAX_VALUE;
                 }
             }
         }
@@ -362,15 +360,11 @@ public class BoardHash {
         } else {
             int mainHashTableSize = ((hashSizeMB * 1024 * 1024) / 14) * 6; // two of these
             int pawnHashTableSize = ((hashSizeMB * 1024 * 1024) / 14) * 2; // one of these
-            setMaxHashEntries(mainHashTableSize / RivalConstants.HASHPOSITION_SIZE_BYTES);
-            setMaxPawnHashEntries(pawnHashTableSize / RivalConstants.PAWNHASHENTRY_SIZE_BYTES);
+            setMaxHashEntries(mainHashTableSize / HashIndex.getHashPositionSizeBytes());
+            setMaxPawnHashEntries(pawnHashTableSize / PawnHashIndex.getHashPositionSizeBytes());
         }
 
         setHashTable();
-    }
-
-    public long pawnHashCode(EngineChessBoard engineChessBoard) {
-        return ZorbristHashCalculator.calculatePawnHash(engineChessBoard);
     }
 
     public synchronized void initialiseHashCode(EngineChessBoard engineChessBoard) {
