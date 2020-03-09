@@ -24,7 +24,7 @@ public enum PawnHashIndex {
         return numPawnHashIndexes;
     }
 
-    public int getHashPositionSizeBytes() {
+    public static int getHashPositionSizeBytes() {
         return 8 +  /* pointer to array */ (getNumHashFields() * 8);
     }
 

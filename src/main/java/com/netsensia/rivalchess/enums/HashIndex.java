@@ -28,7 +28,7 @@ public enum HashIndex {
         return FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive() ? 31 : 7;
     }
 
-    public int getHashPositionSizeBytes() {
+    public static int getHashPositionSizeBytes() {
         return 8 +  /* pointer to array */ (getNumHashFields() * 4);
     }
 
