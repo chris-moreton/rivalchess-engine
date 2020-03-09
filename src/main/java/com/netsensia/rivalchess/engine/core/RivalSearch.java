@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.enums.Colour;
 import com.netsensia.rivalchess.config.FeatureFlag;
 import com.netsensia.rivalchess.enums.MoveOrder;
 import com.netsensia.rivalchess.enums.Piece;
+import com.netsensia.rivalchess.enums.PromotionPieceMask;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.enums.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator;
@@ -822,10 +823,10 @@ public final class RivalSearch implements Runnable {
             if (see > 0) {
                 score = 100 + (int) (((double) see / Piece.QUEEN.getValue()) * 10);
             }
-            if (promotionMask == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
+            if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
                 score += 9;
             }
-        } else if (promotionMask == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
+        } else if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
             score = 116;
         } else if (includeChecks) {
             score = 100;
@@ -870,13 +871,11 @@ public final class RivalSearch implements Runnable {
         int bestScore = Integer.MAX_VALUE;
 
         for (int c = 0; theseMoves[c] != 0; c++) {
-            if (theseMoves[c] != -1) {
+            if (theseMoves[c] != -1 && theseMoves[c] < bestScore && (theseMoves[c] >> 24) != 127) {
                 // update best move found so far, but don't consider moves with no score
-                if (theseMoves[c] < bestScore && (theseMoves[c] >> 24) != 127) {
-                    bestScore = theseMoves[c];
-                    bestMove = theseMoves[c];
-                    bestIndex = c;
-                }
+                bestScore = theseMoves[c];
+                bestMove = theseMoves[c];
+                bestIndex = c;
             }
         }
 

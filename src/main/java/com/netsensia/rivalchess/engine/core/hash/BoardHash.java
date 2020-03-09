@@ -132,9 +132,9 @@ public class BoardHash {
     private void storeSuperVerifyUseHeightInformation(EngineChessBoard board, final int hashIndex) {
         if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive()) {
             for (int i = SquareOccupant.WP.getIndex(); i <= SquareOccupant.BR.getIndex(); i++) {
-                if (hashTableVersion == this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_VERSION]) {
-                    this.hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i] = this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i];
-                    this.hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i + 12] = this.hashTableUseHeight[hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12];
+                if (hashTableVersion == this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_VERSION.getIndex()]) {
+                    this.hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i] = this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i];
+                    this.hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i + 12] = this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i + 12];
                 }
                 this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i] = (int) (board.getBitboardByIndex(i) >>> 32);
                 this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i + 12] = (int) (board.getBitboardByIndex(i) & Bitboards.LOW32);
@@ -335,13 +335,13 @@ public class BoardHash {
     private PawnHashEntry getPawnStatsFromHash(long pawnHashValue, int pawnHashIndex) {
         PawnHashEntry pawnHashEntry = new PawnHashEntry();
 
-        if (this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_LOCK] == pawnHashValue) {
-            pawnHashEntry.setPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_MAIN_SCORE]);
-            if (pawnHashEntry.getPawnScore() != RivalConstants.PAWNHASH_DEFAULT_SCORE) {
-                pawnHashEntry.setWhitePassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE]);
-                pawnHashEntry.setBlackPassedPawnScore((int) this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE]);
-                pawnHashEntry.setWhitePassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_WHITE_PASSEDPAWNS]);
-                pawnHashEntry.setBlackPassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + RivalConstants.PAWNHASHENTRY_BLACK_PASSEDPAWNS]);
+        if (this.pawnHashTable[pawnHashIndex + PawnHashIndex.PAWNHASHENTRY_LOCK.getIndex()] == pawnHashValue) {
+            pawnHashEntry.setPawnScore((int) this.pawnHashTable[pawnHashIndex + PawnHashIndex.PAWNHASHENTRY_MAIN_SCORE.getIndex()]);
+            if (pawnHashEntry.getPawnScore() != -Integer.MAX_VALUE) {
+                pawnHashEntry.setWhitePassedPawnScore((int) this.pawnHashTable[pawnHashIndex + PawnHashIndex.PAWNHASHENTRY_WHITE_PASSEDPAWN_SCORE.getIndex()]);
+                pawnHashEntry.setBlackPassedPawnScore((int) this.pawnHashTable[pawnHashIndex + PawnHashIndex.PAWNHASHENTRY_BLACK_PASSEDPAWN_SCORE.getIndex()]);
+                pawnHashEntry.setWhitePassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + PawnHashIndex.PAWNHASHENTRY_WHITE_PASSEDPAWNS.getIndex()]);
+                pawnHashEntry.setBlackPassedPawnsBitboard(this.pawnHashTable[pawnHashIndex + PawnHashIndex.PAWNHASHENTRY_BLACK_PASSEDPAWNS.getIndex()]);
             }
         }
 
