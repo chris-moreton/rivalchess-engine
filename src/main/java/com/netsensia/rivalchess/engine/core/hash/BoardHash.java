@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core.hash;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.config.Evaluation;
 import com.netsensia.rivalchess.config.FeatureFlag;
+import com.netsensia.rivalchess.config.Hash;
 import com.netsensia.rivalchess.enums.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
@@ -13,6 +14,8 @@ import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.PawnHashIndex;
 import com.netsensia.rivalchess.enums.SquareOccupant;
 import com.netsensia.rivalchess.util.Numbers;
+
+import static com.netsensia.rivalchess.config.Hash.DEFAULT_SEARCH_HASH_HEIGHT;
 
 public class BoardHash {
 
@@ -48,9 +51,9 @@ public class BoardHash {
     public synchronized void clearHash() {
         for (int i = 0; i < maxHashEntries; i++) {
             this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
-            this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
+            this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.getValue();
             this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
-            this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
+            this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.getValue();
             if (FeatureFlag.USE_PAWN_HASH.isActive()) {
                 this.pawnHashTable[i * PawnHashIndex.getNumHashFields() + PawnHashIndex.PAWNHASHENTRY_MAIN_SCORE.getIndex()] = -Integer.MAX_VALUE;
             }
@@ -66,12 +69,12 @@ public class BoardHash {
             }
             lastHashSizeCreated = maxHashEntries;
             for (int i = 0; i < maxHashEntries; i++) {
-                this.hashTableUseHeight[i * HashIndex.getNumHashFields() + RivalConstants.HASHENTRY_FLAG] = HashValueType.EMPTY.getIndex();
-                this.hashTableUseHeight[i * HashIndex.getNumHashFields() + RivalConstants.HASHENTRY_HEIGHT] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
-                this.hashTableUseHeight[i * HashIndex.getNumHashFields() + RivalConstants.HASHENTRY_VERSION] = 1;
-                this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + RivalConstants.HASHENTRY_FLAG] = HashValueType.EMPTY.getIndex();
-                this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + RivalConstants.HASHENTRY_HEIGHT] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
-                this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + RivalConstants.HASHENTRY_VERSION] = 1;
+                this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
+                this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
+                this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_VERSION.getIndex()] = 1;
+                this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
+                this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = RivalConstants.DEFAULT_SEARCH_HASH_HEIGHT;
+                this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_VERSION.getIndex()] = 1;
                 if (FeatureFlag.USE_PAWN_HASH.isActive()) {
                     this.pawnHashTable[i * PawnHashIndex.getNumHashFields() + RivalConstants.PAWNHASHENTRY_MAIN_SCORE] = RivalConstants.PAWNHASH_DEFAULT_SCORE;
                 }
