@@ -304,43 +304,7 @@ public final class Bitboards {
             7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 23, 22, 21, 20, 19, 18, 17, 16, 31, 30, 29, 28, 27, 26, 25, 24, 39, 38, 37, 36, 35, 34, 33, 32, 47, 46, 45, 44, 43, 42, 41, 40, 55, 54, 53, 52, 51, 50, 49, 48, 63, 62, 61, 60, 59, 58, 57, 56
     ));
 
-    public static final List<Integer> xIncrements = Collections.unmodifiableList(Arrays.asList(-1, -1, 0, 1, 1, 1, 0, -1));
-    public static final List<Integer> yIncrements = Collections.unmodifiableList(Arrays.asList(0, -1, -1, -1, 0, 1, 1, 1));
-    public static final List<Integer> bitRefIncrements = Collections.unmodifiableList(Arrays.asList(-1, -9, -8, -7, 1, 9, 8, 7));
-
     private Bitboards() {
-    }
-
-    /*
-     * Piece square tables are from White's point of view.  As h1=0 and a8=63, you'll need to flip these
-     * left to right and top to bottom to see them as if they were mapped to a board with
-     * White at the bottom.
-     */
-    public static final List<List<Integer>> pieceSquareTableMiddleGame = Collections.unmodifiableList(Arrays.asList(
-            pieceSquareTablePawn, pieceSquareTableKnight, pieceSquareTableBishop,
-            pieceSquareTableKing, pieceSquareTableQueen,  pieceSquareTableRook,
-            flipPieceSquareValues(pieceSquareTablePawn), flipPieceSquareValues(pieceSquareTableKnight), flipPieceSquareValues(pieceSquareTableBishop),
-            flipPieceSquareValues(pieceSquareTableKing), flipPieceSquareValues(pieceSquareTableQueen),  flipPieceSquareValues(pieceSquareTableRook)
-    ));
-
-    public static final List<List<Integer>> pieceSquareTableEndGame = Collections.unmodifiableList(Arrays.asList(
-            pieceSquareTablePawnEndGame, pieceSquareTableKnightEndGame, pieceSquareTableBishop,
-            pieceSquareTableKingEndGame, pieceSquareTableQueen,  pieceSquareTableRook,
-            flipPieceSquareValues(pieceSquareTablePawnEndGame), flipPieceSquareValues(pieceSquareTableKnightEndGame), flipPieceSquareValues(pieceSquareTableBishop),
-            flipPieceSquareValues(pieceSquareTableKingEndGame), flipPieceSquareValues(pieceSquareTableQueen),  flipPieceSquareValues(pieceSquareTableRook)
-    ));
-
-    public static final List<List<List<Integer>>> pieceSquareTable = Collections.unmodifiableList(Arrays.asList(
-            pieceSquareTableMiddleGame,
-            pieceSquareTableEndGame
-    ));
-
-    private static List<Integer> flipPieceSquareValues(List<Integer> list) {
-        List<Integer> newList = new ArrayList<>();
-        for (int j = 0; j < 64; j++) {
-            newList.add(list.get(Bitboards.bitFlippedHorizontalAxis.get(j)));
-        }
-        return Collections.unmodifiableList(newList);
     }
 
     public static List<Integer> getSetBits(long bitboard) {
