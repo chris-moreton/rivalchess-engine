@@ -3,7 +3,8 @@ plugins {
 }
 
 version = '1.2.2'
-jar.baseName("rivalchess")
+
+jar.baseName("rivalchess-model")
 
 jar {
     from {
@@ -13,7 +14,6 @@ jar {
     }
     manifest {
         attributes(
-                'Main-Class': 'com.netsensia.rivalchess.uci.RivalUCI',
                 'Implementation-Title': 'Gradle Quickstart',
                 'Implementation-Version': version
         )
@@ -21,16 +21,13 @@ jar {
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
     compile group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.30'
-    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '1.0.2'
 
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.awaitility:awaitility:4.0.2'
 
 }
 
@@ -40,12 +37,3 @@ test {
     testLogging.showStandardStreams = true
 }
 
-task createProperties(dependsOn: processResources) {
-    doLast {
-        new File("$buildDir/resources/main/version.properties").withWriter { w ->
-            Properties p = new Properties()
-            p['version'] = project.version.toString()
-            p.store w, null
-        }
-    }
-}
