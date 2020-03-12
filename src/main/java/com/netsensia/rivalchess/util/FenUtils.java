@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.SquareOccupant;
 
 public class FenUtils {
 
@@ -81,14 +82,15 @@ public class FenUtils {
         final int targetXFile = boardArrayIndex % board.getNumXFiles();
         final int targetYRank = boardArrayIndex / board.getNumXFiles();
 
-        board.setPieceCode(targetXFile, targetYRank, fenToken);
+        board.setSquareOccupant(targetXFile, targetYRank, SquareOccupant.fromChar(fenToken));
         boardArrayIndex++;
         return boardArrayIndex;
     }
 
     private static int padBoardWithSpaces(Board board, int boardArrayIndex, char fenToken) {
         for (int n = 1; n <= Character.digit(fenToken, 10); n++) {
-            boardArrayIndex = setPiece(board, boardArrayIndex, Board.VACANT_TILE);
+            // Todo use Board.VACANT_TILE
+            boardArrayIndex = setPiece(board, boardArrayIndex, '_');
         }
         return boardArrayIndex;
     }

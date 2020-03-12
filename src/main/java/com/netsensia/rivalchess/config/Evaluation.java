@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.config;
 
-import com.netsensia.rivalchess.enums.Piece;
+import com.netsensia.rivalchess.engine.core.eval.PieceValue;
+import com.netsensia.rivalchess.model.Piece;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,21 +9,21 @@ import java.util.List;
 
 public enum Evaluation {
 
-    TOTAL_PIECE_VALUE_PER_SIDE_AT_START ((Piece.KNIGHT.getValue() * 2) + (Piece.BISHOP.getValue() * 2) + (Piece.ROOK.getValue() * 2) + (Piece.QUEEN.getValue())),
+    TOTAL_PIECE_VALUE_PER_SIDE_AT_START ((PieceValue.getValue(Piece.KNIGHT) * 2) + (PieceValue.getValue(Piece.BISHOP) * 2) + (PieceValue.getValue(Piece.ROOK) * 2) + (PieceValue.getValue(Piece.QUEEN))),
     OPENING_PHASE_MATERIAL ((int)(TOTAL_PIECE_VALUE_PER_SIDE_AT_START.getValue() * 0.8)),
     TRADE_BONUS_UPPER_PAWNS (600),
     WRONG_COLOUR_BISHOP_PENALTY_DIVISOR (2),
-    WRONG_COLOUR_BISHOP_MATERIAL_LOW (Piece.BISHOP.getValue() * 2),
-    WRONG_COLOUR_BISHOP_MATERIAL_HIGH (Piece.QUEEN.getValue() * 2 + Piece.ROOK.getValue() * 2 + Piece.BISHOP.getValue() * 2),
-    KNIGHT_STAGE_MATERIAL_LOW (Piece.KNIGHT.getValue() + (8 * Piece.PAWN.getValue())),
-    KNIGHT_STAGE_MATERIAL_HIGH (Piece.QUEEN.getValue() + (2 * Piece.ROOK.getValue()) + (2 * Piece.BISHOP.getValue()) + (6 * Piece.PAWN.getValue())),
-    PAWN_STAGE_MATERIAL_LOW (Piece.ROOK.getValue()),
-    PAWN_STAGE_MATERIAL_HIGH (Piece.QUEEN.getValue() + (2 * Piece.ROOK.getValue()) + (2 * Piece.BISHOP.getValue())),
-    CASTLE_BONUS_LOW_MATERIAL (Piece.ROOK.getValue()),
-    CASTLE_BONUS_HIGH_MATERIAL (Piece.QUEEN.getValue() + (Piece.ROOK.getValue() * 2) + (Piece.BISHOP.getValue() * 2)),
+    WRONG_COLOUR_BISHOP_MATERIAL_LOW (PieceValue.getValue(Piece.BISHOP) * 2),
+    WRONG_COLOUR_BISHOP_MATERIAL_HIGH (PieceValue.getValue(Piece.QUEEN) * 2 + PieceValue.getValue(Piece.ROOK) * 2 + PieceValue.getValue(Piece.BISHOP) * 2),
+    KNIGHT_STAGE_MATERIAL_LOW (PieceValue.getValue(Piece.KNIGHT) + (8 * PieceValue.getValue(Piece.PAWN))),
+    KNIGHT_STAGE_MATERIAL_HIGH (PieceValue.getValue(Piece.QUEEN) + (2 * PieceValue.getValue(Piece.ROOK)) + (2 * PieceValue.getValue(Piece.BISHOP)) + (6 * PieceValue.getValue(Piece.PAWN))),
+    PAWN_STAGE_MATERIAL_LOW (PieceValue.getValue(Piece.ROOK)),
+    PAWN_STAGE_MATERIAL_HIGH (PieceValue.getValue(Piece.QUEEN) + (2 * PieceValue.getValue(Piece.ROOK)) + (2 * PieceValue.getValue(Piece.BISHOP))),
+    CASTLE_BONUS_LOW_MATERIAL (PieceValue.getValue(Piece.ROOK)),
+    CASTLE_BONUS_HIGH_MATERIAL (PieceValue.getValue(Piece.QUEEN) + (PieceValue.getValue(Piece.ROOK) * 2) + (PieceValue.getValue(Piece.BISHOP) * 2)),
     VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS (3),
-    VALUE_TRAPPED_BISHOP_PENALTY ((int)(Piece.PAWN.getValue() * 1.5)),
-    VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY (Piece.PAWN.getValue()),
+    VALUE_TRAPPED_BISHOP_PENALTY ((int)(PieceValue.getValue(Piece.PAWN) * 1.5)),
+    VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY (PieceValue.getValue(Piece.PAWN)),
     VALUE_BISHOP_PAIR (20),
     VALUE_MATE (10000),
     MATE_SCORE_START (9000), // Allows for a mate in 500, probably enough :)
@@ -45,7 +46,7 @@ public enum Evaluation {
     VALUE_BACKWARD_PAWN_PENALTY (15),
     VALUE_GUARDED_PASSED_PAWN (15),
     VALUE_KING_CANNOT_CATCH_PAWN (500),
-    PAWN_ADJUST_MAX_MATERIAL (Piece.QUEEN.getValue() + Piece.ROOK.getValue()), // passed pawn bonus starts increasing once enemy material falls below this
+    PAWN_ADJUST_MAX_MATERIAL (PieceValue.getValue(Piece.QUEEN) + PieceValue.getValue(Piece.ROOK)), // passed pawn bonus starts increasing once enemy material falls below this
     VALUE_ISOLATED_DPAWN_PENALTY (30),
     /*
      * King Safety
@@ -61,10 +62,10 @@ public enum Evaluation {
     KINGSAFETY_SHIELD_BASE (-(Evaluation.KINGSAFTEY_UNIT.getValue() * 9)),
     KINGSAFETY_UNCASTLED_TRAPPED_ROOK (Evaluation.KINGSAFTEY_UNIT.getValue() * 6),
     KINGSAFETY_ATTACK_MULTIPLIER (4),
-    KINGSAFETY_MIN_PIECE_BALANCE (Piece.ROOK.getValue() + Piece.BISHOP.getValue()),
+    KINGSAFETY_MIN_PIECE_BALANCE (PieceValue.getValue(Piece.ROOK) + PieceValue.getValue(Piece.BISHOP)),
     KINGSAFETY_MAX_PIECE_BALANCE (Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.getValue()),
     THREAT_SCORE_DIVISOR (64),
-    EVAL_ENDGAME_TOTAL_PIECES (Piece.ROOK.getValue() * 6),
+    EVAL_ENDGAME_TOTAL_PIECES (PieceValue.getValue(Piece.ROOK) * 6),
     ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR (5),
     ENDGAME_DRAW_DIVISOR (30),
     ENDGAME_PROBABLE_DRAW_DIVISOR (6),
@@ -111,8 +112,8 @@ public enum Evaluation {
 
     public static List<Integer> getPieceValues() {
         return Collections.unmodifiableList(Arrays.asList(
-                Piece.PAWN.getValue(), Piece.KNIGHT.getValue(), Piece.BISHOP.getValue(), Piece.QUEEN.getValue(), Piece.KING.getValue(), Piece.ROOK.getValue(),
-                Piece.PAWN.getValue(), Piece.KNIGHT.getValue(), Piece.BISHOP.getValue(), Piece.QUEEN.getValue(), Piece.KING.getValue(), Piece.ROOK.getValue()
+                PieceValue.getValue(Piece.PAWN), PieceValue.getValue(Piece.KNIGHT), PieceValue.getValue(Piece.BISHOP), PieceValue.getValue(Piece.QUEEN), PieceValue.getValue(Piece.KING), PieceValue.getValue(Piece.ROOK),
+                PieceValue.getValue(Piece.PAWN), PieceValue.getValue(Piece.KNIGHT), PieceValue.getValue(Piece.BISHOP), PieceValue.getValue(Piece.QUEEN), PieceValue.getValue(Piece.KING), PieceValue.getValue(Piece.ROOK)
         ));
     }
 }

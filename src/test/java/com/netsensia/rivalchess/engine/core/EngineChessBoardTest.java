@@ -1,7 +1,8 @@
 package com.netsensia.rivalchess.engine.core;
 
-import com.netsensia.rivalchess.enums.Piece;
-import com.netsensia.rivalchess.enums.SquareOccupant;
+import com.netsensia.rivalchess.engine.core.eval.PieceValue;
+import com.netsensia.rivalchess.model.Piece;
+import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.FenUtils;
@@ -168,10 +169,10 @@ public class EngineChessBoardTest {
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         assertEquals(
-                Piece.QUEEN.getValue()
-                + Piece.KNIGHT.getValue() * 2
-                + Piece.BISHOP.getValue() * 2
-                + Piece.ROOK.getValue() * 2,
+                PieceValue.getValue(Piece.QUEEN)
+                + PieceValue.getValue(Piece.KNIGHT) * 2
+                + PieceValue.getValue(Piece.BISHOP) * 2
+                + PieceValue.getValue(Piece.ROOK) * 2,
                 engineChessBoard.getWhitePieceValues());
 
         engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
@@ -182,10 +183,10 @@ public class EngineChessBoardTest {
         engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d6e5"));
 
         assertEquals(
-                Piece.QUEEN.getValue()
-                        + Piece.KNIGHT.getValue()
-                        + Piece.BISHOP.getValue() * 2
-                        + Piece.ROOK.getValue() * 2,
+                PieceValue.getValue(Piece.QUEEN)
+                        + PieceValue.getValue(Piece.KNIGHT)
+                        + PieceValue.getValue(Piece.BISHOP) * 2
+                        + PieceValue.getValue(Piece.ROOK) * 2,
                 engineChessBoard.getWhitePieceValues());
 
     }
@@ -195,10 +196,10 @@ public class EngineChessBoardTest {
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
 
         assertEquals(
-                Piece.QUEEN.getValue()
-                        + Piece.KNIGHT.getValue() * 2
-                        + Piece.BISHOP.getValue() * 2
-                        + Piece.ROOK.getValue() * 2,
+                PieceValue.getValue(Piece.QUEEN)
+                        + PieceValue.getValue(Piece.KNIGHT) * 2
+                        + PieceValue.getValue(Piece.BISHOP) * 2
+                        + PieceValue.getValue(Piece.ROOK) * 2,
                 engineChessBoard.getBlackPieceValues());
 
         engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
@@ -209,11 +210,11 @@ public class EngineChessBoardTest {
         engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d6e5"));
 
         assertEquals(
-                Piece.QUEEN.getValue()
-                        + Piece.KNIGHT.getValue() * 2,
-                        + Piece.BISHOP.getValue() * 2
-                        + Piece.ROOK.getValue() * 2,
-                engineChessBoard.getWhitePieceValues());
+                PieceValue.getValue(Piece.QUEEN)
+                        + PieceValue.getValue(Piece.KNIGHT) * 2
+                        + PieceValue.getValue(Piece.BISHOP) * 2
+                        + PieceValue.getValue(Piece.ROOK) * 2,
+                engineChessBoard.getBlackPieceValues());
 
     }
 

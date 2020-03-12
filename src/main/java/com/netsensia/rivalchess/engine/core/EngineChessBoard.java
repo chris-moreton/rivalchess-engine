@@ -13,10 +13,8 @@ import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.Piece;
-import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.util.FenUtils;
-import com.sun.corba.se.impl.activation.ProcessMonitorThread;
 
 import java.util.Arrays;
 import java.util.List;
@@ -451,7 +449,7 @@ public final class EngineChessBoard {
         long bitSet;
         int pieceIndex;
 
-        Arrays.fill(squareContents, (byte)-1);
+        Arrays.fill(squareContents, SquareOccupant.NONE);
 
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
@@ -601,7 +599,7 @@ public final class EngineChessBoard {
             } else if (movePiece == SquareOccupant.WK) {
                 adjustKingVariablesForWhiteKingMove(compactMove);
             }
-            if (capturePiece.getColour() == Colour.BLACK) {
+            if (capturePiece != SquareOccupant.NONE) {
                 makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece, toMask);
             }
         } else {

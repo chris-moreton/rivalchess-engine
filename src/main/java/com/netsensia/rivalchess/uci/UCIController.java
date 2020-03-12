@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 
 import com.netsensia.rivalchess.config.BuildInfo;
-import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
