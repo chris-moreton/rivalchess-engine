@@ -1,8 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
-import com.netsensia.rivalchess.enums.SquareOccupant;
+import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.engine.core.type.MoveDetail;
 import com.netsensia.rivalchess.model.Move;
@@ -125,10 +124,17 @@ public class ZorbristHashTracker {
         }
     }
 
+    private SquareOccupant getSquareOccupantFromString(String s) {
+        if (s.trim().equals("")) {
+            return SquareOccupant.NONE;
+        }
+        return SquareOccupant.fromChar(s.toCharArray()[0]);
+    }
+
     private void processSpecialPawnMoves(final Move move, final SquareOccupant movedPiece, final int bitRefTo, final SquareOccupant capturedPiece) {
         if (movedPiece == SquareOccupant.WP) {
             processPossibleWhitePawnEnPassantCapture(move, capturedPiece);
-            final SquareOccupant promotionPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
+            final SquareOccupant promotionPiece = getSquareOccupantFromString(move.getPromotedPieceCode());
             if (promotionPiece != SquareOccupant.NONE) {
                 replaceWithAnotherPiece(promotionPiece, SquareOccupant.WP, bitRefTo);
             }
@@ -136,7 +142,7 @@ public class ZorbristHashTracker {
 
         if (movedPiece == SquareOccupant.BP) {
             processPossibleBlackPawnEnPassantCapture(move, capturedPiece);
-            final SquareOccupant promotionPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
+            final SquareOccupant promotionPiece = getSquareOccupantFromString(move.getPromotedPieceCode());
             if (promotionPiece != SquareOccupant.NONE) {
                 replaceWithAnotherPiece(promotionPiece, SquareOccupant.BP, bitRefTo);
             }
@@ -145,10 +151,10 @@ public class ZorbristHashTracker {
 
     private boolean unMakeEnPassant(final int bitRefTo, final MoveDetail moveDetail) {
         if ((1L << bitRefTo) == moveDetail.enPassantBitboard) {
-            if (moveDetail.movePiece == RivalConstants.WP) {
+            if (moveDetail.movePiece == SquareOccupant.WP) {
                 placePieceOnEmptySquare(SquareOccupant.BP, bitRefTo-8);
                 return true;
-            } else if (moveDetail.movePiece == RivalConstants.BP) {
+            } else if (moveDetail.movePiece == SquareOccupant.BP) {
                 placePieceOnEmptySquare(SquareOccupant.WP, bitRefTo+8);
                 return true;
 
@@ -158,8 +164,8 @@ public class ZorbristHashTracker {
     }
 
     public boolean unMakeCapture(final int bitRefTo, final MoveDetail moveDetail) {
-        if (moveDetail.capturePiece != -1) {
-            placePieceOnEmptySquare(SquareOccupant.fromIndex(moveDetail.capturePiece), bitRefTo);
+        if (moveDetail.capturePiece != SquareOccupant.NONE) {
+            placePieceOnEmptySquare(moveDetail.capturePiece, bitRefTo);
             return true;
         }
         return false;
@@ -198,8 +204,8 @@ public class ZorbristHashTracker {
 
     public boolean unMakePromotion(final int bitRefFrom, final int bitRefTo, final MoveDetail moveDetail) {
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
-        final SquareOccupant movedPiece = SquareOccupant.fromIndex(moveDetail.movePiece);
-        SquareOccupant promotedPiece = SquareOccupant.fromString(move.getPromotedPieceCode());
+        final SquareOccupant movedPiece = moveDetail.movePiece;
+        final SquareOccupant promotedPiece = getSquareOccupantFromString(move.getPromotedPieceCode());
         if (promotedPiece != SquareOccupant.NONE) {
             placePieceOnEmptySquare(movedPiece, bitRefFrom);
             replaceWithEmptySquare(promotedPiece, bitRefTo);
@@ -238,14 +244,14 @@ public class ZorbristHashTracker {
         final int bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.getTgtBoardRef());
 
         if (!unMakePromotion(bitRefFrom, bitRefTo, moveDetail)) {
-            placePieceOnEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefFrom);
-            replaceWithEmptySquare(SquareOccupant.fromIndex(moveDetail.movePiece), bitRefTo);
+            placePieceOnEmptySquare(moveDetail.movePiece, bitRefFrom);
+            replaceWithEmptySquare(moveDetail.movePiece, bitRefTo);
             if (!unMakeEnPassant(bitRefTo, moveDetail)) {
                 if (!unMakeCapture(bitRefTo, moveDetail)) {
-                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.WK && bitRefFrom == 3) {
+                    if (moveDetail.movePiece == SquareOccupant.WK && bitRefFrom == 3) {
                         unMakeWhiteCastle(bitRefTo);
                     }
-                    if (SquareOccupant.fromIndex(moveDetail.movePiece) == SquareOccupant.BK && bitRefFrom == 59) {
+                    if (moveDetail.movePiece == SquareOccupant.BK && bitRefFrom == 59) {
                         unMakeBlackCastle(bitRefTo);
                     }
                 }

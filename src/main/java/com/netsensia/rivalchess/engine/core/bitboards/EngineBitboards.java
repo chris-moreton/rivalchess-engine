@@ -2,9 +2,9 @@ package com.netsensia.rivalchess.engine.core.bitboards;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.enums.BitboardType;
-import com.netsensia.rivalchess.enums.Colour;
-import com.netsensia.rivalchess.enums.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.model.Colour;
+import com.netsensia.rivalchess.model.SquareOccupant;
 
 import java.util.Arrays;
 
@@ -51,7 +51,7 @@ public class EngineBitboards {
         return pieceBitboards[type.getIndex()];
     }
 
-    public void movePiece(int piece, int compactMove) {
+    public void movePiece(SquareOccupant piece, int compactMove) {
 
         final byte moveFrom = (byte) (compactMove >>> 16);
         final byte moveTo = (byte) (compactMove & 63);
@@ -59,7 +59,7 @@ public class EngineBitboards {
         final long fromMask = 1L << moveFrom;
         final long toMask = 1L << moveTo;
 
-        pieceBitboards[piece] ^= fromMask | toMask;
+        pieceBitboards[piece.getIndex()] ^= fromMask | toMask;
     }
 
     public long getRookMovePiecesBitboard(Colour colour) {
@@ -76,9 +76,9 @@ public class EngineBitboards {
 
     public boolean isSquareAttackedBy(final int attackedSquare, final Colour attacker) {
 
-        if ((pieceBitboards[SquareOccupant.WN.ofColour(attacker)] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
-                (pieceBitboards[SquareOccupant.WK.ofColour(attacker)] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
-                (pieceBitboards[SquareOccupant.WP.ofColour(attacker)]
+        if ((pieceBitboards[SquareOccupant.WN.ofColour(attacker).getIndex()] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
+                (pieceBitboards[SquareOccupant.WK.ofColour(attacker).getIndex()] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
+                (pieceBitboards[SquareOccupant.WP.ofColour(attacker).getIndex()]
                         & Bitboards.getPawnMovesCaptureOfColour(attacker.opponent()).get(attackedSquare)) != 0)
             return true;
 

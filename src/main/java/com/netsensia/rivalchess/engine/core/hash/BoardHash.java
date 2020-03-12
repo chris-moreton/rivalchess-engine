@@ -4,20 +4,20 @@ import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.config.Evaluation;
 import com.netsensia.rivalchess.config.FeatureFlag;
 import com.netsensia.rivalchess.config.Hash;
-import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.eval.PawnHashEntry;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.PawnHashIndex;
-import com.netsensia.rivalchess.enums.SquareOccupant;
+import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.util.Numbers;
 
 public class BoardHash {
 
     private long lastPawnHashValue = -1;
-    private final ZorbristHashTracker hashCalculator = new ZorbristHashTracker();
+    private final ZorbristHashTracker hashTracker = new ZorbristHashTracker();
 
     private PawnHashEntry lastPawnHashEntry = new PawnHashEntry();
 
@@ -367,7 +367,7 @@ public class BoardHash {
     }
 
     public synchronized void initialiseHashCode(EngineChessBoard engineChessBoard) {
-        hashCalculator.initHash(engineChessBoard);
+        hashTracker.initHash(engineChessBoard);
     }
 
     public int getHashIndex(EngineChessBoard engineChessBoard) {
@@ -379,23 +379,23 @@ public class BoardHash {
     }
 
     public void move(EngineChessBoard engineChessBoard, EngineMove move) {
-        hashCalculator.makeMove(engineChessBoard, move);
+        hashTracker.makeMove(engineChessBoard, move);
     }
 
     public void unMove(EngineChessBoard engineChessBoard) {
-        hashCalculator.unMakeMove(engineChessBoard.getLastMoveMade());
+        hashTracker.unMakeMove(engineChessBoard.getLastMoveMade());
     }
 
     public void makeNullMove() {
-        hashCalculator.nullMove();
+        hashTracker.nullMove();
     }
 
     public long getTrackedHashValue() {
-        return hashCalculator.getTrackedBoardHashValue();
+        return hashTracker.getTrackedBoardHashValue();
     }
 
     public long getTrackedPawnHashValue() {
-        return hashCalculator.getTrackedPawnHashValue();
+        return hashTracker.getTrackedPawnHashValue();
     }
 
     public int getHashTableVersion() {

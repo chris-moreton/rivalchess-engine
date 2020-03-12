@@ -1,9 +1,11 @@
 package com.netsensia.rivalchess.engine.core.type;
 
-public class MoveDetail 
+import com.netsensia.rivalchess.model.SquareOccupant;
+
+public class MoveDetail
 {
-	public byte movePiece;
-	public byte capturePiece;
+	public SquareOccupant movePiece;
+	public SquareOccupant capturePiece;
 	public int move;
 	public byte halfMoveCount;
 	public byte castlePrivileges;

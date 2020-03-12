@@ -1,11 +1,13 @@
 package com.netsensia.rivalchess.engine.core.bitboards;
 
-import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.enums.BitboardType;
+import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Square;
+import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
@@ -59,8 +61,8 @@ public class EngineBitboardsTest {
         final EngineMove engineMove = ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h4d8");
 
         EngineBitboards engineBitboards = new EngineBitboards();
-        engineBitboards.setPieceBitboard(RivalConstants.WB, bitboard);
-        engineBitboards.movePiece(RivalConstants.WB, engineMove.compact);
+        engineBitboards.setPieceBitboard(BitboardType.WB, bitboard);
+        engineBitboards.movePiece(SquareOccupant.WB, engineMove.compact);
 
         assertEquals(bitboardExpected, engineBitboards.getPieceBitboard(RivalConstants.WB));
     }

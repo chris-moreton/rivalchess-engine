@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.type;
 
 import com.netsensia.rivalchess.enums.BoardDirection;
-import com.netsensia.rivalchess.enums.SquareOccupant;
+import com.netsensia.rivalchess.model.SquareOccupant;
 
 public class SlidingAttacker {
     final BoardDirection direction;

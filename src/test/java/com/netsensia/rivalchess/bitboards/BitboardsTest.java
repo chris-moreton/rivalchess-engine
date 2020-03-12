@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.bitboards;
 
-import com.netsensia.rivalchess.enums.Colour;
+import com.netsensia.rivalchess.model.Colour;
 import org.junit.Test;
 
 import java.math.BigInteger;
