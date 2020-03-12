@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.Move;
+import com.netsensia.rivalchess.model.SquareOccupant;
 
 public class ChessBoardConversion 
 {
@@ -37,19 +38,19 @@ public class ChessBoardConversion
 		switch (promotionPieceCode)
 		{
 			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN :
-				moveRef.setPromotedPieceCode(to >= 56 ? "Q" : "q");
+				moveRef.setPromotedPiece(to >= 56 ? SquareOccupant.WQ : SquareOccupant.BQ);
 				break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK : 
-				moveRef.setPromotedPieceCode(to >= 56 ? "R" : "r");
+			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK :
+				moveRef.setPromotedPiece(to >= 56 ? SquareOccupant.WR : SquareOccupant.BR);
 				break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT : 
-				moveRef.setPromotedPieceCode(to >= 56 ? "N" : "n");
+			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT :
+				moveRef.setPromotedPiece(to >= 56 ? SquareOccupant.WN : SquareOccupant.BN);
 				break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP : 
-				moveRef.setPromotedPieceCode(to >= 56 ? "B" : "b");
+			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP :
+				moveRef.setPromotedPiece(to >= 56 ? SquareOccupant.WB : SquareOccupant.BB);
 				break;
 			default:
-				moveRef.setPromotedPieceCode("");
+				moveRef.setPromotedPiece(SquareOccupant.NONE);
 				break;
 		}
 		
@@ -66,8 +67,10 @@ public class ChessBoardConversion
 		int to = compactMove & 63;
 		
 		Move move = getMoveRefFromEngineMove(compactMove);
-		String pp = move.getPromotedPieceCode();
-		
+		String pp = move.getPromotedPiece() == SquareOccupant.NONE
+				? ""
+				: String.valueOf(move.getPromotedPiece().toChar()).trim();
+
 		return getSimpleAlgebraicFromBitRef(from) + getSimpleAlgebraicFromBitRef(to) + pp;
 	}
 

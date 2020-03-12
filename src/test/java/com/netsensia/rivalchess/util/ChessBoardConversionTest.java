@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.Square;
+import com.netsensia.rivalchess.model.SquareOccupant;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -37,11 +38,11 @@ public class ChessBoardConversionTest {
                 ChessBoardConversion.getMoveRefFromEngineMove(3539198));
 
         Move move1 = new Move(new Square(1, 1), new Square(1, 0));
-        move1.setPromotedPieceCode("Q");
+        move1.setPromotedPiece(SquareOccupant.WQ);
         assertEquals(move1, ChessBoardConversion.getMoveRefFromEngineMove(3539198));
 
         Move move2 = new Move(new Square(0, 6), new Square(1, 7));
-        move2.setPromotedPieceCode("n");
+        move2.setPromotedPiece(SquareOccupant.BN);
         assertEquals(move2, ChessBoardConversion.getMoveRefFromEngineMove(983302));
     }
 

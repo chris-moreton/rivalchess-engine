@@ -134,7 +134,7 @@ public class ZorbristHashTracker {
     private void processSpecialPawnMoves(final Move move, final SquareOccupant movedPiece, final int bitRefTo, final SquareOccupant capturedPiece) {
         if (movedPiece == SquareOccupant.WP) {
             processPossibleWhitePawnEnPassantCapture(move, capturedPiece);
-            final SquareOccupant promotionPiece = getSquareOccupantFromString(move.getPromotedPieceCode());
+            final SquareOccupant promotionPiece = move.getPromotedPiece();
             if (promotionPiece != SquareOccupant.NONE) {
                 replaceWithAnotherPiece(promotionPiece, SquareOccupant.WP, bitRefTo);
             }
@@ -142,7 +142,7 @@ public class ZorbristHashTracker {
 
         if (movedPiece == SquareOccupant.BP) {
             processPossibleBlackPawnEnPassantCapture(move, capturedPiece);
-            final SquareOccupant promotionPiece = getSquareOccupantFromString(move.getPromotedPieceCode());
+            final SquareOccupant promotionPiece = move.getPromotedPiece();
             if (promotionPiece != SquareOccupant.NONE) {
                 replaceWithAnotherPiece(promotionPiece, SquareOccupant.BP, bitRefTo);
             }
@@ -205,7 +205,7 @@ public class ZorbristHashTracker {
     public boolean unMakePromotion(final int bitRefFrom, final int bitRefTo, final MoveDetail moveDetail) {
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move);
         final SquareOccupant movedPiece = moveDetail.movePiece;
-        final SquareOccupant promotedPiece = getSquareOccupantFromString(move.getPromotedPieceCode());
+        final SquareOccupant promotedPiece = move.getPromotedPiece();
         if (promotedPiece != SquareOccupant.NONE) {
             placePieceOnEmptySquare(movedPiece, bitRefFrom);
             replaceWithEmptySquare(promotedPiece, bitRefTo);
