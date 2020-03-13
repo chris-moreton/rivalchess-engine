@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import org.junit.Test;
+import com.netsensia.rivalchess.openings.OpeningLibrary;
 
 import java.util.ArrayList;
 import java.util.List;

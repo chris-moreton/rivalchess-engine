@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.enums;
 
+import com.netsensia.rivalchess.model.Piece;
+
 public enum PromotionPieceMask {
     PROMOTION_PIECE_TOSQUARE_MASK_QUEEN (192),
     PROMOTION_PIECE_TOSQUARE_MASK_ROOK  (64),
@@ -21,6 +23,21 @@ public enum PromotionPieceMask {
             }
         }
         throw new RuntimeException("Invalid fromValue");
+    }
+
+    public static PromotionPieceMask fromPiece(Piece piece) {
+        switch (piece) {
+            case QUEEN:
+                return PROMOTION_PIECE_TOSQUARE_MASK_QUEEN;
+            case KNIGHT:
+                return PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT;
+            case BISHOP:
+                return PROMOTION_PIECE_TOSQUARE_MASK_BISHOP;
+            case ROOK:
+                return PROMOTION_PIECE_TOSQUARE_MASK_ROOK;
+            default:
+                throw new RuntimeException("Invalid piece for promotion mask");
+        }
     }
 
     public int getValue() {

@@ -37,12 +37,10 @@ public class ChessBoardConversionTest {
         assertNotEquals(new Move(new Square(1, 1), new Square(1, 0)),
                 ChessBoardConversion.getMoveRefFromEngineMove(3539198));
 
-        Move move1 = new Move(new Square(1, 1), new Square(1, 0));
-        move1.setPromotedPiece(SquareOccupant.WQ);
+        Move move1 = new Move(new Square(1, 1), new Square(1, 0), SquareOccupant.WQ);
         assertEquals(move1, ChessBoardConversion.getMoveRefFromEngineMove(3539198));
 
-        Move move2 = new Move(new Square(0, 6), new Square(1, 7));
-        move2.setPromotedPiece(SquareOccupant.BN);
+        Move move2 = new Move(new Square(0, 6), new Square(1, 7), SquareOccupant.BN);
         assertEquals(move2, ChessBoardConversion.getMoveRefFromEngineMove(983302));
     }
 

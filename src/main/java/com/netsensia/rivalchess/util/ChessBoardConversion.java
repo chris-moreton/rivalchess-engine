@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.util;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
+import com.netsensia.rivalchess.enums.PromotionPieceMask;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Square;
@@ -32,29 +33,25 @@ public class ChessBoardConversion
 		Square boardRefFrom = ChessBoardConversion.getBoardRefFromBitRef(from);
 		Square boardRefTo = ChessBoardConversion.getBoardRefFromBitRef(to);
 
-		Move moveRef = new Move(boardRefFrom, boardRefTo);
+		final int promotionPieceCode = move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue();
 
-		int promotionPieceCode = move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
-		switch (promotionPieceCode)
-		{
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN :
-				moveRef.setPromotedPiece(to >= 56 ? SquareOccupant.WQ : SquareOccupant.BQ);
-				break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK :
-				moveRef.setPromotedPiece(to >= 56 ? SquareOccupant.WR : SquareOccupant.BR);
-				break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT :
-				moveRef.setPromotedPiece(to >= 56 ? SquareOccupant.WN : SquareOccupant.BN);
-				break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP :
-				moveRef.setPromotedPiece(to >= 56 ? SquareOccupant.WB : SquareOccupant.BB);
-				break;
-			default:
-				moveRef.setPromotedPiece(SquareOccupant.NONE);
-				break;
+		if (promotionPieceCode != 0) {
+			switch (PromotionPieceMask.fromValue(promotionPieceCode)) {
+				case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
+					return new Move(boardRefFrom, boardRefTo, to >= 56 ? SquareOccupant.WQ : SquareOccupant.BQ);
+				case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
+					return new Move(boardRefFrom, boardRefTo, to >= 56 ? SquareOccupant.WR : SquareOccupant.BR);
+				case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
+					return new Move(boardRefFrom, boardRefTo, to >= 56 ? SquareOccupant.WN : SquareOccupant.BN);
+				case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
+					return new Move(boardRefFrom, boardRefTo, to >= 56 ? SquareOccupant.WB : SquareOccupant.BB);
+				default:
+					throw new RuntimeException("Unexpected error");
+			}
 		}
-		
-		return moveRef;
+
+		return new Move(boardRefFrom, boardRefTo, SquareOccupant.NONE);
+
 	}
 
 	public static String getSimpleAlgebraicMoveFromCompactMove(int compactMove)

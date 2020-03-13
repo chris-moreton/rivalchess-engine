@@ -79,10 +79,10 @@ public class ZorbristHashTracker {
     }
 
     private void processPossibleWhitePawnEnPassantCapture(final Move move, final SquareOccupant capturedPiece) {
-        if (move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
+        if (move.getSrcBoardRef().getXFile() != move.getTgtBoardRef().getXFile() && capturedPiece == SquareOccupant.NONE) {
 
             final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
-                        new Square(move.getTgtXFile(), move.getTgtYRank() + 1
+                        new Square(move.getTgtBoardRef().getXFile(), move.getTgtBoardRef().getYRank() + 1
                     ));
 
             replaceWithEmptySquare(SquareOccupant.BP, capturedPawnBitRef);
@@ -90,10 +90,10 @@ public class ZorbristHashTracker {
     }
 
     private void processPossibleBlackPawnEnPassantCapture(final Move move, final SquareOccupant capturedPiece) {
-        if (move.getSrcXFile() != move.getTgtXFile() && capturedPiece == SquareOccupant.NONE) {
+        if (move.getSrcBoardRef().getXFile() != move.getTgtBoardRef().getXFile() && capturedPiece == SquareOccupant.NONE) {
 
             final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
-                    new Square(move.getTgtXFile(), move.getTgtYRank() - 1
+                    new Square(move.getTgtBoardRef().getXFile(), move.getTgtBoardRef().getYRank() - 1
                     ));
 
             replaceWithEmptySquare(SquareOccupant.WP, capturedPawnBitRef);

@@ -16,8 +16,10 @@ import com.netsensia.rivalchess.exception.IllegalSearchStateException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.Colour;
+import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.model.SquareOccupant;
+import com.netsensia.rivalchess.openings.OpeningLibrary;
 import com.netsensia.rivalchess.uci.EngineMonitor;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.FenUtils;
@@ -1755,10 +1757,11 @@ public final class RivalSearch implements Runnable {
             }
 
             if (this.m_inBook) {
-                int libraryMove = OpeningLibrary.getMove(getFen());
-                if (libraryMove > 0 && engineChessBoard.isMoveLegal(libraryMove)) {
+                Move libraryMove = OpeningLibrary.getMove(getFen());
+                // Todo - check for legality
+                if (libraryMove != null) {
                     path = new SearchPath();
-                    path.setPath(libraryMove);
+                    path.setPath(new EngineMove(libraryMove).compact);
                     m_currentPath = path;
                     currentPathString = "" + m_currentPath;
                     setSearchComplete();
