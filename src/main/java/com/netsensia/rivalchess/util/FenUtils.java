@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.SquareOccupant;
 
 public class FenUtils {
@@ -55,21 +56,21 @@ public class FenUtils {
             throw new IllegalFenException("Illegal mover in FEN");
         }
 
-        board.setWhiteToMove(fenToken == 'w');
+        board.setSideToMove(fenToken == 'w' ? Colour.WHITE : Colour.BLACK);
 
         fenIndex++;
 
-        board.setWhiteQueenSideCastleAvailable(false);
-        board.setWhiteKingSideCastleAvailable(false);
-        board.setBlackQueenSideCastleAvailable(false);
-        board.setBlackKingSideCastleAvailable(false);
+        board.setQueenSideCastleAvailable(Colour.WHITE,false);
+        board.setKingSideCastleAvailable(Colour.WHITE,false);
+        board.setQueenSideCastleAvailable(Colour.BLACK,false);
+        board.setKingSideCastleAvailable(Colour.BLACK,false);
 
         final String castleFlags = fenStr.substring(fenIndex, fenStr.indexOf(' ', fenIndex));
 
-        board.setWhiteQueenSideCastleAvailable(castleFlags.contains("Q"));
-        board.setWhiteKingSideCastleAvailable(castleFlags.contains("K"));
-        board.setBlackQueenSideCastleAvailable(castleFlags.contains("q"));
-        board.setBlackKingSideCastleAvailable(castleFlags.contains("k"));
+        board.setQueenSideCastleAvailable(Colour.WHITE,castleFlags.contains("Q"));
+        board.setKingSideCastleAvailable(Colour.WHITE,castleFlags.contains("K"));
+        board.setQueenSideCastleAvailable(Colour.BLACK,castleFlags.contains("q"));
+        board.setKingSideCastleAvailable(Colour.BLACK,castleFlags.contains("k"));
 
         final char enPassantChar = fenStr.charAt(fenIndex + castleFlags.length() + 1);
 

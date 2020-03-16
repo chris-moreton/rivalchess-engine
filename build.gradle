@@ -27,7 +27,7 @@ repositories {
 
 dependencies {
     compile group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.30'
-    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '1.3.0'
+    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '1.4.0'
     compile group: 'com.netsensia.rivalchess', name: 'rivalchess-openings', version: '1.0.0'
 
     testImplementation 'junit:junit:4.12'

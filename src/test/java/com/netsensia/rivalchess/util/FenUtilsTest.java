@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
+import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class FenUtilsTest {
         assertEquals(board.getSquareOccupant(new Square(1,1)), SquareOccupant.NONE);
         assertEquals(board.getSquareOccupant(new Square(1,0)), SquareOccupant.NONE);
 
-        assertTrue(board.isBlackToMove());
+        assertTrue(board.getSideToMove() == Colour.BLACK);
         assertEquals(6, board.getEnPassantFile());
     }
 

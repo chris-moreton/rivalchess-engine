@@ -434,7 +434,7 @@ public final class EngineChessBoard {
     }
 
     public void setEngineBoardVars(Board board) {
-        this.isWhiteToMove = board.isWhiteToMove();
+        this.isWhiteToMove = board.getSideToMove() == Colour.WHITE;
 
         engineBitboards.reset();
 
@@ -479,7 +479,7 @@ public final class EngineChessBoard {
         if (ep == -1) {
             engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 0;
         } else {
-            if (board.isWhiteToMove()) {
+            if (board.getSideToMove() == Colour.WHITE) {
                 engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 1L << (40 + (7 - ep));
             } else {
                 engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = 1L << (16 + (7 - ep));
@@ -489,10 +489,10 @@ public final class EngineChessBoard {
 
     private void setCastlePrivileges(Board board) {
         this.castlePrivileges = 0;
-        this.castlePrivileges |= (board.isWhiteKingSideCastleAvailable() ? RivalConstants.CASTLEPRIV_WK : 0);
-        this.castlePrivileges |= (board.isWhiteQueenSideCastleAvailable() ? RivalConstants.CASTLEPRIV_WQ : 0);
-        this.castlePrivileges |= (board.isBlackKingSideCastleAvailable() ? RivalConstants.CASTLEPRIV_BK : 0);
-        this.castlePrivileges |= (board.isBlackQueenSideCastleAvailable() ? RivalConstants.CASTLEPRIV_BQ : 0);
+        this.castlePrivileges |= (board.isKingSideCastleAvailable(Colour.WHITE) ? RivalConstants.CASTLEPRIV_WK : 0);
+        this.castlePrivileges |= (board.isQueenSideCastleAvailable(Colour.WHITE) ? RivalConstants.CASTLEPRIV_WQ : 0);
+        this.castlePrivileges |= (board.isKingSideCastleAvailable(Colour.BLACK) ? RivalConstants.CASTLEPRIV_BK : 0);
+        this.castlePrivileges |= (board.isQueenSideCastleAvailable(Colour.BLACK) ? RivalConstants.CASTLEPRIV_BQ : 0);
     }
 
     public void calculateSupplementaryBitboards() {
