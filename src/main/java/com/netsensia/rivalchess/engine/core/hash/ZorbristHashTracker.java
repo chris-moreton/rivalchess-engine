@@ -82,7 +82,7 @@ public class ZorbristHashTracker {
         if (move.getSrcBoardRef().getXFile() != move.getTgtBoardRef().getXFile() && capturedPiece == SquareOccupant.NONE) {
 
             final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
-                        new Square(move.getTgtBoardRef().getXFile(), move.getTgtBoardRef().getYRank() + 1
+                        Square.fromCoords(move.getTgtBoardRef().getXFile(), move.getTgtBoardRef().getYRank() + 1
                     ));
 
             replaceWithEmptySquare(SquareOccupant.BP, capturedPawnBitRef);
@@ -93,7 +93,7 @@ public class ZorbristHashTracker {
         if (move.getSrcBoardRef().getXFile() != move.getTgtBoardRef().getXFile() && capturedPiece == SquareOccupant.NONE) {
 
             final int capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(
-                    new Square(move.getTgtBoardRef().getXFile(), move.getTgtBoardRef().getYRank() - 1
+                    Square.fromCoords(move.getTgtBoardRef().getXFile(), move.getTgtBoardRef().getYRank() - 1
                     ));
 
             replaceWithEmptySquare(SquareOccupant.WP, capturedPawnBitRef);

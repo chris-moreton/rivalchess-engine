@@ -13,6 +13,7 @@ import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.Piece;
+import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.util.FenUtils;
 
@@ -455,7 +456,7 @@ public final class EngineChessBoard {
             for (int x = 0; x < 8; x++) {
                 bitNum = (byte) (63 - (8 * y) - x);
                 bitSet = 1L << bitNum;
-                final SquareOccupant squareOccupant = board.getSquareOccupant(x, y);
+                final SquareOccupant squareOccupant = board.getSquareOccupant(Square.fromCoords(x,y));
                 squareContents[bitNum] = squareOccupant;
                 pieceIndex = squareOccupant.getIndex();
 

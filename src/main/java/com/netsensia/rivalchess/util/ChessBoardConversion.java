@@ -18,7 +18,7 @@ public class ChessBoardConversion
 		bitRef = 63 - bitRef;
 		int x = bitRef % 8;
 		int y = bitRef / 8;
-		return new Square(x,y);
+		return Square.fromCoords(x,y);
 	}
 	
 	public static int getBitRefFromBoardRef(Square boardRef)
@@ -172,8 +172,8 @@ public class ChessBoardConversion
 		int toX = s.toUpperCase().charAt(2) - 65;
 		int toY = 7 - (s.toUpperCase().charAt(3) - 49);
 		
-		int fromBitRef = getBitRefFromBoardRef(new Square(fromX, fromY));
-		int toBitRef = getBitRefFromBoardRef(new Square(toX, toY));
+		int fromBitRef = getBitRefFromBoardRef(Square.fromCoords(fromX, fromY));
+		int toBitRef = getBitRefFromBoardRef(Square.fromCoords(toX, toY));
 		
 		int l = s.length();
 		char promotionPiece;

@@ -100,11 +100,11 @@ public class EngineBitboardsTest {
             for (int x=0; x<8; x++) {
 
                 assertEquals(expectedWhiteAttacks[y][x], engineBitboards.isSquareAttackedBy(
-                        ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
+                        ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(x, y)),
                         Colour.WHITE));
 
                 assertEquals(expectedBlackAttacks[y][x], engineBitboards.isSquareAttackedBy(
-                        ChessBoardConversion.getBitRefFromBoardRef(new Square(x, y)),
+                        ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(x, y)),
                         Colour.BLACK));
             }
         }

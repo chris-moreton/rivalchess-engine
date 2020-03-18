@@ -15,32 +15,32 @@ public class ChessBoardConversionTest {
 
     @Test
     public void getBoardRefFromBitRef() {
-        assertEquals(new Square(7, 7), ChessBoardConversion.getBoardRefFromBitRef(0));
-        assertEquals(new Square(0, 7), ChessBoardConversion.getBoardRefFromBitRef(7));
-        assertEquals(new Square(7, 0), ChessBoardConversion.getBoardRefFromBitRef(56));
-        assertEquals(new Square(0, 0), ChessBoardConversion.getBoardRefFromBitRef(63));
+        assertEquals(Square.fromCoords(7, 7), ChessBoardConversion.getBoardRefFromBitRef(0));
+        assertEquals(Square.fromCoords(0, 7), ChessBoardConversion.getBoardRefFromBitRef(7));
+        assertEquals(Square.fromCoords(7, 0), ChessBoardConversion.getBoardRefFromBitRef(56));
+        assertEquals(Square.fromCoords(0, 0), ChessBoardConversion.getBoardRefFromBitRef(63));
     }
 
     @Test
     public void getBitRefFromBoardRef() {
-        assertEquals(0, ChessBoardConversion.getBitRefFromBoardRef(new Square(7, 7)));
-        assertEquals(7, ChessBoardConversion.getBitRefFromBoardRef(new Square(0, 7)));
-        assertEquals(56, ChessBoardConversion.getBitRefFromBoardRef(new Square(7, 0)));
-        assertEquals(63, ChessBoardConversion.getBitRefFromBoardRef(new Square(0, 0)));
+        assertEquals(0, ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(7, 7)));
+        assertEquals(7, ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(0, 7)));
+        assertEquals(56, ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(7, 0)));
+        assertEquals(63, ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(0, 0)));
     }
 
     @Test
     public void getMoveRefFromEngineMove() {
-        assertEquals(new Move(new Square(4, 6), new Square(4, 4)),
+        assertEquals(new Move(Square.fromCoords(4, 6), Square.fromCoords(4, 4)),
                 ChessBoardConversion.getMoveRefFromEngineMove(720923));
 
-        assertNotEquals(new Move(new Square(1, 1), new Square(1, 0)),
+        assertNotEquals(new Move(Square.fromCoords(1, 1), Square.fromCoords(1, 0)),
                 ChessBoardConversion.getMoveRefFromEngineMove(3539198));
 
-        Move move1 = new Move(new Square(1, 1), new Square(1, 0), SquareOccupant.WQ);
+        Move move1 = new Move(Square.fromCoords(1, 1), Square.fromCoords(1, 0), SquareOccupant.WQ);
         assertEquals(move1, ChessBoardConversion.getMoveRefFromEngineMove(3539198));
 
-        Move move2 = new Move(new Square(0, 6), new Square(1, 7), SquareOccupant.BN);
+        Move move2 = new Move(Square.fromCoords(0, 6), Square.fromCoords(1, 7), SquareOccupant.BN);
         assertEquals(move2, ChessBoardConversion.getMoveRefFromEngineMove(983302));
     }
 
