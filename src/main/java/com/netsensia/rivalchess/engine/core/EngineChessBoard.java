@@ -15,7 +15,7 @@ import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
-import com.netsensia.rivalchess.util.FenUtils;
+import com.netsensia.rivalchess.model.util.FenUtils;
 
 import java.util.Arrays;
 import java.util.List;

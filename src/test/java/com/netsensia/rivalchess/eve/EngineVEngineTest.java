@@ -4,7 +4,7 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.RivalSearch;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.util.FenUtils;
+import com.netsensia.rivalchess.model.util.FenUtils;
 import org.junit.Test;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;

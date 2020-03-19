@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.util.FenUtils;
+import com.netsensia.rivalchess.model.util.FenUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -8,8 +8,8 @@ import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
+import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
-import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
 
 import java.math.BigInteger;

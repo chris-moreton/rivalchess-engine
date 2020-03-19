@@ -19,10 +19,10 @@ import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.model.SquareOccupant;
+import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.openings.OpeningLibrary;
 import com.netsensia.rivalchess.uci.EngineMonitor;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
-import com.netsensia.rivalchess.util.FenUtils;
 import com.netsensia.rivalchess.util.Numbers;
 
 import java.io.PrintStream;

@@ -9,6 +9,7 @@ import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.SquareOccupant;
+import com.netsensia.rivalchess.model.util.FenUtils;
 
 public class ChessBoardConversion 
 {

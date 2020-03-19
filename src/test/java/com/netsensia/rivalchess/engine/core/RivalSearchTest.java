@@ -1,8 +1,8 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
-import com.netsensia.rivalchess.util.FenUtils;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;

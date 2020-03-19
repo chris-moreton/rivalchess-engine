@@ -7,8 +7,8 @@ import com.netsensia.rivalchess.engine.core.hash.ZorbristHashTracker;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
+import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
-import com.netsensia.rivalchess.util.FenUtils;
 import org.junit.Test;
 
 import java.util.Random;
