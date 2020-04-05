@@ -10,12 +10,6 @@ import com.netsensia.rivalchess.util.FenUtils;
 import junit.framework.TestCase;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluationHelper.getIndexOfNextDirectionAttackerAfterIndex;
-import static com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluationHelper.getScoreFromCaptureList;
-
 public class StaticExchangeEvaluatorPremiumTest extends TestCase {
 
     private StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorPremium();

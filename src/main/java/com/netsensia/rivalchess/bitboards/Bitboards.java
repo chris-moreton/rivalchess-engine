@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.bitboards;
 
 import com.netsensia.rivalchess.constants.Colour;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;

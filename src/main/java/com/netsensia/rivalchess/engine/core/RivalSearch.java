@@ -8,7 +8,6 @@ import com.netsensia.rivalchess.constants.Piece;
 import com.netsensia.rivalchess.constants.SearchState;
 import com.netsensia.rivalchess.constants.SquareOccupant;
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator;
-import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluatorClassic;
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluatorPremium;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
