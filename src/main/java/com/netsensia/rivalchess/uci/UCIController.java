@@ -9,7 +9,7 @@ import com.netsensia.rivalchess.config.BuildInfo;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
-import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.engine.core.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
@@ -32,12 +32,12 @@ public class UCIController implements Runnable {
     private int moveTime;
     private boolean isInfinite;
 
-    private final RivalSearch rivalSearch;
+    private final Search search;
     private final int timeMultiple;
     private final PrintStream printStream;
 
-    public UCIController(RivalSearch engine, int timeMultiple, PrintStream printStream) {
-        rivalSearch = engine;
+    public UCIController(Search engine, int timeMultiple, PrintStream printStream) {
+        search = engine;
         this.timeMultiple = timeMultiple;
         this.printStream = printStream;
         EngineMonitor.setPrintStream(this.printStream);
@@ -50,7 +50,7 @@ public class UCIController implements Runnable {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String s;
 
-        rivalSearch.setUseOpeningBook(false);
+        search.setUseOpeningBook(false);
 
         try {
 
@@ -81,14 +81,14 @@ public class UCIController implements Runnable {
 
     private void handleIfQuitCommand(String[] parts) {
         if (parts[0].equals("quit")) {
-            rivalSearch.quit();
+            search.quit();
             System.exit(0);
         }
     }
 
     private void handleIfStopCommand(String[] parts) {
         if (parts[0].equals("stop")) {
-            rivalSearch.stopSearch();
+            search.stopSearch();
             waitForSearchToComplete();
         }
     }
@@ -109,19 +109,19 @@ public class UCIController implements Runnable {
 
     private void handleIfSetOptionOwnBookCommand(String[] parts) {
         if (parts[2].equals("OwnBook") && parts[3].equals("value")) {
-            rivalSearch.setUseOpeningBook(parts[4].equals("true"));
+            search.setUseOpeningBook(parts[4].equals("true"));
         }
     }
 
     private void handleIfSetOptionHashValueCommand(String[] parts) {
         if (parts[2].equals("Hash") && parts[3].equals("value")) {
-            rivalSearch.setHashSizeMB(Integer.parseInt(parts[4]));
+            search.setHashSizeMB(Integer.parseInt(parts[4]));
         }
     }
 
     private void handleIfSetOptionNameClearHashCommand(String[] parts) {
         if (parts[2].equals("Clear") && parts[3].equals("Hash")) {
-            rivalSearch.clearHash();
+            search.clearHash();
         }
     }
 
@@ -150,33 +150,33 @@ public class UCIController implements Runnable {
 
             setSearchOptions();
 
-            rivalSearch.startSearch();
+            search.startSearch();
         }
     }
 
     private void setSearchOptions() {
         if (isInfinite) {
-            rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-            rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            rivalSearch.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+            search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+            search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            search.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
         } else if (moveTime != -1) {
-            rivalSearch.setMillisToThink(moveTime);
-            rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            rivalSearch.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+            search.setMillisToThink(moveTime);
+            search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            search.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
         } else if (maxDepth != -1) {
-            rivalSearch.setSearchDepth(maxDepth);
-            rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-            rivalSearch.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+            search.setSearchDepth(maxDepth);
+            search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+            search.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
         } else if (maxNodes != -1) {
-            rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-            rivalSearch.setNodesToSearch(maxNodes);
+            search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+            search.setNodesToSearch(maxNodes);
         } else if (whiteTime != -1) {
-            int calcTime = (rivalSearch.getMover() == Colour.WHITE ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
-            int guaranteedTime = (rivalSearch.getMover() == Colour.WHITE ? whiteInc : blackInc);
+            int calcTime = (search.getMover() == Colour.WHITE ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
+            int guaranteedTime = (search.getMover() == Colour.WHITE ? whiteInc : blackInc);
             int timeToThink = calcTime + guaranteedTime - RivalConstants.UCI_TIMER_SAFTEY_MARGIN_MILLIS;
-            rivalSearch.setMillisToThink(timeToThink);
-            rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            search.setMillisToThink(timeToThink);
+            search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
         }
     }
 
@@ -201,7 +201,7 @@ public class UCIController implements Runnable {
     private void handleIfGoDepth(String[] parts, int i) {
         if (parts[i].equals("depth")) {
             maxDepth = Integer.parseInt(parts[i + 1]);
-            rivalSearch.setSearchDepth(maxDepth);
+            search.setSearchDepth(maxDepth);
         }
     }
 
@@ -241,7 +241,7 @@ public class UCIController implements Runnable {
             waitForSearchToComplete();
 
             try {
-                rivalSearch.setBoard(getBoardModel(s, parts));
+                search.setBoard(getBoardModel(s, parts));
 
                 playMovesFromPosition(parts);
 
@@ -259,7 +259,7 @@ public class UCIController implements Runnable {
             for (int pos = 2; pos < l; pos++) {
                 if (parts[pos].equals("moves")) {
                     for (int i = pos + 1; i < l; i++) {
-                        rivalSearch.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(parts[i]));
+                        search.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(parts[i]));
                     }
                     break;
                 }
@@ -280,7 +280,7 @@ public class UCIController implements Runnable {
     private void handleIfUciNewGameCommand(String[] parts) {
         if (parts[0].equals("ucinewgame")) {
             waitForSearchToComplete();
-            rivalSearch.newGame();
+            search.newGame();
         }
     }
 
@@ -301,9 +301,9 @@ public class UCIController implements Runnable {
 
     public void waitForSearchToComplete() {
         SearchState state;
-        rivalSearch.stopSearch();
+        search.stopSearch();
         do {
-            state = rivalSearch.getEngineState();
+            state = search.getEngineState();
         }
         while (state != SearchState.READY && state != SearchState.COMPLETE);
     }

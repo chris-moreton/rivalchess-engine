@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.epd;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
-import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.engine.core.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
@@ -34,12 +34,12 @@ import static org.hamcrest.CoreMatchers.hasItem;
 public class EpdTest {
 
     private static final int MAX_SEARCH_SECONDS = 1000;
-    private static RivalSearch rivalSearch;
+    private static Search search;
 
     @BeforeClass
     public static void setup() {
-        rivalSearch = new RivalSearch();
-        new Thread(rivalSearch).start();
+        search = new Search();
+        new Thread(search).start();
     }
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
@@ -68,19 +68,19 @@ public class EpdTest {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
 
-        rivalSearch.quit();
+        search.quit();
 
-        rivalSearch = new RivalSearch();
-        new Thread(rivalSearch).start();
+        search = new Search();
+        new Thread(search).start();
 
-        rivalSearch.setBoard(engineChessBoard);
-        rivalSearch.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-        rivalSearch.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
+        search.setBoard(engineChessBoard);
+        search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+        search.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
 
-        rivalSearch.setNodesToSearch(epdItem.getMaxNodesToSearch());
-        rivalSearch.setHashSizeMB(32);
-        rivalSearch.clearHash();
-        rivalSearch.startSearch();
+        search.setNodesToSearch(epdItem.getMaxNodesToSearch());
+        search.setHashSizeMB(32);
+        search.clearHash();
+        search.startSearch();
 
         MILLISECONDS.sleep(100);
 
@@ -89,19 +89,19 @@ public class EpdTest {
         System.out.println(epdItem.getId() + " " + dtf.format(now));
 
         try {
-            await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !rivalSearch.isSearching());
+            await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !search.isSearching());
         } catch (ConditionTimeoutException e) {
-            rivalSearch.stopSearch();
+            search.stopSearch();
 
             SearchState state;
             do {
-                state = rivalSearch.getEngineState();
+                state = search.getEngineState();
             }
             while (state != SearchState.READY && state != SearchState.COMPLETE);
         }
 
         final String move = ChessBoardConversion.getPgnMoveFromCompactMove(
-                rivalSearch.getCurrentMove(), engineChessBoard.getFen());
+                search.getCurrentMove(), engineChessBoard.getFen());
 
         System.out.println("Looking for " + move + " in " + epdItem.getBestMoves());
 
@@ -110,7 +110,7 @@ public class EpdTest {
         } else {
             Assert.assertFalse(epdItem.getBestMoves().contains(
                     ChessBoardConversion.getPgnMoveFromCompactMove(
-                        rivalSearch.getCurrentMove(), engineChessBoard.getFen())));
+                        search.getCurrentMove(), engineChessBoard.getFen())));
         }
     }
 

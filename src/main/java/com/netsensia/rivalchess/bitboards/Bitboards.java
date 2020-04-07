@@ -213,11 +213,11 @@ public final class Bitboards {
         return bitboard;
     }
 
-    public static long getPawnFiles(long pawns) {
+    public static long getPawnFiles(final long pawns) {
         return southFill(pawns) & RANK_1;
     }
 
-    public static long getBlackPawnAttacks(long blackPawns) {
+    public static long getBlackPawnAttacks(final long blackPawns) {
         return ((blackPawns & ~FILE_A) >>> 7) | ((blackPawns & ~FILE_H) >>> 9);
     }
 
@@ -225,39 +225,43 @@ public final class Bitboards {
         return ((whitePawns & ~FILE_A) << 9) | ((whitePawns & ~FILE_H) << 7);
     }
 
-    public static long getWhitePassedPawns(long whitePawns, long blackPawns) {
+    public static long getWhitePassedPawns(final long whitePawns, final long blackPawns) {
         return whitePawns &
                 ~Bitboards.southFill(blackPawns | getBlackPawnAttacks(blackPawns) | (whitePawns >>> 8));
     }
 
-    public static long getBlackPassedPawns(long whitePawns, long blackPawns) {
+    public static long getBlackPassedPawns(final long whitePawns, final long blackPawns) {
         return blackPawns &
                 ~Bitboards.northFill(whitePawns |  getWhitePawnAttacks (whitePawns) | (blackPawns << 8));
     }
 
-    public static List<Long> getPawnMovesCaptureOfColour(Colour colour) {
+    public static List<Long> getPawnMovesCaptureOfColour(final Colour colour) {
         return colour == Colour.WHITE
                 ? whitePawnMovesCapture
                 : blackPawnMovesCapture;
     }
 
-    public static int getFirstOccupiedSquare(long bitboard) {
+    public static int getFirstOccupiedSquare(final long bitboard) {
         return Long.numberOfTrailingZeros(bitboard);
     }
 
-    public static boolean isBishopAttackingSquare(int attackedSquare, int pieceSquare, long allPieceBitboard) {
-        return (magicBitboards.magicMovesBishop[pieceSquare][getMagicIndexForBishop(pieceSquare, allPieceBitboard)] & (1L << attackedSquare)) != 0;
+    public static boolean isBishopAttackingSquare(final int attackedSquare, final int pieceSquare,final  long allPieceBitboard) {
+        return (magicBitboards.magicMovesBishop[pieceSquare][getMagicIndexForBishop(pieceSquare, allPieceBitboard)]
+                & (1L << attackedSquare)) != 0;
     }
 
-    private static int getMagicIndexForBishop(int pieceSquare, long allPieceBitboard) {
-        return (int) (((allPieceBitboard & MagicBitboards.occupancyMaskBishop[pieceSquare]) * MagicBitboards.magicNumberBishop[pieceSquare]) >>> MagicBitboards.magicNumberShiftsBishop[pieceSquare]);
+    private static int getMagicIndexForBishop(final int pieceSquare, final long allPieceBitboard) {
+        return (int) (((allPieceBitboard & MagicBitboards.occupancyMaskBishop[pieceSquare]) * MagicBitboards.magicNumberBishop[pieceSquare])
+                >>> MagicBitboards.magicNumberShiftsBishop[pieceSquare]);
     }
 
-    public static boolean isRookAttackingSquare(int attackedSquare, int pieceSquare, long allPieceBitboard) {
-        return (magicBitboards.magicMovesRook[pieceSquare][getMagicIndexForRook(pieceSquare, allPieceBitboard)] & (1L << attackedSquare)) != 0;
+    public static boolean isRookAttackingSquare(final int attackedSquare, final int pieceSquare, final long allPieceBitboard) {
+        return (magicBitboards.magicMovesRook[pieceSquare][getMagicIndexForRook(pieceSquare, allPieceBitboard)]
+                & (1L << attackedSquare)) != 0;
     }
 
-    private static int getMagicIndexForRook(int pieceSquare, long allPieceBitboard) {
-        return (int) (((allPieceBitboard & MagicBitboards.occupancyMaskRook[pieceSquare]) * MagicBitboards.magicNumberRook[pieceSquare]) >>> MagicBitboards.magicNumberShiftsRook[pieceSquare]);
+    private static int getMagicIndexForRook(final int pieceSquare, final long allPieceBitboard) {
+        return (int) (((allPieceBitboard & MagicBitboards.occupancyMaskRook[pieceSquare]) * MagicBitboards.magicNumberRook[pieceSquare])
+                >>> MagicBitboards.magicNumberShiftsRook[pieceSquare]);
     }
 }

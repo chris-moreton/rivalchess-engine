@@ -4,14 +4,14 @@ import java.io.PrintStream;
 import java.util.TimerTask;
 
 import com.netsensia.rivalchess.enums.SearchState;
-import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.engine.core.Search;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class EngineMonitor extends TimerTask {
-    private final RivalSearch engine;
+    private final Search engine;
     private static PrintStream out;
 
-    public EngineMonitor(RivalSearch engine) {
+    public EngineMonitor(Search engine) {
         this.engine = engine;
     }
 

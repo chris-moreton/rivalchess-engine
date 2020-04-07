@@ -1,10 +1,10 @@
 package com.netsensia.rivalchess.uci;
 
-import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.engine.core.Search;
 
 public final class RivalUCI {
     @SuppressWarnings("squid:S106")
-    private static final RivalSearch rivalSearch = new RivalSearch(System.out);
+    private static final Search SEARCH = new Search(System.out);
 
     public static void main(String[] args) {
 
@@ -15,14 +15,14 @@ public final class RivalUCI {
             timeMultiple = 1;
         }
 
-        rivalSearch.startEngineTimer(true);
-        rivalSearch.setHashSizeMB(32);
+        SEARCH.startEngineTimer(true);
+        SEARCH.setHashSizeMB(32);
 
-        new Thread(rivalSearch).start();
+        new Thread(SEARCH).start();
 
         @SuppressWarnings("squid:S106")
         UCIController uciController = new UCIController(
-                rivalSearch,
+                SEARCH,
                 timeMultiple,
                 System.out);
 

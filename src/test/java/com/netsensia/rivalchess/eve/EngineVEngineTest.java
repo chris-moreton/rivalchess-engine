@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.eve;
 
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
-import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.engine.core.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import org.junit.Test;
@@ -20,19 +20,19 @@ public class EngineVEngineTest {
 
     private void makeMove() throws IllegalFenException, InterruptedException {
 
-        RivalSearch rivalSearch = new RivalSearch();
+        Search search = new Search();
 
-        new Thread(rivalSearch).start();
+        new Thread(search).start();
 
-        rivalSearch.setBoard(engineChessBoard);
-        rivalSearch.setSearchDepth(6);
-        rivalSearch.setNodesToSearch(10000);
-        rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-        rivalSearch.startSearch();
+        search.setBoard(engineChessBoard);
+        search.setSearchDepth(6);
+        search.setNodesToSearch(10000);
+        search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+        search.startSearch();
 
         MILLISECONDS.sleep(50);
 
-        await().atMost(5, SECONDS).until(() -> !rivalSearch.isSearching());
+        await().atMost(5, SECONDS).until(() -> !search.isSearching());
     }
 
     @Test

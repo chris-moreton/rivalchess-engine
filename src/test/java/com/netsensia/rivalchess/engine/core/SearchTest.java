@@ -10,14 +10,14 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class RivalSearchTest {
+public class SearchTest {
 
     private void assertEvaluationScore(String fen, int expectedScore, boolean flip) throws IllegalFenException {
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
-        RivalSearch rivalSearch = new RivalSearch();
-        int actualScore = rivalSearch.evaluate(engineChessBoard);
+        Search search = new Search();
+        int actualScore = search.evaluate(engineChessBoard);
 
         assertEquals(expectedScore, actualScore);
 
@@ -41,24 +41,24 @@ public class RivalSearchTest {
 
     private void assertBestMove(String fen, String expectedMove, int expectedScore) throws IllegalFenException, InterruptedException {
 
-        RivalSearch rivalSearch = new RivalSearch();
+        Search search = new Search();
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
 
-        new Thread(rivalSearch).start();
+        new Thread(search).start();
 
-        rivalSearch.setBoard(engineChessBoard);
-        rivalSearch.setSearchDepth(4);
-        rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-        rivalSearch.startSearch();
+        search.setBoard(engineChessBoard);
+        search.setSearchDepth(4);
+        search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+        search.startSearch();
 
         SECONDS.sleep(1);
 
-        await().atMost(30, SECONDS).until(() -> !rivalSearch.isSearching());
+        await().atMost(30, SECONDS).until(() -> !search.isSearching());
 
-        assertEquals(expectedMove, ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(rivalSearch.getCurrentMove()));
-        assertEquals(expectedScore, rivalSearch.getCurrentScore());
+        assertEquals(expectedMove, ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(search.getCurrentMove()));
+        assertEquals(expectedScore, search.getCurrentScore());
 
     }
 
@@ -67,20 +67,20 @@ public class RivalSearchTest {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
 
-        RivalSearch rivalSearch = new RivalSearch();
+        Search search = new Search();
 
-        new Thread(rivalSearch).start();
+        new Thread(search).start();
 
-        rivalSearch.setBoard(engineChessBoard);
-        rivalSearch.setSearchDepth(6);
-        rivalSearch.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-        rivalSearch.startSearch();
+        search.setBoard(engineChessBoard);
+        search.setSearchDepth(6);
+        search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+        search.startSearch();
 
         SECONDS.sleep(1);
 
-        await().atMost(30, SECONDS).until(() -> !rivalSearch.isSearching());
+        await().atMost(30, SECONDS).until(() -> !search.isSearching());
 
-        assertEquals(expectedNodes, rivalSearch.getNodes());
+        assertEquals(expectedNodes, search.getNodes());
     }
 
     @Test

@@ -36,7 +36,7 @@ import java.util.Timer;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 
-public final class RivalSearch implements Runnable {
+public final class Search implements Runnable {
 
     private final PrintStream printStream;
 
@@ -98,19 +98,19 @@ public final class RivalSearch implements Runnable {
 
     private static byte[] rivalKPKBitbase = null;
 
-    public RivalSearch() throws IllegalFenException {
+    public Search() throws IllegalFenException {
         this(System.out, FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
     }
 
-    public RivalSearch(PrintStream printStream) throws IllegalFenException {
+    public Search(PrintStream printStream) throws IllegalFenException {
         this(printStream, FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
     }
 
-    public RivalSearch(Board board) throws IllegalFenException {
+    public Search(Board board) throws IllegalFenException {
         this(System.out, board);
     }
 
-    public RivalSearch(PrintStream printStream, Board board) throws IllegalFenException {
+    public Search(PrintStream printStream, Board board) throws IllegalFenException {
 
         this.engineChessBoard.setBoard(board);
 

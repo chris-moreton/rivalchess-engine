@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.uci;
 
-import com.netsensia.rivalchess.engine.core.RivalSearch;
+import com.netsensia.rivalchess.engine.core.Search;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ import static org.junit.Assert.assertTrue;
 
 public class UciControllerTest {
 
-    RivalSearch rivalSearch;
+    Search search;
     UCIController uciController;
     ByteArrayOutputStream outSpy;
 
@@ -23,14 +23,14 @@ public class UciControllerTest {
 
         outSpy = new ByteArrayOutputStream();
 
-        rivalSearch = new RivalSearch(new PrintStream(outSpy));
+        search = new Search(new PrintStream(outSpy));
 
-        rivalSearch.startEngineTimer(true);
-        rivalSearch.setHashSizeMB(32);
+        search.startEngineTimer(true);
+        search.setHashSizeMB(32);
 
-        new Thread(rivalSearch).start();
+        new Thread(search).start();
 
-        uciController = new UCIController(rivalSearch, 1, new PrintStream(outSpy));
+        uciController = new UCIController(search, 1, new PrintStream(outSpy));
 
         new Thread(uciController).start();
 
