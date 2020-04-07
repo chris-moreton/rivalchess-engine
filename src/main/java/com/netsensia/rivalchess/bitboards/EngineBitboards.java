@@ -1,7 +1,5 @@
-package com.netsensia.rivalchess.engine.core.bitboards;
+package com.netsensia.rivalchess.bitboards;
 
-import com.netsensia.rivalchess.bitboards.Bitboards;
-import com.netsensia.rivalchess.enums.BitboardType;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.SquareOccupant;

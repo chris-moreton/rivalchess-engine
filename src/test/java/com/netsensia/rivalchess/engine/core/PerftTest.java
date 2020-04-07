@@ -8,7 +8,6 @@ import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.util.FenUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
