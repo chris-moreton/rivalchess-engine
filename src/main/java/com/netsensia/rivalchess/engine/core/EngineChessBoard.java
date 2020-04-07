@@ -3,8 +3,8 @@ package com.netsensia.rivalchess.engine.core;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
-import com.netsensia.rivalchess.enums.BitboardType;
-import com.netsensia.rivalchess.engine.core.bitboards.EngineBitboards;
+import com.netsensia.rivalchess.bitboards.BitboardType;
+import com.netsensia.rivalchess.bitboards.EngineBitboards;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.engine.core.type.MoveDetail;
@@ -19,8 +19,6 @@ import com.netsensia.rivalchess.model.util.FenUtils;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static com.netsensia.rivalchess.model.SquareOccupant.WK;
 
 /**
  * Represents the state of a chessboard including bitboard states and the Zorbrish hash value.

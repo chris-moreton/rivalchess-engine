@@ -42,8 +42,7 @@ public class ZorbristHashCalculator {
             }
         }
 
-        hashValue ^= moverHashValues[engineChessBoard.getMover() == Colour.WHITE
-                ? Colour.WHITE.getValue() : Colour.BLACK.getValue()];
+        hashValue ^= moverHashValues[engineChessBoard.getMover() == Colour.WHITE ? 0 : 1];
 
         return hashValue;
     }

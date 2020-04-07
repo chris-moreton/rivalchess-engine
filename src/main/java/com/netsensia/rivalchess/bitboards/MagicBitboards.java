@@ -1,7 +1,5 @@
 package com.netsensia.rivalchess.bitboards;
 
-import com.netsensia.rivalchess.engine.core.RivalConstants;
-
 import java.util.List;
 
 public class MagicBitboards {
@@ -42,14 +40,13 @@ public class MagicBitboards {
         occupancyAttackSet = new long[4096];
 
         generateOccupancyVariationsAndDatabase(false);
-
         generateOccupancyVariationsAndDatabase(true);
 
         occupancyVariation = null;
         occupancyAttackSet = null;
     }
 
-    public void generateOccupancyVariationsAndDatabase(boolean isRook) {
+    private void generateOccupancyVariationsAndDatabase(boolean isRook) {
         int bitRef;
         long mask;
 
@@ -187,7 +184,6 @@ public class MagicBitboards {
 
             // multiple variations can share the same attack set (possible moves),
             // so find this here because we can use it to allow clashes for hash keys
-
 
             final int j = isRook ? calculateOccupancyAttackSetsRook(bitRef, i) : calculateOccupancyAttackSetsBishop(bitRef, i);
 

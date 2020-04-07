@@ -1,4 +1,4 @@
-package com.netsensia.rivalchess.enums;
+package com.netsensia.rivalchess.bitboards;
 
 public enum BitboardType {
     NONE(-1),
