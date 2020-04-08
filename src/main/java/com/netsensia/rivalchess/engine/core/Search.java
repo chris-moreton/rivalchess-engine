@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 
@@ -588,12 +589,12 @@ public final class Search implements Runnable {
                     shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
                 }
 
-                final long whiteOpen = Bitboards.southFill(kingShield) & (~Bitboards.southFill(board.getWhitePawnBitboard())) & Bitboards.RANK_1;
+                final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (whiteOpen != 0) {
                     halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT);
                     halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
-                final long blackOpen = Bitboards.southFill(kingShield) & (~Bitboards.southFill(board.getBlackPawnBitboard())) & Bitboards.RANK_1;
+                final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (blackOpen != 0) {
                     halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT);
                     halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
@@ -625,12 +626,12 @@ public final class Search implements Runnable {
                     shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
                 }
 
-                final long whiteOpen = Bitboards.southFill(kingShield) & (~Bitboards.southFill(board.getWhitePawnBitboard())) & Bitboards.RANK_1;
+                final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (whiteOpen != 0) {
                     halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT)
                             + RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
-                final long blackOpen = Bitboards.southFill(kingShield) & (~Bitboards.southFill(board.getBlackPawnBitboard())) & Bitboards.RANK_1;
+                final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (blackOpen != 0) {
                     halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT)
                             + RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);

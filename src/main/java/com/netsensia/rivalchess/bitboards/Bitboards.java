@@ -199,40 +199,12 @@ public final class Bitboards {
         return setBits;
     }
 
-    public static long southFill(long bitboard) {
-        bitboard |= (bitboard >>> 8);
-        bitboard |= (bitboard >>> 16);
-        bitboard |= (bitboard >>> 32);
-        return bitboard;
-    }
-
-    public static long northFill(long bitboard) {
-        bitboard |= (bitboard << 8);
-        bitboard |= (bitboard << 16);
-        bitboard |= (bitboard << 32);
-        return bitboard;
-    }
-
-    public static long getPawnFiles(final long pawns) {
-        return southFill(pawns) & RANK_1;
-    }
-
     public static long getBlackPawnAttacks(final long blackPawns) {
         return ((blackPawns & ~FILE_A) >>> 7) | ((blackPawns & ~FILE_H) >>> 9);
     }
 
     public static long getWhitePawnAttacks(long whitePawns) {
         return ((whitePawns & ~FILE_A) << 9) | ((whitePawns & ~FILE_H) << 7);
-    }
-
-    public static long getWhitePassedPawns(final long whitePawns, final long blackPawns) {
-        return whitePawns &
-                ~Bitboards.southFill(blackPawns | getBlackPawnAttacks(blackPawns) | (whitePawns >>> 8));
-    }
-
-    public static long getBlackPassedPawns(final long whitePawns, final long blackPawns) {
-        return blackPawns &
-                ~Bitboards.northFill(whitePawns |  getWhitePawnAttacks (whitePawns) | (blackPawns << 8));
     }
 
     public static List<Long> getPawnMovesCaptureOfColour(final Colour colour) {

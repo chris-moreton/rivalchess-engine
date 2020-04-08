@@ -7,7 +7,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static java.time.LocalDate.now;
 import static org.junit.Assert.assertEquals;
 
 public class BitboardsTest {
@@ -49,7 +48,7 @@ public class BitboardsTest {
         long bitboard = new BigInteger(bitboardString, 2).longValue();
         long expected = new BigInteger(expectedString, 2).longValue();
 
-        assertEquals(expected, Bitboards.southFill(bitboard));
+        assertEquals(expected, BitboardUtilsKt.southFill(bitboard, 8));
     }
 
     @Test
@@ -79,7 +78,8 @@ public class BitboardsTest {
         long bitboard = new BigInteger(bitboardString, 2).longValue();
         long expected = new BigInteger(expectedString, 2).longValue();
 
-        assertEquals(expected, Bitboards.northFill(bitboard));
+        assertEquals(expected, BitboardUtilsKt.northFill(bitboard, 8));
+
     }
 
     @Test
@@ -106,7 +106,7 @@ public class BitboardsTest {
                 "00000000" +
                 "11101011", 2).longValue();
 
-        assertEquals(expected, Bitboards.getPawnFiles(bitboard));
+        assertEquals(expected, BitboardUtilsKt.getPawnFiles(bitboard));
     }
 
     @Test
@@ -191,7 +191,7 @@ public class BitboardsTest {
                         "00000000" +
                         "00000000", 2).longValue();
 
-        assertEquals(expected, Bitboards.getWhitePassedPawns(whitePawns, blackPawns));
+        assertEquals(expected, BitboardUtilsKt.getWhitePassedPawns(whitePawns, blackPawns));
     }
 
     @Test
@@ -226,7 +226,7 @@ public class BitboardsTest {
                         "00000000" +
                         "00000000", 2).longValue();
 
-        assertEquals(expected, Bitboards.getBlackPassedPawns(whitePawns, blackPawns));
+        assertEquals(expected, BitboardUtilsKt.getBlackPassedPawns(whitePawns, blackPawns));
     }
 
     @Test
