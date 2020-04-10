@@ -6,6 +6,11 @@ import com.netsensia.rivalchess.model.SquareOccupant;
 
 import java.util.Arrays;
 
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getFirstOccupiedSquare;
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.isBishopAttackingSquare;
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.isRookAttackingSquare;
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getPawnMovesCaptureOfColour;
+
 public class EngineBitboards {
 
     /**
@@ -77,15 +82,15 @@ public class EngineBitboards {
         if ((pieceBitboards[SquareOccupant.WN.ofColour(attacker).getIndex()] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
                 (pieceBitboards[SquareOccupant.WK.ofColour(attacker).getIndex()] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
                 (pieceBitboards[SquareOccupant.WP.ofColour(attacker).getIndex()]
-                        & Bitboards.getPawnMovesCaptureOfColour(attacker.opponent()).get(attackedSquare)) != 0)
+                        & getPawnMovesCaptureOfColour(attacker.opponent()).get(attackedSquare)) != 0)
             return true;
 
         long bitboardBishop = getBishopMovePiecesBitboard(attacker);
 
         while (bitboardBishop != 0) {
-            final int pieceSquare = Bitboards.getFirstOccupiedSquare(bitboardBishop);
+            final int pieceSquare = getFirstOccupiedSquare(bitboardBishop);
             bitboardBishop ^= (1L << (pieceSquare));
-            if (Bitboards.isBishopAttackingSquare(attackedSquare, pieceSquare, getAllPieceBitboard())) {
+            if (isBishopAttackingSquare(attackedSquare, pieceSquare, getAllPieceBitboard())) {
                 return true;
             }
         }
@@ -95,7 +100,7 @@ public class EngineBitboards {
         while (bitboardRook != 0) {
             final int pieceSquare = Long.numberOfTrailingZeros(bitboardRook);
             bitboardRook ^= (1L << (pieceSquare));
-            if (Bitboards.isRookAttackingSquare(attackedSquare, pieceSquare, getAllPieceBitboard())) {
+            if (isRookAttackingSquare(attackedSquare, pieceSquare, getAllPieceBitboard())) {
                 return true;
             }
         }

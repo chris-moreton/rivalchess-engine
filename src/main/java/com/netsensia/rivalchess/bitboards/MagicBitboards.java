@@ -1,6 +1,9 @@
 package com.netsensia.rivalchess.bitboards;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getSetBits;
 
 public class MagicBitboards {
     public static final long[] occupancyMaskRook = {
@@ -56,7 +59,7 @@ public class MagicBitboards {
 
         for (bitRef = 0; bitRef <= 63; bitRef++) {
             mask = isRook ? occupancyMaskRook[bitRef] : occupancyMaskBishop[bitRef];
-            setBitsInMask = Bitboards.getSetBits(mask);
+            setBitsInMask = getSetBits(mask, new ArrayList<>());
             bitCount = Long.bitCount(mask);
 
             calculateOccupancyAttackSets(isRook, bitRef, setBitsInMask, bitCount);
@@ -174,7 +177,7 @@ public class MagicBitboards {
         for (i = 0; i < variationCount; i++) {
             occupancyVariation[i] = 0;
             // find bits set in index "i" and map them to bits in the 64 bit "occupancyVariation"
-            setBitsInIndex = Bitboards.getSetBits(i);
+            setBitsInIndex = getSetBits(i, new ArrayList<>());
             for (int setBitInIndex : setBitsInIndex) {
                 occupancyVariation[i] |= (1L << setBitsInMask.get(setBitInIndex));
                 // e.g. if setBitsInIndex[0] == 3 then the third bit (position 4) is set in counter "i"

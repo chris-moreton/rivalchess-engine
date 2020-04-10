@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.bitboards.BitboardUtilsKt;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
@@ -17,8 +18,11 @@ import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.model.util.FenUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getSetBits;
 
 /**
  * Represents the state of a chessboard including bitboard states and the Zorbrish hash value.
@@ -1206,7 +1210,7 @@ public final class EngineChessBoard {
         char[] pieces = new char[]{'P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r'};
 
         for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-            List<Integer> bitsSet = Bitboards.getSetBits(engineBitboards.pieceBitboards[i]);
+            List<Integer> bitsSet = getSetBits(engineBitboards.pieceBitboards[i], new ArrayList<>());
             for (int bitSet : bitsSet) {
                 board[bitSet] = pieces[i];
             }

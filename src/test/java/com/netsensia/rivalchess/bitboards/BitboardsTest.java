@@ -15,11 +15,11 @@ public class BitboardsTest {
     public void getSetBits() {
         assertEquals(
                 new ArrayList<>(Arrays.asList(0, 1, 6, 9, 11, 13, 16, 18, 19, 20, 21, 23)),
-                Bitboards.getSetBits(12397123L));
+                BitboardUtilsKt.getSetBits(12397123L, new ArrayList<>()));
 
         assertEquals(
                 new ArrayList<>(Arrays.asList(0, 1, 6, 8, 10, 12, 14, 24, 33, 38, 44, 45, 54, 55, 57, 59, 60, 63)),
-                Bitboards.getSetBits(Long.parseUnsignedLong("11150965737412121923")));
+                BitboardUtilsKt.getSetBits(Long.parseUnsignedLong("11150965737412121923"), new ArrayList<>()));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class BitboardsTest {
                     "11100101" +
                     "00000000", 2).longValue();
 
-        assertEquals(expected, Bitboards.getBlackPawnAttacks(bitboard));
+        assertEquals(expected, BitboardUtilsKt.getBlackPawnAttacks(bitboard));
     }
 
     @Test
@@ -156,7 +156,7 @@ public class BitboardsTest {
                     "00000000" +
                     "00000000", 2).longValue();
 
-        assertEquals(expected, Bitboards.getWhitePawnAttacks(bitboard));
+        assertEquals(expected, BitboardUtilsKt.getWhitePawnAttacks(bitboard));
     }
 
     @Test
@@ -231,7 +231,7 @@ public class BitboardsTest {
 
     @Test
     public void getPawnMovesOfCaptureColour() {
-        assertEquals(Bitboards.whitePawnMovesCapture, Bitboards.getPawnMovesCaptureOfColour(Colour.WHITE));
-        assertEquals(Bitboards.blackPawnMovesCapture, Bitboards.getPawnMovesCaptureOfColour(Colour.BLACK));
+        assertEquals(Bitboards.whitePawnMovesCapture, BitboardUtilsKt.getPawnMovesCaptureOfColour(Colour.WHITE));
+        assertEquals(Bitboards.blackPawnMovesCapture, BitboardUtilsKt.getPawnMovesCaptureOfColour(Colour.BLACK));
     }
 }

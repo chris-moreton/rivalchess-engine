@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getBlackPawnAttacks;
+import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getWhitePawnAttacks;
 import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
@@ -188,8 +190,8 @@ public final class Search implements Runnable {
         int blackKingAttackedCount = 0;
         long whiteAttacksBitboard = 0;
         long blackAttacksBitboard = 0;
-        final long whitePawnAttacks = Bitboards.getWhitePawnAttacks(board.getWhitePawnBitboard());
-        final long blackPawnAttacks = Bitboards.getBlackPawnAttacks(board.getBlackPawnBitboard());
+        final long whitePawnAttacks = getWhitePawnAttacks(board.getWhitePawnBitboard());
+        final long blackPawnAttacks = getBlackPawnAttacks(board.getBlackPawnBitboard());
         final long whitePieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? RivalConstants.FRIENDLY : RivalConstants.ENEMY);
         final long blackPieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? RivalConstants.ENEMY : RivalConstants.FRIENDLY);
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
@@ -518,7 +520,7 @@ public final class Search implements Runnable {
         // Everything white attacks with pieces.  Does not include attacked pawns.
         whiteAttacksBitboard &= board.getBlackKnightBitboard() | board.getBlackRookBitboard() | board.getBlackQueenBitboard() | board.getBlackBishopBitboard();
         // Plus anything white attacks with pawns.
-        whiteAttacksBitboard |= Bitboards.getWhitePawnAttacks(board.getWhitePawnBitboard());
+        whiteAttacksBitboard |= getWhitePawnAttacks(board.getWhitePawnBitboard());
 
         int temp = 0;
 
@@ -536,14 +538,14 @@ public final class Search implements Runnable {
         int threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
 
         blackAttacksBitboard &= board.getWhiteKnightBitboard() | board.getWhiteRookBitboard() | board.getWhiteQueenBitboard() | board.getWhiteBishopBitboard();
-        blackAttacksBitboard |= Bitboards.getBlackPawnAttacks(board.getBlackPawnBitboard());
+        blackAttacksBitboard |= getBlackPawnAttacks(board.getBlackPawnBitboard());
 
         temp = 0;
 
         bitboard = blackAttacksBitboard & whitePieces & ~board.getWhiteKingBitboard();
 
         while (bitboard != 0) {
-            bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
+            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
             if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WP) temp += PieceValue.getValue(Piece.PAWN);
             else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WN) temp += PieceValue.getValue(Piece.KNIGHT);
             else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WR) temp += PieceValue.getValue(Piece.ROOK);
