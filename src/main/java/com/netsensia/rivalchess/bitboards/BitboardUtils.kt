@@ -36,30 +36,6 @@ fun getWhitePawnAttacks(whitePawns: Long): Long {
     return whitePawns and Bitboards.FILE_A.inv() shl 9 or (whitePawns and Bitboards.FILE_H.inv() shl 7)
 }
 
-fun getSetBitsIterative(bitboard: Long): List<Int> {
-    var bitboard = bitboard
-    val setBits: MutableList<Int> = ArrayList()
-    while (bitboard != 0L) {
-        val trailingZeroes = java.lang.Long.numberOfTrailingZeros(bitboard)
-        setBits.add(trailingZeroes)
-        bitboard = bitboard xor (1L shl trailingZeroes)
-    }
-    return setBits
-}
-
-fun getSetBitsNonTailRecursive(bitboard: Long): List<Int> {
-    return when (bitboard) {
-        0L -> ArrayList()
-        else -> {
-            val setBits: MutableList<Int> = ArrayList()
-            val trailingZeroes = numberOfTrailingZeros(bitboard)
-            setBits.add(trailingZeroes)
-            setBits.addAll(getSetBitsNonTailRecursive(bitboard xor (1L shl trailingZeroes)))
-            return setBits
-        }
-    }
-}
-
 tailrec fun getSetBits(bitboard: Long, setBits: MutableList<Int> = ArrayList()): List<Int> {
     return when (bitboard) {
         0L -> setBits
