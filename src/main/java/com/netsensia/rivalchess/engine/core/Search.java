@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.config.FeatureFlag;
+import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
 import com.netsensia.rivalchess.enums.MoveOrder;
@@ -50,7 +51,7 @@ public final class Search implements Runnable {
     private final List<List<Long>> drawnPositionsAtRoot;
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
     private EngineChessBoard engineChessBoard
-            = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+            = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     private final List<Integer> mateKiller = new ArrayList<>();
 
     private final int[][] killerMoves;
@@ -102,11 +103,11 @@ public final class Search implements Runnable {
     private static byte[] rivalKPKBitbase = null;
 
     public Search() throws IllegalFenException {
-        this(System.out, FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        this(System.out, FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     }
 
     public Search(PrintStream printStream) throws IllegalFenException {
-        this(printStream, FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        this(printStream, FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     }
 
     public Search(Board board) throws IllegalFenException {
@@ -1272,9 +1273,13 @@ public final class Search implements Runnable {
         byte verifyingNullMoveDepthReduction = 0;
         int threatExtend = 0, pawnExtend = 0;
 
-        int nullMoveReduceDepth = (depthRemaining > RivalConstants.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE) ? RivalConstants.NULLMOVE_REDUCE_DEPTH + 1 : RivalConstants.NULLMOVE_REDUCE_DEPTH;
+        int nullMoveReduceDepth = (depthRemaining > SearchConfig.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE.getValue())
+                ? SearchConfig.NULLMOVE_REDUCE_DEPTH.getValue() + 1
+                : SearchConfig.NULLMOVE_REDUCE_DEPTH.getValue();
         if (RivalConstants.USE_NULLMOVE_PRUNING && !isCheck && board.isNotOnNullMove() && depthRemaining > 1) {
-            if ((board.getMover() == Colour.WHITE ? board.getWhitePieceValues() : board.getBlackPieceValues()) >= RivalConstants.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES &&
+            if ((board.getMover() == Colour.WHITE
+                    ? board.getWhitePieceValues()
+                    : board.getBlackPieceValues()) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.getValue() &&
                     (board.getMover() == Colour.WHITE ? board.getWhitePawnValues() : board.getBlackPawnValues()) > 0) {
                 board.makeNullMove();
                 newPath = search(board, (byte) (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, -1, false);

@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
+import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
@@ -7,10 +8,10 @@ import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import junit.framework.TestCase;
 
-public class SearchHashHelperTest extends TestCase {
+public class SearchConfigHashHelperTest extends TestCase {
 
     public void testIsHeightHashTableEntryValid() throws InvalidMoveException {
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
         final BoardHash boardHash = engineChessBoard.getBoardHashObject();
 
         engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
@@ -82,7 +83,7 @@ public class SearchHashHelperTest extends TestCase {
                 boardHash.getHashTableIgnoreHeight(
                         boardHash.getHashIndex(engineChessBoard) + RivalConstants.HASHENTRY_MOVE));
 
-        for (int i=0; i < RivalConstants.MAXIMUM_HASH_AGE; i++) {
+        for (int i = 0; i < RivalConstants.MAXIMUM_HASH_AGE; i++) {
             boardHash.incVersion();
             assertTrue(SearchHashHelper.isHeightHashTableEntryValid(2, engineChessBoard));
         }

@@ -21,14 +21,14 @@ public class EngineChessBoardTest {
 
     @Test
     public void canRecognisePreviousPositions() throws IllegalFenException, InvalidMoveException {
-        final EngineChessBoard board = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        final EngineChessBoard board = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         final List<String> moves = new ArrayList<>();
 
         moves.add("e2e4");
         moves.add("e7e5");
 
-        board.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        board.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         for (String move : moves) {
             board.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
@@ -44,7 +44,7 @@ public class EngineChessBoardTest {
 
         assertEquals(2, board.previousOccurrencesOfThisPosition());
 
-        board.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        board.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         moves.add("b1c3");
         moves.add("b8a6");
@@ -55,7 +55,7 @@ public class EngineChessBoardTest {
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
 
-        board.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        board.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         moves.add("c3b1");
         moves.add("a6b8");
@@ -74,7 +74,7 @@ public class EngineChessBoardTest {
         moves.add("c3b1");
         moves.add("c6b8");
 
-        board.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        board.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         for (String move : moves) {
             board.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
@@ -88,7 +88,7 @@ public class EngineChessBoardTest {
         final String STALEMATE = "8/6b1/8/8/8/n7/PP6/K7 w - - 0 4";
         final String NOT_STALEMATE = "8/6b1/8/8/8/n7/PP6/K7 b - - 0 4";
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
         
         engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
         assertFalse(engineChessBoard.isGameOver());
@@ -108,7 +108,7 @@ public class EngineChessBoardTest {
 
     @Test
     public void getSquareOccupant() throws IllegalFenException {
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         assertEquals(SquareOccupant.WK, engineChessBoard.getSquareOccupant(3));
         assertEquals(SquareOccupant.WQ, engineChessBoard.getSquareOccupant(4));
@@ -121,7 +121,7 @@ public class EngineChessBoardTest {
 
     @Test
     public void getPiece() throws IllegalFenException {
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         assertEquals(Piece.KING, engineChessBoard.getPiece(3));
         assertEquals(Piece.QUEEN, engineChessBoard.getPiece(4));
@@ -147,7 +147,7 @@ public class EngineChessBoardTest {
         final String SILLY_CHECK = "rnbqkbnr/pppp1ppp/8/8/8/8/PPPP1PPP/RNBKQBNR b KQkq - 0 4";
         final String STALEMATE = "8/6b1/8/8/8/n7/PP6/K7 w - - 0 4";
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
         assertFalse(engineChessBoard.isCheck());
@@ -167,7 +167,7 @@ public class EngineChessBoardTest {
 
     @Test
     public void getWhitePieceValues() throws IllegalFenException, InvalidMoveException {
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         assertEquals(
                 PieceValue.getValue(Piece.QUEEN)
@@ -194,7 +194,7 @@ public class EngineChessBoardTest {
 
     @Test
     public void getBlackPieceValues() throws IllegalFenException, InvalidMoveException {
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         assertEquals(
                 PieceValue.getValue(Piece.QUEEN)
@@ -221,9 +221,9 @@ public class EngineChessBoardTest {
 
     @Test
     public void getFen() throws IllegalFenException, InvalidMoveException {
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
-        assertEquals(RivalConstants.FEN_START_POS, engineChessBoard.getFen());
+        assertEquals(ConstantsKt.FEN_START_POS, engineChessBoard.getFen());
 
         engineChessBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
         assertEquals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", engineChessBoard.getFen());

@@ -11,16 +11,6 @@ public final class RivalConstants
 {
 
 	/*
-	 * Null move
-	 */
-	@Deprecated
-	public static final int NULLMOVE_REDUCE_DEPTH = 2;
-	@Deprecated
-	public static final int NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE = 6;
-	@Deprecated
-	public static final int NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES = PieceValue.getValue(Piece.KNIGHT);
-
-	/*
 	 * Hash
 	 */
 	@Deprecated
@@ -98,9 +88,6 @@ public final class RivalConstants
 	public static final int HASHPOSITION_SIZE_BYTES = 8 +  /* pointer to array */ (NUM_HASH_FIELDS * 4); /* array contents */
 	@Deprecated
 	public static final int PAWNHASHENTRY_SIZE_BYTES = 8 +  /* pointer to array */ (NUM_PAWNHASH_FIELDS * 8); /* array contents */
-
-	@Deprecated
-	public static final String FEN_START_POS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 	@Deprecated
 	public static final int INFINITY = 20000000;

@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.eve;
 
+import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.Search;
@@ -37,6 +38,6 @@ public class EngineVEngineTest {
 
     @Test
     public void runGame() throws IllegalFenException {
-        engineChessBoard.setBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        engineChessBoard.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     }
 }

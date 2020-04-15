@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core.helper;
 
+import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
@@ -134,7 +135,7 @@ public class ZorbristHashTrackerTest {
     @Test
     public void zorbristTracker() throws InvalidMoveException {
 
-        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         compareCalculatedHashWithTrackedHash(ecb, "e2e4");
         compareCalculatedHashWithTrackedHash(ecb, "c7c5");
@@ -165,7 +166,7 @@ public class ZorbristHashTrackerTest {
 
         assertEquals("5b1r/pN1k1ppp/3q1n2/2p5/2B3b1/8/PPP2PPP/RNB1qRK1 w - - 0 14", ecb.getFen());
 
-        ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        ecb = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         compareCalculatedHashWithTrackedHash(ecb, "e2e4");
         compareCalculatedHashWithTrackedHash(ecb, "e7e5");
@@ -186,7 +187,7 @@ public class ZorbristHashTrackerTest {
 
     @Test
     public void testTrackerWhenMakeMoveLeavesMoverInCheck() throws InvalidMoveException {
-        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         compareCalculatedHashWithTrackedHash(ecb, "e2e4");
         compareCalculatedHashWithTrackedHash(ecb, "e7e5");
@@ -221,7 +222,7 @@ public class ZorbristHashTrackerTest {
     public void multipleRandomMovesTest() throws InvalidMoveException {
 
         for (int i=0; i<100; i++) {
-            EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+            EngineChessBoard ecb = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
             Random r = new Random();
             r.setSeed(i);

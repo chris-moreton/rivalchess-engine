@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 
 import com.netsensia.rivalchess.config.BuildInfo;
+import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
@@ -270,7 +271,7 @@ public class UCIController implements Runnable {
     private Board getBoardModel(String s, String[] parts) throws IllegalFenException {
         Board board;
         if (parts[1].equals("startpos")) {
-            board = FenUtils.getBoardModel(RivalConstants.FEN_START_POS);
+            board = FenUtils.getBoardModel(ConstantsKt.FEN_START_POS);
         } else {
             board = FenUtils.getBoardModel(s.substring(12).trim());
         }

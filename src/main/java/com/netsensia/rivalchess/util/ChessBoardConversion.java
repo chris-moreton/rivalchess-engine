@@ -94,10 +94,10 @@ public class ChessBoardConversion
 		
 		switch (board.getSquareOccupant(from).getIndex() % 6)
 		{
-			case RivalConstants.WN : pgnMove = "N"; break;  
-			case RivalConstants.WK : pgnMove = "K"; break;  
-			case RivalConstants.WQ : pgnMove = "Q"; break;  
-			case RivalConstants.WB : pgnMove = "B"; break;  
+			case RivalConstants.WN : pgnMove = "N"; break;
+			case RivalConstants.WK : pgnMove = "K"; break;
+			case RivalConstants.WQ : pgnMove = "Q"; break;
+			case RivalConstants.WB : pgnMove = "B"; break;
 			case RivalConstants.WR : pgnMove = "R"; break;
 			case RivalConstants.WP : break;
 			default:
@@ -151,10 +151,10 @@ public class ChessBoardConversion
 		
 		switch (promotionPiece)
 		{
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN : pgnMove += "=Q"; break; 
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT : pgnMove += "=N"; break; 
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP : pgnMove += "=B"; break; 
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK : pgnMove += "=R"; break; 
+			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN : pgnMove += "=Q"; break;
+			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT : pgnMove += "=N"; break;
+			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP : pgnMove += "=B"; break;
+			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK : pgnMove += "=R"; break;
 		}
 		
 		if (board.makeMove(new EngineMove(move)))

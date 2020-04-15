@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public enum Search {
+public enum SearchConfig {
 
     NUM_KILLER_MOVES (2),
     HISTORY_MAX_VALUE (20000),
@@ -28,7 +28,7 @@ public enum Search {
 
     private int value;
 
-    private Search(int value) {
+    private SearchConfig(int value) {
         this.value = value;
     }
 

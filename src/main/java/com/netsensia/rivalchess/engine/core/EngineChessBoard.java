@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core;
 
-import com.netsensia.rivalchess.bitboards.BitboardUtilsKt;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
@@ -29,8 +28,8 @@ import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getSetBits;
  */
 public final class EngineChessBoard {
 
-    final private EngineBitboards engineBitboards = new EngineBitboards();
-    final private BoardHash boardHash = new BoardHash();
+    private final EngineBitboards engineBitboards = new EngineBitboards();
+    private final BoardHash boardHash = new BoardHash();
 
     private int castlePrivileges;
     private boolean isWhiteToMove;
@@ -50,7 +49,7 @@ public final class EngineChessBoard {
     private int halfMoveCount = 0;
 
     public EngineChessBoard() {
-        this(FenUtils.getBoardModel(RivalConstants.FEN_START_POS));
+        this(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     }
 
     public EngineChessBoard(Board board) {
