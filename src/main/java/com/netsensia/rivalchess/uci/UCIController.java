@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 
 import com.netsensia.rivalchess.config.BuildInfo;
+import com.netsensia.rivalchess.config.Limit;
+import com.netsensia.rivalchess.config.Uci;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.enums.SearchState;
@@ -156,27 +158,26 @@ public class UCIController implements Runnable {
 
     private void setSearchOptions() {
         if (isInfinite) {
-            search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-            search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            search.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+            search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
+            search.setSearchDepth(Limit.MAX_SEARCH_DEPTH.getValue() - 2);
+            search.setNodesToSearch(Limit.MAX_NODES_TO_SEARCH.getValue());
         } else if (moveTime != -1) {
             search.setMillisToThink(moveTime);
-            search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            search.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+            search.setSearchDepth(Limit.MAX_SEARCH_DEPTH.getValue() - 2);
+            search.setNodesToSearch(Limit.MAX_NODES_TO_SEARCH.getValue());
         } else if (maxDepth != -1) {
             search.setSearchDepth(maxDepth);
-            search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
-            search.setNodesToSearch(RivalConstants.MAX_NODES_TO_SEARCH);
+            search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
+            search.setNodesToSearch(Limit.MAX_NODES_TO_SEARCH.getValue());
         } else if (maxNodes != -1) {
-            search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
-            search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+            search.setSearchDepth(Limit.MAX_SEARCH_DEPTH.getValue() - 2);
+            search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
             search.setNodesToSearch(maxNodes);
         } else if (whiteTime != -1) {
             int calcTime = (search.getMover() == Colour.WHITE ? whiteTime : blackTime) / (movesToGo == 0 ? 120 : movesToGo);
             int guaranteedTime = (search.getMover() == Colour.WHITE ? whiteInc : blackInc);
-            int timeToThink = calcTime + guaranteedTime - RivalConstants.UCI_TIMER_SAFTEY_MARGIN_MILLIS;
-            search.setMillisToThink(timeToThink);
-            search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+            int timeToThink = calcTime + guaranteedTime - Uci.UCI_TIMER_SAFTEY_MARGIN_MILLIS.getValue();
+            search.setMillisToThink(Limit.MAX_SEARCH_DEPTH.getValue() - 2);
         }
     }
 
