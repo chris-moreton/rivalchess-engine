@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.bitboards;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.SquareOccupant;
 
@@ -33,7 +34,7 @@ public class EngineBitboards {
     }
 
     public long getAllPieceBitboard() {
-        return pieceBitboards[RivalConstants.ALL];
+        return getPieceBitboard(BitboardType.ALL);
     }
 
     public void xorPieceBitboard(int i, long xorBy) {
@@ -49,7 +50,7 @@ public class EngineBitboards {
     }
 
     public void reset() {
-        pieceBitboards = new long[RivalConstants.NUM_BITBOARDS];
+        pieceBitboards = new long[BitboardType.getNumBitboardTypes()];
         Arrays.fill(pieceBitboards, 0);
     }
 
@@ -74,14 +75,14 @@ public class EngineBitboards {
 
     public long getRookMovePiecesBitboard(Colour colour) {
         return colour == Colour.WHITE
-                ? pieceBitboards[RivalConstants.WR] | pieceBitboards[RivalConstants.WQ]
-                : pieceBitboards[RivalConstants.BR] | pieceBitboards[RivalConstants.BQ];
+                ? getPieceBitboard(BitboardType.WR) | getPieceBitboard(BitboardType.WQ)
+                : getPieceBitboard(BitboardType.BR) | getPieceBitboard(BitboardType.BQ);
     }
 
     public long getBishopMovePiecesBitboard(Colour colour) {
         return colour == Colour.WHITE
-                ? pieceBitboards[RivalConstants.WB] | pieceBitboards[RivalConstants.WQ]
-                : pieceBitboards[RivalConstants.BB] | pieceBitboards[RivalConstants.BQ];
+                ? getPieceBitboard(BitboardType.WB) | getPieceBitboard(BitboardType.WQ)
+                : getPieceBitboard(BitboardType.BB) | getPieceBitboard(BitboardType.BQ);
     }
 
     public boolean isSquareAttackedBy(final int attackedSquare, final Colour attacker) {

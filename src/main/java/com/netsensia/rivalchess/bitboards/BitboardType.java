@@ -40,7 +40,7 @@ public enum BitboardType {
         return BitboardType.NONE;
     }
 
-    public int getNumBitboardTypes() {
+    public static int getNumBitboardTypes() {
         return numBitboardTypes;
     }
 
