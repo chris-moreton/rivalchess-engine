@@ -3,7 +3,6 @@ package com.netsensia.rivalchess.engine.core.hash;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.HashVerificationException;
 
 public class SearchHashHelper {

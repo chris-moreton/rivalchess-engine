@@ -2,7 +2,6 @@ package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 
 public class ZorbristHashCalculator {
 

@@ -1,11 +1,10 @@
 package com.netsensia.rivalchess.engine.core.eval;
 
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 
 public class PawnHashEntry {
-    private int pawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-    private int whitePassedPawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
-    private int blackPassedPawnScore = RivalConstants.PAWNHASH_DEFAULT_SCORE;
+    private int pawnScore = -Integer.MAX_VALUE;
+    private int whitePassedPawnScore = -Integer.MAX_VALUE;
+    private int blackPassedPawnScore = -Integer.MAX_VALUE;
     private long whitePassedPawnsBitboard = 0;
     private long blackPassedPawnsBitboard = 0;
 

@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.bitboards;
 
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.SquareOccupant;
 
@@ -39,6 +38,14 @@ public class EngineBitboards {
 
     public void xorPieceBitboard(int i, long xorBy) {
         this.pieceBitboards[i] ^= xorBy;
+    }
+
+    public void xorPieceBitboard(BitboardType type, long xorBy) {
+        this.pieceBitboards[type.getIndex()] ^= xorBy;
+    }
+
+    public void orPieceBitboard(BitboardType type, long xorBy) {
+        this.pieceBitboards[type.getIndex()] |= xorBy;
     }
 
     public void reset() {

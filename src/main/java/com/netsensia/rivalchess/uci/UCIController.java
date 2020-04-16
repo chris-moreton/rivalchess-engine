@@ -9,7 +9,6 @@ import com.netsensia.rivalchess.config.BuildInfo;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.enums.SearchState;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
