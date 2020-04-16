@@ -11,14 +11,6 @@ public final class RivalConstants
 {
 
 	/*
-	 * Hash
-	 */
-	@Deprecated
-	public static final int MAXIMUM_HASH_AGE = 3;
-	@Deprecated
-	public static final int ASPIRATION_RADIUS = 40;
-
-	/*
 	 * Quiesce
 	 */
 	@Deprecated

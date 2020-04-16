@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
+import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
@@ -83,7 +84,7 @@ public class SearchConfigHashHelperTest extends TestCase {
                 boardHash.getHashTableIgnoreHeight(
                         boardHash.getHashIndex(engineChessBoard) + RivalConstants.HASHENTRY_MOVE));
 
-        for (int i = 0; i < RivalConstants.MAXIMUM_HASH_AGE; i++) {
+        for (int i = 0; i < SearchConfig.MAXIMUM_HASH_AGE.getValue(); i++) {
             boardHash.incVersion();
             assertTrue(SearchHashHelper.isHeightHashTableEntryValid(2, engineChessBoard));
         }

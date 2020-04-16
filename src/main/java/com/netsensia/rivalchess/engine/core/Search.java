@@ -1808,11 +1808,11 @@ public final class Search implements Runnable {
                     if (!this.m_abortingSearch) {
                         m_currentPath.setPath(Objects.requireNonNull(path));
                         currentPathString = "" + m_currentPath;
-                        aspirationLow = path.score - RivalConstants.ASPIRATION_RADIUS;
-                        aspirationHigh = path.score + RivalConstants.ASPIRATION_RADIUS;
+                        aspirationLow = path.score - SearchConfig.ASPIRATION_RADIUS.getValue();
+                        aspirationHigh = path.score + SearchConfig.ASPIRATION_RADIUS.getValue();
                     }
                 } else {
-                    path = searchZero(engineChessBoard, depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
+                    path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, RivalConstants.INFINITY);
                 }
 
                 if (!this.m_abortingSearch) {

@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
+import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.HashVerificationException;
@@ -22,7 +23,7 @@ public class SearchHashHelper {
             boolean isLocked =
                     boardHash.getHashTableVersion()
                             - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION)
-                            <= RivalConstants.MAXIMUM_HASH_AGE;
+                            <= SearchConfig.MAXIMUM_HASH_AGE.getValue();
 
             if (isLocked) {
                 superVerifyUseHeightHash(board);
@@ -45,7 +46,7 @@ public class SearchHashHelper {
                 boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
                 boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
 
-            boolean isLocked = boardHash.getHashTableVersion() - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION) <= RivalConstants.MAXIMUM_HASH_AGE;
+            boolean isLocked = boardHash.getHashTableVersion() - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION) <= SearchConfig.MAXIMUM_HASH_AGE.getValue();
 
             if (isLocked) {
                 superVerifyAlwaysReplaceHash(board);
