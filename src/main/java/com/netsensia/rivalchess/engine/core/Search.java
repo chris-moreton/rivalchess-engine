@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.config.Uci;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
+import com.netsensia.rivalchess.enums.CastleBitMask;
 import com.netsensia.rivalchess.enums.MoveOrder;
 import com.netsensia.rivalchess.enums.PromotionPieceMask;
 import com.netsensia.rivalchess.enums.SearchState;
@@ -264,7 +265,7 @@ public final class Search implements Runnable {
         eval += (pieceSquareTemp * Math.min(board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);
 
         if (Long.bitCount(board.getWhiteRookBitboard() & Bitboards.RANK_7) > 1 && (board.getBitboardByIndex(BitboardType.BK.getIndex()) & Bitboards.RANK_8) != 0)
-            eval += RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
+            eval += Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
 
         bitboard = board.getBlackRookBitboard();
         pieceSquareTemp = 0;
@@ -272,22 +273,22 @@ public final class Search implements Runnable {
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (lastSq != -1 && file == (lastSq % 8)) eval -= RivalConstants.VALUE_ROOKS_ON_SAME_FILE;
+            if (lastSq != -1 && file == (lastSq % 8)) eval -= Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
 
             pieceSquareTemp += PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
 
             file = sq % 8;
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
-            eval -= RivalConstants.VALUE_ROOK_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
+            eval -= Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
             blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
 
             if ((Bitboards.FILES.get(file) & board.getBlackPawnBitboard()) == 0)
                 if ((Bitboards.FILES.get(file) & board.getWhitePawnBitboard()) == 0)
-                    eval -= RivalConstants.VALUE_ROOK_ON_OPEN_FILE;
+                    eval -= Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue();
                 else
-                    eval -= RivalConstants.VALUE_ROOK_ON_HALF_OPEN_FILE;
+                    eval -= Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue();
 
             lastSq = sq;
         }
@@ -295,7 +296,7 @@ public final class Search implements Runnable {
         eval -= (pieceSquareTemp * Math.min(board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);
 
         if (Long.bitCount(board.getBlackRookBitboard() & Bitboards.RANK_2) > 1 && (board.getWhiteKingBitboard() & Bitboards.RANK_1) != 0)
-            eval -= RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
+            eval -= Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
 
         bitboard = board.getWhiteKnightBitboard();
 
@@ -310,10 +311,10 @@ public final class Search implements Runnable {
             pieceSquareTempEndGame += PieceSquareTables.knightEndGame.get(sq);
 
             whiteAttacksBitboard |= knightAttacks;
-            eval -= Long.bitCount(knightAttacks & (blackPawnAttacks | board.getWhitePawnBitboard())) * RivalConstants.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY;
+            eval -= Long.bitCount(knightAttacks & (blackPawnAttacks | board.getWhitePawnBitboard())) * Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue();
         }
 
-        eval += Numbers.linearScale(board.getBlackPieceValues() + board.getBlackPawnValues(), RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval += Numbers.linearScale(board.getBlackPieceValues() + board.getBlackPawnValues(), Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(), Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
         pieceSquareTemp = 0;
         pieceSquareTempEndGame = 0;
@@ -327,10 +328,10 @@ public final class Search implements Runnable {
             final long knightAttacks = Bitboards.knightMoves.get(sq);
 
             blackAttacksBitboard |= knightAttacks;
-            eval += Long.bitCount(knightAttacks & (whitePawnAttacks | board.getBlackPawnBitboard())) * RivalConstants.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY;
+            eval += Long.bitCount(knightAttacks & (whitePawnAttacks | board.getBlackPawnBitboard())) * Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue();
         }
 
-        eval -= Numbers.linearScale(board.getWhitePieceValues() + board.getWhitePawnValues(), RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval -= Numbers.linearScale(board.getWhitePieceValues() + board.getWhitePawnValues(), Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(), Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
         bitboard = board.getWhiteQueenBitboard();
         while (bitboard != 0) {
@@ -345,7 +346,7 @@ public final class Search implements Runnable {
             whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone) * 2;
 
-            eval += RivalConstants.VALUE_QUEEN_MOBILITY[Long.bitCount(allAttacks & ~whitePieces)];
+            eval += Evaluation.getQueenMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
         }
 
         bitboard = board.getBlackQueenBitboard();
@@ -361,21 +362,21 @@ public final class Search implements Runnable {
             blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone) * 2;
 
-            eval -= RivalConstants.VALUE_QUEEN_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
+            eval -= Evaluation.getQueenMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
         }
 
         final BoardHash boardHash = engineChessBoard.getBoardHashObject();
         eval += boardHash.getPawnHashEntry(board).getPawnScore();
 
         eval +=
-                Numbers.linearScale((materialDifference > 0) ? board.getWhitePawnValues() : board.getBlackPawnValues(), 0, RivalConstants.TRADE_BONUS_UPPER_PAWNS, -30 * materialDifference / 100, 0) +
-                        Numbers.linearScale((materialDifference > 0) ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues(), 0, RivalConstants.TOTAL_PIECE_VALUE_PER_SIDE_AT_START, 30 * materialDifference / 100, 0);
+                Numbers.linearScale((materialDifference > 0) ? board.getWhitePawnValues() : board.getBlackPawnValues(), 0, Evaluation.TRADE_BONUS_UPPER_PAWNS.getValue(), -30 * materialDifference / 100, 0) +
+                        Numbers.linearScale((materialDifference > 0) ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues(), 0, Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.getValue(), 30 * materialDifference / 100, 0);
 
         final int castlePrivs =
-                (board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_WK) +
-                        (board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_WQ) +
-                        (board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_BK) +
-                        (board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_BQ);
+                (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WK.getValue()) +
+                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WQ.getValue()) +
+                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BK.getValue()) +
+                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BQ.getValue());
 
         if (castlePrivs != 0) {
             // Value of moving King to its queenside castle destination in the middle game
@@ -385,8 +386,8 @@ public final class Search implements Runnable {
             int kingSquareBonusScaled =
                     Numbers.linearScale(
                             board.getBlackPieceValues(),
-                            RivalConstants.CASTLE_BONUS_LOW_MATERIAL,
-                            RivalConstants.CASTLE_BONUS_HIGH_MATERIAL,
+                            Evaluation.CASTLE_BONUS_LOW_MATERIAL.getValue(),
+                            Evaluation.CASTLE_BONUS_HIGH_MATERIAL.getValue(),
                             kingSquareBonusEndGame,
                             kingSquareBonusMiddleGame);
 
@@ -397,12 +398,12 @@ public final class Search implements Runnable {
             if (castleValue > 0) {
                 int timeToCastleKingSide = 100;
                 int timeToCastleQueenSide = 100;
-                if ((board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_WK) != 0) {
+                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WK.getValue()) != 0) {
                     timeToCastleKingSide = 2;
                     if ((board.getAllPiecesBitboard() & (1L << 1)) != 0) timeToCastleKingSide++;
                     if ((board.getAllPiecesBitboard() & (1L << 2)) != 0) timeToCastleKingSide++;
                 }
-                if ((board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_WQ) != 0) {
+                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WQ.getValue()) != 0) {
                     timeToCastleQueenSide = 2;
                     if ((board.getAllPiecesBitboard() & (1L << 6)) != 0) timeToCastleQueenSide++;
                     if ((board.getAllPiecesBitboard() & (1L << 5)) != 0) timeToCastleQueenSide++;
@@ -414,8 +415,8 @@ public final class Search implements Runnable {
             kingSquareBonusScaled =
                     Numbers.linearScale(
                             board.getWhitePieceValues(),
-                            RivalConstants.CASTLE_BONUS_LOW_MATERIAL,
-                            RivalConstants.CASTLE_BONUS_HIGH_MATERIAL,
+                            Evaluation.CASTLE_BONUS_LOW_MATERIAL.getValue(),
+                            Evaluation.CASTLE_BONUS_HIGH_MATERIAL.getValue(),
                             kingSquareBonusEndGame,
                             kingSquareBonusMiddleGame);
 
@@ -424,12 +425,12 @@ public final class Search implements Runnable {
             if (castleValue > 0) {
                 int timeToCastleKingSide = 100;
                 int timeToCastleQueenSide = 100;
-                if ((board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_BK) != 0) {
+                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BK.getValue()) != 0) {
                     timeToCastleKingSide = 2;
                     if ((board.getAllPiecesBitboard() & (1L << 57)) != 0) timeToCastleKingSide++;
                     if ((board.getAllPiecesBitboard() & (1L << 58)) != 0) timeToCastleKingSide++;
                 }
-                if ((board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_BQ) != 0) {
+                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BQ.getValue()) != 0) {
                     timeToCastleQueenSide = 2;
                     if ((board.getAllPiecesBitboard() & (1L << 60)) != 0) timeToCastleQueenSide++;
                     if ((board.getAllPiecesBitboard() & (1L << 61)) != 0) timeToCastleQueenSide++;
@@ -459,11 +460,11 @@ public final class Search implements Runnable {
             whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
 
-            bishopScore += RivalConstants.VALUE_BISHOP_MOBILITY[Long.bitCount(allAttacks & ~whitePieces)];
+            bishopScore += Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
         }
 
         if (whiteBishopColourCount == 2)
-            bishopScore += RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN))) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
+            bishopScore += Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
 
         bitboard = board.getBlackBishopBitboard();
         while (bitboard != 0) {
@@ -475,21 +476,21 @@ public final class Search implements Runnable {
             blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
 
-            bishopScore -= RivalConstants.VALUE_BISHOP_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
+            bishopScore -= Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
         }
 
         if (blackBishopColourCount == 2)
-            bishopScore -= RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN))) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
+            bishopScore -= Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
 
         if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.getWhitePieceValues() == board.getBlackPieceValues()) {
             // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
-            final int maxPenalty = (eval + bishopScore) / RivalConstants.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR; // mostly pawns as material is identical
+            final int maxPenalty = (eval + bishopScore) / Evaluation.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR.getValue(); // mostly pawns as material is identical
 
             // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
             bishopScore -= Numbers.linearScale(
                     board.getWhitePieceValues() + board.getBlackPieceValues(),
-                    RivalConstants.WRONG_COLOUR_BISHOP_MATERIAL_LOW,
-                    RivalConstants.WRONG_COLOUR_BISHOP_MATERIAL_HIGH,
+                    Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_LOW.getValue(),
+                    Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_HIGH.getValue(),
                     maxPenalty,
                     0);
         }
@@ -498,26 +499,26 @@ public final class Search implements Runnable {
             if ((board.getWhiteBishopBitboard() & (1L << Square.A7.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.B6.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.C7.getBitRef())) != 0)
-                bishopScore -= RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY;
+                bishopScore -= Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue();
 
             if ((board.getWhiteBishopBitboard() & (1L << Square.H7.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.G6.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.F7.getBitRef())) != 0)
                 bishopScore -= (board.getWhiteQueenBitboard() == 0) ?
-                        RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY :
-                        RivalConstants.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY;
+                        Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue() :
+                        Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.getValue();
 
             if ((board.getBlackBishopBitboard() & (1L << Square.A2.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.B3.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.C2.getBitRef())) != 0)
-                bishopScore += RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY;
+                bishopScore += Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue();
 
             if ((board.getBlackBishopBitboard() & (1L << Square.H2.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.G3.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.F2.getBitRef())) != 0)
                 bishopScore += (board.getBlackQueenBitboard() == 0) ?
-                        RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY :
-                        RivalConstants.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY;
+                        Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue() :
+                        Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.getValue();
         }
 
         eval += bishopScore;
@@ -529,15 +530,15 @@ public final class Search implements Runnable {
 
         int temp = 0;
 
-        bitboard = whiteAttacksBitboard & blackPieces & ~board.getBitboardByIndex(RivalConstants.BK);
+        bitboard = whiteAttacksBitboard & blackPieces & ~board.getBlackKnightBitboard();
 
         while (bitboard != 0) {
             bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
-            if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BB) temp += PieceValue.getValue(Piece.BISHOP);
+            if (board.getSquareOccupant(sq) == SquareOccupant.BP) temp += PieceValue.getValue(Piece.PAWN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BN) temp += PieceValue.getValue(Piece.KNIGHT);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BR) temp += PieceValue.getValue(Piece.ROOK);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BQ) temp += PieceValue.getValue(Piece.QUEEN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BB) temp += PieceValue.getValue(Piece.BISHOP);
         }
 
         int threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
@@ -551,15 +552,15 @@ public final class Search implements Runnable {
 
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-            if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WB) temp += PieceValue.getValue(Piece.BISHOP);
+            if (board.getSquareOccupant(sq) == SquareOccupant.WP) temp += PieceValue.getValue(Piece.PAWN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WN) temp += PieceValue.getValue(Piece.KNIGHT);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WR) temp += PieceValue.getValue(Piece.ROOK);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WQ) temp += PieceValue.getValue(Piece.QUEEN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WB) temp += PieceValue.getValue(Piece.BISHOP);
         }
 
         threatScore -= temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
-        threatScore /= RivalConstants.THREAT_SCORE_DIVISOR;
+        threatScore /= Evaluation.THREAT_SCORE_DIVISOR.getValue();
 
         eval += threatScore;
 
@@ -567,7 +568,7 @@ public final class Search implements Runnable {
         int whiteKingSafety = 0;
         int blackKingSafety = 0;
         int kingSafety = 0;
-        if (averagePiecesPerSide > RivalConstants.KINGSAFETY_MIN_PIECE_BALANCE) {
+        if (averagePiecesPerSide > Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue()) {
 
             whiteKingSafety = Evaluate.getWhiteKingRightWayScore(board);
             blackKingSafety = Evaluate.getBlackKingRightWayScore(board);
@@ -577,89 +578,89 @@ public final class Search implements Runnable {
             if (board.getWhiteKingSquare() / 8 < 2) {
                 final long kingShield = Bitboards.whiteKingShieldMask.get(board.getWhiteKingSquare() % 8);
 
-                shieldValue += RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * Long.bitCount(board.getWhitePawnBitboard() & kingShield)
-                        - RivalConstants.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield | (kingShield << 8)))
-                        + RivalConstants.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield << 8))
-                        - RivalConstants.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield << 16));
+                shieldValue += Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & kingShield)
+                        - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield | (kingShield << 8)))
+                        + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield << 8))
+                        - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield << 16));
 
-                shieldValue = Math.min(shieldValue, RivalConstants.KINGSAFTEY_MAXIMUM_SHIELD_BONUS);
+                shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.getValue());
 
                 if (((board.getWhiteKingBitboard() & Bitboards.F1G1) != 0) &&
                         ((board.getWhiteRookBitboard() & Bitboards.G1H1) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_G) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_H) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 } else if (((board.getWhiteKingBitboard() & Bitboards.B1C1) != 0) &&
                         ((board.getWhiteRookBitboard() & Bitboards.A1B1) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_A) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_B) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 }
 
                 final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (whiteOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT);
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
                 final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (blackOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT);
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
             }
 
-            whiteKingSafety += RivalConstants.KINGSAFETY_SHIELD_BASE + shieldValue - halfOpenFilePenalty;
+            whiteKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
 
             shieldValue = 0;
             halfOpenFilePenalty = 0;
             if (board.getBlackKingSquare() / 8 >= 6) {
                 final long kingShield = Bitboards.whiteKingShieldMask.get(board.getBlackKingSquare() % 8) << 40;
-                shieldValue += RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * Long.bitCount(board.getBlackPawnBitboard() & kingShield)
-                        - RivalConstants.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield | (kingShield >>> 8)))
-                        + RivalConstants.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield >>> 8))
-                        - RivalConstants.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield >>> 16));
+                shieldValue += Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & kingShield)
+                        - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield | (kingShield >>> 8)))
+                        + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield >>> 8))
+                        - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield >>> 16));
 
-                shieldValue = Math.min(shieldValue, RivalConstants.KINGSAFTEY_MAXIMUM_SHIELD_BONUS);
+                shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.getValue());
 
                 if (((board.getBlackKingBitboard() & Bitboards.F8G8) != 0) &&
                         ((board.getBlackRookBitboard() & Bitboards.G8H8) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_G) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_H) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 } else if (((board.getBlackKingBitboard() & Bitboards.B8C8) != 0) &&
                         ((board.getBlackRookBitboard() & Bitboards.A8B8) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_A) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_B) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 }
 
                 final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (whiteOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT)
-                            + RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT)
+                            + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
                 final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (blackOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT)
-                            + RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT)
+                            + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
             }
 
-            blackKingSafety += RivalConstants.KINGSAFETY_SHIELD_BASE + shieldValue - halfOpenFilePenalty;
+            blackKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
 
             kingSafety =
                     Numbers.linearScale(
                             averagePiecesPerSide,
-                            RivalConstants.KINGSAFETY_MIN_PIECE_BALANCE,
-                            RivalConstants.KINGSAFETY_MAX_PIECE_BALANCE,
+                            Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue(),
+                            Evaluation.KINGSAFETY_MAX_PIECE_BALANCE.getValue(),
                             0,
-                            (whiteKingSafety - blackKingSafety) + (blackKingAttackedCount - whiteKingAttackedCount) * RivalConstants.KINGSAFETY_ATTACK_MULTIPLIER);
+                            (whiteKingSafety - blackKingSafety) + (blackKingAttackedCount - whiteKingAttackedCount) * Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.getValue());
 
         }
 
         eval += kingSafety;
 
-        if (board.getWhitePieceValues() + board.getWhitePawnValues() + board.getBlackPieceValues() + board.getBlackPawnValues() <= RivalConstants.EVAL_ENDGAME_TOTAL_PIECES) {
+        if (board.getWhitePieceValues() + board.getWhitePawnValues() + board.getBlackPieceValues() + board.getBlackPawnValues() <= Evaluation.EVAL_ENDGAME_TOTAL_PIECES.getValue()) {
             eval = endGameAdjustment(board, eval);
         }
 
@@ -689,13 +690,13 @@ public final class Search implements Runnable {
         }
 
         if (board.getWhitePawnValues() + board.getBlackPawnValues() == 0 && board.getWhitePieceValues() < PieceValue.getValue(Piece.ROOK) && board.getBlackPieceValues() < PieceValue.getValue(Piece.ROOK))
-            return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+            return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
 
         if (eval > 0) {
             if (board.getWhitePawnValues() == 0 && (board.getWhitePieceValues() == PieceValue.getValue(Piece.KNIGHT) || board.getWhitePieceValues() == PieceValue.getValue(Piece.BISHOP)))
-                return eval - (int) (board.getWhitePieceValues() * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
+                return eval - (int) (board.getWhitePieceValues() * Evaluation.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.getWhitePawnValues() == 0 && board.getWhitePieceValues() - PieceValue.getValue(Piece.BISHOP) <= board.getBlackPieceValues())
-                return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR;
+                return eval / Evaluation.ENDGAME_PROBABLE_DRAW_DIVISOR.getValue();
             else if (Long.bitCount(board.getAllPiecesBitboard()) > 3 && (board.getWhiteRookBitboard() | board.getWhiteKnightBitboard() | board.getWhiteQueenBitboard()) == 0) {
                 // If this is not yet a KPK ending, and if white has only A pawns and has no dark bishop and the black king is on a8/a7/b8/b7 then this is probably a draw.
                 // Do the same for H pawns
@@ -705,7 +706,7 @@ public final class Search implements Runnable {
                         ((board.getBlackKingBitboard() & Bitboards.A8A7B8B7) != 0) || ((board.getWhitePawnBitboard() & ~Bitboards.FILE_H) == 0) &&
                                 ((board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) == 0) &&
                                 ((board.getBlackKingBitboard() & Bitboards.H8H7G8G7) != 0)) {
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                 }
 
             }
@@ -714,54 +715,54 @@ public final class Search implements Runnable {
                     int whiteKnightCount = Long.bitCount(board.getWhiteKnightBitboard());
                     int whiteBishopCount = Long.bitCount(board.getWhiteBishopBitboard());
                     if ((whiteKnightCount == 2) && (board.getWhitePieceValues() == 2 * PieceValue.getValue(Piece.KNIGHT)) && (board.getBlackPieceValues() == 0))
-                        return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                        return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                     else if ((whiteKnightCount == 1) && (whiteBishopCount == 1) && (board.getWhitePieceValues() == PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP)) && board.getBlackPieceValues() == 0) {
-                        eval = PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + RivalConstants.VALUE_SHOULD_WIN + (eval / RivalConstants.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR);
+                        eval = PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.getValue() + (eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.getValue());
                         final int kingSquare = board.getBlackKingSquare();
 
                         if ((board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) != 0)
-                            eval += (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval += (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         else
-                            eval += (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval += (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
 
                         return eval;
                     } else
-                        return eval + RivalConstants.VALUE_SHOULD_WIN;
+                        return eval + Evaluation.VALUE_SHOULD_WIN.getValue();
                 }
             }
         }
         if (eval < 0) {
             if (board.getBlackPawnValues() == 0 && (board.getBlackPieceValues() == PieceValue.getValue(Piece.KNIGHT) || board.getBlackPieceValues() == PieceValue.getValue(Piece.BISHOP)))
-                return eval + (int) (board.getBlackPieceValues() * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
+                return eval + (int) (board.getBlackPieceValues() * Evaluation.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.getBlackPawnValues() == 0 && board.getBlackPieceValues() - PieceValue.getValue(Piece.BISHOP) <= board.getWhitePieceValues())
-                return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR;
+                return eval / Evaluation.ENDGAME_PROBABLE_DRAW_DIVISOR.getValue();
             else if (Long.bitCount(board.getAllPiecesBitboard()) > 3 && (board.getBlackRookBitboard() | board.getBlackKnightBitboard() | board.getBlackQueenBitboard()) == 0) {
                 if (((board.getBlackPawnBitboard() & ~Bitboards.FILE_A) == 0) &&
                         ((board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) == 0) &&
                         ((board.getWhiteKingBitboard() & Bitboards.A1A2B1B2) != 0))
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                 else if (((board.getBlackPawnBitboard() & ~Bitboards.FILE_H) == 0) &&
                         ((board.getBlackBishopBitboard() & Bitboards.LIGHT_SQUARES) == 0) &&
                         ((board.getWhiteKingBitboard() & Bitboards.H1H2G1G2) != 0))
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
             }
             if (board.getWhitePawnValues() == 0) {
                 if (board.getBlackPieceValues() - board.getWhitePieceValues() > PieceValue.getValue(Piece.BISHOP)) {
                     int blackKnightCount = Long.bitCount(board.getBlackKnightBitboard());
                     int blackBishopCount = Long.bitCount(board.getBlackBishopBitboard());
                     if ((blackKnightCount == 2) && (board.getBlackPieceValues() == 2 * PieceValue.getValue(Piece.KNIGHT)) && (board.getWhitePieceValues() == 0))
-                        return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                        return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                     else if ((blackKnightCount == 1) && (blackBishopCount == 1) && (board.getBlackPieceValues() == PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP)) && board.getWhitePieceValues() == 0) {
-                        eval = -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + RivalConstants.VALUE_SHOULD_WIN) + (eval / RivalConstants.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR);
+                        eval = -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.getValue()) + (eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.getValue());
                         final int kingSquare = board.getWhiteKingSquare();
                         if ((board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) != 0) {
-                            eval -= (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval -= (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         } else {
-                            eval -= (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval -= (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         }
                         return eval;
                     } else
-                        return eval - RivalConstants.VALUE_SHOULD_WIN;
+                        return eval - Evaluation.VALUE_SHOULD_WIN.getValue();
                 }
             }
         }
@@ -798,7 +799,7 @@ public final class Search implements Runnable {
 
         int pawnDistanceFromPromotion = 7 - (pawnSquare / 8);
 
-        return PieceValue.getValue(Piece.QUEEN) - RivalConstants.ENDGAME_KPK_PAWN_PENALTY_PER_SQUARE * pawnDistanceFromPromotion;
+        return PieceValue.getValue(Piece.QUEEN) - Evaluation.ENDGAME_KPK_PAWN_PENALTY_PER_SQUARE.getValue() * pawnDistanceFromPromotion;
     }
 
     private int[] scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
@@ -830,7 +831,7 @@ public final class Search implements Runnable {
     private int getScore(EngineChessBoard board, int move, boolean includeChecks, boolean isCapture) throws InvalidMoveException {
         int score = 0;
 
-        final int promotionMask = (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
+        final int promotionMask = (move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue());
         if (isCapture) {
             final int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
             if (see > 0) {
@@ -908,7 +909,7 @@ public final class Search implements Runnable {
         bestPath.reset();
 
         final int evalScore = evaluate(board);
-        bestPath.score = isCheck ? -RivalConstants.VALUE_MATE : evalScore;
+        bestPath.score = isCheck ? -Evaluation.VALUE_MATE.getValue() : evalScore;
 
         if (depth == 0 || bestPath.score >= high) {
             return bestPath;
@@ -922,8 +923,8 @@ public final class Search implements Runnable {
             board.setLegalMoves(theseMoves);
             scoreFullWidthMoves(board, ply);
         } else {
-            board.setLegalQuiesceMoves(theseMoves, quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY);
-            scoreQuiesceMoves(board, ply, quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY);
+            board.setLegalQuiesceMoves(theseMoves, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.getValue());
+            scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.getValue());
         }
 
         int move = getHighScoreMove(theseMoves);
@@ -936,7 +937,7 @@ public final class Search implements Runnable {
                 if (board.makeMove(new EngineMove(move))) {
                     legalMoveCount++;
 
-                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck()));
+                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.getValue() && board.isCheck()));
                     newPath.score = -newPath.score;
                     if (newPath.score > bestPath.score) {
                         bestPath.setPath(move, newPath);
@@ -955,7 +956,7 @@ public final class Search implements Runnable {
         }
 
         if (isCheck && legalMoveCount == 0) {
-            bestPath.score = -RivalConstants.VALUE_MATE;
+            bestPath.score = -Evaluation.VALUE_MATE.getValue();
         }
 
         return bestPath;
@@ -967,23 +968,23 @@ public final class Search implements Runnable {
                     ? PieceValue.getValue(board.lastCapturePiece().getPiece())
                     : 0) + getMaterialIncreaseForPromotion(move);
 
-            return materialIncrease + evalScore + RivalConstants.DELTA_PRUNING_MARGIN < low;
+            return materialIncrease + evalScore + SearchConfig.DELTA_PRUNING_MARGIN.getValue() < low;
         }
 
         return false;
     }
 
-    private int getMaterialIncreaseForPromotion(int move) {
-        switch (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
+    private int getMaterialIncreaseForPromotion(final int move) {
+        switch (PromotionPieceMask.fromValue(move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue())) {
             case 0:
                 return 0;
-            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
+            case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
                 return PieceValue.getValue(Piece.QUEEN) - PieceValue.getValue(Piece.PAWN);
-            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
+            case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
                 return PieceValue.getValue(Piece.BISHOP) - PieceValue.getValue(Piece.PAWN);
-            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
+            case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
                 return PieceValue.getValue(Piece.KNIGHT) - PieceValue.getValue(Piece.PAWN);
-            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
+            case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
                 return PieceValue.getValue(Piece.ROOK) - PieceValue.getValue(Piece.PAWN);
             default:
                 return 0;
@@ -1004,8 +1005,8 @@ public final class Search implements Runnable {
                 Piece capturePiece = Piece.fromSquareOccupant(board.getSquareOccupant(toSquare));
 
                 if (capturePiece == Piece.NONE &&
-                        ((1L << toSquare) & board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) != 0 &&
-                        board.getSquareOccupant((movesForSorting[i] >>> 16) & 63).getIndex() % 6 == RivalConstants.WP) {
+                        ((1L << toSquare) & board.getBitboardByIndex(BitboardType.ENPASSANTSQUARE.getIndex())) != 0 &&
+                        board.getSquareOccupant((movesForSorting[i] >>> 16) & 63).getPiece() == Piece.PAWN) {
                     capturePiece = Piece.PAWN;
                 }
 
@@ -1015,14 +1016,14 @@ public final class Search implements Runnable {
                     score = 126;
                 } else if (capturePiece != Piece.NONE) {
                     int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(movesForSorting[i]));
-                    if (see > -RivalConstants.INFINITY) {
+                    if (see > -Integer.MAX_VALUE) {
                         see = (int) (((double) see / PieceValue.getValue(Piece.QUEEN)) * 10);
                     }
 
                     if (see > 0) {
                         score = 110 + see;
                     }
-                    else if ((movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
+                    else if ((movesForSorting[i] & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue()) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
                         score = 109;
                     }
                     else if (see == 0) {
@@ -1522,7 +1523,7 @@ public final class Search implements Runnable {
 
             if (!this.m_abortingSearch) {
                 if (legalMoveCount == 0) {
-                    bestPath.score = board.isCheck() ? -RivalConstants.VALUE_MATE : 0;
+                    bestPath.score = board.isCheck() ? -Evaluation.VALUE_MATE.getValue() : 0;
                     boardHash.storeHashMove(0, board, bestPath.score, RivalConstants.EXACTSCORE, RivalConstants.MAX_SEARCH_DEPTH);
                     return bestPath;
                 }
@@ -1923,7 +1924,7 @@ public final class Search implements Runnable {
         int score = this.m_currentPath.getScore();
         int abs = Math.abs(score);
         if (abs > RivalConstants.MATE_SCORE_START) {
-            int mateIn = ((RivalConstants.VALUE_MATE - abs) + 1) / 2;
+            int mateIn = ((Evaluation.VALUE_MATE.getValue() - abs) + 1) / 2;
             return "mate " + (score < 0 ? "-" : "") + mateIn;
         }
         return "cp " + score;
