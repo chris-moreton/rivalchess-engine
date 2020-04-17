@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.config.FeatureFlag;
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
@@ -46,7 +47,7 @@ public final class Search implements Runnable {
 
     private final StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorPremium();
 
-    private final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
+    private final MoveOrder[] moveOrderStatus = new MoveOrder[Limit.MAX_TREE_DEPTH.getValue()];
 
     private final List<List<Long>> drawnPositionsAtRoot;
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();

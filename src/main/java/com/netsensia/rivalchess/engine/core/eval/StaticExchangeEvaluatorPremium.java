@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core.eval;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
@@ -20,7 +21,7 @@ public class StaticExchangeEvaluatorPremium implements StaticExchangeEvaluator {
             return seeValue;
         }
 
-        return -RivalConstants.INFINITY;
+        return -Integer.MAX_VALUE;
     }
 
     public int seeSearch(EngineChessBoard board, int captureSquare) throws InvalidMoveException {
@@ -57,7 +58,7 @@ public class StaticExchangeEvaluatorPremium implements StaticExchangeEvaluator {
     }
 
     public List<EngineMove> getCaptureMovesOnSquare(EngineChessBoard board, int captureSquare) {
-        int[] moves = new int[RivalConstants.MAX_LEGAL_MOVES];
+        int[] moves = new int[Limit.MAX_LEGAL_MOVES.getValue()];
         final boolean includeChecks = false;
         board.setLegalQuiesceMoves(moves, includeChecks);
         List<EngineMove> moveList = new ArrayList<>();
