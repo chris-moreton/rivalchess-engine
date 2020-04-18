@@ -1033,7 +1033,8 @@ public final class Search implements Runnable {
                         score = scoreLosingCapturesWithWinningHistory(board, ply, i, score, movesForSorting, toSquare);
                     }
 
-                } else if ((movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
+                } else if ((movesForSorting[i] & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue())
+                        == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
                     score = 108;
                 }
 
@@ -1052,7 +1053,7 @@ public final class Search implements Runnable {
         if (historyScore > 5) {
             score = historyScore;
         } else {
-            for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+            for (int j = 0; j < SearchConfig.NUM_KILLER_MOVES.getValue(); j++) {
                 if (movesForSorting[i] == killerMoves[ply][j]) {
                     return 106 - j;
                 }
@@ -1092,7 +1093,7 @@ public final class Search implements Runnable {
                     score = 1;
                 }
 
-                if (score == 0 && RivalConstants.USE_PIECE_SQUARES_IN_MOVE_ORDERING) {
+                if (score == 0 && FeatureFlag.USE_PIECE_SQUARES_IN_MOVE_ORDERING.isActive()) {
                     score = 50 + (scorePieceSquareValues(board, fromSquare, toSquare) / 2);
                 }
                 movesForSorting[i] |= ((127 - score) << 24);
@@ -1107,40 +1108,40 @@ public final class Search implements Runnable {
             fromSquare = Bitboards.bitFlippedHorizontalAxis.get(fromSquare);
             toSquare = Bitboards.bitFlippedHorizontalAxis.get(toSquare);
         }
-        switch (board.getSquareOccupant(fromSquare).getIndex() % 6) {
-            case RivalConstants.WP:
+        switch (board.getSquareOccupant(fromSquare).getPiece()) {
+            case PAWN:
                 ps =
                         Numbers.linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
-                                RivalConstants.PAWN_STAGE_MATERIAL_LOW,
-                                RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
+                                Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(),
+                                Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(),
                                 PieceSquareTables.pawnEndGame.get(toSquare) - PieceSquareTables.pawnEndGame.get(fromSquare),
                                 PieceSquareTables.pawn.get(toSquare) - PieceSquareTables.pawn.get(fromSquare));
                 break;
-            case RivalConstants.WN:
+            case KNIGHT:
                 ps =
                         Numbers.linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues()),
-                                RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
-                                RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
+                                Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(),
+                                Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(),
                                 PieceSquareTables.knightEndGame.get(toSquare) - PieceSquareTables.knightEndGame.get(fromSquare),
                                 PieceSquareTables.knight.get(toSquare) - PieceSquareTables.knight.get(fromSquare));
                 break;
-            case RivalConstants.WB:
+            case BISHOP:
                 ps = PieceSquareTables.bishop.get(toSquare) - PieceSquareTables.bishop.get(fromSquare);
                 break;
-            case RivalConstants.WR:
+            case ROOK:
                 ps = PieceSquareTables.rook.get(toSquare) - PieceSquareTables.rook.get(fromSquare);
                 break;
-            case RivalConstants.WQ:
+            case QUEEN:
                 ps = PieceSquareTables.queen.get(toSquare) - PieceSquareTables.queen.get(fromSquare);
                 break;
-            case RivalConstants.WK:
+            case KING:
                 ps =
                         Numbers.linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
                                 PieceValue.getValue(Piece.ROOK),
-                                RivalConstants.OPENING_PHASE_MATERIAL,
+                                Evaluation.OPENING_PHASE_MATERIAL.getValue(),
                                 PieceSquareTables.kingEndGame.get(toSquare) - PieceSquareTables.kingEndGame.get(fromSquare),
                                 PieceSquareTables.king.get(toSquare) - PieceSquareTables.king.get(fromSquare));
                 break;
@@ -1151,14 +1152,14 @@ public final class Search implements Runnable {
     }
 
     private int scoreHistoryHeuristic(EngineChessBoard board, int score, int fromSquare, int toSquare) {
-        if (score == 0 && RivalConstants.USE_HISTORY_HEURISTIC && historyMovesSuccess[board.getMover() == Colour.WHITE ? 0 : 1][fromSquare][toSquare] > 0) {
+        if (score == 0 && FeatureFlag.USE_HISTORY_HEURISTIC.isActive() && historyMovesSuccess[board.getMover() == Colour.WHITE ? 0 : 1][fromSquare][toSquare] > 0) {
             score = 90 + historyScore(board.getMover() == Colour.WHITE, fromSquare, toSquare);
         }
         return score;
     }
 
     private int scoreKillerMoves(int ply, int i, int[] movesForSorting) {
-        for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+        for (int j = 0; j < SearchConfig.NUM_KILLER_MOVES.getValue(); j++) {
             if (movesForSorting[i] == killerMoves[ply][j]) {
                 return 106 - j;
             }
