@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.config.Evaluation;
 import com.netsensia.rivalchess.config.Extensions;
 import com.netsensia.rivalchess.config.FeatureFlag;
 import com.netsensia.rivalchess.config.Hash;
+import com.netsensia.rivalchess.config.IterativeDeepening;
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.config.Uci;
@@ -1197,7 +1198,7 @@ public final class Search implements Runnable {
 
         final int depthRemaining = depth + (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue());
 
-        final int flag = HashValueType.UPPERBOUND.getIndex();
+        int flag = HashValueType.UPPERBOUND.getIndex();
 
         final BoardHash boardHash = board.getBoardHashObject();
         final int hashIndex = boardHash.getHashIndex(board);
@@ -1252,22 +1253,24 @@ public final class Search implements Runnable {
         }
 
         if (depthRemaining <= 0) {
-            bestPath = quiesce(board, RivalConstants.MAX_QUIESCE_DEPTH - 1, ply, 0, low, high, isCheck);
-            if (bestPath.score < low) flag = RivalConstants.UPPERBOUND;
-            else if (bestPath.score > high) flag = RivalConstants.LOWERBOUND;
+            bestPath = quiesce(board, Limit.MAX_QUIESCE_DEPTH.getValue() - 1, ply, 0, low, high, isCheck);
+            if (bestPath.score < low) flag = HashValueType.UPPERBOUND.getIndex();
+            else if (bestPath.score > high) flag = HashValueType.LOWERBOUND.getIndex();
             else
-                flag = RivalConstants.EXACTSCORE;
+                flag = HashValueType.EXACTSCORE.getIndex();
 
             boardHash.storeHashMove(0, board, bestPath.score, flag, 0);
             return bestPath;
         }
 
-        if (RivalConstants.USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= RivalConstants.IID_MIN_DEPTH && hashMove == 0 && board.isNotOnNullMove()) {
+        if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive()
+                && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.getValue()
+                && hashMove == 0 && board.isNotOnNullMove()) {
             boolean doIt = true;
 
             if (doIt) {
-                if (depth - RivalConstants.IID_REDUCE_DEPTH > 0) {
-                    newPath = search(board, (byte) (depth - RivalConstants.IID_REDUCE_DEPTH), ply, low, high, extensions, recaptureSquare, isCheck);
+                if (depth - IterativeDeepening.IID_REDUCE_DEPTH.getValue() > 0) {
+                    newPath = search(board, (byte) (depth - IterativeDeepening.IID_REDUCE_DEPTH.getValue()), ply, low, high, extensions, recaptureSquare, isCheck);
                     // it's not really a hash move, but this will cause the order routine to rank it first
                     if (newPath != null && newPath.height > 0) hashMove = newPath.move[0];
                 }
@@ -1285,24 +1288,24 @@ public final class Search implements Runnable {
         int nullMoveReduceDepth = (depthRemaining > SearchConfig.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE.getValue())
                 ? SearchConfig.NULLMOVE_REDUCE_DEPTH.getValue() + 1
                 : SearchConfig.NULLMOVE_REDUCE_DEPTH.getValue();
-        if (RivalConstants.USE_NULLMOVE_PRUNING && !isCheck && board.isNotOnNullMove() && depthRemaining > 1) {
+        if (FeatureFlag.USE_NULL_MOVE_PRUNING.isActive() && !isCheck && board.isNotOnNullMove() && depthRemaining > 1) {
             if ((board.getMover() == Colour.WHITE
                     ? board.getWhitePieceValues()
                     : board.getBlackPieceValues()) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.getValue() &&
                     (board.getMover() == Colour.WHITE ? board.getWhitePawnValues() : board.getBlackPawnValues()) > 0) {
                 board.makeNullMove();
                 newPath = search(board, (byte) (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, -1, false);
-                if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
+                else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                 if (!this.m_abortingSearch) {
                     if (-Objects.requireNonNull(newPath).score >= high) {
                         bestPath.score = -newPath.score;
                         board.unMakeNullMove();
                         return bestPath;
                     } else if (
-                            RivalConstants.FRACTIONAL_EXTENSION_THREAT > 0 &&
-                                    -newPath.score < -RivalConstants.MATE_SCORE_START &&
-                                    (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
+                            Extensions.FRACTIONAL_EXTENSION_THREAT.getValue() > 0 &&
+                                    -newPath.score < -Evaluation.MATE_SCORE_START.getValue() &&
+                                    (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue()) < Limit.MAX_EXTENSION_DEPTH.getValue()) {
                         threatExtend = 1;
                     } else {
                         threatExtend = 0;
@@ -1347,18 +1350,19 @@ public final class Search implements Runnable {
 
                 int newRecaptureSquare = -1;
 
-                int currentSEEValue = -RivalConstants.INFINITY;
-                if (RivalConstants.FRACTIONAL_EXTENSION_RECAPTURE > 0 && (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
+                int currentSEEValue = -Integer.MAX_VALUE;
+                if (Extensions.FRACTIONAL_EXTENSION_RECAPTURE.getValue() > 0 && (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                        < Limit.MAX_EXTENSION_DEPTH.getValue()) {
                     recaptureExtend = 0;
 
-                    if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece).equals(RivalConstants.PIECE_VALUES.get(targetPiece))) {
+                    if (targetPiece != -1 && Evaluation.getPieceValues().get(movePiece).equals(Evaluation.getPieceValues().get(targetPiece))) {
                         currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
-                        if (Math.abs(currentSEEValue) <= RivalConstants.RECAPTURE_EXTENSION_MARGIN)
+                        if (Math.abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.getValue())
                             newRecaptureSquare = (move & 63);
                     }
 
                     if ((move & 63) == recaptureSquare) {
-                        if (currentSEEValue == -RivalConstants.INFINITY)
+                        if (currentSEEValue == -Integer.MAX_VALUE)
                             currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
                         if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(recaptureSquare).getIndex()) - RivalConstants.RECAPTURE_EXTENSION_MARGIN) {
                             recaptureExtend = 1;
@@ -1658,7 +1662,7 @@ public final class Search implements Runnable {
                 }
                 engineChessBoard.unMakeMove();
             } else {
-                depthZeroMoveScores[numMoves] = -RivalConstants.INFINITY;
+                depthZeroMoveScores[numMoves] = -Integer.MAX_VALUE;
             }
             numMoves++;
             move = orderedMoves[0][numMoves] & 0x00FFFFFF;
@@ -1708,7 +1712,7 @@ public final class Search implements Runnable {
             drawnPositionsAtRootCount.add(0);
             drawnPositionsAtRootCount.add(0);
             int legal = 0;
-            int bestNewbieScore = -RivalConstants.INFINITY;
+            int bestNewbieScore = -Integer.MAX_VALUE;
 
             while (move != 0) {
                 if (engineChessBoard.makeMove(new EngineMove(move))) {
@@ -1721,7 +1725,7 @@ public final class Search implements Runnable {
 
                     if (this.iterativeDeepeningCurrentDepth < 1) // super beginner mode
                     {
-                        SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, engineChessBoard.isCheck());
+                        SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE, engineChessBoard.isCheck());
                         sp.score = -sp.score;
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score;
@@ -1803,15 +1807,15 @@ public final class Search implements Runnable {
                     path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
 
                     if (!this.m_abortingSearch && Objects.requireNonNull(path).score <= aspirationLow) {
-                        aspirationLow = -RivalConstants.INFINITY;
+                        aspirationLow = -Integer.MAX_VALUE;
                         path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
                     } else if (!this.m_abortingSearch && path.score >= aspirationHigh) {
-                        aspirationHigh = RivalConstants.INFINITY;
+                        aspirationHigh = Integer.MAX_VALUE;
                         path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
                     }
 
                     if (!this.m_abortingSearch && (Objects.requireNonNull(path).score <= aspirationLow || path.score >= aspirationHigh)) {
-                        path = searchZero(engineChessBoard, depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
+                        path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                     }
 
                     if (!this.m_abortingSearch) {
@@ -1821,7 +1825,7 @@ public final class Search implements Runnable {
                         aspirationHigh = path.score + SearchConfig.ASPIRATION_RADIUS.getValue();
                     }
                 } else {
-                    path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, RivalConstants.INFINITY);
+                    path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                 }
 
                 if (!this.m_abortingSearch) {
@@ -1866,8 +1870,8 @@ public final class Search implements Runnable {
         searchEndTime = 0;
         searchTargetEndTime = this.searchStartTime + this.millisToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
 
-        aspirationLow = -RivalConstants.INFINITY;
-        aspirationHigh = RivalConstants.INFINITY;
+        aspirationLow = -Integer.MAX_VALUE;
+        aspirationHigh = Integer.MAX_VALUE;
         nodes = 0;
     }
 
