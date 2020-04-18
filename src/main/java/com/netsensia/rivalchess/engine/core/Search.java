@@ -1364,7 +1364,8 @@ public final class Search implements Runnable {
                     if ((move & 63) == recaptureSquare) {
                         if (currentSEEValue == -Integer.MAX_VALUE)
                             currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
-                        if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(recaptureSquare).getIndex()) - RivalConstants.RECAPTURE_EXTENSION_MARGIN) {
+                        if (Math.abs(currentSEEValue) > Evaluation.getPieceValue(board.getSquareOccupant(recaptureSquare))
+                                - Extensions.RECAPTURE_EXTENSION_MARGIN.getValue()) {
                             recaptureExtend = 1;
                         }
                     }

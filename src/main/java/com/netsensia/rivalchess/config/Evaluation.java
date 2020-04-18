@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.config;
 
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
 import com.netsensia.rivalchess.model.Piece;
+import com.netsensia.rivalchess.model.SquareOccupant;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -116,4 +117,9 @@ public enum Evaluation {
                 PieceValue.getValue(Piece.PAWN), PieceValue.getValue(Piece.KNIGHT), PieceValue.getValue(Piece.BISHOP), PieceValue.getValue(Piece.QUEEN), PieceValue.getValue(Piece.KING), PieceValue.getValue(Piece.ROOK)
         ));
     }
+
+    public static int getPieceValue(final SquareOccupant squareOccupant) {
+        return getPieceValues().get(squareOccupant.getIndex());
+    }
+
 }
