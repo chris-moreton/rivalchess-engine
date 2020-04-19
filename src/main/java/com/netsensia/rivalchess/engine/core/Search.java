@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.config.Extensions;
 import com.netsensia.rivalchess.config.FeatureFlag;
 import com.netsensia.rivalchess.config.Hash;
 import com.netsensia.rivalchess.config.IterativeDeepening;
+import com.netsensia.rivalchess.config.LateMoveReductions;
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.config.Uci;
@@ -39,6 +40,7 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.Numbers;
 
 import java.io.PrintStream;
+import java.lang.reflect.Executable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -1376,14 +1378,15 @@ public final class Search implements Runnable {
 
                     isCheck = board.isCheck();
 
-                    if (RivalConstants.USE_FUTILITY_PRUNING && canFutilityPrune && !isCheck && board.wasCapture() && !board.wasPawnPush()) {
+                    if (FeatureFlag.USE_FUTILITY_PRUNING.isActive() && canFutilityPrune && !isCheck && board.wasCapture() && !board.wasPawnPush()) {
                         newPath = searchPath[ply + 1];
                         newPath.reset();
                         newPath.score = -futilityScore; // newPath.score gets reversed later
                     } else {
-                        if ((extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
+                        if ((extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                                < Limit.MAX_EXTENSION_DEPTH.getValue()) {
                             pawnExtend = 0;
-                            if (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0) {
+                            if (Extensions.FRACTIONAL_EXTENSION_PAWN.getValue() > 0) {
                                 if (board.wasPawnPush()) {
                                     pawnExtend = 1;
                                 }
@@ -1391,31 +1394,35 @@ public final class Search implements Runnable {
                         }
 
                         int partOfTree = ply / this.iterativeDeepeningCurrentDepth;
-                        int maxNewExtensionsInThisPart = RivalConstants.MAX_NEW_EXTENSIONS_TREE_PART.get(Math.min(partOfTree, RivalConstants.LAST_EXTENSION_LAYER));
+                        int maxNewExtensionsInThisPart =
+                                Extensions.getMaxNewExtensionsTreePart().get(
+                                        Math.min(partOfTree, Extensions.LAST_EXTENSION_LAYER.getValue()));
 
                         newExtensions =
                                 extensions +
                                         Math.min(
-                                                (checkExtend * RivalConstants.FRACTIONAL_EXTENSION_CHECK) +
-                                                        (threatExtend * RivalConstants.FRACTIONAL_EXTENSION_THREAT) +
-                                                        (recaptureExtend * RivalConstants.FRACTIONAL_EXTENSION_RECAPTURE) +
-                                                        (pawnExtend * RivalConstants.FRACTIONAL_EXTENSION_PAWN),
+                                                (checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.getValue()) +
+                                                        (threatExtend * Extensions.FRACTIONAL_EXTENSION_THREAT.getValue()) +
+                                                        (recaptureExtend * Extensions.FRACTIONAL_EXTENSION_RECAPTURE.getValue()) +
+                                                        (pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.getValue()),
                                                 maxNewExtensionsInThisPart);
 
                         int lateMoveReduction = 0;
                         if (
-                                RivalConstants.USE_LATE_MOVE_REDUCTIONS &&
+                                FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive() &&
                                         newExtensions == 0 &&
-                                        legalMoveCount > RivalConstants.LMR_LEGALMOVES_BEFORE_ATTEMPT &&
+                                        legalMoveCount > LateMoveReductions.LMR_LEGALMOVES_BEFORE_ATTEMPT.getValue() &&
                                         depthRemaining - verifyingNullMoveDepthReduction > 1 &&
                                         move != hashMove &&
                                         !wasCheckBeforeMove &&
-                                        historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] <= RivalConstants.LMR_THRESHOLD &&
+                                        historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                                <= LateMoveReductions.LMR_THRESHOLD.getValue() &&
                                         board.wasCapture() &&
-                                        (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0 || !board.wasPawnPush())) {
-                            if (-evaluate(board) <= low + RivalConstants.LMR_CUT_MARGIN) {
+                                        (Extensions.FRACTIONAL_EXTENSION_PAWN.getValue() > 0 || !board.wasPawnPush())) {
+                            if (-evaluate(board) <= low + LateMoveReductions.LMR_CUT_MARGIN.getValue()) {
                                 lateMoveReduction = 1;
-                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] = RivalConstants.LMR_REPLACE_VALUE_AFTER_CUT;
+                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                        = LateMoveReductions.LMR_REPLACE_VALUE_AFTER_CUT.getValue();
                             }
                         }
 
