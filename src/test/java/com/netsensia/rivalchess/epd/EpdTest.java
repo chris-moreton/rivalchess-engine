@@ -1,8 +1,8 @@
 package com.netsensia.rivalchess.epd;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -74,7 +74,7 @@ public class EpdTest {
         new Thread(search).start();
 
         search.setBoard(engineChessBoard);
-        search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+        search.setSearchDepth(Limit.MAX_SEARCH_DEPTH.getValue() - 2);
         search.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
 
         search.setNodesToSearch(epdItem.getMaxNodesToSearch());

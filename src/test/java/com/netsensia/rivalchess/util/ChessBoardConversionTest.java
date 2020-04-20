@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Move;

@@ -2,7 +2,6 @@ package com.netsensia.rivalchess.engine.core.eval;
 
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -36,7 +35,7 @@ public class StaticExchangeEvaluatorPremiumTest extends TestCase {
         assertSeeScore("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", "g2f1", PieceValue.getValue(Piece.KNIGHT) - PieceValue.getValue(Piece.PAWN));
 
         // leaves king in check
-        assertSeeScore("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", "h6c1", -RivalConstants.INFINITY);
+        assertSeeScore("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", "h6c1", -Integer.MAX_VALUE);
 
         assertSeeScore("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", "e5f6", 0);
 

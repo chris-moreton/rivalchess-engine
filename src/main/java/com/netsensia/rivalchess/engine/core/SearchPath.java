@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 public class SearchPath 
@@ -10,7 +11,7 @@ public class SearchPath
 
 	public SearchPath()
 	{
-		move = new int[RivalConstants.MAX_TREE_DEPTH];
+		move = new int[Limit.MAX_TREE_DEPTH.getValue()];
 	}
 
 	public synchronized void reset()

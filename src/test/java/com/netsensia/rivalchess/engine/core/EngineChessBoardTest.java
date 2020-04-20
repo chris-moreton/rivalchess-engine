@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.model.SquareOccupant;
@@ -90,19 +91,19 @@ public class EngineChessBoardTest {
 
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
         
-        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        engineChessBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
         assertFalse(engineChessBoard.isGameOver());
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(SCHOLARS_MATE));
-        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        engineChessBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
         assertTrue(engineChessBoard.isGameOver());
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(STALEMATE));
-        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        engineChessBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
         assertTrue(engineChessBoard.isGameOver());
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(NOT_STALEMATE));
-        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        engineChessBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
         assertFalse(engineChessBoard.isGameOver());
     }
 
@@ -149,19 +150,19 @@ public class EngineChessBoardTest {
 
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
-        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        engineChessBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
         assertFalse(engineChessBoard.isCheck());
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(SILLY_CHECK));
-        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        engineChessBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
         assertTrue(engineChessBoard.isCheck());
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(SCHOLARS_MATE));
-        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        engineChessBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
         assertTrue(engineChessBoard.isCheck());
 
         engineChessBoard.setBoard(FenUtils.getBoardModel(STALEMATE));
-        engineChessBoard.setLegalMoves(new int[RivalConstants.MAX_LEGAL_MOVES]);
+        engineChessBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
         assertFalse(engineChessBoard.isCheck());
     }
 
