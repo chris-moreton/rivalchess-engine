@@ -1470,9 +1470,10 @@ public final class Search implements Runnable {
                         Objects.requireNonNull(newPath).score = -newPath.score;
 
                         if (newPath.score >= high) {
-                            if (RivalConstants.USE_HISTORY_HEURISTIC) {
+                            if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive()) {
                                 historyMovesSuccess[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] += depthRemaining;
-                                if (historyMovesSuccess[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] > RivalConstants.HISTORY_MAX_VALUE) {
+                                if (historyMovesSuccess[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                        > SearchConfig.HISTORY_MAX_VALUE.getValue()) {
                                     for (int i = 0; i < 2; i++)
                                         for (int j = 0; j < 64; j++)
                                             for (int k = 0; k < 64; k++) {
@@ -1482,22 +1483,24 @@ public final class Search implements Runnable {
                                 }
                             }
 
-                            if (RivalConstants.USE_LATE_MOVE_REDUCTIONS)
-                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] += RivalConstants.LMR_ABOVE_ALPHA_ADDITION;
+                            if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive())
+                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                        += LateMoveReductions.LMR_ABOVE_ALPHA_ADDITION.getValue();
 
                             board.unMakeMove();
                             bestPath.setPath(move, newPath);
-                            boardHash.storeHashMove(move, board, newPath.score, RivalConstants.LOWERBOUND, depthRemaining);
+                            boardHash.storeHashMove(move, board, newPath.score, (byte)HashValueType.LOWERBOUND.getIndex(), depthRemaining);
 
-                            if (RivalConstants.NUM_KILLER_MOVES > 0) {
-                                if ((board.getBitboardByIndex(RivalConstants.ENEMY) & (move & 63)) == 0 || (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == 0) {
+                            if (SearchConfig.NUM_KILLER_MOVES.getValue() > 0) {
+                                if ((board.getBitboard(BitboardType.ENEMY) & (move & 63)) == 0
+                                        || (move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue()) == 0) {
                                     // if this move is in second place, or if it's not in the table at all,
                                     // then move first to second, and replace first with this move
                                     if (killerMoves[ply][0] != move) {
-                                        System.arraycopy(killerMoves[ply], 0, killerMoves[ply], 1, RivalConstants.NUM_KILLER_MOVES - 1);
+                                        System.arraycopy(killerMoves[ply], 0, killerMoves[ply], 1, SearchConfig.NUM_KILLER_MOVES.getValue() - 1);
                                         killerMoves[ply][0] = move;
                                     }
-                                    if (RivalConstants.USE_MATE_HISTORY_KILLERS && newPath.score > RivalConstants.MATE_SCORE_START) {
+                                    if (FeatureFlag.USE_MATE_HISTORY_KILLERS.isActive() && newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
                                         mateKiller.set(ply, move);
                                     }
                                 }
@@ -1505,9 +1508,10 @@ public final class Search implements Runnable {
                             return bestPath;
                         }
 
-                        if (RivalConstants.USE_HISTORY_HEURISTIC) {
+                        if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive()) {
                             historyMovesFail[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] += depthRemaining;
-                            if (historyMovesFail[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] > RivalConstants.HISTORY_MAX_VALUE) {
+                            if (historyMovesFail[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                    > SearchConfig.HISTORY_MAX_VALUE.getValue()) {
                                 for (int i = 0; i < 2; i++)
                                     for (int j = 0; j < 64; j++)
                                         for (int k = 0; k < 64; k++) {
@@ -1522,15 +1526,19 @@ public final class Search implements Runnable {
                         }
 
                         if (newPath.score > low) {
-                            flag = RivalConstants.EXACTSCORE;
+                            flag = HashValueType.EXACTSCORE.getIndex();
                             bestMoveForHash = move;
                             low = newPath.score;
-                            scoutSearch = RivalConstants.USE_PV_SEARCH && depth - reductions + (newExtensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) >= RivalConstants.PV_MINIMUM_DISTANCE_FROM_LEAF;
+                            scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive() && depth - reductions
+                                    + (newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                                    >= SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.getValue();
 
-                            if (RivalConstants.USE_LATE_MOVE_REDUCTIONS)
-                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] += RivalConstants.LMR_ABOVE_ALPHA_ADDITION;
-                        } else if (RivalConstants.USE_LATE_MOVE_REDUCTIONS) {
-                            historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] -= RivalConstants.LMR_NOT_ABOVE_ALPHA_REDUCTION;
+                            if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive())
+                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                        += LateMoveReductions.LMR_ABOVE_ALPHA_ADDITION.getValue();
+                        } else if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive()) {
+                            historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                    -= LateMoveReductions.LMR_NOT_ABOVE_ALPHA_REDUCTION.getValue();
                         }
                     }
                     board.unMakeMove();
@@ -1540,7 +1548,7 @@ public final class Search implements Runnable {
             if (!this.m_abortingSearch) {
                 if (legalMoveCount == 0) {
                     bestPath.score = board.isCheck() ? -Evaluation.VALUE_MATE.getValue() : 0;
-                    boardHash.storeHashMove(0, board, bestPath.score, RivalConstants.EXACTSCORE, RivalConstants.MAX_SEARCH_DEPTH);
+                    boardHash.storeHashMove(0, board, bestPath.score, (byte)HashValueType.EXACTSCORE.getIndex(), Limit.MAX_SEARCH_DEPTH.getValue());
                     return bestPath;
                 }
 

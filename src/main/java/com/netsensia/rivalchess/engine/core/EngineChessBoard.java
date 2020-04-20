@@ -1092,8 +1092,13 @@ public final class EngineChessBoard {
         return blackKingSquare;
     }
 
+    @Deprecated
     public long getBitboardByIndex(int index) {
         return engineBitboards.pieceBitboards[index];
+    }
+
+    public long getBitboard(final BitboardType bitboardType) {
+        return engineBitboards.getPieceBitboard(bitboardType);
     }
 
     public int getHalfMoveCount() {
