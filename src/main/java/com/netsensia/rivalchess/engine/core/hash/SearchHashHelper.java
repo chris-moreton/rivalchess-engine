@@ -1,10 +1,15 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
+import com.netsensia.rivalchess.config.FeatureFlag;
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.enums.HashIndex;
+import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.exception.HashVerificationException;
+import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.model.SquareOccupant;
 
 public class SearchHashHelper {
 
@@ -15,14 +20,14 @@ public class SearchHashHelper {
         final long hashValue = boardHash.getTrackedHashValue();
         final int hashIndex = boardHash.getHashIndex(board);
 
-        if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_HEIGHT) >= depthRemaining &&
-                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) != RivalConstants.EMPTY &&
-                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT1) == (int) (hashValue >>> 32) &&
-                boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_64BIT2) == (int) (hashValue & Bitboards.LOW32)) {
+        if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_HEIGHT.getIndex()) >= depthRemaining &&
+                boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) != HashValueType.EMPTY.getIndex() &&
+                boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_64BIT1.getIndex()) == (int) (hashValue >>> 32) &&
+                boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_64BIT2.getIndex()) == (int) (hashValue & Bitboards.LOW32)) {
 
             boolean isLocked =
                     boardHash.getHashTableVersion()
-                            - boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION)
+                            - boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_VERSION.getIndex())
                             <= SearchConfig.MAXIMUM_HASH_AGE.getValue();
 
             if (isLocked) {
@@ -62,10 +67,10 @@ public class SearchHashHelper {
         final BoardHash boardHash = board.getBoardHashObject();
         final int hashIndex = boardHash.getHashIndex(board);
 
-        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-            for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
-                        boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
+        if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive()) {
+            for (int i = SquareOccupant.WP.getIndex(); i <= SquareOccupant.BR.getIndex(); i++) {
+                if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
+                        boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
                     throw new HashVerificationException("Height bad clash " + ZorbristHashCalculator.calculateHash(board));
                 }
             }
@@ -77,10 +82,10 @@ public class SearchHashHelper {
         final BoardHash boardHash = board.getBoardHashObject();
         final int hashIndex = boardHash.getHashIndex(board);
 
-        if (RivalConstants.USE_SUPER_VERIFY_ON_HASH) {
-            for (int i = RivalConstants.WP; i <= RivalConstants.BR; i++) {
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
-                        boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_LOCK1 + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
+        if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive()) {
+            for (int i = SquareOccupant.WP.getIndex(); i <= SquareOccupant.BR.getIndex(); i++) {
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i) != (int) (board.getBitboardByIndex(i) >>> 32) ||
+                        boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i + 12) != (int) (board.getBitboardByIndex(i) & Bitboards.LOW32)) {
                     System.exit(0);
                 }
             }
