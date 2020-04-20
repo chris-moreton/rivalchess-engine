@@ -36,7 +36,7 @@ public enum SearchConfig {
         return value;
     }
 
-    public int getFutilityMargin(int i) {
+    public static int getFutilityMargin(int i) {
         return futilityMargin.get(i);
     }
 
