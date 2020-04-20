@@ -21,7 +21,7 @@ public enum BitboardType {
     ;
 
     private int index;
-    private static final int numBitboardTypes = 15;
+    private static final int numBitboardTypes = 16;
 
     private BitboardType(int index) {
         this.index = index;
