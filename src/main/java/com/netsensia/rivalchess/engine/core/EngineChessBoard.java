@@ -566,7 +566,7 @@ public final class EngineChessBoard {
         this.moveList[this.numMovesMade].isOnNullMove = this.isOnNullMove;
         this.moveList[this.numMovesMade].pawnHashValue = boardHash.getTrackedPawnHashValue();
         this.moveList[this.numMovesMade].halfMoveCount = (byte) this.halfMoveCount;
-        this.moveList[this.numMovesMade].enPassantBitboard = this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE];
+        this.moveList[this.numMovesMade].enPassantBitboard = this.engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE);
         this.moveList[this.numMovesMade].castlePrivileges = (byte) this.castlePrivileges;
         this.moveList[this.numMovesMade].movePiece = movePiece;
 
@@ -576,7 +576,7 @@ public final class EngineChessBoard {
 
         this.halfMoveCount++;
 
-        engineBitboards.setPieceBitboard(RivalConstants.ENPASSANTSQUARE, 0);
+        engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 0);
 
         engineBitboards.movePiece(movePiece, compactMove);
 
@@ -637,15 +637,15 @@ public final class EngineChessBoard {
         this.engineBitboards.pieceBitboards[capturePiece.getIndex()] ^= toMask;
         if (capturePiece != SquareOccupant.WP && capturePiece == SquareOccupant.WR) {
             if (toMask == Bitboards.WHITEKINGSIDEROOKMASK) {
-                this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_WK;
+                this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_WK.getValue();
             }
             else if (toMask == Bitboards.WHITEQUEENSIDEROOKMASK) {
-                this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_WQ;
+                this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_WQ.getValue();
             }
         }
     }
 
-    private void adjustKingVariablesForBlackKingMove(int compactMove) {
+    private void adjustKingVariablesForBlackKingMove(final int compactMove) {
 
         final byte moveFrom = (byte) (compactMove >>> 16);
         final byte moveTo = (byte) (compactMove & 63);
@@ -653,22 +653,22 @@ public final class EngineChessBoard {
         final long fromMask = 1L << moveFrom;
         final long toMask = 1L << moveTo;
 
-        this.castlePrivileges &= RivalConstants.CASTLEPRIV_BNONE;
+        this.castlePrivileges &= CastleBitMask.CASTLEPRIV_BNONE.getValue();
         this.blackKingSquare = moveTo;
         if ((toMask | fromMask) == Bitboards.BLACKKINGSIDECASTLEMOVEMASK) {
-            this.engineBitboards.pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKKINGSIDECASTLEROOKMOVE;
+            this.engineBitboards.xorPieceBitboard(BitboardType.BR, Bitboards.BLACKKINGSIDECASTLEROOKMOVE);
             this.squareContents[Square.H8.getBitRef()] = SquareOccupant.NONE;
             this.squareContents[Square.F8.getBitRef()] = SquareOccupant.BR;
         } else if ((toMask | fromMask) == Bitboards.BLACKQUEENSIDECASTLEMOVEMASK) {
-            this.engineBitboards.pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKQUEENSIDECASTLEROOKMOVE;
+            this.engineBitboards.xorPieceBitboard(BitboardType.BR, Bitboards.BLACKQUEENSIDECASTLEROOKMOVE);
             this.squareContents[Square.A8.getBitRef()] = SquareOccupant.NONE;
             this.squareContents[Square.D8.getBitRef()] = SquareOccupant.BR;
         }
     }
 
     private void adjustCastlePrivilegesForBlackRookMove(byte moveFrom) {
-        if (moveFrom == Square.A8.getBitRef()) this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_BQ;
-        else if (moveFrom == Square.H8.getBitRef()) this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_BK;
+        if (moveFrom == Square.A8.getBitRef()) this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_BQ.getValue();
+        else if (moveFrom == Square.H8.getBitRef()) this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_BK.getValue();
     }
 
     private void makeSpecialBlackPawnMoveAdjustments(int compactMove) throws InvalidMoveException {
@@ -681,7 +681,7 @@ public final class EngineChessBoard {
         this.halfMoveCount = 0;
 
         if ((toMask & Bitboards.RANK_5) != 0 && (fromMask & Bitboards.RANK_7) != 0) {
-            this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = toMask << 8L;
+            this.engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, toMask << 8L);
         } else if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
             this.engineBitboards.pieceBitboards[RivalConstants.WP] ^= toMask << 8;
             this.moveList[this.numMovesMade].capturePiece = SquareOccupant.WP;

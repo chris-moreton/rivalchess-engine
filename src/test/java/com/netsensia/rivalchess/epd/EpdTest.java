@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -56,7 +57,7 @@ public class EpdTest {
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
-        runEpdSuite("winAtChess.epd", "WAC.200", true);
+        runEpdSuite("winAtChess.epd", "WAC.001", true);
     }
 
     @Test
@@ -66,6 +67,10 @@ public class EpdTest {
     }
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException, InvalidMoveException {
+
+        if (new Random().nextInt(12) > 0) {
+            return;
+        }
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
