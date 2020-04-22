@@ -9,7 +9,7 @@ import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import junit.framework.TestCase;
 
-public class SearchConfigHashHelperTest extends TestCase {
+public class SearchHashHelperTest extends TestCase {
 
     public void testIsHeightHashTableEntryValid() throws InvalidMoveException {
         EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));

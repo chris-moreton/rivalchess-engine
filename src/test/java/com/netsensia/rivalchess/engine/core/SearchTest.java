@@ -10,7 +10,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class SearchConfigTest {
+public class SearchTest {
 
     private void assertEvaluationScore(String fen, int expectedScore, boolean flip) throws IllegalFenException {
 
