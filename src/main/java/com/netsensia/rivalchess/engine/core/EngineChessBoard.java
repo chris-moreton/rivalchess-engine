@@ -683,32 +683,32 @@ public final class EngineChessBoard {
         if ((toMask & Bitboards.RANK_5) != 0 && (fromMask & Bitboards.RANK_7) != 0) {
             this.engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, toMask << 8L);
         } else if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
-            this.engineBitboards.pieceBitboards[RivalConstants.WP] ^= toMask << 8;
+            this.engineBitboards.xorPieceBitboard(BitboardType.WP, toMask << 8);
             this.moveList[this.numMovesMade].capturePiece = SquareOccupant.WP;
             this.squareContents[moveTo + 8] = SquareOccupant.NONE;
-        } else if ((compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) != 0) {
-            final int promotionPieceMask = compactMove & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
+        } else if ((compactMove & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue()) != 0) {
+            final int promotionPieceMask = compactMove & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue();
             switch (PromotionPieceMask.fromValue(promotionPieceMask)) {
                 case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                    this.engineBitboards.pieceBitboards[RivalConstants.BQ] |= toMask;
+                    this.engineBitboards.orPieceBitboard(BitboardType.BQ, toMask);
                     this.squareContents[moveTo] = SquareOccupant.BQ;
                     break;
                 case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                    this.engineBitboards.pieceBitboards[RivalConstants.BR] |= toMask;
+                    this.engineBitboards.orPieceBitboard(BitboardType.BR, toMask);
                     this.squareContents[moveTo] = SquareOccupant.BR;
                     break;
                 case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                    this.engineBitboards.pieceBitboards[RivalConstants.BN] |= toMask;
+                    this.engineBitboards.orPieceBitboard(BitboardType.BN, toMask);
                     this.squareContents[moveTo] = SquareOccupant.BN;
                     break;
                 case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                    this.engineBitboards.pieceBitboards[RivalConstants.BB] |= toMask;
+                    this.engineBitboards.orPieceBitboard(BitboardType.BB, toMask);
                     this.squareContents[moveTo] = SquareOccupant.BB;
                     break;
                 default: throw new InvalidMoveException(
                         "compactMove " + compactMove + " produced invalid promotion piece");
             }
-            this.engineBitboards.pieceBitboards[RivalConstants.BP] ^= toMask;
+            this.engineBitboards.xorPieceBitboard(BitboardType.BP, toMask);
         }
     }
 
@@ -719,10 +719,10 @@ public final class EngineChessBoard {
 
         if (capturePiece != SquareOccupant.BP && capturePiece == SquareOccupant.BR) {
             if (toMask == Bitboards.BLACKKINGSIDEROOKMASK) {
-                this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_BK;
+                this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_BK.getValue();
             }
             else if (toMask == Bitboards.BLACKQUEENSIDEROOKMASK) {
-                this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_BQ;
+                this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_BQ.getValue();
             }
         }
     }
@@ -735,14 +735,14 @@ public final class EngineChessBoard {
         final long toMask = 1L << moveTo;
 
         this.whiteKingSquare = moveTo;
-        this.castlePrivileges &= RivalConstants.CASTLEPRIV_WNONE;
+        this.castlePrivileges &= CastleBitMask.CASTLEPRIV_WNONE.getValue();
         if ((toMask | fromMask) == Bitboards.WHITEKINGSIDECASTLEMOVEMASK) {
-            this.engineBitboards.pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEKINGSIDECASTLEROOKMOVE;
+            this.engineBitboards.xorPieceBitboard(BitboardType.WR, Bitboards.WHITEKINGSIDECASTLEROOKMOVE);
             this.squareContents[Square.H1.getBitRef()] = SquareOccupant.NONE;
             this.squareContents[Square.F1.getBitRef()] = SquareOccupant.WR;
 
         } else if ((toMask | fromMask) == Bitboards.WHITEQUEENSIDECASTLEMOVEMASK) {
-            this.engineBitboards.pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEQUEENSIDECASTLEROOKMOVE;
+            this.engineBitboards.xorPieceBitboard(BitboardType.WR, Bitboards.WHITEQUEENSIDECASTLEROOKMOVE);
             this.squareContents[Square.A1.getBitRef()] = SquareOccupant.NONE;
             this.squareContents[Square.D1.getBitRef()] = SquareOccupant.WR;
         }
@@ -750,9 +750,9 @@ public final class EngineChessBoard {
 
     private void adjustCastlePrivilegesForWhiteRookMove(byte moveFrom) {
         if (moveFrom == Square.A1.getBitRef()) {
-            this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_WQ;
+            this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_WQ.getValue();
         } else if (moveFrom == Square.H1.getBitRef()) {
-            this.castlePrivileges &= ~RivalConstants.CASTLEPRIV_WK;
+            this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_WK.getValue();
         }
     }
 
@@ -767,7 +767,7 @@ public final class EngineChessBoard {
         this.halfMoveCount = 0;
 
         if ((toMask & Bitboards.RANK_4) != 0 && (fromMask & Bitboards.RANK_2) != 0) {
-            this.engineBitboards.setPieceBitboard(RivalConstants.ENPASSANTSQUARE, fromMask << 8L);
+            this.engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, fromMask << 8L);
         } else if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
             this.engineBitboards.xorPieceBitboard(SquareOccupant.BP.getIndex(), toMask >>> 8);
             this.moveList[this.numMovesMade].capturePiece = SquareOccupant.BP;
@@ -795,7 +795,7 @@ public final class EngineChessBoard {
                     throw new InvalidMoveException(
                             "compactMove " + compactMove + " produced invalid promotion piece");
             }
-            this.engineBitboards.pieceBitboards[RivalConstants.WP] ^= toMask;
+            this.engineBitboards.xorPieceBitboard(BitboardType.WP, toMask);
         }
     }
 
@@ -811,7 +811,7 @@ public final class EngineChessBoard {
 
         this.isWhiteToMove = !this.isWhiteToMove;
 
-        this.engineBitboards.pieceBitboards[RivalConstants.ENPASSANTSQUARE] = this.moveList[this.numMovesMade].enPassantBitboard;
+        this.engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, this.moveList[this.numMovesMade].enPassantBitboard);
         this.castlePrivileges = this.moveList[this.numMovesMade].castlePrivileges;
         this.isOnNullMove = this.moveList[this.numMovesMade].isOnNullMove;
 
@@ -862,23 +862,23 @@ public final class EngineChessBoard {
     private void replaceCastledRook(long fromMask, long toMask, SquareOccupant movePiece) {
         if (movePiece == SquareOccupant.WK) {
             if ((toMask | fromMask) == Bitboards.WHITEKINGSIDECASTLEMOVEMASK) {
-                this.engineBitboards.pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEKINGSIDECASTLEROOKMOVE;
+                this.engineBitboards.xorPieceBitboard(BitboardType.WR, Bitboards.WHITEKINGSIDECASTLEROOKMOVE);
                 this.squareContents[Square.H1.getBitRef()] = SquareOccupant.WR;
                 this.squareContents[Square.F1.getBitRef()] = SquareOccupant.NONE;
             } else if ((toMask | fromMask) == Bitboards.WHITEQUEENSIDECASTLEMOVEMASK) {
-                this.engineBitboards.pieceBitboards[RivalConstants.WR] ^= Bitboards.WHITEQUEENSIDECASTLEROOKMOVE;
+                this.engineBitboards.xorPieceBitboard(BitboardType.WR, Bitboards.WHITEQUEENSIDECASTLEROOKMOVE);
                 this.squareContents[Square.A1.getBitRef()] = SquareOccupant.WR;
                 this.squareContents[Square.D1.getBitRef()] = SquareOccupant.NONE;
 
             }
         } else if (movePiece == SquareOccupant.BK) {
             if ((toMask | fromMask) == Bitboards.BLACKKINGSIDECASTLEMOVEMASK) {
-                this.engineBitboards.pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKKINGSIDECASTLEROOKMOVE;
+                this.engineBitboards.xorPieceBitboard(BitboardType.BR, Bitboards.BLACKKINGSIDECASTLEROOKMOVE);
                 this.squareContents[Square.H8.getBitRef()] = SquareOccupant.BR;
                 this.squareContents[Square.F8.getBitRef()] = SquareOccupant.NONE;
 
             } else if ((toMask | fromMask) == Bitboards.BLACKQUEENSIDECASTLEMOVEMASK) {
-                this.engineBitboards.pieceBitboards[RivalConstants.BR] ^= Bitboards.BLACKQUEENSIDECASTLEROOKMOVE;
+                this.engineBitboards.xorPieceBitboard(BitboardType.BR, Bitboards.BLACKQUEENSIDECASTLEROOKMOVE);
                 this.squareContents[Square.A8.getBitRef()] = SquareOccupant.BR;
                 this.squareContents[Square.D8.getBitRef()] = SquareOccupant.NONE;
 
@@ -887,27 +887,27 @@ public final class EngineChessBoard {
     }
 
     private boolean removePromotionPiece(long fromMask, long toMask) throws InvalidMoveException {
-        final int promotionPiece = this.moveList[this.numMovesMade].move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
+        final int promotionPiece = this.moveList[this.numMovesMade].move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue();
         if (promotionPiece != 0) {
             if (this.isWhiteToMove) {
-                this.engineBitboards.pieceBitboards[RivalConstants.WP] ^= fromMask;
+                this.engineBitboards.xorPieceBitboard(BitboardType.WP, fromMask);
 
-                switch (promotionPiece) {
-                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
+                switch (PromotionPieceMask.fromValue(promotionPiece)) {
+                    case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
 
-                        this.engineBitboards.pieceBitboards[RivalConstants.WQ] ^= toMask;
+                        this.engineBitboards.xorPieceBitboard(BitboardType.WQ, toMask);
                         break;
-                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
+                    case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
 
-                        this.engineBitboards.pieceBitboards[RivalConstants.WB] ^= toMask;
+                        this.engineBitboards.xorPieceBitboard(BitboardType.WB, toMask);
                         break;
-                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
+                    case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
 
-                        this.engineBitboards.pieceBitboards[RivalConstants.WN] ^= toMask;
+                        this.engineBitboards.xorPieceBitboard(BitboardType.WN, toMask);
                         break;
-                    case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
+                    case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
 
-                        this.engineBitboards.pieceBitboards[RivalConstants.WR] ^= toMask;
+                        this.engineBitboards.xorPieceBitboard(BitboardType.WR, toMask);
                         break;
                     default:
                         throw new InvalidMoveException("Illegal promotion piece " + promotionPiece);

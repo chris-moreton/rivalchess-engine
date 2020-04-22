@@ -68,7 +68,7 @@ public class EpdTest {
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException, InvalidMoveException {
 
-        if (new Random().nextInt(3) > 0) {
+        if (new Random().nextInt(1) > 0) {
             return;
         }
 
