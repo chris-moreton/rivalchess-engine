@@ -1,11 +1,22 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
+import com.netsensia.rivalchess.config.Evaluation;
+import com.netsensia.rivalchess.config.Extensions;
 import com.netsensia.rivalchess.config.FeatureFlag;
+import com.netsensia.rivalchess.config.Hash;
+import com.netsensia.rivalchess.config.IterativeDeepening;
+import com.netsensia.rivalchess.config.LateMoveReductions;
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
+import com.netsensia.rivalchess.config.Uci;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
+import com.netsensia.rivalchess.enums.CastleBitMask;
+import com.netsensia.rivalchess.enums.HashIndex;
+import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.MoveOrder;
 import com.netsensia.rivalchess.enums.PromotionPieceMask;
 import com.netsensia.rivalchess.enums.SearchState;
@@ -46,7 +57,7 @@ public final class Search implements Runnable {
 
     private final StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorPremium();
 
-    private final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
+    private final MoveOrder[] moveOrderStatus = new MoveOrder[Limit.MAX_TREE_DEPTH.getValue()];
 
     private final List<List<Long>> drawnPositionsAtRoot;
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
@@ -89,7 +100,7 @@ public final class Search implements Runnable {
     protected int m_finalDepthToSearch = 1;
     protected int iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
 
-    private boolean useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK;
+    private boolean useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive();
     private boolean m_inBook = useOpeningBook;
 
     private int currentDepthZeroMove;
@@ -100,7 +111,7 @@ public final class Search implements Runnable {
 
     private boolean m_isUCIMode = false;
 
-    private static byte[] rivalKPKBitbase = null;
+    private static final byte[] rivalKPKBitbase = null;
 
     public Search() throws IllegalFenException {
         this(System.out, FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
@@ -131,17 +142,17 @@ public final class Search implements Runnable {
 
         searchState = SearchState.READY;
 
-        this.searchPath = new SearchPath[RivalConstants.MAX_TREE_DEPTH];
-        this.killerMoves = new int[RivalConstants.MAX_TREE_DEPTH][RivalConstants.NUM_KILLER_MOVES];
-        for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
+        this.searchPath = new SearchPath[Limit.MAX_TREE_DEPTH.getValue()];
+        this.killerMoves = new int[Limit.MAX_TREE_DEPTH.getValue()][SearchConfig.NUM_KILLER_MOVES.getValue()];
+        for (int i = 0; i < Limit.MAX_TREE_DEPTH.getValue(); i++) {
             this.searchPath[i] = new SearchPath();
-            this.killerMoves[i] = new int[RivalConstants.NUM_KILLER_MOVES];
+            this.killerMoves[i] = new int[SearchConfig.NUM_KILLER_MOVES.getValue()];
         }
 
-        orderedMoves = new int[RivalConstants.MAX_TREE_DEPTH][RivalConstants.MAX_LEGAL_MOVES];
+        orderedMoves = new int[Limit.MAX_TREE_DEPTH.getValue()][Limit.MAX_LEGAL_MOVES.getValue()];
 
         depthZeroLegalMoves = orderedMoves[0];
-        depthZeroMoveScores = new int[RivalConstants.MAX_LEGAL_MOVES];
+        depthZeroMoveScores = new int[Limit.MAX_LEGAL_MOVES.getValue()];
     }
 
     public void startEngineTimer(boolean isUCIMode) {
