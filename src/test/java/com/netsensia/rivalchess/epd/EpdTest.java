@@ -14,6 +14,7 @@ import com.netsensia.rivalchess.util.EpdReader;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -55,10 +56,11 @@ public class EpdTest {
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
-        runEpdSuite("winAtChess.epd", "WAC.001", true);
+        runEpdSuite("winAtChess.epd", "WAC.200", true);
     }
 
     @Test
+    @Ignore
     public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
         runEpdSuite("winAtChess.epd", "WAC.001", false);
     }
