@@ -1243,29 +1243,31 @@ public final class Search implements Runnable {
         }
 
         int checkExtend = 0;
-        if ((extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
-            if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
+        if ((extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue()) < Limit.MAX_EXTENSION_DEPTH.getValue()) {
+            if (Extensions.FRACTIONAL_EXTENSION_CHECK.getValue() > 0 && isCheck) {
                 checkExtend = 1;
             }
         }
 
         if (depthRemaining <= 0) {
-            bestPath = quiesce(board, RivalConstants.MAX_QUIESCE_DEPTH - 1, ply, 0, low, high, isCheck);
-            if (bestPath.score < low) flag = RivalConstants.UPPERBOUND;
-            else if (bestPath.score > high) flag = RivalConstants.LOWERBOUND;
+            bestPath = quiesce(board, Limit.MAX_QUIESCE_DEPTH.getValue() - 1, ply, 0, low, high, isCheck);
+            if (bestPath.score < low) flag = HashValueType.UPPERBOUND.getIndex();
+            else if (bestPath.score > high) flag = HashValueType.LOWERBOUND.getIndex();
             else
-                flag = RivalConstants.EXACTSCORE;
+                flag = HashValueType.EXACTSCORE.getIndex();
 
             boardHash.storeHashMove(0, board, bestPath.score, (byte)flag, 0);
             return bestPath;
         }
 
-        if (RivalConstants.USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= RivalConstants.IID_MIN_DEPTH && hashMove == 0 && board.isNotOnNullMove()) {
+        if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive()
+                && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.getValue()
+                && hashMove == 0 && board.isNotOnNullMove()) {
             boolean doIt = true;
 
             if (doIt) {
-                if (depth - RivalConstants.IID_REDUCE_DEPTH > 0) {
-                    newPath = search(board, (byte) (depth - RivalConstants.IID_REDUCE_DEPTH), ply, low, high, extensions, recaptureSquare, isCheck);
+                if (depth - IterativeDeepening.IID_REDUCE_DEPTH.getValue() > 0) {
+                    newPath = search(board, (byte) (depth - IterativeDeepening.IID_REDUCE_DEPTH.getValue()), ply, low, high, extensions, recaptureSquare, isCheck);
                     // it's not really a hash move, but this will cause the order routine to rank it first
                     if (newPath != null && newPath.height > 0) hashMove = newPath.move[0];
                 }
@@ -1283,24 +1285,24 @@ public final class Search implements Runnable {
         int nullMoveReduceDepth = (depthRemaining > SearchConfig.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE.getValue())
                 ? SearchConfig.NULLMOVE_REDUCE_DEPTH.getValue() + 1
                 : SearchConfig.NULLMOVE_REDUCE_DEPTH.getValue();
-        if (RivalConstants.USE_NULLMOVE_PRUNING && !isCheck && board.isNotOnNullMove() && depthRemaining > 1) {
+        if (FeatureFlag.USE_NULL_MOVE_PRUNING.isActive() && !isCheck && board.isNotOnNullMove() && depthRemaining > 1) {
             if ((board.getMover() == Colour.WHITE
                     ? board.getWhitePieceValues()
                     : board.getBlackPieceValues()) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.getValue() &&
                     (board.getMover() == Colour.WHITE ? board.getWhitePawnValues() : board.getBlackPawnValues()) > 0) {
                 board.makeNullMove();
                 newPath = search(board, (byte) (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, -1, false);
-                if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
+                else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                 if (!this.m_abortingSearch) {
                     if (-Objects.requireNonNull(newPath).score >= high) {
                         bestPath.score = -newPath.score;
                         board.unMakeNullMove();
                         return bestPath;
                     } else if (
-                            RivalConstants.FRACTIONAL_EXTENSION_THREAT > 0 &&
-                                    -newPath.score < -RivalConstants.MATE_SCORE_START &&
-                                    (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
+                            Extensions.FRACTIONAL_EXTENSION_THREAT.getValue() > 0 &&
+                                    -newPath.score < -Evaluation.MATE_SCORE_START.getValue() &&
+                                    (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue()) < Limit.MAX_EXTENSION_DEPTH.getValue()) {
                         threatExtend = 1;
                     } else {
                         threatExtend = 0;
@@ -1327,9 +1329,9 @@ public final class Search implements Runnable {
             // Check to see if we can futility prune this whole node
             boolean canFutilityPrune = false;
             int futilityScore = low;
-            if (RivalConstants.USE_FUTILITY_PRUNING && depthRemaining < 4 && !wasCheckBeforeMove && threatExtend == 0 && Math.abs(low) < RivalConstants.MATE_SCORE_START && Math.abs(high) < RivalConstants.MATE_SCORE_START) {
+            if (FeatureFlag.USE_FUTILITY_PRUNING.isActive() && depthRemaining < 4 && !wasCheckBeforeMove && threatExtend == 0 && Math.abs(low) < Evaluation.MATE_SCORE_START.getValue() && Math.abs(high) < Evaluation.MATE_SCORE_START.getValue()) {
                 futilityPruningEvaluation = evaluate(board);
-                futilityScore = futilityPruningEvaluation + RivalConstants.FUTILITY_MARGIN.get(depthRemaining - 1);
+                futilityScore = futilityPruningEvaluation + SearchConfig.getFutilityMargin(depthRemaining - 1);
                 if (futilityScore < low) canFutilityPrune = true;
             }
 
@@ -1345,20 +1347,22 @@ public final class Search implements Runnable {
 
                 int newRecaptureSquare = -1;
 
-                int currentSEEValue = -RivalConstants.INFINITY;
-                if (RivalConstants.FRACTIONAL_EXTENSION_RECAPTURE > 0 && (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
+                int currentSEEValue = -Integer.MAX_VALUE;
+                if (Extensions.FRACTIONAL_EXTENSION_RECAPTURE.getValue() > 0 && (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                        < Limit.MAX_EXTENSION_DEPTH.getValue()) {
                     recaptureExtend = 0;
 
-                    if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece).equals(RivalConstants.PIECE_VALUES.get(targetPiece))) {
+                    if (targetPiece != -1 && Evaluation.getPieceValues().get(movePiece).equals(Evaluation.getPieceValues().get(targetPiece))) {
                         currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
-                        if (Math.abs(currentSEEValue) <= RivalConstants.RECAPTURE_EXTENSION_MARGIN)
+                        if (Math.abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.getValue())
                             newRecaptureSquare = (move & 63);
                     }
 
                     if ((move & 63) == recaptureSquare) {
-                        if (currentSEEValue == -RivalConstants.INFINITY)
+                        if (currentSEEValue == -Integer.MAX_VALUE)
                             currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
-                        if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(recaptureSquare).getIndex()) - RivalConstants.RECAPTURE_EXTENSION_MARGIN) {
+                        if (Math.abs(currentSEEValue) > Evaluation.getPieceValue(board.getSquareOccupant(recaptureSquare))
+                                - Extensions.RECAPTURE_EXTENSION_MARGIN.getValue()) {
                             recaptureExtend = 1;
                         }
                     }
