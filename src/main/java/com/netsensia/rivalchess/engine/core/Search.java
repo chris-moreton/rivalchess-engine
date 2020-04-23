@@ -1542,8 +1542,8 @@ public final class Search implements Runnable {
 
             if (!this.m_abortingSearch) {
                 if (legalMoveCount == 0) {
-                    bestPath.score = board.isCheck() ? -RivalConstants.VALUE_MATE : 0;
-                    boardHash.storeHashMove(0, board, bestPath.score, RivalConstants.EXACTSCORE, RivalConstants.MAX_SEARCH_DEPTH);
+                    bestPath.score = board.isCheck() ? -Evaluation.VALUE_MATE.getValue() : 0;
+                    boardHash.storeHashMove(0, board, bestPath.score, (byte)HashValueType.EXACTSCORE.getIndex(), Limit.MAX_SEARCH_DEPTH.getValue());
                     return bestPath;
                 }
 
@@ -1563,7 +1563,7 @@ public final class Search implements Runnable {
         setNodes(getNodes() + 1);
 
         int numMoves = 0;
-        byte flag = RivalConstants.UPPERBOUND;
+        int flag = HashValueType.UPPERBOUND.getIndex();
         int move;
         int bestMoveForHash = 0;
 
@@ -1586,9 +1586,9 @@ public final class Search implements Runnable {
 
                 checkExtend = 0;
                 pawnExtend = 0;
-                if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
+                if (Extensions.FRACTIONAL_EXTENSION_CHECK.getValue() > 0 && isCheck) {
                     checkExtend = 1;
-                } else if (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0) {
+                } else if (Extensions.FRACTIONAL_EXTENSION_PAWN.getValue() > 0) {
                     if (board.wasPawnPush()) {
                         pawnExtend = 1;
                     }
@@ -1596,9 +1596,9 @@ public final class Search implements Runnable {
 
                 int newExtensions =
                         Math.min(
-                                (checkExtend * RivalConstants.FRACTIONAL_EXTENSION_CHECK) +
-                                        (pawnExtend * RivalConstants.FRACTIONAL_EXTENSION_PAWN),
-                                RivalConstants.FRACTIONAL_EXTENSION_FULL);
+                                (checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.getValue()) +
+                                        (pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.getValue()),
+                                Extensions.FRACTIONAL_EXTENSION_FULL.getValue());
 
                 numLegalMovesAtDepthZero++;
 
@@ -1615,20 +1615,20 @@ public final class Search implements Runnable {
                     if (scoutSearch) {
                         newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, -1, isCheck);
                         if (newPath != null) {
-                            if (newPath.score > RivalConstants.MATE_SCORE_START) {
+                            if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
                                 newPath.score--;
                             }
-                            else if (newPath.score < -RivalConstants.MATE_SCORE_START) {
+                            else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) {
                                 newPath.score++;
                             }
                         }
                         if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                             newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
                             if (newPath != null) {
-                                if (newPath.score > RivalConstants.MATE_SCORE_START) {
+                                if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
                                     newPath.score--;
                                 } else {
-                                    if (newPath.score < -RivalConstants.MATE_SCORE_START) {
+                                    if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) {
                                         newPath.score++;
                                     }
                                 }
@@ -1637,9 +1637,9 @@ public final class Search implements Runnable {
                     } else {
                         newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
                         if (newPath != null) {
-                            if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
+                            if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
                             else {
-                                if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                                if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                             }
                         }
                     }
@@ -1650,7 +1650,7 @@ public final class Search implements Runnable {
                     if (newPath.score >= high) {
                         board.unMakeMove();
                         bestPath.setPath(move, newPath);
-                        boardHash.storeHashMove(move, board, newPath.score, RivalConstants.LOWERBOUND, depth);
+                        boardHash.storeHashMove(move, board, newPath.score, (byte)HashValueType.LOWERBOUND.getIndex(), depth);
                         depthZeroMoveScores[numMoves] = newPath.score;
                         return bestPath;
                     }
@@ -1660,11 +1660,12 @@ public final class Search implements Runnable {
                     }
 
                     if (newPath.score > low) {
-                        flag = RivalConstants.EXACTSCORE;
+                        flag = HashValueType.EXACTSCORE.getIndex();
                         bestMoveForHash = move;
                         low = newPath.score;
 
-                        scoutSearch = RivalConstants.USE_PV_SEARCH && depth + (newExtensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) >= RivalConstants.PV_MINIMUM_DISTANCE_FROM_LEAF;
+                        scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive() && depth + (newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                                >= SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.getValue();
                         m_currentPath.setPath(bestPath);
                         currentPathString = "" + m_currentPath;
                     }
@@ -1673,20 +1674,20 @@ public final class Search implements Runnable {
                 }
                 engineChessBoard.unMakeMove();
             } else {
-                depthZeroMoveScores[numMoves] = -RivalConstants.INFINITY;
+                depthZeroMoveScores[numMoves] = -Integer.MAX_VALUE;
             }
             numMoves++;
             move = orderedMoves[0][numMoves] & 0x00FFFFFF;
         }
 
         if (!this.m_abortingSearch) {
-            if (numLegalMovesAtDepthZero == 1 && this.millisToThink < RivalConstants.MAX_SEARCH_MILLIS) {
+            if (numLegalMovesAtDepthZero == 1 && this.millisToThink < Limit.MAX_SEARCH_MILLIS.getValue()) {
                 this.m_abortingSearch = true;
                 m_currentPath.setPath(bestPath); // otherwise we will crash!
                 currentPathString = "" + m_currentPath;
             } else {
                 final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-                boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag, depth);
+                boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, (byte)flag, depth);
             }
 
             return bestPath;
@@ -1718,12 +1719,12 @@ public final class Search implements Runnable {
             int depthZeroMoveCount = 0;
 
             int c = 0;
-            int[] depth1MovesTemp = new int[RivalConstants.MAX_LEGAL_MOVES];
+            int[] depth1MovesTemp = new int[Limit.MAX_LEGAL_MOVES.getValue()];
             int move = depthZeroLegalMoves[c] & 0x00FFFFFF;
             drawnPositionsAtRootCount.add(0);
             drawnPositionsAtRootCount.add(0);
             int legal = 0;
-            int bestNewbieScore = -RivalConstants.INFINITY;
+            int bestNewbieScore = -Integer.MAX_VALUE;
 
             while (move != 0) {
                 if (engineChessBoard.makeMove(new EngineMove(move))) {
