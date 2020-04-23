@@ -666,7 +666,7 @@ public final class Search implements Runnable {
 
         eval += kingSafety;
 
-        if (board.getWhitePieceValues() + board.getWhitePawnValues() + board.getBlackPieceValues() + board.getBlackPawnValues() <= RivalConstants.EVAL_ENDGAME_TOTAL_PIECES) {
+        if (board.getWhitePieceValues() + board.getWhitePawnValues() + board.getBlackPieceValues() + board.getBlackPawnValues() <= Evaluation.EVAL_ENDGAME_TOTAL_PIECES.getValue()) {
             eval = endGameAdjustment(board, eval);
         }
 
@@ -696,13 +696,13 @@ public final class Search implements Runnable {
         }
 
         if (board.getWhitePawnValues() + board.getBlackPawnValues() == 0 && board.getWhitePieceValues() < PieceValue.getValue(Piece.ROOK) && board.getBlackPieceValues() < PieceValue.getValue(Piece.ROOK))
-            return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+            return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
 
         if (eval > 0) {
             if (board.getWhitePawnValues() == 0 && (board.getWhitePieceValues() == PieceValue.getValue(Piece.KNIGHT) || board.getWhitePieceValues() == PieceValue.getValue(Piece.BISHOP)))
-                return eval - (int) (board.getWhitePieceValues() * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
+                return eval - (int) (board.getWhitePieceValues() * Evaluation.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.getWhitePawnValues() == 0 && board.getWhitePieceValues() - PieceValue.getValue(Piece.BISHOP) <= board.getBlackPieceValues())
-                return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR;
+                return eval / Evaluation.ENDGAME_PROBABLE_DRAW_DIVISOR.getValue();
             else if (Long.bitCount(board.getAllPiecesBitboard()) > 3 && (board.getWhiteRookBitboard() | board.getWhiteKnightBitboard() | board.getWhiteQueenBitboard()) == 0) {
                 // If this is not yet a KPK ending, and if white has only A pawns and has no dark bishop and the black king is on a8/a7/b8/b7 then this is probably a draw.
                 // Do the same for H pawns
@@ -712,7 +712,7 @@ public final class Search implements Runnable {
                         ((board.getBlackKingBitboard() & Bitboards.A8A7B8B7) != 0) || ((board.getWhitePawnBitboard() & ~Bitboards.FILE_H) == 0) &&
                                 ((board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) == 0) &&
                                 ((board.getBlackKingBitboard() & Bitboards.H8H7G8G7) != 0)) {
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                 }
 
             }
@@ -721,54 +721,54 @@ public final class Search implements Runnable {
                     int whiteKnightCount = Long.bitCount(board.getWhiteKnightBitboard());
                     int whiteBishopCount = Long.bitCount(board.getWhiteBishopBitboard());
                     if ((whiteKnightCount == 2) && (board.getWhitePieceValues() == 2 * PieceValue.getValue(Piece.KNIGHT)) && (board.getBlackPieceValues() == 0))
-                        return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                        return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                     else if ((whiteKnightCount == 1) && (whiteBishopCount == 1) && (board.getWhitePieceValues() == PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP)) && board.getBlackPieceValues() == 0) {
-                        eval = PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + RivalConstants.VALUE_SHOULD_WIN + (eval / RivalConstants.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR);
+                        eval = PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.getValue() + (eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.getValue());
                         final int kingSquare = board.getBlackKingSquare();
 
                         if ((board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) != 0)
-                            eval += (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval += (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         else
-                            eval += (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval += (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
 
                         return eval;
                     } else
-                        return eval + RivalConstants.VALUE_SHOULD_WIN;
+                        return eval + Evaluation.VALUE_SHOULD_WIN.getValue();
                 }
             }
         }
         if (eval < 0) {
             if (board.getBlackPawnValues() == 0 && (board.getBlackPieceValues() == PieceValue.getValue(Piece.KNIGHT) || board.getBlackPieceValues() == PieceValue.getValue(Piece.BISHOP)))
-                return eval + (int) (board.getBlackPieceValues() * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
+                return eval + (int) (board.getBlackPieceValues() * Evaluation.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.getBlackPawnValues() == 0 && board.getBlackPieceValues() - PieceValue.getValue(Piece.BISHOP) <= board.getWhitePieceValues())
-                return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR;
+                return eval / Evaluation.ENDGAME_PROBABLE_DRAW_DIVISOR.getValue();
             else if (Long.bitCount(board.getAllPiecesBitboard()) > 3 && (board.getBlackRookBitboard() | board.getBlackKnightBitboard() | board.getBlackQueenBitboard()) == 0) {
                 if (((board.getBlackPawnBitboard() & ~Bitboards.FILE_A) == 0) &&
                         ((board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) == 0) &&
                         ((board.getWhiteKingBitboard() & Bitboards.A1A2B1B2) != 0))
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                 else if (((board.getBlackPawnBitboard() & ~Bitboards.FILE_H) == 0) &&
                         ((board.getBlackBishopBitboard() & Bitboards.LIGHT_SQUARES) == 0) &&
                         ((board.getWhiteKingBitboard() & Bitboards.H1H2G1G2) != 0))
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
             }
             if (board.getWhitePawnValues() == 0) {
                 if (board.getBlackPieceValues() - board.getWhitePieceValues() > PieceValue.getValue(Piece.BISHOP)) {
                     int blackKnightCount = Long.bitCount(board.getBlackKnightBitboard());
                     int blackBishopCount = Long.bitCount(board.getBlackBishopBitboard());
                     if ((blackKnightCount == 2) && (board.getBlackPieceValues() == 2 * PieceValue.getValue(Piece.KNIGHT)) && (board.getWhitePieceValues() == 0))
-                        return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                        return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                     else if ((blackKnightCount == 1) && (blackBishopCount == 1) && (board.getBlackPieceValues() == PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP)) && board.getWhitePieceValues() == 0) {
-                        eval = -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + RivalConstants.VALUE_SHOULD_WIN) + (eval / RivalConstants.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR);
+                        eval = -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.getValue()) + (eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.getValue());
                         final int kingSquare = board.getWhiteKingSquare();
                         if ((board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) != 0) {
-                            eval -= (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval -= (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         } else {
-                            eval -= (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval -= (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         }
                         return eval;
                     } else
-                        return eval - RivalConstants.VALUE_SHOULD_WIN;
+                        return eval - Evaluation.VALUE_SHOULD_WIN.getValue();
                 }
             }
         }
