@@ -158,7 +158,7 @@ public final class Search implements Runnable {
     public void startEngineTimer(boolean isUCIMode) {
         this.m_isUCIMode = isUCIMode;
         EngineMonitor m_monitor = new EngineMonitor(this);
-        new Timer().schedule(m_monitor, RivalConstants.UCI_TIMER_INTERVAL_MILLIS, RivalConstants.UCI_TIMER_INTERVAL_MILLIS);
+        new Timer().schedule(m_monitor, Uci.UCI_TIMER_INTERVAL_MILLIS.getValue(), Uci.UCI_TIMER_INTERVAL_MILLIS.getValue());
     }
 
     public boolean isUCIMode() {
@@ -204,8 +204,8 @@ public final class Search implements Runnable {
         long blackAttacksBitboard = 0;
         final long whitePawnAttacks = getWhitePawnAttacks(board.getWhitePawnBitboard());
         final long blackPawnAttacks = getBlackPawnAttacks(board.getBlackPawnBitboard());
-        final long whitePieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? RivalConstants.FRIENDLY : RivalConstants.ENEMY);
-        final long blackPieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? RivalConstants.ENEMY : RivalConstants.FRIENDLY);
+        final long whitePieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? BitboardType.FRIENDLY.getIndex() : BitboardType.ENEMY.getIndex());
+        final long blackPieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? BitboardType.ENEMY.getIndex() : BitboardType.FRIENDLY.getIndex());
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
         final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
 
@@ -223,7 +223,7 @@ public final class Search implements Runnable {
             pieceSquareTempEndGame += PieceSquareTables.pawnEndGame.get(sq);
         }
 
-        eval += Numbers.linearScale(board.getBlackPieceValues(), RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval += Numbers.linearScale(board.getBlackPieceValues(), Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(), Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
         pieceSquareTemp = 0;
         pieceSquareTempEndGame = 0;
@@ -234,10 +234,10 @@ public final class Search implements Runnable {
             pieceSquareTempEndGame += PieceSquareTables.pawnEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
         }
 
-        eval -= Numbers.linearScale(board.getWhitePieceValues(), RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval -= Numbers.linearScale(board.getWhitePieceValues(), Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(), Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
-        eval += Numbers.linearScale(board.getBlackPieceValues(), PieceValue.getValue(Piece.ROOK), RivalConstants.OPENING_PHASE_MATERIAL, PieceSquareTables.kingEndGame.get(board.getWhiteKingSquare()), PieceSquareTables.king.get(board.getWhiteKingSquare()))
-                - Numbers.linearScale(board.getWhitePieceValues(), PieceValue.getValue(Piece.ROOK), RivalConstants.OPENING_PHASE_MATERIAL, PieceSquareTables.kingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())), PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())));
+        eval += Numbers.linearScale(board.getBlackPieceValues(), PieceValue.getValue(Piece.ROOK), Evaluation.OPENING_PHASE_MATERIAL.getValue(), PieceSquareTables.kingEndGame.get(board.getWhiteKingSquare()), PieceSquareTables.king.get(board.getWhiteKingSquare()))
+                - Numbers.linearScale(board.getWhitePieceValues(), PieceValue.getValue(Piece.ROOK), Evaluation.OPENING_PHASE_MATERIAL.getValue(), PieceSquareTables.kingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())), PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())));
 
         int lastSq = -1;
         int file = -1;
@@ -247,13 +247,13 @@ public final class Search implements Runnable {
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (lastSq != -1 && file == (lastSq % 8)) eval += RivalConstants.VALUE_ROOKS_ON_SAME_FILE;
+            if (lastSq != -1 && file == (lastSq % 8)) eval += Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
 
             pieceSquareTemp += PieceSquareTables.rook.get(sq);
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
 
-            eval += RivalConstants.VALUE_ROOK_MOBILITY[Long.bitCount(allAttacks & ~whitePieces)];
+            eval += Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
             whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
 
@@ -261,17 +261,17 @@ public final class Search implements Runnable {
 
             if ((Bitboards.FILES.get(file) & board.getWhitePawnBitboard()) == 0)
                 if ((Bitboards.FILES.get(file) & board.getBlackPawnBitboard()) == 0)
-                    eval += RivalConstants.VALUE_ROOK_ON_OPEN_FILE;
+                    eval += Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue();
                 else
-                    eval += RivalConstants.VALUE_ROOK_ON_HALF_OPEN_FILE;
+                    eval += Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue();
 
             lastSq = sq;
         }
 
         eval += (pieceSquareTemp * Math.min(board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);
 
-        if (Long.bitCount(board.getWhiteRookBitboard() & Bitboards.RANK_7) > 1 && (board.getBitboardByIndex(RivalConstants.BK) & Bitboards.RANK_8) != 0)
-            eval += RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
+        if (Long.bitCount(board.getWhiteRookBitboard() & Bitboards.RANK_7) > 1 && (board.getBitboardByIndex(BitboardType.BK.getIndex()) & Bitboards.RANK_8) != 0)
+            eval += Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
 
         bitboard = board.getBlackRookBitboard();
         pieceSquareTemp = 0;
