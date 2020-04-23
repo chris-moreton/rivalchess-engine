@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -10,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class SearchConfigTest {
+public class SearchTest {
 
     private void assertEvaluationScore(String fen, int expectedScore, boolean flip) throws IllegalFenException {
 
@@ -50,7 +51,7 @@ public class SearchConfigTest {
 
         search.setBoard(engineChessBoard);
         search.setSearchDepth(4);
-        search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+        search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
         search.startSearch();
 
         SECONDS.sleep(1);
@@ -73,7 +74,7 @@ public class SearchConfigTest {
 
         search.setBoard(engineChessBoard);
         search.setSearchDepth(6);
-        search.setMillisToThink(RivalConstants.MAX_SEARCH_MILLIS);
+        search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
         search.startSearch();
 
         SECONDS.sleep(1);

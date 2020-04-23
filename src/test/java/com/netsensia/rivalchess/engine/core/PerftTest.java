@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.text.NumberFormat;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
@@ -24,7 +25,7 @@ public class PerftTest {
         long nodes = 0;
         int moveNum = 0;
 
-        int[] legalMoves = new int[RivalConstants.MAX_LEGAL_MOVES];
+        int[] legalMoves = new int[Limit.MAX_LEGAL_MOVES.getValue()];
 
         board.setLegalMoves(legalMoves);
         while (legalMoves[moveNum] != 0) {

@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.bitboards;
 
-import com.netsensia.rivalchess.engine.core.RivalConstants;
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.SquareOccupant;
 

@@ -1,8 +1,8 @@
 package com.netsensia.rivalchess.engine.core.helper;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashTracker;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
@@ -227,7 +227,7 @@ public class ZorbristHashTrackerTest {
             Random r = new Random();
             r.setSeed(i);
 
-            int legalMoves[] = new int[RivalConstants.MAX_LEGAL_MOVES];
+            int legalMoves[] = new int[Limit.MAX_LEGAL_MOVES.getValue()];
             ecb.setLegalMoves(legalMoves);
             ecb.generateLegalMoves();
 

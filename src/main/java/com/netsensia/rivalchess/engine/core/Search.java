@@ -1,11 +1,22 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
+import com.netsensia.rivalchess.config.Evaluation;
+import com.netsensia.rivalchess.config.Extensions;
 import com.netsensia.rivalchess.config.FeatureFlag;
+import com.netsensia.rivalchess.config.Hash;
+import com.netsensia.rivalchess.config.IterativeDeepening;
+import com.netsensia.rivalchess.config.LateMoveReductions;
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
+import com.netsensia.rivalchess.config.Uci;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
+import com.netsensia.rivalchess.enums.CastleBitMask;
+import com.netsensia.rivalchess.enums.HashIndex;
+import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.MoveOrder;
 import com.netsensia.rivalchess.enums.PromotionPieceMask;
 import com.netsensia.rivalchess.enums.SearchState;
@@ -46,7 +57,7 @@ public final class Search implements Runnable {
 
     private final StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorPremium();
 
-    private final MoveOrder[] moveOrderStatus = new MoveOrder[RivalConstants.MAX_TREE_DEPTH];
+    private final MoveOrder[] moveOrderStatus = new MoveOrder[Limit.MAX_TREE_DEPTH.getValue()];
 
     private final List<List<Long>> drawnPositionsAtRoot;
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
@@ -89,7 +100,7 @@ public final class Search implements Runnable {
     protected int m_finalDepthToSearch = 1;
     protected int iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
 
-    private boolean useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK;
+    private boolean useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive();
     private boolean m_inBook = useOpeningBook;
 
     private int currentDepthZeroMove;
@@ -100,7 +111,7 @@ public final class Search implements Runnable {
 
     private boolean m_isUCIMode = false;
 
-    private static byte[] rivalKPKBitbase = null;
+    private static final byte[] rivalKPKBitbase = null;
 
     public Search() throws IllegalFenException {
         this(System.out, FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
@@ -131,23 +142,23 @@ public final class Search implements Runnable {
 
         searchState = SearchState.READY;
 
-        this.searchPath = new SearchPath[RivalConstants.MAX_TREE_DEPTH];
-        this.killerMoves = new int[RivalConstants.MAX_TREE_DEPTH][RivalConstants.NUM_KILLER_MOVES];
-        for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
+        this.searchPath = new SearchPath[Limit.MAX_TREE_DEPTH.getValue()];
+        this.killerMoves = new int[Limit.MAX_TREE_DEPTH.getValue()][SearchConfig.NUM_KILLER_MOVES.getValue()];
+        for (int i = 0; i < Limit.MAX_TREE_DEPTH.getValue(); i++) {
             this.searchPath[i] = new SearchPath();
-            this.killerMoves[i] = new int[RivalConstants.NUM_KILLER_MOVES];
+            this.killerMoves[i] = new int[SearchConfig.NUM_KILLER_MOVES.getValue()];
         }
 
-        orderedMoves = new int[RivalConstants.MAX_TREE_DEPTH][RivalConstants.MAX_LEGAL_MOVES];
+        orderedMoves = new int[Limit.MAX_TREE_DEPTH.getValue()][Limit.MAX_LEGAL_MOVES.getValue()];
 
         depthZeroLegalMoves = orderedMoves[0];
-        depthZeroMoveScores = new int[RivalConstants.MAX_LEGAL_MOVES];
+        depthZeroMoveScores = new int[Limit.MAX_LEGAL_MOVES.getValue()];
     }
 
     public void startEngineTimer(boolean isUCIMode) {
         this.m_isUCIMode = isUCIMode;
         EngineMonitor m_monitor = new EngineMonitor(this);
-        new Timer().schedule(m_monitor, RivalConstants.UCI_TIMER_INTERVAL_MILLIS, RivalConstants.UCI_TIMER_INTERVAL_MILLIS);
+        new Timer().schedule(m_monitor, Uci.UCI_TIMER_INTERVAL_MILLIS.getValue(), Uci.UCI_TIMER_INTERVAL_MILLIS.getValue());
     }
 
     public boolean isUCIMode() {
@@ -193,8 +204,8 @@ public final class Search implements Runnable {
         long blackAttacksBitboard = 0;
         final long whitePawnAttacks = getWhitePawnAttacks(board.getWhitePawnBitboard());
         final long blackPawnAttacks = getBlackPawnAttacks(board.getBlackPawnBitboard());
-        final long whitePieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? RivalConstants.FRIENDLY : RivalConstants.ENEMY);
-        final long blackPieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? RivalConstants.ENEMY : RivalConstants.FRIENDLY);
+        final long whitePieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? BitboardType.FRIENDLY.getIndex() : BitboardType.ENEMY.getIndex());
+        final long blackPieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? BitboardType.ENEMY.getIndex() : BitboardType.FRIENDLY.getIndex());
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
         final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
 
@@ -212,7 +223,7 @@ public final class Search implements Runnable {
             pieceSquareTempEndGame += PieceSquareTables.pawnEndGame.get(sq);
         }
 
-        eval += Numbers.linearScale(board.getBlackPieceValues(), RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval += Numbers.linearScale(board.getBlackPieceValues(), Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(), Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
         pieceSquareTemp = 0;
         pieceSquareTempEndGame = 0;
@@ -223,10 +234,10 @@ public final class Search implements Runnable {
             pieceSquareTempEndGame += PieceSquareTables.pawnEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
         }
 
-        eval -= Numbers.linearScale(board.getWhitePieceValues(), RivalConstants.PAWN_STAGE_MATERIAL_LOW, RivalConstants.PAWN_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval -= Numbers.linearScale(board.getWhitePieceValues(), Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(), Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
-        eval += Numbers.linearScale(board.getBlackPieceValues(), PieceValue.getValue(Piece.ROOK), RivalConstants.OPENING_PHASE_MATERIAL, PieceSquareTables.kingEndGame.get(board.getWhiteKingSquare()), PieceSquareTables.king.get(board.getWhiteKingSquare()))
-                - Numbers.linearScale(board.getWhitePieceValues(), PieceValue.getValue(Piece.ROOK), RivalConstants.OPENING_PHASE_MATERIAL, PieceSquareTables.kingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())), PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())));
+        eval += Numbers.linearScale(board.getBlackPieceValues(), PieceValue.getValue(Piece.ROOK), Evaluation.OPENING_PHASE_MATERIAL.getValue(), PieceSquareTables.kingEndGame.get(board.getWhiteKingSquare()), PieceSquareTables.king.get(board.getWhiteKingSquare()))
+                - Numbers.linearScale(board.getWhitePieceValues(), PieceValue.getValue(Piece.ROOK), Evaluation.OPENING_PHASE_MATERIAL.getValue(), PieceSquareTables.kingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())), PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())));
 
         int lastSq = -1;
         int file = -1;
@@ -236,13 +247,13 @@ public final class Search implements Runnable {
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (lastSq != -1 && file == (lastSq % 8)) eval += RivalConstants.VALUE_ROOKS_ON_SAME_FILE;
+            if (lastSq != -1 && file == (lastSq % 8)) eval += Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
 
             pieceSquareTemp += PieceSquareTables.rook.get(sq);
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
 
-            eval += RivalConstants.VALUE_ROOK_MOBILITY[Long.bitCount(allAttacks & ~whitePieces)];
+            eval += Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
             whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
 
@@ -250,17 +261,17 @@ public final class Search implements Runnable {
 
             if ((Bitboards.FILES.get(file) & board.getWhitePawnBitboard()) == 0)
                 if ((Bitboards.FILES.get(file) & board.getBlackPawnBitboard()) == 0)
-                    eval += RivalConstants.VALUE_ROOK_ON_OPEN_FILE;
+                    eval += Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue();
                 else
-                    eval += RivalConstants.VALUE_ROOK_ON_HALF_OPEN_FILE;
+                    eval += Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue();
 
             lastSq = sq;
         }
 
         eval += (pieceSquareTemp * Math.min(board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);
 
-        if (Long.bitCount(board.getWhiteRookBitboard() & Bitboards.RANK_7) > 1 && (board.getBitboardByIndex(RivalConstants.BK) & Bitboards.RANK_8) != 0)
-            eval += RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
+        if (Long.bitCount(board.getWhiteRookBitboard() & Bitboards.RANK_7) > 1 && (board.getBitboardByIndex(BitboardType.BK.getIndex()) & Bitboards.RANK_8) != 0)
+            eval += Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
 
         bitboard = board.getBlackRookBitboard();
         pieceSquareTemp = 0;
@@ -268,22 +279,22 @@ public final class Search implements Runnable {
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (lastSq != -1 && file == (lastSq % 8)) eval -= RivalConstants.VALUE_ROOKS_ON_SAME_FILE;
+            if (lastSq != -1 && file == (lastSq % 8)) eval -= Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
 
             pieceSquareTemp += PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
 
             file = sq % 8;
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
-            eval -= RivalConstants.VALUE_ROOK_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
+            eval -= Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
             blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
 
             if ((Bitboards.FILES.get(file) & board.getBlackPawnBitboard()) == 0)
                 if ((Bitboards.FILES.get(file) & board.getWhitePawnBitboard()) == 0)
-                    eval -= RivalConstants.VALUE_ROOK_ON_OPEN_FILE;
+                    eval -= Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue();
                 else
-                    eval -= RivalConstants.VALUE_ROOK_ON_HALF_OPEN_FILE;
+                    eval -= Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue();
 
             lastSq = sq;
         }
@@ -291,7 +302,7 @@ public final class Search implements Runnable {
         eval -= (pieceSquareTemp * Math.min(board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);
 
         if (Long.bitCount(board.getBlackRookBitboard() & Bitboards.RANK_2) > 1 && (board.getWhiteKingBitboard() & Bitboards.RANK_1) != 0)
-            eval -= RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING;
+            eval -= Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
 
         bitboard = board.getWhiteKnightBitboard();
 
@@ -306,10 +317,10 @@ public final class Search implements Runnable {
             pieceSquareTempEndGame += PieceSquareTables.knightEndGame.get(sq);
 
             whiteAttacksBitboard |= knightAttacks;
-            eval -= Long.bitCount(knightAttacks & (blackPawnAttacks | board.getWhitePawnBitboard())) * RivalConstants.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY;
+            eval -= Long.bitCount(knightAttacks & (blackPawnAttacks | board.getWhitePawnBitboard())) * Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue();
         }
 
-        eval += Numbers.linearScale(board.getBlackPieceValues() + board.getBlackPawnValues(), RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval += Numbers.linearScale(board.getBlackPieceValues() + board.getBlackPawnValues(), Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(), Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
         pieceSquareTemp = 0;
         pieceSquareTempEndGame = 0;
@@ -323,10 +334,10 @@ public final class Search implements Runnable {
             final long knightAttacks = Bitboards.knightMoves.get(sq);
 
             blackAttacksBitboard |= knightAttacks;
-            eval += Long.bitCount(knightAttacks & (whitePawnAttacks | board.getBlackPawnBitboard())) * RivalConstants.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY;
+            eval += Long.bitCount(knightAttacks & (whitePawnAttacks | board.getBlackPawnBitboard())) * Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue();
         }
 
-        eval -= Numbers.linearScale(board.getWhitePieceValues() + board.getWhitePawnValues(), RivalConstants.KNIGHT_STAGE_MATERIAL_LOW, RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH, pieceSquareTempEndGame, pieceSquareTemp);
+        eval -= Numbers.linearScale(board.getWhitePieceValues() + board.getWhitePawnValues(), Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(), Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
         bitboard = board.getWhiteQueenBitboard();
         while (bitboard != 0) {
@@ -341,7 +352,7 @@ public final class Search implements Runnable {
             whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone) * 2;
 
-            eval += RivalConstants.VALUE_QUEEN_MOBILITY[Long.bitCount(allAttacks & ~whitePieces)];
+            eval += Evaluation.getQueenMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
         }
 
         bitboard = board.getBlackQueenBitboard();
@@ -357,21 +368,21 @@ public final class Search implements Runnable {
             blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone) * 2;
 
-            eval -= RivalConstants.VALUE_QUEEN_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
+            eval -= Evaluation.getQueenMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
         }
 
         final BoardHash boardHash = engineChessBoard.getBoardHashObject();
         eval += boardHash.getPawnHashEntry(board).getPawnScore();
 
         eval +=
-                Numbers.linearScale((materialDifference > 0) ? board.getWhitePawnValues() : board.getBlackPawnValues(), 0, RivalConstants.TRADE_BONUS_UPPER_PAWNS, -30 * materialDifference / 100, 0) +
-                        Numbers.linearScale((materialDifference > 0) ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues(), 0, RivalConstants.TOTAL_PIECE_VALUE_PER_SIDE_AT_START, 30 * materialDifference / 100, 0);
+                Numbers.linearScale((materialDifference > 0) ? board.getWhitePawnValues() : board.getBlackPawnValues(), 0, Evaluation.TRADE_BONUS_UPPER_PAWNS.getValue(), -30 * materialDifference / 100, 0) +
+                        Numbers.linearScale((materialDifference > 0) ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues(), 0, Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.getValue(), 30 * materialDifference / 100, 0);
 
         final int castlePrivs =
-                (board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_WK) +
-                        (board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_WQ) +
-                        (board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_BK) +
-                        (board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_BQ);
+                (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WK.getValue()) +
+                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WQ.getValue()) +
+                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BK.getValue()) +
+                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BQ.getValue());
 
         if (castlePrivs != 0) {
             // Value of moving King to its queenside castle destination in the middle game
@@ -381,8 +392,8 @@ public final class Search implements Runnable {
             int kingSquareBonusScaled =
                     Numbers.linearScale(
                             board.getBlackPieceValues(),
-                            RivalConstants.CASTLE_BONUS_LOW_MATERIAL,
-                            RivalConstants.CASTLE_BONUS_HIGH_MATERIAL,
+                            Evaluation.CASTLE_BONUS_LOW_MATERIAL.getValue(),
+                            Evaluation.CASTLE_BONUS_HIGH_MATERIAL.getValue(),
                             kingSquareBonusEndGame,
                             kingSquareBonusMiddleGame);
 
@@ -393,12 +404,12 @@ public final class Search implements Runnable {
             if (castleValue > 0) {
                 int timeToCastleKingSide = 100;
                 int timeToCastleQueenSide = 100;
-                if ((board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_WK) != 0) {
+                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WK.getValue()) != 0) {
                     timeToCastleKingSide = 2;
                     if ((board.getAllPiecesBitboard() & (1L << 1)) != 0) timeToCastleKingSide++;
                     if ((board.getAllPiecesBitboard() & (1L << 2)) != 0) timeToCastleKingSide++;
                 }
-                if ((board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_WQ) != 0) {
+                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WQ.getValue()) != 0) {
                     timeToCastleQueenSide = 2;
                     if ((board.getAllPiecesBitboard() & (1L << 6)) != 0) timeToCastleQueenSide++;
                     if ((board.getAllPiecesBitboard() & (1L << 5)) != 0) timeToCastleQueenSide++;
@@ -410,8 +421,8 @@ public final class Search implements Runnable {
             kingSquareBonusScaled =
                     Numbers.linearScale(
                             board.getWhitePieceValues(),
-                            RivalConstants.CASTLE_BONUS_LOW_MATERIAL,
-                            RivalConstants.CASTLE_BONUS_HIGH_MATERIAL,
+                            Evaluation.CASTLE_BONUS_LOW_MATERIAL.getValue(),
+                            Evaluation.CASTLE_BONUS_HIGH_MATERIAL.getValue(),
                             kingSquareBonusEndGame,
                             kingSquareBonusMiddleGame);
 
@@ -420,12 +431,12 @@ public final class Search implements Runnable {
             if (castleValue > 0) {
                 int timeToCastleKingSide = 100;
                 int timeToCastleQueenSide = 100;
-                if ((board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_BK) != 0) {
+                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BK.getValue()) != 0) {
                     timeToCastleKingSide = 2;
                     if ((board.getAllPiecesBitboard() & (1L << 57)) != 0) timeToCastleKingSide++;
                     if ((board.getAllPiecesBitboard() & (1L << 58)) != 0) timeToCastleKingSide++;
                 }
-                if ((board.getCastlePrivileges() & RivalConstants.CASTLEPRIV_BQ) != 0) {
+                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BQ.getValue()) != 0) {
                     timeToCastleQueenSide = 2;
                     if ((board.getAllPiecesBitboard() & (1L << 60)) != 0) timeToCastleQueenSide++;
                     if ((board.getAllPiecesBitboard() & (1L << 61)) != 0) timeToCastleQueenSide++;
@@ -455,11 +466,11 @@ public final class Search implements Runnable {
             whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
 
-            bishopScore += RivalConstants.VALUE_BISHOP_MOBILITY[Long.bitCount(allAttacks & ~whitePieces)];
+            bishopScore += Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
         }
 
         if (whiteBishopColourCount == 2)
-            bishopScore += RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN))) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
+            bishopScore += Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
 
         bitboard = board.getBlackBishopBitboard();
         while (bitboard != 0) {
@@ -471,21 +482,21 @@ public final class Search implements Runnable {
             blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
 
-            bishopScore -= RivalConstants.VALUE_BISHOP_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
+            bishopScore -= Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
         }
 
         if (blackBishopColourCount == 2)
-            bishopScore -= RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN))) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
+            bishopScore -= Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
 
         if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.getWhitePieceValues() == board.getBlackPieceValues()) {
             // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
-            final int maxPenalty = (eval + bishopScore) / RivalConstants.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR; // mostly pawns as material is identical
+            final int maxPenalty = (eval + bishopScore) / Evaluation.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR.getValue(); // mostly pawns as material is identical
 
             // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
             bishopScore -= Numbers.linearScale(
                     board.getWhitePieceValues() + board.getBlackPieceValues(),
-                    RivalConstants.WRONG_COLOUR_BISHOP_MATERIAL_LOW,
-                    RivalConstants.WRONG_COLOUR_BISHOP_MATERIAL_HIGH,
+                    Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_LOW.getValue(),
+                    Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_HIGH.getValue(),
                     maxPenalty,
                     0);
         }
@@ -494,26 +505,26 @@ public final class Search implements Runnable {
             if ((board.getWhiteBishopBitboard() & (1L << Square.A7.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.B6.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.C7.getBitRef())) != 0)
-                bishopScore -= RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY;
+                bishopScore -= Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue();
 
             if ((board.getWhiteBishopBitboard() & (1L << Square.H7.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.G6.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.F7.getBitRef())) != 0)
                 bishopScore -= (board.getWhiteQueenBitboard() == 0) ?
-                        RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY :
-                        RivalConstants.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY;
+                        Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue() :
+                        Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.getValue();
 
             if ((board.getBlackBishopBitboard() & (1L << Square.A2.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.B3.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.C2.getBitRef())) != 0)
-                bishopScore += RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY;
+                bishopScore += Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue();
 
             if ((board.getBlackBishopBitboard() & (1L << Square.H2.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.G3.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.F2.getBitRef())) != 0)
                 bishopScore += (board.getBlackQueenBitboard() == 0) ?
-                        RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY :
-                        RivalConstants.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY;
+                        Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue() :
+                        Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.getValue();
         }
 
         eval += bishopScore;
@@ -525,15 +536,15 @@ public final class Search implements Runnable {
 
         int temp = 0;
 
-        bitboard = whiteAttacksBitboard & blackPieces & ~board.getBitboardByIndex(RivalConstants.BK);
+        bitboard = whiteAttacksBitboard & blackPieces & ~board.getBlackKingBitboard();
 
         while (bitboard != 0) {
             bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
-            if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BB) temp += PieceValue.getValue(Piece.BISHOP);
+            if (board.getSquareOccupant(sq) == SquareOccupant.BP) temp += PieceValue.getValue(Piece.PAWN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BN) temp += PieceValue.getValue(Piece.KNIGHT);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BR) temp += PieceValue.getValue(Piece.ROOK);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BQ) temp += PieceValue.getValue(Piece.QUEEN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BB) temp += PieceValue.getValue(Piece.BISHOP);
         }
 
         int threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
@@ -547,15 +558,15 @@ public final class Search implements Runnable {
 
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-            if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WB) temp += PieceValue.getValue(Piece.BISHOP);
+            if (board.getSquareOccupant(sq) == SquareOccupant.WP) temp += PieceValue.getValue(Piece.PAWN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WN) temp += PieceValue.getValue(Piece.KNIGHT);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WR) temp += PieceValue.getValue(Piece.ROOK);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WQ) temp += PieceValue.getValue(Piece.QUEEN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WB) temp += PieceValue.getValue(Piece.BISHOP);
         }
 
         threatScore -= temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
-        threatScore /= RivalConstants.THREAT_SCORE_DIVISOR;
+        threatScore /= Evaluation.THREAT_SCORE_DIVISOR.getValue();
 
         eval += threatScore;
 
@@ -563,7 +574,7 @@ public final class Search implements Runnable {
         int whiteKingSafety = 0;
         int blackKingSafety = 0;
         int kingSafety = 0;
-        if (averagePiecesPerSide > RivalConstants.KINGSAFETY_MIN_PIECE_BALANCE) {
+        if (averagePiecesPerSide > Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue()) {
 
             whiteKingSafety = Evaluate.getWhiteKingRightWayScore(board);
             blackKingSafety = Evaluate.getBlackKingRightWayScore(board);
@@ -573,89 +584,89 @@ public final class Search implements Runnable {
             if (board.getWhiteKingSquare() / 8 < 2) {
                 final long kingShield = Bitboards.whiteKingShieldMask.get(board.getWhiteKingSquare() % 8);
 
-                shieldValue += RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * Long.bitCount(board.getWhitePawnBitboard() & kingShield)
-                        - RivalConstants.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield | (kingShield << 8)))
-                        + RivalConstants.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield << 8))
-                        - RivalConstants.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield << 16));
+                shieldValue += Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & kingShield)
+                        - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield | (kingShield << 8)))
+                        + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield << 8))
+                        - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield << 16));
 
-                shieldValue = Math.min(shieldValue, RivalConstants.KINGSAFTEY_MAXIMUM_SHIELD_BONUS);
+                shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.getValue());
 
                 if (((board.getWhiteKingBitboard() & Bitboards.F1G1) != 0) &&
                         ((board.getWhiteRookBitboard() & Bitboards.G1H1) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_G) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_H) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 } else if (((board.getWhiteKingBitboard() & Bitboards.B1C1) != 0) &&
                         ((board.getWhiteRookBitboard() & Bitboards.A1B1) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_A) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_B) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 }
 
                 final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (whiteOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT);
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
                 final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (blackOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT);
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
             }
 
-            whiteKingSafety += RivalConstants.KINGSAFETY_SHIELD_BASE + shieldValue - halfOpenFilePenalty;
+            whiteKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
 
             shieldValue = 0;
             halfOpenFilePenalty = 0;
             if (board.getBlackKingSquare() / 8 >= 6) {
                 final long kingShield = Bitboards.whiteKingShieldMask.get(board.getBlackKingSquare() % 8) << 40;
-                shieldValue += RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * Long.bitCount(board.getBlackPawnBitboard() & kingShield)
-                        - RivalConstants.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield | (kingShield >>> 8)))
-                        + RivalConstants.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield >>> 8))
-                        - RivalConstants.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield >>> 16));
+                shieldValue += Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & kingShield)
+                        - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield | (kingShield >>> 8)))
+                        + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield >>> 8))
+                        - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield >>> 16));
 
-                shieldValue = Math.min(shieldValue, RivalConstants.KINGSAFTEY_MAXIMUM_SHIELD_BONUS);
+                shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.getValue());
 
                 if (((board.getBlackKingBitboard() & Bitboards.F8G8) != 0) &&
                         ((board.getBlackRookBitboard() & Bitboards.G8H8) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_G) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_H) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 } else if (((board.getBlackKingBitboard() & Bitboards.B8C8) != 0) &&
                         ((board.getBlackRookBitboard() & Bitboards.A8B8) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_A) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_B) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 }
 
                 final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (whiteOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT)
-                            + RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT)
+                            + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
                 final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (blackOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT)
-                            + RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT)
+                            + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
             }
 
-            blackKingSafety += RivalConstants.KINGSAFETY_SHIELD_BASE + shieldValue - halfOpenFilePenalty;
+            blackKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
 
             kingSafety =
                     Numbers.linearScale(
                             averagePiecesPerSide,
-                            RivalConstants.KINGSAFETY_MIN_PIECE_BALANCE,
-                            RivalConstants.KINGSAFETY_MAX_PIECE_BALANCE,
+                            Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue(),
+                            Evaluation.KINGSAFETY_MAX_PIECE_BALANCE.getValue(),
                             0,
-                            (whiteKingSafety - blackKingSafety) + (blackKingAttackedCount - whiteKingAttackedCount) * RivalConstants.KINGSAFETY_ATTACK_MULTIPLIER);
+                            (whiteKingSafety - blackKingSafety) + (blackKingAttackedCount - whiteKingAttackedCount) * Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.getValue());
 
         }
 
         eval += kingSafety;
 
-        if (board.getWhitePieceValues() + board.getWhitePawnValues() + board.getBlackPieceValues() + board.getBlackPawnValues() <= RivalConstants.EVAL_ENDGAME_TOTAL_PIECES) {
+        if (board.getWhitePieceValues() + board.getWhitePawnValues() + board.getBlackPieceValues() + board.getBlackPawnValues() <= Evaluation.EVAL_ENDGAME_TOTAL_PIECES.getValue()) {
             eval = endGameAdjustment(board, eval);
         }
 
@@ -685,13 +696,13 @@ public final class Search implements Runnable {
         }
 
         if (board.getWhitePawnValues() + board.getBlackPawnValues() == 0 && board.getWhitePieceValues() < PieceValue.getValue(Piece.ROOK) && board.getBlackPieceValues() < PieceValue.getValue(Piece.ROOK))
-            return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+            return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
 
         if (eval > 0) {
             if (board.getWhitePawnValues() == 0 && (board.getWhitePieceValues() == PieceValue.getValue(Piece.KNIGHT) || board.getWhitePieceValues() == PieceValue.getValue(Piece.BISHOP)))
-                return eval - (int) (board.getWhitePieceValues() * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
+                return eval - (int) (board.getWhitePieceValues() * Evaluation.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.getWhitePawnValues() == 0 && board.getWhitePieceValues() - PieceValue.getValue(Piece.BISHOP) <= board.getBlackPieceValues())
-                return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR;
+                return eval / Evaluation.ENDGAME_PROBABLE_DRAW_DIVISOR.getValue();
             else if (Long.bitCount(board.getAllPiecesBitboard()) > 3 && (board.getWhiteRookBitboard() | board.getWhiteKnightBitboard() | board.getWhiteQueenBitboard()) == 0) {
                 // If this is not yet a KPK ending, and if white has only A pawns and has no dark bishop and the black king is on a8/a7/b8/b7 then this is probably a draw.
                 // Do the same for H pawns
@@ -701,7 +712,7 @@ public final class Search implements Runnable {
                         ((board.getBlackKingBitboard() & Bitboards.A8A7B8B7) != 0) || ((board.getWhitePawnBitboard() & ~Bitboards.FILE_H) == 0) &&
                                 ((board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) == 0) &&
                                 ((board.getBlackKingBitboard() & Bitboards.H8H7G8G7) != 0)) {
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                 }
 
             }
@@ -710,54 +721,54 @@ public final class Search implements Runnable {
                     int whiteKnightCount = Long.bitCount(board.getWhiteKnightBitboard());
                     int whiteBishopCount = Long.bitCount(board.getWhiteBishopBitboard());
                     if ((whiteKnightCount == 2) && (board.getWhitePieceValues() == 2 * PieceValue.getValue(Piece.KNIGHT)) && (board.getBlackPieceValues() == 0))
-                        return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                        return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                     else if ((whiteKnightCount == 1) && (whiteBishopCount == 1) && (board.getWhitePieceValues() == PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP)) && board.getBlackPieceValues() == 0) {
-                        eval = PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + RivalConstants.VALUE_SHOULD_WIN + (eval / RivalConstants.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR);
+                        eval = PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.getValue() + (eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.getValue());
                         final int kingSquare = board.getBlackKingSquare();
 
                         if ((board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) != 0)
-                            eval += (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval += (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         else
-                            eval += (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval += (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
 
                         return eval;
                     } else
-                        return eval + RivalConstants.VALUE_SHOULD_WIN;
+                        return eval + Evaluation.VALUE_SHOULD_WIN.getValue();
                 }
             }
         }
         if (eval < 0) {
             if (board.getBlackPawnValues() == 0 && (board.getBlackPieceValues() == PieceValue.getValue(Piece.KNIGHT) || board.getBlackPieceValues() == PieceValue.getValue(Piece.BISHOP)))
-                return eval + (int) (board.getBlackPieceValues() * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
+                return eval + (int) (board.getBlackPieceValues() * Evaluation.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
             else if (board.getBlackPawnValues() == 0 && board.getBlackPieceValues() - PieceValue.getValue(Piece.BISHOP) <= board.getWhitePieceValues())
-                return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR;
+                return eval / Evaluation.ENDGAME_PROBABLE_DRAW_DIVISOR.getValue();
             else if (Long.bitCount(board.getAllPiecesBitboard()) > 3 && (board.getBlackRookBitboard() | board.getBlackKnightBitboard() | board.getBlackQueenBitboard()) == 0) {
                 if (((board.getBlackPawnBitboard() & ~Bitboards.FILE_A) == 0) &&
                         ((board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) == 0) &&
                         ((board.getWhiteKingBitboard() & Bitboards.A1A2B1B2) != 0))
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                 else if (((board.getBlackPawnBitboard() & ~Bitboards.FILE_H) == 0) &&
                         ((board.getBlackBishopBitboard() & Bitboards.LIGHT_SQUARES) == 0) &&
                         ((board.getWhiteKingBitboard() & Bitboards.H1H2G1G2) != 0))
-                    return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
             }
             if (board.getWhitePawnValues() == 0) {
                 if (board.getBlackPieceValues() - board.getWhitePieceValues() > PieceValue.getValue(Piece.BISHOP)) {
                     int blackKnightCount = Long.bitCount(board.getBlackKnightBitboard());
                     int blackBishopCount = Long.bitCount(board.getBlackBishopBitboard());
                     if ((blackKnightCount == 2) && (board.getBlackPieceValues() == 2 * PieceValue.getValue(Piece.KNIGHT)) && (board.getWhitePieceValues() == 0))
-                        return eval / RivalConstants.ENDGAME_DRAW_DIVISOR;
+                        return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
                     else if ((blackKnightCount == 1) && (blackBishopCount == 1) && (board.getBlackPieceValues() == PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP)) && board.getWhitePieceValues() == 0) {
-                        eval = -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + RivalConstants.VALUE_SHOULD_WIN) + (eval / RivalConstants.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR);
+                        eval = -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.getValue()) + (eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.getValue());
                         final int kingSquare = board.getWhiteKingSquare();
                         if ((board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) != 0) {
-                            eval -= (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval -= (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         } else {
-                            eval -= (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE;
+                            eval -= (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
                         }
                         return eval;
                     } else
-                        return eval - RivalConstants.VALUE_SHOULD_WIN;
+                        return eval - Evaluation.VALUE_SHOULD_WIN.getValue();
                 }
             }
         }
@@ -794,7 +805,7 @@ public final class Search implements Runnable {
 
         int pawnDistanceFromPromotion = 7 - (pawnSquare / 8);
 
-        return PieceValue.getValue(Piece.QUEEN) - RivalConstants.ENDGAME_KPK_PAWN_PENALTY_PER_SQUARE * pawnDistanceFromPromotion;
+        return PieceValue.getValue(Piece.QUEEN) - Evaluation.ENDGAME_KPK_PAWN_PENALTY_PER_SQUARE.getValue() * pawnDistanceFromPromotion;
     }
 
     private int[] scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
@@ -826,7 +837,7 @@ public final class Search implements Runnable {
     private int getScore(EngineChessBoard board, int move, boolean includeChecks, boolean isCapture) throws InvalidMoveException {
         int score = 0;
 
-        final int promotionMask = (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL);
+        final int promotionMask = (move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue());
         if (isCapture) {
             final int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
             if (see > 0) {
@@ -904,7 +915,7 @@ public final class Search implements Runnable {
         bestPath.reset();
 
         final int evalScore = evaluate(board);
-        bestPath.score = isCheck ? -RivalConstants.VALUE_MATE : evalScore;
+        bestPath.score = isCheck ? -Evaluation.VALUE_MATE.getValue() : evalScore;
 
         if (depth == 0 || bestPath.score >= high) {
             return bestPath;
@@ -918,8 +929,8 @@ public final class Search implements Runnable {
             board.setLegalMoves(theseMoves);
             scoreFullWidthMoves(board, ply);
         } else {
-            board.setLegalQuiesceMoves(theseMoves, quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY);
-            scoreQuiesceMoves(board, ply, quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY);
+            board.setLegalQuiesceMoves(theseMoves, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.getValue());
+            scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.getValue());
         }
 
         int move = getHighScoreMove(theseMoves);
@@ -932,7 +943,7 @@ public final class Search implements Runnable {
                 if (board.makeMove(new EngineMove(move))) {
                     legalMoveCount++;
 
-                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck()));
+                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.getValue() && board.isCheck()));
                     newPath.score = -newPath.score;
                     if (newPath.score > bestPath.score) {
                         bestPath.setPath(move, newPath);
@@ -951,7 +962,7 @@ public final class Search implements Runnable {
         }
 
         if (isCheck && legalMoveCount == 0) {
-            bestPath.score = -RivalConstants.VALUE_MATE;
+            bestPath.score = -Evaluation.VALUE_MATE.getValue();
         }
 
         return bestPath;
@@ -963,23 +974,25 @@ public final class Search implements Runnable {
                     ? PieceValue.getValue(board.lastCapturePiece().getPiece())
                     : 0) + getMaterialIncreaseForPromotion(move);
 
-            return materialIncrease + evalScore + RivalConstants.DELTA_PRUNING_MARGIN < low;
+            return materialIncrease + evalScore + SearchConfig.DELTA_PRUNING_MARGIN.getValue() < low;
         }
 
         return false;
     }
 
-    private int getMaterialIncreaseForPromotion(int move) {
-        switch (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
-            case 0:
-                return 0;
-            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
+    private int getMaterialIncreaseForPromotion(final int move) {
+        final int promotionMaskValue = move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue();
+        if (promotionMaskValue == 0) {
+            return 0;
+        }
+        switch (PromotionPieceMask.fromValue(promotionMaskValue)) {
+            case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
                 return PieceValue.getValue(Piece.QUEEN) - PieceValue.getValue(Piece.PAWN);
-            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
+            case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
                 return PieceValue.getValue(Piece.BISHOP) - PieceValue.getValue(Piece.PAWN);
-            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
+            case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
                 return PieceValue.getValue(Piece.KNIGHT) - PieceValue.getValue(Piece.PAWN);
-            case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
+            case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
                 return PieceValue.getValue(Piece.ROOK) - PieceValue.getValue(Piece.PAWN);
             default:
                 return 0;
@@ -1000,8 +1013,8 @@ public final class Search implements Runnable {
                 Piece capturePiece = Piece.fromSquareOccupant(board.getSquareOccupant(toSquare));
 
                 if (capturePiece == Piece.NONE &&
-                        ((1L << toSquare) & board.getBitboardByIndex(RivalConstants.ENPASSANTSQUARE)) != 0 &&
-                        board.getSquareOccupant((movesForSorting[i] >>> 16) & 63).getIndex() % 6 == RivalConstants.WP) {
+                        ((1L << toSquare) & board.getBitboardByIndex(BitboardType.ENPASSANTSQUARE.getIndex())) != 0 &&
+                        board.getSquareOccupant((movesForSorting[i] >>> 16) & 63).getPiece() == Piece.PAWN) {
                     capturePiece = Piece.PAWN;
                 }
 
@@ -1011,14 +1024,15 @@ public final class Search implements Runnable {
                     score = 126;
                 } else if (capturePiece != Piece.NONE) {
                     int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(movesForSorting[i]));
-                    if (see > -RivalConstants.INFINITY) {
+                    if (see > -Integer.MAX_VALUE) {
                         see = (int) (((double) see / PieceValue.getValue(Piece.QUEEN)) * 10);
                     }
 
                     if (see > 0) {
                         score = 110 + see;
                     }
-                    else if ((movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
+                    else if ((movesForSorting[i] & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue())
+                            == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
                         score = 109;
                     }
                     else if (see == 0) {
@@ -1028,7 +1042,8 @@ public final class Search implements Runnable {
                         score = scoreLosingCapturesWithWinningHistory(board, ply, i, score, movesForSorting, toSquare);
                     }
 
-                } else if ((movesForSorting[i] & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
+                } else if ((movesForSorting[i] & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue())
+                        == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
                     score = 108;
                 }
 
@@ -1047,7 +1062,7 @@ public final class Search implements Runnable {
         if (historyScore > 5) {
             score = historyScore;
         } else {
-            for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+            for (int j = 0; j < SearchConfig.NUM_KILLER_MOVES.getValue(); j++) {
                 if (movesForSorting[i] == killerMoves[ply][j]) {
                     return 106 - j;
                 }
@@ -1087,7 +1102,7 @@ public final class Search implements Runnable {
                     score = 1;
                 }
 
-                if (score == 0 && RivalConstants.USE_PIECE_SQUARES_IN_MOVE_ORDERING) {
+                if (score == 0 && FeatureFlag.USE_PIECE_SQUARES_IN_MOVE_ORDERING.isActive()) {
                     score = 50 + (scorePieceSquareValues(board, fromSquare, toSquare) / 2);
                 }
                 movesForSorting[i] |= ((127 - score) << 24);
@@ -1096,64 +1111,56 @@ public final class Search implements Runnable {
     }
 
     private int scorePieceSquareValues(EngineChessBoard board, int fromSquare, int toSquare) {
-        int ps = 0;
         if (board.getMover() == Colour.BLACK) {
             // piece square tables are set up from white's PoV
             fromSquare = Bitboards.bitFlippedHorizontalAxis.get(fromSquare);
             toSquare = Bitboards.bitFlippedHorizontalAxis.get(toSquare);
         }
-        switch (board.getSquareOccupant(fromSquare).getIndex() % 6) {
-            case RivalConstants.WP:
-                ps =
+        switch (board.getSquareOccupant(fromSquare).getPiece()) {
+            case PAWN:
+                return
                         Numbers.linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
-                                RivalConstants.PAWN_STAGE_MATERIAL_LOW,
-                                RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
+                                Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(),
+                                Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(),
                                 PieceSquareTables.pawnEndGame.get(toSquare) - PieceSquareTables.pawnEndGame.get(fromSquare),
                                 PieceSquareTables.pawn.get(toSquare) - PieceSquareTables.pawn.get(fromSquare));
-                break;
-            case RivalConstants.WN:
-                ps =
+            case KNIGHT:
+                return
                         Numbers.linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues()),
-                                RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
-                                RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
+                                Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(),
+                                Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(),
                                 PieceSquareTables.knightEndGame.get(toSquare) - PieceSquareTables.knightEndGame.get(fromSquare),
                                 PieceSquareTables.knight.get(toSquare) - PieceSquareTables.knight.get(fromSquare));
-                break;
-            case RivalConstants.WB:
-                ps = PieceSquareTables.bishop.get(toSquare) - PieceSquareTables.bishop.get(fromSquare);
-                break;
-            case RivalConstants.WR:
-                ps = PieceSquareTables.rook.get(toSquare) - PieceSquareTables.rook.get(fromSquare);
-                break;
-            case RivalConstants.WQ:
-                ps = PieceSquareTables.queen.get(toSquare) - PieceSquareTables.queen.get(fromSquare);
-                break;
-            case RivalConstants.WK:
-                ps =
+            case BISHOP:
+                return PieceSquareTables.bishop.get(toSquare) - PieceSquareTables.bishop.get(fromSquare);
+            case ROOK:
+                return PieceSquareTables.rook.get(toSquare) - PieceSquareTables.rook.get(fromSquare);
+            case QUEEN:
+                return PieceSquareTables.queen.get(toSquare) - PieceSquareTables.queen.get(fromSquare);
+            case KING:
+                return
                         Numbers.linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
                                 PieceValue.getValue(Piece.ROOK),
-                                RivalConstants.OPENING_PHASE_MATERIAL,
+                                Evaluation.OPENING_PHASE_MATERIAL.getValue(),
                                 PieceSquareTables.kingEndGame.get(toSquare) - PieceSquareTables.kingEndGame.get(fromSquare),
                                 PieceSquareTables.king.get(toSquare) - PieceSquareTables.king.get(fromSquare));
-                break;
             default:
-                // do nothing
+                return 0;
         }
-        return ps;
     }
 
     private int scoreHistoryHeuristic(EngineChessBoard board, int score, int fromSquare, int toSquare) {
-        if (score == 0 && RivalConstants.USE_HISTORY_HEURISTIC && historyMovesSuccess[board.getMover() == Colour.WHITE ? 0 : 1][fromSquare][toSquare] > 0) {
+        if (score == 0 && FeatureFlag.USE_HISTORY_HEURISTIC.isActive() && historyMovesSuccess[board.getMover() == Colour.WHITE ? 0 : 1][fromSquare][toSquare] > 0) {
             score = 90 + historyScore(board.getMover() == Colour.WHITE, fromSquare, toSquare);
         }
         return score;
     }
 
     private int scoreKillerMoves(int ply, int i, int[] movesForSorting) {
-        for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+        for (int j = 0; j < SearchConfig.NUM_KILLER_MOVES.getValue(); j++) {
             if (movesForSorting[i] == killerMoves[ply][j]) {
                 return 106 - j;
             }
@@ -1177,7 +1184,7 @@ public final class Search implements Runnable {
         bestPath.reset();
 
         if (board.previousOccurrencesOfThisPosition() == 2 || board.getHalfMoveCount() >= 100) {
-            bestPath.score = RivalConstants.DRAW_CONTEMPT;
+            bestPath.score = Evaluation.DRAW_CONTEMPT.getValue();
             return bestPath;
         }
 
@@ -1186,49 +1193,49 @@ public final class Search implements Runnable {
             return bestPath;
         }
 
-        final int depthRemaining = depth + (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL);
+        final int depthRemaining = depth + (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue());
 
-        byte flag = RivalConstants.UPPERBOUND;
+        int flag = HashValueType.UPPERBOUND.getIndex();
 
         final BoardHash boardHash = board.getBoardHashObject();
         final int hashIndex = boardHash.getHashIndex(board);
         int hashMove = 0;
 
         if (FeatureFlag.USE_HASH_TABLES.isActive()) {
-            if (RivalConstants.USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, board)) {
-                boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION, boardHash.getHashTableVersion());
-                hashMove = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
+            if (FeatureFlag.USE_HEIGHT_REPLACE_HASH.isActive() && isHeightHashTableEntryValid(depthRemaining, board)) {
+                boardHash.setHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_VERSION.getIndex(), boardHash.getHashTableVersion());
+                hashMove = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_MOVE.getIndex());
 
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
-                    if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low) {
-                        low = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.LOWERBOUND.getIndex()) {
+                    if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) > low) {
+                        low = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                     }
-                } else if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
-                    if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high) {
-                        high = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                } else if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.UPPERBOUND.getIndex()) {
+                    if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) < high) {
+                        high = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                     }
                 }
 
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
-                    bestPath.score = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.EXACTSCORE.getIndex() || low >= high) {
+                    bestPath.score = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                     bestPath.setPath(hashMove);
                     return bestPath;
                 }
             }
 
-            if (RivalConstants.USE_ALWAYS_REPLACE_HASH && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
+            if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive() && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
 
-                hashMove = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
-                    if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low)
-                        low = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
-                } else if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
-                    if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high)
-                        high = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                hashMove = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_MOVE.getIndex());
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.LOWERBOUND.getIndex()) {
+                    if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) > low)
+                        low = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
+                } else if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.UPPERBOUND.getIndex()) {
+                    if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) < high)
+                        high = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                 }
 
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
-                    bestPath.score = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.EXACTSCORE.getIndex() || low >= high) {
+                    bestPath.score = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                     bestPath.setPath(hashMove);
                     return bestPath;
                 }
@@ -1236,29 +1243,31 @@ public final class Search implements Runnable {
         }
 
         int checkExtend = 0;
-        if ((extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
-            if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
+        if ((extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue()) < Limit.MAX_EXTENSION_DEPTH.getValue()) {
+            if (Extensions.FRACTIONAL_EXTENSION_CHECK.getValue() > 0 && isCheck) {
                 checkExtend = 1;
             }
         }
 
         if (depthRemaining <= 0) {
-            bestPath = quiesce(board, RivalConstants.MAX_QUIESCE_DEPTH - 1, ply, 0, low, high, isCheck);
-            if (bestPath.score < low) flag = RivalConstants.UPPERBOUND;
-            else if (bestPath.score > high) flag = RivalConstants.LOWERBOUND;
+            bestPath = quiesce(board, Limit.MAX_QUIESCE_DEPTH.getValue() - 1, ply, 0, low, high, isCheck);
+            if (bestPath.score < low) flag = HashValueType.UPPERBOUND.getIndex();
+            else if (bestPath.score > high) flag = HashValueType.LOWERBOUND.getIndex();
             else
-                flag = RivalConstants.EXACTSCORE;
+                flag = HashValueType.EXACTSCORE.getIndex();
 
-            boardHash.storeHashMove(0, board, bestPath.score, flag, 0);
+            boardHash.storeHashMove(0, board, bestPath.score, (byte)flag, 0);
             return bestPath;
         }
 
-        if (RivalConstants.USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= RivalConstants.IID_MIN_DEPTH && hashMove == 0 && board.isNotOnNullMove()) {
+        if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive()
+                && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.getValue()
+                && hashMove == 0 && board.isNotOnNullMove()) {
             boolean doIt = true;
 
             if (doIt) {
-                if (depth - RivalConstants.IID_REDUCE_DEPTH > 0) {
-                    newPath = search(board, (byte) (depth - RivalConstants.IID_REDUCE_DEPTH), ply, low, high, extensions, recaptureSquare, isCheck);
+                if (depth - IterativeDeepening.IID_REDUCE_DEPTH.getValue() > 0) {
+                    newPath = search(board, (byte) (depth - IterativeDeepening.IID_REDUCE_DEPTH.getValue()), ply, low, high, extensions, recaptureSquare, isCheck);
                     // it's not really a hash move, but this will cause the order routine to rank it first
                     if (newPath != null && newPath.height > 0) hashMove = newPath.move[0];
                 }
@@ -1276,24 +1285,24 @@ public final class Search implements Runnable {
         int nullMoveReduceDepth = (depthRemaining > SearchConfig.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE.getValue())
                 ? SearchConfig.NULLMOVE_REDUCE_DEPTH.getValue() + 1
                 : SearchConfig.NULLMOVE_REDUCE_DEPTH.getValue();
-        if (RivalConstants.USE_NULLMOVE_PRUNING && !isCheck && board.isNotOnNullMove() && depthRemaining > 1) {
+        if (FeatureFlag.USE_NULL_MOVE_PRUNING.isActive() && !isCheck && board.isNotOnNullMove() && depthRemaining > 1) {
             if ((board.getMover() == Colour.WHITE
                     ? board.getWhitePieceValues()
                     : board.getBlackPieceValues()) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.getValue() &&
                     (board.getMover() == Colour.WHITE ? board.getWhitePawnValues() : board.getBlackPawnValues()) > 0) {
                 board.makeNullMove();
                 newPath = search(board, (byte) (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, -1, false);
-                if (newPath != null) if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
+                else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                 if (!this.m_abortingSearch) {
                     if (-Objects.requireNonNull(newPath).score >= high) {
                         bestPath.score = -newPath.score;
                         board.unMakeNullMove();
                         return bestPath;
                     } else if (
-                            RivalConstants.FRACTIONAL_EXTENSION_THREAT > 0 &&
-                                    -newPath.score < -RivalConstants.MATE_SCORE_START &&
-                                    (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
+                            Extensions.FRACTIONAL_EXTENSION_THREAT.getValue() > 0 &&
+                                    -newPath.score < -Evaluation.MATE_SCORE_START.getValue() &&
+                                    (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue()) < Limit.MAX_EXTENSION_DEPTH.getValue()) {
                         threatExtend = 1;
                     } else {
                         threatExtend = 0;
@@ -1320,9 +1329,9 @@ public final class Search implements Runnable {
             // Check to see if we can futility prune this whole node
             boolean canFutilityPrune = false;
             int futilityScore = low;
-            if (RivalConstants.USE_FUTILITY_PRUNING && depthRemaining < 4 && !wasCheckBeforeMove && threatExtend == 0 && Math.abs(low) < RivalConstants.MATE_SCORE_START && Math.abs(high) < RivalConstants.MATE_SCORE_START) {
+            if (FeatureFlag.USE_FUTILITY_PRUNING.isActive() && depthRemaining < 4 && !wasCheckBeforeMove && threatExtend == 0 && Math.abs(low) < Evaluation.MATE_SCORE_START.getValue() && Math.abs(high) < Evaluation.MATE_SCORE_START.getValue()) {
                 futilityPruningEvaluation = evaluate(board);
-                futilityScore = futilityPruningEvaluation + RivalConstants.FUTILITY_MARGIN.get(depthRemaining - 1);
+                futilityScore = futilityPruningEvaluation + SearchConfig.getFutilityMargin(depthRemaining - 1);
                 if (futilityScore < low) canFutilityPrune = true;
             }
 
@@ -1338,20 +1347,22 @@ public final class Search implements Runnable {
 
                 int newRecaptureSquare = -1;
 
-                int currentSEEValue = -RivalConstants.INFINITY;
-                if (RivalConstants.FRACTIONAL_EXTENSION_RECAPTURE > 0 && (extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
+                int currentSEEValue = -Integer.MAX_VALUE;
+                if (Extensions.FRACTIONAL_EXTENSION_RECAPTURE.getValue() > 0 && (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                        < Limit.MAX_EXTENSION_DEPTH.getValue()) {
                     recaptureExtend = 0;
 
-                    if (targetPiece != -1 && RivalConstants.PIECE_VALUES.get(movePiece).equals(RivalConstants.PIECE_VALUES.get(targetPiece))) {
+                    if (targetPiece != -1 && Evaluation.getPieceValues().get(movePiece).equals(Evaluation.getPieceValues().get(targetPiece))) {
                         currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
-                        if (Math.abs(currentSEEValue) <= RivalConstants.RECAPTURE_EXTENSION_MARGIN)
+                        if (Math.abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.getValue())
                             newRecaptureSquare = (move & 63);
                     }
 
                     if ((move & 63) == recaptureSquare) {
-                        if (currentSEEValue == -RivalConstants.INFINITY)
+                        if (currentSEEValue == -Integer.MAX_VALUE)
                             currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
-                        if (Math.abs(currentSEEValue) > RivalConstants.PIECE_VALUES.get(board.getSquareOccupant(recaptureSquare).getIndex()) - RivalConstants.RECAPTURE_EXTENSION_MARGIN) {
+                        if (Math.abs(currentSEEValue) > Evaluation.getPieceValue(board.getSquareOccupant(recaptureSquare))
+                                - Extensions.RECAPTURE_EXTENSION_MARGIN.getValue()) {
                             recaptureExtend = 1;
                         }
                     }
@@ -1362,14 +1373,15 @@ public final class Search implements Runnable {
 
                     isCheck = board.isCheck();
 
-                    if (RivalConstants.USE_FUTILITY_PRUNING && canFutilityPrune && !isCheck && board.wasCapture() && !board.wasPawnPush()) {
+                    if (FeatureFlag.USE_FUTILITY_PRUNING.isActive() && canFutilityPrune && !isCheck && board.wasCapture() && !board.wasPawnPush()) {
                         newPath = searchPath[ply + 1];
                         newPath.reset();
                         newPath.score = -futilityScore; // newPath.score gets reversed later
                     } else {
-                        if ((extensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) < RivalConstants.MAX_EXTENSION_DEPTH) {
+                        if ((extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                                < Limit.MAX_EXTENSION_DEPTH.getValue()) {
                             pawnExtend = 0;
-                            if (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0) {
+                            if (Extensions.FRACTIONAL_EXTENSION_PAWN.getValue() > 0) {
                                 if (board.wasPawnPush()) {
                                     pawnExtend = 1;
                                 }
@@ -1377,38 +1389,42 @@ public final class Search implements Runnable {
                         }
 
                         int partOfTree = ply / this.iterativeDeepeningCurrentDepth;
-                        int maxNewExtensionsInThisPart = RivalConstants.MAX_NEW_EXTENSIONS_TREE_PART.get(Math.min(partOfTree, RivalConstants.LAST_EXTENSION_LAYER));
+                        int maxNewExtensionsInThisPart =
+                                Extensions.getMaxNewExtensionsTreePart().get(
+                                        Math.min(partOfTree, Extensions.LAST_EXTENSION_LAYER.getValue()));
 
                         newExtensions =
                                 extensions +
                                         Math.min(
-                                                (checkExtend * RivalConstants.FRACTIONAL_EXTENSION_CHECK) +
-                                                        (threatExtend * RivalConstants.FRACTIONAL_EXTENSION_THREAT) +
-                                                        (recaptureExtend * RivalConstants.FRACTIONAL_EXTENSION_RECAPTURE) +
-                                                        (pawnExtend * RivalConstants.FRACTIONAL_EXTENSION_PAWN),
+                                                (checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.getValue()) +
+                                                        (threatExtend * Extensions.FRACTIONAL_EXTENSION_THREAT.getValue()) +
+                                                        (recaptureExtend * Extensions.FRACTIONAL_EXTENSION_RECAPTURE.getValue()) +
+                                                        (pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.getValue()),
                                                 maxNewExtensionsInThisPart);
 
                         int lateMoveReduction = 0;
                         if (
-                                RivalConstants.USE_LATE_MOVE_REDUCTIONS &&
+                                FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive() &&
                                         newExtensions == 0 &&
-                                        legalMoveCount > RivalConstants.LMR_LEGALMOVES_BEFORE_ATTEMPT &&
+                                        legalMoveCount > LateMoveReductions.LMR_LEGALMOVES_BEFORE_ATTEMPT.getValue() &&
                                         depthRemaining - verifyingNullMoveDepthReduction > 1 &&
                                         move != hashMove &&
                                         !wasCheckBeforeMove &&
-                                        historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] <= RivalConstants.LMR_THRESHOLD &&
+                                        historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                                <= LateMoveReductions.LMR_THRESHOLD.getValue() &&
                                         board.wasCapture() &&
-                                        (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0 || !board.wasPawnPush())) {
-                            if (-evaluate(board) <= low + RivalConstants.LMR_CUT_MARGIN) {
+                                        (Extensions.FRACTIONAL_EXTENSION_PAWN.getValue() > 0 || !board.wasPawnPush())) {
+                            if (-evaluate(board) <= low + LateMoveReductions.LMR_CUT_MARGIN.getValue()) {
                                 lateMoveReduction = 1;
-                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] = RivalConstants.LMR_REPLACE_VALUE_AFTER_CUT;
+                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                        = LateMoveReductions.LMR_REPLACE_VALUE_AFTER_CUT.getValue();
                             }
                         }
 
                         //noinspection ConstantConditions
-                        if (RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION > -1) {
+                        if (LateMoveReductions.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION.getValue() > -1) {
                             lateMoveReductionsMade += lateMoveReduction;
-                            if (lateMoveReductionsMade > RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION && depthRemaining > 3) {
+                            if (lateMoveReductionsMade > LateMoveReductions.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION.getValue() && depthRemaining > 3) {
                                 lateMoveReduction = 2;
                             }
                         }
@@ -1421,23 +1437,23 @@ public final class Search implements Runnable {
                             if (scoutSearch) {
                                 newPath = search(engineChessBoard, (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, newRecaptureSquare, isCheck);
                                 if (newPath != null)
-                                    if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                                    else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                                    if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
+                                    else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                                 if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                                     // research with normal window
                                     newPath = search(engineChessBoard, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, newRecaptureSquare, isCheck);
                                     if (newPath != null)
-                                        if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                                        else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                                        if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
+                                        else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                                 }
                             } else {
                                 newPath = search(board, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, newRecaptureSquare, isCheck);
                                 if (newPath != null)
-                                    if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
-                                    else if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                                    if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
+                                    else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                             }
                             if (!this.m_abortingSearch && lateMoveReduction > 0 && -Objects.requireNonNull(newPath).score >= low) {
-                                lmrResearch = RivalConstants.LMR_RESEARCH_ON_FAIL_HIGH;
+                                lmrResearch = FeatureFlag.LMR_RESEARCH_ON_FAIL_HIGH.isActive();
                                 lateMoveReduction = 0;
                             }
                         }
@@ -1449,9 +1465,10 @@ public final class Search implements Runnable {
                         Objects.requireNonNull(newPath).score = -newPath.score;
 
                         if (newPath.score >= high) {
-                            if (RivalConstants.USE_HISTORY_HEURISTIC) {
+                            if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive()) {
                                 historyMovesSuccess[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] += depthRemaining;
-                                if (historyMovesSuccess[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] > RivalConstants.HISTORY_MAX_VALUE) {
+                                if (historyMovesSuccess[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                        > SearchConfig.HISTORY_MAX_VALUE.getValue()) {
                                     for (int i = 0; i < 2; i++)
                                         for (int j = 0; j < 64; j++)
                                             for (int k = 0; k < 64; k++) {
@@ -1461,22 +1478,24 @@ public final class Search implements Runnable {
                                 }
                             }
 
-                            if (RivalConstants.USE_LATE_MOVE_REDUCTIONS)
-                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] += RivalConstants.LMR_ABOVE_ALPHA_ADDITION;
+                            if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive())
+                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                        += LateMoveReductions.LMR_ABOVE_ALPHA_ADDITION.getValue();
 
                             board.unMakeMove();
                             bestPath.setPath(move, newPath);
-                            boardHash.storeHashMove(move, board, newPath.score, RivalConstants.LOWERBOUND, depthRemaining);
+                            boardHash.storeHashMove(move, board, newPath.score, (byte)HashValueType.LOWERBOUND.getIndex(), depthRemaining);
 
-                            if (RivalConstants.NUM_KILLER_MOVES > 0) {
-                                if ((board.getBitboardByIndex(RivalConstants.ENEMY) & (move & 63)) == 0 || (move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL) == 0) {
+                            if (SearchConfig.NUM_KILLER_MOVES.getValue() > 0) {
+                                if ((board.getBitboard(BitboardType.ENEMY) & (move & 63)) == 0
+                                        || (move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue()) == 0) {
                                     // if this move is in second place, or if it's not in the table at all,
                                     // then move first to second, and replace first with this move
                                     if (killerMoves[ply][0] != move) {
-                                        System.arraycopy(killerMoves[ply], 0, killerMoves[ply], 1, RivalConstants.NUM_KILLER_MOVES - 1);
+                                        System.arraycopy(killerMoves[ply], 0, killerMoves[ply], 1, SearchConfig.NUM_KILLER_MOVES.getValue() - 1);
                                         killerMoves[ply][0] = move;
                                     }
-                                    if (RivalConstants.USE_MATE_HISTORY_KILLERS && newPath.score > RivalConstants.MATE_SCORE_START) {
+                                    if (FeatureFlag.USE_MATE_HISTORY_KILLERS.isActive() && newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
                                         mateKiller.set(ply, move);
                                     }
                                 }
@@ -1484,9 +1503,10 @@ public final class Search implements Runnable {
                             return bestPath;
                         }
 
-                        if (RivalConstants.USE_HISTORY_HEURISTIC) {
+                        if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive()) {
                             historyMovesFail[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] += depthRemaining;
-                            if (historyMovesFail[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] > RivalConstants.HISTORY_MAX_VALUE) {
+                            if (historyMovesFail[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                    > SearchConfig.HISTORY_MAX_VALUE.getValue()) {
                                 for (int i = 0; i < 2; i++)
                                     for (int j = 0; j < 64; j++)
                                         for (int k = 0; k < 64; k++) {
@@ -1501,15 +1521,19 @@ public final class Search implements Runnable {
                         }
 
                         if (newPath.score > low) {
-                            flag = RivalConstants.EXACTSCORE;
+                            flag = HashValueType.EXACTSCORE.getIndex();
                             bestMoveForHash = move;
                             low = newPath.score;
-                            scoutSearch = RivalConstants.USE_PV_SEARCH && depth - reductions + (newExtensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) >= RivalConstants.PV_MINIMUM_DISTANCE_FROM_LEAF;
+                            scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive() && depth - reductions
+                                    + (newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                                    >= SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.getValue();
 
-                            if (RivalConstants.USE_LATE_MOVE_REDUCTIONS)
-                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] += RivalConstants.LMR_ABOVE_ALPHA_ADDITION;
-                        } else if (RivalConstants.USE_LATE_MOVE_REDUCTIONS) {
-                            historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)] -= RivalConstants.LMR_NOT_ABOVE_ALPHA_REDUCTION;
+                            if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive())
+                                historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                        += LateMoveReductions.LMR_ABOVE_ALPHA_ADDITION.getValue();
+                        } else if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive()) {
+                            historyPruneMoves[board.getMover() == Colour.WHITE ? 1 : 0][(move >>> 16) & 63][(move & 63)]
+                                    -= LateMoveReductions.LMR_NOT_ABOVE_ALPHA_REDUCTION.getValue();
                         }
                     }
                     board.unMakeMove();
@@ -1518,13 +1542,13 @@ public final class Search implements Runnable {
 
             if (!this.m_abortingSearch) {
                 if (legalMoveCount == 0) {
-                    bestPath.score = board.isCheck() ? -RivalConstants.VALUE_MATE : 0;
-                    boardHash.storeHashMove(0, board, bestPath.score, RivalConstants.EXACTSCORE, RivalConstants.MAX_SEARCH_DEPTH);
+                    bestPath.score = board.isCheck() ? -Evaluation.VALUE_MATE.getValue() : 0;
+                    boardHash.storeHashMove(0, board, bestPath.score, (byte)HashValueType.EXACTSCORE.getIndex(), Limit.MAX_SEARCH_DEPTH.getValue());
                     return bestPath;
                 }
 
                 if (!research) {
-                    boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag, depthRemaining);
+                    boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, (byte)flag, depthRemaining);
                     return bestPath;
                 }
             }
@@ -1539,7 +1563,7 @@ public final class Search implements Runnable {
         setNodes(getNodes() + 1);
 
         int numMoves = 0;
-        byte flag = RivalConstants.UPPERBOUND;
+        int flag = HashValueType.UPPERBOUND.getIndex();
         int move;
         int bestMoveForHash = 0;
 
@@ -1562,9 +1586,9 @@ public final class Search implements Runnable {
 
                 checkExtend = 0;
                 pawnExtend = 0;
-                if (RivalConstants.FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) {
+                if (Extensions.FRACTIONAL_EXTENSION_CHECK.getValue() > 0 && isCheck) {
                     checkExtend = 1;
-                } else if (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0) {
+                } else if (Extensions.FRACTIONAL_EXTENSION_PAWN.getValue() > 0) {
                     if (board.wasPawnPush()) {
                         pawnExtend = 1;
                     }
@@ -1572,9 +1596,9 @@ public final class Search implements Runnable {
 
                 int newExtensions =
                         Math.min(
-                                (checkExtend * RivalConstants.FRACTIONAL_EXTENSION_CHECK) +
-                                        (pawnExtend * RivalConstants.FRACTIONAL_EXTENSION_PAWN),
-                                RivalConstants.FRACTIONAL_EXTENSION_FULL);
+                                (checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.getValue()) +
+                                        (pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.getValue()),
+                                Extensions.FRACTIONAL_EXTENSION_FULL.getValue());
 
                 numLegalMovesAtDepthZero++;
 
@@ -1591,20 +1615,20 @@ public final class Search implements Runnable {
                     if (scoutSearch) {
                         newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, -1, isCheck);
                         if (newPath != null) {
-                            if (newPath.score > RivalConstants.MATE_SCORE_START) {
+                            if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
                                 newPath.score--;
                             }
-                            else if (newPath.score < -RivalConstants.MATE_SCORE_START) {
+                            else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) {
                                 newPath.score++;
                             }
                         }
                         if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                             newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
                             if (newPath != null) {
-                                if (newPath.score > RivalConstants.MATE_SCORE_START) {
+                                if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
                                     newPath.score--;
                                 } else {
-                                    if (newPath.score < -RivalConstants.MATE_SCORE_START) {
+                                    if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) {
                                         newPath.score++;
                                     }
                                 }
@@ -1613,9 +1637,9 @@ public final class Search implements Runnable {
                     } else {
                         newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
                         if (newPath != null) {
-                            if (newPath.score > RivalConstants.MATE_SCORE_START) newPath.score--;
+                            if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
                             else {
-                                if (newPath.score < -RivalConstants.MATE_SCORE_START) newPath.score++;
+                                if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                             }
                         }
                     }
@@ -1626,7 +1650,7 @@ public final class Search implements Runnable {
                     if (newPath.score >= high) {
                         board.unMakeMove();
                         bestPath.setPath(move, newPath);
-                        boardHash.storeHashMove(move, board, newPath.score, RivalConstants.LOWERBOUND, depth);
+                        boardHash.storeHashMove(move, board, newPath.score, (byte)HashValueType.LOWERBOUND.getIndex(), depth);
                         depthZeroMoveScores[numMoves] = newPath.score;
                         return bestPath;
                     }
@@ -1636,11 +1660,12 @@ public final class Search implements Runnable {
                     }
 
                     if (newPath.score > low) {
-                        flag = RivalConstants.EXACTSCORE;
+                        flag = HashValueType.EXACTSCORE.getIndex();
                         bestMoveForHash = move;
                         low = newPath.score;
 
-                        scoutSearch = RivalConstants.USE_PV_SEARCH && depth + (newExtensions / RivalConstants.FRACTIONAL_EXTENSION_FULL) >= RivalConstants.PV_MINIMUM_DISTANCE_FROM_LEAF;
+                        scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive() && depth + (newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
+                                >= SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.getValue();
                         m_currentPath.setPath(bestPath);
                         currentPathString = "" + m_currentPath;
                     }
@@ -1649,20 +1674,20 @@ public final class Search implements Runnable {
                 }
                 engineChessBoard.unMakeMove();
             } else {
-                depthZeroMoveScores[numMoves] = -RivalConstants.INFINITY;
+                depthZeroMoveScores[numMoves] = -Integer.MAX_VALUE;
             }
             numMoves++;
             move = orderedMoves[0][numMoves] & 0x00FFFFFF;
         }
 
         if (!this.m_abortingSearch) {
-            if (numLegalMovesAtDepthZero == 1 && this.millisToThink < RivalConstants.MAX_SEARCH_MILLIS) {
+            if (numLegalMovesAtDepthZero == 1 && this.millisToThink < Limit.MAX_SEARCH_MILLIS.getValue()) {
                 this.m_abortingSearch = true;
                 m_currentPath.setPath(bestPath); // otherwise we will crash!
                 currentPathString = "" + m_currentPath;
             } else {
                 final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-                boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag, depth);
+                boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, (byte)flag, depth);
             }
 
             return bestPath;
@@ -1694,12 +1719,12 @@ public final class Search implements Runnable {
             int depthZeroMoveCount = 0;
 
             int c = 0;
-            int[] depth1MovesTemp = new int[RivalConstants.MAX_LEGAL_MOVES];
+            int[] depth1MovesTemp = new int[Limit.MAX_LEGAL_MOVES.getValue()];
             int move = depthZeroLegalMoves[c] & 0x00FFFFFF;
             drawnPositionsAtRootCount.add(0);
             drawnPositionsAtRootCount.add(0);
             int legal = 0;
-            int bestNewbieScore = -RivalConstants.INFINITY;
+            int bestNewbieScore = -Integer.MAX_VALUE;
 
             while (move != 0) {
                 if (engineChessBoard.makeMove(new EngineMove(move))) {
@@ -1712,7 +1737,7 @@ public final class Search implements Runnable {
 
                     if (this.iterativeDeepeningCurrentDepth < 1) // super beginner mode
                     {
-                        SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, engineChessBoard.isCheck());
+                        SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE, engineChessBoard.isCheck());
                         sp.score = -sp.score;
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score;
@@ -1790,19 +1815,19 @@ public final class Search implements Runnable {
 
                 if (depth > 1) setOkToSendInfo(true);
 
-                if (RivalConstants.USE_ASPIRATION_WINDOW) {
+                if (FeatureFlag.USE_ASPIRATION_WINDOW.isActive()) {
                     path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
 
                     if (!this.m_abortingSearch && Objects.requireNonNull(path).score <= aspirationLow) {
-                        aspirationLow = -RivalConstants.INFINITY;
+                        aspirationLow = -Integer.MAX_VALUE;
                         path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
                     } else if (!this.m_abortingSearch && path.score >= aspirationHigh) {
-                        aspirationHigh = RivalConstants.INFINITY;
+                        aspirationHigh = Integer.MAX_VALUE;
                         path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
                     }
 
                     if (!this.m_abortingSearch && (Objects.requireNonNull(path).score <= aspirationLow || path.score >= aspirationHigh)) {
-                        path = searchZero(engineChessBoard, depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
+                        path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                     }
 
                     if (!this.m_abortingSearch) {
@@ -1812,13 +1837,13 @@ public final class Search implements Runnable {
                         aspirationHigh = path.score + SearchConfig.ASPIRATION_RADIUS.getValue();
                     }
                 } else {
-                    path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, RivalConstants.INFINITY);
+                    path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                 }
 
                 if (!this.m_abortingSearch) {
                     m_currentPath.setPath(Objects.requireNonNull(path));
                     currentPathString = "" + m_currentPath;
-                    if (path.score > RivalConstants.MATE_SCORE_START) {
+                    if (path.score > Evaluation.MATE_SCORE_START.getValue()) {
                         setSearchComplete();
                         return;
                     }
@@ -1855,17 +1880,17 @@ public final class Search implements Runnable {
 
         searchStartTime = System.currentTimeMillis();
         searchEndTime = 0;
-        searchTargetEndTime = this.searchStartTime + this.millisToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
+        searchTargetEndTime = this.searchStartTime + this.millisToThink - Uci.UCI_TIMER_INTERVAL_MILLIS.getValue();
 
-        aspirationLow = -RivalConstants.INFINITY;
-        aspirationHigh = RivalConstants.INFINITY;
+        aspirationLow = -Integer.MAX_VALUE;
+        aspirationHigh = Integer.MAX_VALUE;
         nodes = 0;
     }
 
     private void setupMateAndKillerMoveTables() {
-        for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
+        for (int i = 0; i < Limit.MAX_TREE_DEPTH.getValue(); i++) {
             this.mateKiller.add(-1);
-            for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+            for (int j = 0; j < SearchConfig.NUM_KILLER_MOVES.getValue(); j++) {
                 this.killerMoves[i][j] = -1;
             }
         }
@@ -1878,8 +1903,8 @@ public final class Search implements Runnable {
                 historyMovesSuccess[1][i][j] = 0;
                 historyMovesFail[0][i][j] = 0;
                 historyMovesFail[1][i][j] = 0;
-                historyPruneMoves[0][i][j] = RivalConstants.LMR_INITIAL_VALUE;
-                historyPruneMoves[1][i][j] = RivalConstants.LMR_INITIAL_VALUE;
+                historyPruneMoves[0][i][j] = LateMoveReductions.LMR_INITIAL_VALUE.getValue();
+                historyPruneMoves[1][i][j] = LateMoveReductions.LMR_INITIAL_VALUE.getValue();
             }
     }
 
@@ -1890,8 +1915,8 @@ public final class Search implements Runnable {
     public void setMillisToThink(int millisToThink) {
         this.millisToThink = millisToThink;
 
-        if (this.millisToThink < RivalConstants.MIN_SEARCH_MILLIS) {
-            this.millisToThink = RivalConstants.MIN_SEARCH_MILLIS;
+        if (this.millisToThink < Limit.MIN_SEARCH_MILLIS.getValue()) {
+            this.millisToThink = Limit.MIN_SEARCH_MILLIS.getValue();
         }
     }
 
@@ -1918,8 +1943,8 @@ public final class Search implements Runnable {
     public String getCurrentScoreHuman() {
         int score = this.m_currentPath.getScore();
         int abs = Math.abs(score);
-        if (abs > RivalConstants.MATE_SCORE_START) {
-            int mateIn = ((RivalConstants.VALUE_MATE - abs) + 1) / 2;
+        if (abs > Evaluation.MATE_SCORE_START.getValue()) {
+            int mateIn = ((Evaluation.VALUE_MATE.getValue() - abs) + 1) / 2;
             return "mate " + (score < 0 ? "-" : "") + mateIn;
         }
         return "cp " + score;
@@ -1997,7 +2022,7 @@ public final class Search implements Runnable {
     }
 
     public void setUseOpeningBook(boolean useBook) {
-        this.useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK && useBook;
+        this.useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive() && useBook;
         this.m_inBook = this.useOpeningBook;
     }
 
