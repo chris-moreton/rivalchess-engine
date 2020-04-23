@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.enums.PromotionPieceMask;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
+import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.SquareOccupant;
@@ -109,7 +110,7 @@ public class ChessBoardConversion
 		
 		char qualifier = ' ';
 		
-		int[] legalMoves = new int[RivalConstants.MAX_LEGAL_MOVES];
+		int[] legalMoves = new int[Limit.MAX_LEGAL_MOVES.getValue()];
 		board.setLegalMoves(legalMoves);
 		
 		int moveCount = 0;
@@ -143,7 +144,7 @@ public class ChessBoardConversion
 		
 		if (board.getSquareOccupant(to).getIndex() != -1)
 		{
-			if (board.getSquareOccupant(from).getIndex() % 6 == RivalConstants.WP)
+			if (board.getSquareOccupant(from).getPiece() == Piece.PAWN)
 			{
 				pgnMove += (char)((int)'a' + (7-(from % 8)));
 			}
