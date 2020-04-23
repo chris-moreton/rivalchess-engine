@@ -1,8 +1,8 @@
 package com.netsensia.rivalchess.epd;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -14,7 +14,6 @@ import com.netsensia.rivalchess.util.EpdReader;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -25,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -61,16 +59,11 @@ public class EpdTest {
     }
 
     @Test
-    @Ignore
     public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
         runEpdSuite("winAtChess.epd", "WAC.001", false);
     }
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException, InvalidMoveException {
-
-        if (new Random().nextInt(1) > 0) {
-            return;
-        }
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
@@ -81,7 +74,7 @@ public class EpdTest {
         new Thread(search).start();
 
         search.setBoard(engineChessBoard);
-        search.setSearchDepth(RivalConstants.MAX_SEARCH_DEPTH - 2);
+        search.setSearchDepth(Limit.MAX_SEARCH_DEPTH.getValue() - 2);
         search.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
 
         search.setNodesToSearch(epdItem.getMaxNodesToSearch());
