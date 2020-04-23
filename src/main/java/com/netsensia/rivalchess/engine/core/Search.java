@@ -1915,8 +1915,8 @@ public final class Search implements Runnable {
     public void setMillisToThink(int millisToThink) {
         this.millisToThink = millisToThink;
 
-        if (this.millisToThink < RivalConstants.MIN_SEARCH_MILLIS) {
-            this.millisToThink = RivalConstants.MIN_SEARCH_MILLIS;
+        if (this.millisToThink < Limit.MIN_SEARCH_MILLIS.getValue()) {
+            this.millisToThink = Limit.MIN_SEARCH_MILLIS.getValue();
         }
     }
 
@@ -1943,8 +1943,8 @@ public final class Search implements Runnable {
     public String getCurrentScoreHuman() {
         int score = this.m_currentPath.getScore();
         int abs = Math.abs(score);
-        if (abs > RivalConstants.MATE_SCORE_START) {
-            int mateIn = ((RivalConstants.VALUE_MATE - abs) + 1) / 2;
+        if (abs > Evaluation.MATE_SCORE_START.getValue()) {
+            int mateIn = ((Evaluation.VALUE_MATE.getValue() - abs) + 1) / 2;
             return "mate " + (score < 0 ? "-" : "") + mateIn;
         }
         return "cp " + score;
@@ -2022,7 +2022,7 @@ public final class Search implements Runnable {
     }
 
     public void setUseOpeningBook(boolean useBook) {
-        this.useOpeningBook = RivalConstants.USE_INTERNAL_OPENING_BOOK && useBook;
+        this.useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive() && useBook;
         this.m_inBook = this.useOpeningBook;
     }
 
