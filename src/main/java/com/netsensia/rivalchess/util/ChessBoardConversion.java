@@ -2,7 +2,6 @@ package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.enums.PromotionPieceMask;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -152,13 +151,22 @@ public class ChessBoardConversion
 		}
 		
 		pgnMove += ChessBoardConversion.getSimpleAlgebraicFromBitRef(to);
-		
-		switch (promotionPiece)
-		{
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN : pgnMove += "=Q"; break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT : pgnMove += "=N"; break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP : pgnMove += "=B"; break;
-			case RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK : pgnMove += "=R"; break;
+
+		if (promotionPiece != 0) {
+			switch (PromotionPieceMask.fromValue(promotionPiece)) {
+				case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
+					pgnMove += "=Q";
+					break;
+				case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
+					pgnMove += "=N";
+					break;
+				case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
+					pgnMove += "=B";
+					break;
+				case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
+					pgnMove += "=R";
+					break;
+			}
 		}
 		
 		if (board.makeMove(new EngineMove(move)))
