@@ -943,7 +943,7 @@ public final class Search implements Runnable {
                 if (board.makeMove(new EngineMove(move))) {
                     legalMoveCount++;
 
-                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= RivalConstants.GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck()));
+                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, (quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.getValue() && board.isCheck()));
                     newPath.score = -newPath.score;
                     if (newPath.score > bestPath.score) {
                         bestPath.setPath(move, newPath);
@@ -1202,40 +1202,40 @@ public final class Search implements Runnable {
         int hashMove = 0;
 
         if (FeatureFlag.USE_HASH_TABLES.isActive()) {
-            if (RivalConstants.USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, board)) {
-                boardHash.setHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_VERSION, boardHash.getHashTableVersion());
-                hashMove = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
+            if (FeatureFlag.USE_HEIGHT_REPLACE_HASH.isActive() && isHeightHashTableEntryValid(depthRemaining, board)) {
+                boardHash.setHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_VERSION.getIndex(), boardHash.getHashTableVersion());
+                hashMove = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_MOVE.getIndex());
 
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
-                    if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low) {
-                        low = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.LOWERBOUND.getIndex()) {
+                    if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) > low) {
+                        low = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                     }
-                } else if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
-                    if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high) {
-                        high = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                } else if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.UPPERBOUND.getIndex()) {
+                    if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) < high) {
+                        high = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                     }
                 }
 
-                if (boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
-                    bestPath.score = boardHash.getHashTableUseHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.EXACTSCORE.getIndex() || low >= high) {
+                    bestPath.score = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                     bestPath.setPath(hashMove);
                     return bestPath;
                 }
             }
 
-            if (RivalConstants.USE_ALWAYS_REPLACE_HASH && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
+            if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive() && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
 
-                hashMove = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_MOVE);
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.LOWERBOUND) {
-                    if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) > low)
-                        low = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
-                } else if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.UPPERBOUND) {
-                    if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE) < high)
-                        high = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                hashMove = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_MOVE.getIndex());
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.LOWERBOUND.getIndex()) {
+                    if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) > low)
+                        low = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
+                } else if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.UPPERBOUND.getIndex()) {
+                    if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) < high)
+                        high = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                 }
 
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_FLAG) == RivalConstants.EXACTSCORE || low >= high) {
-                    bestPath.score = boardHash.getHashTableIgnoreHeight(hashIndex + RivalConstants.HASHENTRY_SCORE);
+                if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.EXACTSCORE.getIndex() || low >= high) {
+                    bestPath.score = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
                     bestPath.setPath(hashMove);
                     return bestPath;
                 }
