@@ -1737,7 +1737,7 @@ public final class Search implements Runnable {
 
                     if (this.iterativeDeepeningCurrentDepth < 1) // super beginner mode
                     {
-                        SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY, engineChessBoard.isCheck());
+                        SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE, engineChessBoard.isCheck());
                         sp.score = -sp.score;
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score;
@@ -1815,19 +1815,19 @@ public final class Search implements Runnable {
 
                 if (depth > 1) setOkToSendInfo(true);
 
-                if (RivalConstants.USE_ASPIRATION_WINDOW) {
+                if (FeatureFlag.USE_ASPIRATION_WINDOW.isActive()) {
                     path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
 
                     if (!this.m_abortingSearch && Objects.requireNonNull(path).score <= aspirationLow) {
-                        aspirationLow = -RivalConstants.INFINITY;
+                        aspirationLow = -Integer.MAX_VALUE;
                         path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
                     } else if (!this.m_abortingSearch && path.score >= aspirationHigh) {
-                        aspirationHigh = RivalConstants.INFINITY;
+                        aspirationHigh = Integer.MAX_VALUE;
                         path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
                     }
 
                     if (!this.m_abortingSearch && (Objects.requireNonNull(path).score <= aspirationLow || path.score >= aspirationHigh)) {
-                        path = searchZero(engineChessBoard, depth, 0, -RivalConstants.INFINITY, RivalConstants.INFINITY);
+                        path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                     }
 
                     if (!this.m_abortingSearch) {
@@ -1837,13 +1837,13 @@ public final class Search implements Runnable {
                         aspirationHigh = path.score + SearchConfig.ASPIRATION_RADIUS.getValue();
                     }
                 } else {
-                    path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, RivalConstants.INFINITY);
+                    path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                 }
 
                 if (!this.m_abortingSearch) {
                     m_currentPath.setPath(Objects.requireNonNull(path));
                     currentPathString = "" + m_currentPath;
-                    if (path.score > RivalConstants.MATE_SCORE_START) {
+                    if (path.score > Evaluation.MATE_SCORE_START.getValue()) {
                         setSearchComplete();
                         return;
                     }
@@ -1880,17 +1880,17 @@ public final class Search implements Runnable {
 
         searchStartTime = System.currentTimeMillis();
         searchEndTime = 0;
-        searchTargetEndTime = this.searchStartTime + this.millisToThink - RivalConstants.UCI_TIMER_INTERVAL_MILLIS;
+        searchTargetEndTime = this.searchStartTime + this.millisToThink - Uci.UCI_TIMER_INTERVAL_MILLIS.getValue();
 
-        aspirationLow = -RivalConstants.INFINITY;
-        aspirationHigh = RivalConstants.INFINITY;
+        aspirationLow = -Integer.MAX_VALUE;
+        aspirationHigh = Integer.MAX_VALUE;
         nodes = 0;
     }
 
     private void setupMateAndKillerMoveTables() {
-        for (int i = 0; i < RivalConstants.MAX_TREE_DEPTH; i++) {
+        for (int i = 0; i < Limit.MAX_TREE_DEPTH.getValue(); i++) {
             this.mateKiller.add(-1);
-            for (int j = 0; j < RivalConstants.NUM_KILLER_MOVES; j++) {
+            for (int j = 0; j < SearchConfig.NUM_KILLER_MOVES.getValue(); j++) {
                 this.killerMoves[i][j] = -1;
             }
         }
@@ -1903,8 +1903,8 @@ public final class Search implements Runnable {
                 historyMovesSuccess[1][i][j] = 0;
                 historyMovesFail[0][i][j] = 0;
                 historyMovesFail[1][i][j] = 0;
-                historyPruneMoves[0][i][j] = RivalConstants.LMR_INITIAL_VALUE;
-                historyPruneMoves[1][i][j] = RivalConstants.LMR_INITIAL_VALUE;
+                historyPruneMoves[0][i][j] = LateMoveReductions.LMR_INITIAL_VALUE.getValue();
+                historyPruneMoves[1][i][j] = LateMoveReductions.LMR_INITIAL_VALUE.getValue();
             }
     }
 
