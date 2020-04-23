@@ -4,7 +4,6 @@ import com.netsensia.rivalchess.bitboards.EngineBitboards;
 import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Square;
@@ -65,7 +64,7 @@ public class EngineBitboardsTest {
         engineBitboards.setPieceBitboard(BitboardType.WB, bitboard);
         engineBitboards.movePiece(SquareOccupant.WB, engineMove.compact);
 
-        assertEquals(bitboardExpected, engineBitboards.getPieceBitboard(RivalConstants.WB));
+        assertEquals(bitboardExpected, engineBitboards.getPieceBitboard(BitboardType.WB));
     }
 
     @Test

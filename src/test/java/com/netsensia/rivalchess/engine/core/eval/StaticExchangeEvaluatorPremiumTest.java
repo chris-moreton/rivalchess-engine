@@ -2,7 +2,6 @@ package com.netsensia.rivalchess.engine.core.eval;
 
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
-import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
