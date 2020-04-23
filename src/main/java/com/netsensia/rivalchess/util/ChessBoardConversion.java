@@ -181,16 +181,14 @@ public class ChessBoardConversion
 		int toBitRef = getBitRefFromBoardRef(Square.fromCoords(toX, toY));
 		
 		int l = s.length();
-		char promotionPiece;
 		if (l == 5)
 		{
-			promotionPiece = s.toUpperCase().charAt(4);
-			switch (promotionPiece)
+			switch (s.toUpperCase().charAt(4))
 			{
-				case 'Q' : toBitRef |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN; break;
-				case 'R' : toBitRef |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_ROOK; break;
-				case 'N' : toBitRef |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT; break;
-				case 'B' : toBitRef |= RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP; break;
+				case 'Q' : toBitRef |= PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue(); break;
+				case 'R' : toBitRef |= PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.getValue(); break;
+				case 'N' : toBitRef |= PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.getValue(); break;
+				case 'B' : toBitRef |= PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.getValue(); break;
 			}
 		}
 		
