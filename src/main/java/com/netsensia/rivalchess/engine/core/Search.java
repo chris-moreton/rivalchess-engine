@@ -470,7 +470,7 @@ public final class Search implements Runnable {
         }
 
         if (whiteBishopColourCount == 2)
-            bishopScore += RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN))) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
+            bishopScore += Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
 
         bitboard = board.getBlackBishopBitboard();
         while (bitboard != 0) {
@@ -482,21 +482,21 @@ public final class Search implements Runnable {
             blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
 
-            bishopScore -= RivalConstants.VALUE_BISHOP_MOBILITY[Long.bitCount(allAttacks & ~blackPieces)];
+            bishopScore -= Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
         }
 
         if (blackBishopColourCount == 2)
-            bishopScore -= RivalConstants.VALUE_BISHOP_PAIR + ((8 - (board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN))) * RivalConstants.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS);
+            bishopScore -= Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
 
         if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.getWhitePieceValues() == board.getBlackPieceValues()) {
             // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
-            final int maxPenalty = (eval + bishopScore) / RivalConstants.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR; // mostly pawns as material is identical
+            final int maxPenalty = (eval + bishopScore) / Evaluation.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR.getValue(); // mostly pawns as material is identical
 
             // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
             bishopScore -= Numbers.linearScale(
                     board.getWhitePieceValues() + board.getBlackPieceValues(),
-                    RivalConstants.WRONG_COLOUR_BISHOP_MATERIAL_LOW,
-                    RivalConstants.WRONG_COLOUR_BISHOP_MATERIAL_HIGH,
+                    Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_LOW.getValue(),
+                    Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_HIGH.getValue(),
                     maxPenalty,
                     0);
         }
@@ -505,26 +505,26 @@ public final class Search implements Runnable {
             if ((board.getWhiteBishopBitboard() & (1L << Square.A7.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.B6.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.C7.getBitRef())) != 0)
-                bishopScore -= RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY;
+                bishopScore -= Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue();
 
             if ((board.getWhiteBishopBitboard() & (1L << Square.H7.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.G6.getBitRef())) != 0 &&
                     (board.getBlackPawnBitboard() & (1L << Square.F7.getBitRef())) != 0)
                 bishopScore -= (board.getWhiteQueenBitboard() == 0) ?
-                        RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY :
-                        RivalConstants.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY;
+                        Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue() :
+                        Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.getValue();
 
             if ((board.getBlackBishopBitboard() & (1L << Square.A2.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.B3.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.C2.getBitRef())) != 0)
-                bishopScore += RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY;
+                bishopScore += Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue();
 
             if ((board.getBlackBishopBitboard() & (1L << Square.H2.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.G3.getBitRef())) != 0 &&
                     (board.getWhitePawnBitboard() & (1L << Square.F2.getBitRef())) != 0)
                 bishopScore += (board.getBlackQueenBitboard() == 0) ?
-                        RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY :
-                        RivalConstants.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY;
+                        Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue() :
+                        Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.getValue();
         }
 
         eval += bishopScore;
@@ -536,7 +536,7 @@ public final class Search implements Runnable {
 
         int temp = 0;
 
-        bitboard = whiteAttacksBitboard & blackPieces & ~board.getBitboardByIndex(RivalConstants.BK);
+        bitboard = whiteAttacksBitboard & blackPieces & ~board.getBlackKingBitboard();
 
         while (bitboard != 0) {
             bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
