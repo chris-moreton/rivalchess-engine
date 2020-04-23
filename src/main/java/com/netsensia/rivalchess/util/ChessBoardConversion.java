@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.util;
 
+import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.RivalConstants;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
@@ -11,7 +12,9 @@ import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.model.util.FenUtils;
 
-public class ChessBoardConversion 
+import static com.netsensia.rivalchess.enums.PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP;
+
+public class ChessBoardConversion
 {
 
 	public static Square getBoardRefFromBitRef(int bitRef)
@@ -90,16 +93,16 @@ public class ChessBoardConversion
 		String pgnMove = "";
 		int to = move & 63;
 		int from = (move >>> 16) & 63;
-		int promotionPiece = move & RivalConstants.PROMOTION_PIECE_TOSQUARE_MASK_FULL;
+		int promotionPiece = move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue();
 		
-		switch (board.getSquareOccupant(from).getIndex() % 6)
+		switch (board.getSquareOccupant(from).getPiece())
 		{
-			case RivalConstants.WN : pgnMove = "N"; break;
-			case RivalConstants.WK : pgnMove = "K"; break;
-			case RivalConstants.WQ : pgnMove = "Q"; break;
-			case RivalConstants.WB : pgnMove = "B"; break;
-			case RivalConstants.WR : pgnMove = "R"; break;
-			case RivalConstants.WP : break;
+			case KNIGHT : pgnMove = "N"; break;
+			case KING : pgnMove = "K"; break;
+			case QUEEN : pgnMove = "Q"; break;
+			case BISHOP : pgnMove = "B"; break;
+			case ROOK : pgnMove = "R"; break;
+			case PAWN : break;
 			default:
 				throw new InvalidMoveException("No piece found on source square");
 		}
