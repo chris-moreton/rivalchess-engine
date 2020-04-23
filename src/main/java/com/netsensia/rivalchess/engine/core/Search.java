@@ -540,11 +540,11 @@ public final class Search implements Runnable {
 
         while (bitboard != 0) {
             bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
-            if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.BB) temp += PieceValue.getValue(Piece.BISHOP);
+            if (board.getSquareOccupant(sq) == SquareOccupant.BP) temp += PieceValue.getValue(Piece.PAWN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BN) temp += PieceValue.getValue(Piece.KNIGHT);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BR) temp += PieceValue.getValue(Piece.ROOK);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BQ) temp += PieceValue.getValue(Piece.QUEEN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.BB) temp += PieceValue.getValue(Piece.BISHOP);
         }
 
         int threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
@@ -558,15 +558,15 @@ public final class Search implements Runnable {
 
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-            if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(sq).getIndex() == RivalConstants.WB) temp += PieceValue.getValue(Piece.BISHOP);
+            if (board.getSquareOccupant(sq) == SquareOccupant.WP) temp += PieceValue.getValue(Piece.PAWN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WN) temp += PieceValue.getValue(Piece.KNIGHT);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WR) temp += PieceValue.getValue(Piece.ROOK);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WQ) temp += PieceValue.getValue(Piece.QUEEN);
+            else if (board.getSquareOccupant(sq) == SquareOccupant.WB) temp += PieceValue.getValue(Piece.BISHOP);
         }
 
         threatScore -= temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
-        threatScore /= RivalConstants.THREAT_SCORE_DIVISOR;
+        threatScore /= Evaluation.THREAT_SCORE_DIVISOR.getValue();
 
         eval += threatScore;
 
@@ -574,7 +574,7 @@ public final class Search implements Runnable {
         int whiteKingSafety = 0;
         int blackKingSafety = 0;
         int kingSafety = 0;
-        if (averagePiecesPerSide > RivalConstants.KINGSAFETY_MIN_PIECE_BALANCE) {
+        if (averagePiecesPerSide > Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue()) {
 
             whiteKingSafety = Evaluate.getWhiteKingRightWayScore(board);
             blackKingSafety = Evaluate.getBlackKingRightWayScore(board);
@@ -584,83 +584,83 @@ public final class Search implements Runnable {
             if (board.getWhiteKingSquare() / 8 < 2) {
                 final long kingShield = Bitboards.whiteKingShieldMask.get(board.getWhiteKingSquare() % 8);
 
-                shieldValue += RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * Long.bitCount(board.getWhitePawnBitboard() & kingShield)
-                        - RivalConstants.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield | (kingShield << 8)))
-                        + RivalConstants.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield << 8))
-                        - RivalConstants.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield << 16));
+                shieldValue += Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & kingShield)
+                        - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield | (kingShield << 8)))
+                        + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield << 8))
+                        - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield << 16));
 
-                shieldValue = Math.min(shieldValue, RivalConstants.KINGSAFTEY_MAXIMUM_SHIELD_BONUS);
+                shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.getValue());
 
                 if (((board.getWhiteKingBitboard() & Bitboards.F1G1) != 0) &&
                         ((board.getWhiteRookBitboard() & Bitboards.G1H1) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_G) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_H) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 } else if (((board.getWhiteKingBitboard() & Bitboards.B1C1) != 0) &&
                         ((board.getWhiteRookBitboard() & Bitboards.A1B1) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_A) != 0) &&
                         ((board.getWhitePawnBitboard() & Bitboards.FILE_B) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 }
 
                 final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (whiteOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT);
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
                 final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (blackOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT);
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
             }
 
-            whiteKingSafety += RivalConstants.KINGSAFETY_SHIELD_BASE + shieldValue - halfOpenFilePenalty;
+            whiteKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
 
             shieldValue = 0;
             halfOpenFilePenalty = 0;
             if (board.getBlackKingSquare() / 8 >= 6) {
                 final long kingShield = Bitboards.whiteKingShieldMask.get(board.getBlackKingSquare() % 8) << 40;
-                shieldValue += RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * Long.bitCount(board.getBlackPawnBitboard() & kingShield)
-                        - RivalConstants.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield | (kingShield >>> 8)))
-                        + RivalConstants.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * Long.bitCount(board.getBlackPawnBitboard() & (kingShield >>> 8))
-                        - RivalConstants.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * Long.bitCount(board.getWhitePawnBitboard() & (kingShield >>> 16));
+                shieldValue += Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & kingShield)
+                        - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield | (kingShield >>> 8)))
+                        + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield >>> 8))
+                        - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield >>> 16));
 
-                shieldValue = Math.min(shieldValue, RivalConstants.KINGSAFTEY_MAXIMUM_SHIELD_BONUS);
+                shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.getValue());
 
                 if (((board.getBlackKingBitboard() & Bitboards.F8G8) != 0) &&
                         ((board.getBlackRookBitboard() & Bitboards.G8H8) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_G) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_H) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 } else if (((board.getBlackKingBitboard() & Bitboards.B8C8) != 0) &&
                         ((board.getBlackRookBitboard() & Bitboards.A8B8) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_A) != 0) &&
                         ((board.getBlackPawnBitboard() & Bitboards.FILE_B) != 0)) {
-                    shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK;
+                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
                 }
 
                 final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (whiteOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT)
-                            + RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT)
+                            + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
                 final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
                 if (blackOpen != 0) {
-                    halfOpenFilePenalty += RivalConstants.KINGSAFTEY_HALFOPEN_MIDFILE * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT)
-                            + RivalConstants.KINGSAFTEY_HALFOPEN_NONMIDFILE * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
+                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT)
+                            + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
                 }
             }
 
-            blackKingSafety += RivalConstants.KINGSAFETY_SHIELD_BASE + shieldValue - halfOpenFilePenalty;
+            blackKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
 
             kingSafety =
                     Numbers.linearScale(
                             averagePiecesPerSide,
-                            RivalConstants.KINGSAFETY_MIN_PIECE_BALANCE,
-                            RivalConstants.KINGSAFETY_MAX_PIECE_BALANCE,
+                            Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue(),
+                            Evaluation.KINGSAFETY_MAX_PIECE_BALANCE.getValue(),
                             0,
-                            (whiteKingSafety - blackKingSafety) + (blackKingAttackedCount - whiteKingAttackedCount) * RivalConstants.KINGSAFETY_ATTACK_MULTIPLIER);
+                            (whiteKingSafety - blackKingSafety) + (blackKingAttackedCount - whiteKingAttackedCount) * Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.getValue());
 
         }
 
