@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
-import com.netsensia.rivalchess.config.Hash;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;

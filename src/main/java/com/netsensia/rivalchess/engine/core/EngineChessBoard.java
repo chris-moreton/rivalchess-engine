@@ -214,8 +214,11 @@ public final class EngineChessBoard {
     private void generateSliderMoves(final int whitePieceConstant, final int blackPieceConstant, long[][] magicMovesRook, long[] occupancyMaskRook, long[] magicNumberRook, int[] magicNumberShiftsRook) {
         long rookBitboard;
         rookBitboard =
-                this.isWhiteToMove ? engineBitboards.pieceBitboards[whitePieceConstant] | engineBitboards.getPieceBitboard(BitboardType.WQ)
-                        : engineBitboards.pieceBitboards[blackPieceConstant] | engineBitboards.getPieceBitboard(BitboardType.BQ);
+                this.isWhiteToMove
+                        ? engineBitboards.getPieceBitboard(BitboardType.fromIndex(whitePieceConstant))
+                            | engineBitboards.getPieceBitboard(BitboardType.WQ)
+                        : engineBitboards.getPieceBitboard(BitboardType.fromIndex(blackPieceConstant))
+                            | engineBitboards.getPieceBitboard(BitboardType.BQ);
 
         while (rookBitboard != 0) {
             final int bitRef = Long.numberOfTrailingZeros(rookBitboard);
@@ -371,8 +374,10 @@ public final class EngineChessBoard {
         final long rookCheckSquares = magicMovesRook[enemyKingSquare][(int) (((engineBitboards.getPieceBitboard(BitboardType.ALL) & occupancyMaskRook[enemyKingSquare]) * magicNumberRook[enemyKingSquare]) >>> magicNumberShiftsRook[enemyKingSquare])];
 
         long pieceBitboard =
-                this.isWhiteToMove ? engineBitboards.pieceBitboards[whiteSliderConstant] | engineBitboards.getPieceBitboard(BitboardType.WQ)
-                        : engineBitboards.pieceBitboards[blackSliderConstant] | engineBitboards.getPieceBitboard(BitboardType.BQ);
+                this.isWhiteToMove ? engineBitboards.getPieceBitboard(
+                        BitboardType.fromIndex(whiteSliderConstant)) | engineBitboards.getPieceBitboard(BitboardType.WQ)
+                        : engineBitboards.getPieceBitboard(
+                                BitboardType.fromIndex(blackSliderConstant)) | engineBitboards.getPieceBitboard(BitboardType.BQ);
 
         while (pieceBitboard != 0) {
             final int bitRef = Long.numberOfTrailingZeros(pieceBitboard);
@@ -466,7 +471,7 @@ public final class EngineChessBoard {
                 pieceIndex = squareOccupant.getIndex();
 
                 if (pieceIndex != -1) {
-                    engineBitboards.pieceBitboards[pieceIndex] |= bitSet;
+                    engineBitboards.orPieceBitboard(BitboardType.fromIndex(pieceIndex), bitSet);
                 }
 
                 if (squareOccupant == SquareOccupant.WK) {
@@ -634,7 +639,7 @@ public final class EngineChessBoard {
         this.moveList[this.numMovesMade].capturePiece = capturePiece;
 
         this.halfMoveCount = 0;
-        this.engineBitboards.pieceBitboards[capturePiece.getIndex()] ^= toMask;
+        this.engineBitboards.xorPieceBitboard(capturePiece.getIndex(), toMask);
         if (capturePiece != SquareOccupant.WP && capturePiece == SquareOccupant.WR) {
             if (toMask == Bitboards.WHITEKINGSIDEROOKMASK) {
                 this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_WK.getValue();
@@ -715,7 +720,7 @@ public final class EngineChessBoard {
     private void makeAdjustmentsFollowingCaptureOfBlackPiece(SquareOccupant capturePiece, long toMask) {
         this.moveList[this.numMovesMade].capturePiece = capturePiece;
         this.halfMoveCount = 0;
-        this.engineBitboards.pieceBitboards[capturePiece.getIndex()] ^= toMask;
+        this.engineBitboards.xorPieceBitboard(capturePiece.getIndex(), toMask);
 
         if (capturePiece != SquareOccupant.BP && capturePiece == SquareOccupant.BR) {
             if (toMask == Bitboards.BLACKKINGSIDEROOKMASK) {
@@ -776,19 +781,19 @@ public final class EngineChessBoard {
             final PromotionPieceMask promotionPieceMask = PromotionPieceMask.fromValue(compactMove & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue());
             switch (promotionPieceMask) {
                 case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                    this.engineBitboards.pieceBitboards[SquareOccupant.WQ.getIndex()] |= toMask;
+                    engineBitboards.orPieceBitboard(BitboardType.WQ, toMask);
                     this.squareContents[moveTo] = SquareOccupant.WQ;
                     break;
                 case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                    this.engineBitboards.pieceBitboards[SquareOccupant.WR.getIndex()] |= toMask;
+                    engineBitboards.orPieceBitboard(BitboardType.WR, toMask);
                     this.squareContents[moveTo] = SquareOccupant.WR;
                     break;
                 case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                    this.engineBitboards.pieceBitboards[SquareOccupant.WN.getIndex()] |= toMask;
+                    engineBitboards.orPieceBitboard(BitboardType.WN, toMask);
                     this.squareContents[moveTo] = SquareOccupant.WN;
                     break;
                 case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                    this.engineBitboards.pieceBitboards[SquareOccupant.WB.getIndex()] |= toMask;
+                    engineBitboards.orPieceBitboard(BitboardType.WB, toMask);
                     this.squareContents[moveTo] = SquareOccupant.WB;
                     break;
                 default:
@@ -848,7 +853,7 @@ public final class EngineChessBoard {
 
     private SquareOccupant replaceMovedPiece(int fromSquare, long fromMask, long toMask) {
         final SquareOccupant movePiece = this.moveList[this.numMovesMade].movePiece;
-        this.engineBitboards.pieceBitboards[movePiece.getIndex()] ^= toMask | fromMask;
+        this.engineBitboards.xorPieceBitboard(movePiece.getIndex(), toMask | fromMask);
         if (movePiece == SquareOccupant.WK) {
             this.whiteKingSquare = (byte) fromSquare;
         }
@@ -943,29 +948,29 @@ public final class EngineChessBoard {
 
     public int getWhitePieceValues() {
         return
-                Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.WN.getIndex()]) * PieceValue.getValue(Piece.KNIGHT) +
-                        Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.WR.getIndex()]) * PieceValue.getValue(Piece.ROOK) +
-                        Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.WB.getIndex()]) * PieceValue.getValue(Piece.BISHOP) +
-                        Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.WQ.getIndex()]) * PieceValue.getValue(Piece.QUEEN);
+                Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WN)) * PieceValue.getValue(Piece.KNIGHT) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WR)) * PieceValue.getValue(Piece.ROOK) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WB)) * PieceValue.getValue(Piece.BISHOP) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WQ)) * PieceValue.getValue(Piece.QUEEN);
 
     }
 
     public int getBlackPieceValues() {
         return
-                Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.BN.getIndex()]) * PieceValue.getValue(Piece.KNIGHT) +
-                        Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.BR.getIndex()]) * PieceValue.getValue(Piece.ROOK) +
-                        Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.BB.getIndex()]) * PieceValue.getValue(Piece.BISHOP) +
-                        Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.BQ.getIndex()]) * PieceValue.getValue(Piece.QUEEN);
+                Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BN)) * PieceValue.getValue(Piece.KNIGHT) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BR)) * PieceValue.getValue(Piece.ROOK) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BB)) * PieceValue.getValue(Piece.BISHOP) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BQ)) * PieceValue.getValue(Piece.QUEEN);
 
     }
 
     public int getWhitePawnValues() {
-        return Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.WP.getIndex()]) * PieceValue.getValue(Piece.PAWN);
+        return Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WP)) * PieceValue.getValue(Piece.PAWN);
 
     }
 
     public int getBlackPawnValues() {
-        return Long.bitCount(engineBitboards.pieceBitboards[SquareOccupant.BP.getIndex()]) * PieceValue.getValue(Piece.PAWN);
+        return Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BP)) * PieceValue.getValue(Piece.PAWN);
     }
 
     private void replaceCapturedPiece(int toSquare, long toMask) {
@@ -973,22 +978,22 @@ public final class EngineChessBoard {
         if (capturePiece != SquareOccupant.NONE) {
             this.squareContents[toSquare] = capturePiece;
 
-            this.engineBitboards.pieceBitboards[capturePiece.getIndex()] ^= toMask;
+            this.engineBitboards.xorPieceBitboard(capturePiece.getIndex(), toMask);
         }
     }
 
     private boolean unMakeEnPassants(int toSquare, long fromMask, long toMask) {
         if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
             if (this.moveList[this.numMovesMade].movePiece == SquareOccupant.WP) {
-                this.engineBitboards.pieceBitboards[SquareOccupant.WP.getIndex()] ^= toMask | fromMask;
-                this.engineBitboards.pieceBitboards[SquareOccupant.BP.getIndex()] ^= toMask >>> 8;
+                this.engineBitboards.xorPieceBitboard(BitboardType.WP,toMask | fromMask);
+                this.engineBitboards.xorPieceBitboard(BitboardType.BP,toMask >>> 8);
                 this.squareContents[toSquare - 8] = SquareOccupant.BP;
 
 
                 return true;
             } else if (this.moveList[this.numMovesMade].movePiece == SquareOccupant.BP) {
-                this.engineBitboards.pieceBitboards[SquareOccupant.BP.getIndex()] ^= toMask | fromMask;
-                this.engineBitboards.pieceBitboards[SquareOccupant.WP.getIndex()] ^= toMask << 8;
+                this.engineBitboards.xorPieceBitboard(BitboardType.BP, toMask | fromMask);
+                this.engineBitboards.xorPieceBitboard(BitboardType.WP, toMask << 8);
                 this.squareContents[toSquare + 8] = SquareOccupant.WP;
 
 
@@ -1094,7 +1099,7 @@ public final class EngineChessBoard {
 
     @Deprecated
     public long getBitboardByIndex(int index) {
-        return engineBitboards.pieceBitboards[index];
+        return engineBitboards.getPieceBitboard(BitboardType.fromIndex(index));
     }
 
     public long getBitboard(final BitboardType bitboardType) {
@@ -1220,7 +1225,7 @@ public final class EngineChessBoard {
         char[] pieces = new char[]{'P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r'};
 
         for (int i = SquareOccupant.WP.getIndex(); i <= SquareOccupant.BR.getIndex(); i++) {
-            List<Integer> bitsSet = getSetBits(engineBitboards.getPieceBitboard(i), new ArrayList<>());
+            List<Integer> bitsSet = getSetBits(engineBitboards.getPieceBitboard(BitboardType.fromIndex(i)), new ArrayList<>());
             for (int bitSet : bitsSet) {
                 board[bitSet] = pieces[i];
             }

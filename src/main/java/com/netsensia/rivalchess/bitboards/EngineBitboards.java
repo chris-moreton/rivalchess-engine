@@ -13,24 +13,10 @@ import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getPawnMovesCap
 
 public class EngineBitboards {
 
-    /**
-     * @deprecated Use getters and setters
-     */
-    @Deprecated
-    public long[] pieceBitboards;
+    private long[] pieceBitboards;
 
     public EngineBitboards() {
         reset();
-    }
-
-    @Deprecated
-    public void setPieceBitboard(int i, long bitboard) {
-        pieceBitboards[i] = bitboard;
-    }
-
-    @Deprecated
-    public long getPieceBitboard(int i) {
-        return pieceBitboards[i];
     }
 
     public long getAllPieceBitboard() {
