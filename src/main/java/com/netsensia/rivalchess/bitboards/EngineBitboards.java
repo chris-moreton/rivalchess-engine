@@ -6,10 +6,10 @@ import com.netsensia.rivalchess.model.SquareOccupant;
 
 import java.util.Arrays;
 
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getFirstOccupiedSquare;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.isBishopAttackingSquare;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.isRookAttackingSquare;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getPawnMovesCaptureOfColour;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getFirstOccupiedSquare;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.isBishopAttackingSquare;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.isRookAttackingSquare;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getPawnMovesCaptureOfColour;
 
 public class EngineBitboards {
 

@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.bitboards;
 
+import com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt;
 import com.netsensia.rivalchess.model.Colour;
 import org.junit.Test;
 
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.*;
 
 public class BitboardsTest {
 

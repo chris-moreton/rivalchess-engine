@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.config.Evaluation;
 import com.netsensia.rivalchess.config.Extensions;
 import com.netsensia.rivalchess.config.FeatureFlag;
-import com.netsensia.rivalchess.config.Hash;
 import com.netsensia.rivalchess.config.IterativeDeepening;
 import com.netsensia.rivalchess.config.LateMoveReductions;
 import com.netsensia.rivalchess.config.Limit;
@@ -45,11 +44,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getBlackPawnAttacks;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getWhitePawnAttacks;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.southFill;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whitePawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyKingRemains;
 
 public final class Search implements Runnable {
 
@@ -88,17 +90,17 @@ public final class Search implements Runnable {
     private int aspirationLow;
     private int aspirationHigh;
 
-    protected int millisToThink;
-    protected int nodesToSearch = Integer.MAX_VALUE;
+    private int millisToThink;
+    private int nodesToSearch = Integer.MAX_VALUE;
 
-    protected boolean m_abortingSearch = true;
+    private boolean m_abortingSearch = true;
 
     private long searchStartTime = -1;
     private long searchTargetEndTime;
     private long searchEndTime = 0;
 
-    protected int m_finalDepthToSearch = 1;
-    protected int iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
+    private int m_finalDepthToSearch = 1;
+    private int iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
 
     private boolean useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive();
     private boolean m_inBook = useOpeningBook;
@@ -192,8 +194,9 @@ public final class Search implements Runnable {
 
     public int evaluate(EngineChessBoard board) {
 
-        if (board.getWhitePieceValues() + board.getBlackPieceValues() + board.getWhitePawnValues() + board.getBlackPawnValues() == 0)
+        if (onlyKingRemains(board)) {
             return 0;
+        }
 
         int sq;
         long bitboard;
@@ -202,10 +205,11 @@ public final class Search implements Runnable {
         int blackKingAttackedCount = 0;
         long whiteAttacksBitboard = 0;
         long blackAttacksBitboard = 0;
+
         final long whitePawnAttacks = getWhitePawnAttacks(board.getWhitePawnBitboard());
         final long blackPawnAttacks = getBlackPawnAttacks(board.getBlackPawnBitboard());
-        final long whitePieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? BitboardType.FRIENDLY.getIndex() : BitboardType.ENEMY.getIndex());
-        final long blackPieces = board.getBitboardByIndex(board.getMover() == Colour.WHITE ? BitboardType.ENEMY.getIndex() : BitboardType.FRIENDLY.getIndex());
+        final long whitePieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.FRIENDLY : BitboardType.ENEMY);
+        final long blackPieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.ENEMY : BitboardType.FRIENDLY);
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
         final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
 
@@ -216,25 +220,8 @@ public final class Search implements Runnable {
         int pieceSquareTemp = 0;
         int pieceSquareTempEndGame = 0;
 
-        bitboard = board.getWhitePawnBitboard();
-        while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-            pieceSquareTemp += PieceSquareTables.pawn.get(sq);
-            pieceSquareTempEndGame += PieceSquareTables.pawnEndGame.get(sq);
-        }
-
-        eval += Numbers.linearScale(board.getBlackPieceValues(), Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(), Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
-
-        pieceSquareTemp = 0;
-        pieceSquareTempEndGame = 0;
-        bitboard = board.getBlackPawnBitboard();
-        while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-            pieceSquareTemp += PieceSquareTables.pawn.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
-            pieceSquareTempEndGame += PieceSquareTables.pawnEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
-        }
-
-        eval -= Numbers.linearScale(board.getWhitePieceValues(), Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(), Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
+        eval += whitePawnPieceSquareEval(board);
+        eval -= blackPawnPieceSquareEval(board);
 
         eval += Numbers.linearScale(board.getBlackPieceValues(), PieceValue.getValue(Piece.ROOK), Evaluation.OPENING_PHASE_MATERIAL.getValue(), PieceSquareTables.kingEndGame.get(board.getWhiteKingSquare()), PieceSquareTables.king.get(board.getWhiteKingSquare()))
                 - Numbers.linearScale(board.getWhitePieceValues(), PieceValue.getValue(Piece.ROOK), Evaluation.OPENING_PHASE_MATERIAL.getValue(), PieceSquareTables.kingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())), PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())));

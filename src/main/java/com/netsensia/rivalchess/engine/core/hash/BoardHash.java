@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
-import com.netsensia.rivalchess.bitboards.BitboardUtilsKt;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.config.Evaluation;
 import com.netsensia.rivalchess.config.FeatureFlag;
@@ -15,12 +14,13 @@ import com.netsensia.rivalchess.enums.PawnHashIndex;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.util.Numbers;
 
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getBlackPawnAttacks;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getPawnFiles;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getWhitePassedPawns;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.getWhitePawnAttacks;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.northFill;
-import static com.netsensia.rivalchess.bitboards.BitboardUtilsKt.southFill;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPassedPawns;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getPawnFiles;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePassedPawns;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.northFill;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 
 public class BoardHash {
 
@@ -243,7 +243,7 @@ public class BoardHash {
 
         final long whiteGuardedPassedPawns = pawnHashEntry.getWhitePassedPawnsBitboard() & (getWhitePawnAttacks(board.getWhitePawnBitboard()));
 
-        pawnHashEntry.setBlackPassedPawnsBitboard(BitboardUtilsKt.getBlackPassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
+        pawnHashEntry.setBlackPassedPawnsBitboard(getBlackPassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
 
         long blackGuardedPassedPawns = pawnHashEntry.getBlackPassedPawnsBitboard() & (getBlackPawnAttacks(board.getBlackPawnBitboard()));
 

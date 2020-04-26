@@ -1,5 +1,7 @@
-package com.netsensia.rivalchess.bitboards
+package com.netsensia.rivalchess.bitboards.util
 
+import com.netsensia.rivalchess.bitboards.Bitboards
+import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
 import java.util.*
