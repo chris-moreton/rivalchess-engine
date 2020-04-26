@@ -48,6 +48,7 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePa
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDifference;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whitePawnPieceSquareEval;
@@ -215,15 +216,16 @@ public final class Search implements Runnable {
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
         final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
 
-        final int materialDifference = board.getWhitePieceValues() - board.getBlackPieceValues() + board.getWhitePawnValues() - board.getBlackPawnValues();
-
-        int eval = materialDifference;
-
         int pieceSquareTemp = 0;
         int pieceSquareTempEndGame = 0;
 
-        eval += whitePawnPieceSquareEval(board) - blackPawnPieceSquareEval(board);
-        eval += whiteKingSquareEval(board) - blackKingSquareEval(board);
+        final int materialDifference = materialDifference(board);
+
+        int eval = materialDifference
+                + whitePawnPieceSquareEval(board)
+                - blackPawnPieceSquareEval(board)
+                + whiteKingSquareEval(board)
+                - blackKingSquareEval(board);
 
         int lastSq = -1;
         int file = -1;
