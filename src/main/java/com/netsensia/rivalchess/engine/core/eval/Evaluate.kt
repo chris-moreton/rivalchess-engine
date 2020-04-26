@@ -1,6 +1,8 @@
 package com.netsensia.rivalchess.engine.core.eval
 
+import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.Bitboards
+import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
 import com.netsensia.rivalchess.model.Piece
@@ -78,6 +80,16 @@ fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int):
     return if (situation > ref2) score2 else (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
 }
 
-fun materialDifference(board: EngineChessBoard): Int {
+fun materialDifference(board: EngineChessBoard) : Int {
     return board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
+}
+
+fun twoWhiteRooksTrappingKing(board: EngineChessBoard) : Boolean {
+    return java.lang.Long.bitCount(board.whiteRookBitboard and Bitboards.RANK_7) > 1
+            && board.getBitboard(BitboardType.BK) and Bitboards.RANK_8 != 0L
+}
+
+fun twoBlackRooksTrappingKing(board: EngineChessBoard) : Boolean {
+    return java.lang.Long.bitCount(board.blackRookBitboard and Bitboards.RANK_2) > 1
+            && board.whiteKingBitboard and Bitboards.RANK_1 != 0L
 }

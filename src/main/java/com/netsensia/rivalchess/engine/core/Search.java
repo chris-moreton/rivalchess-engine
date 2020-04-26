@@ -50,6 +50,8 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSqua
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDifference;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoBlackRooksTrappingKing;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoWhiteRooksTrappingKing;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whitePawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
@@ -258,8 +260,9 @@ public final class Search implements Runnable {
 
         eval += (pieceSquareTemp * Math.min(board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);
 
-        if (Long.bitCount(board.getWhiteRookBitboard() & Bitboards.RANK_7) > 1 && (board.getBitboardByIndex(BitboardType.BK.getIndex()) & Bitboards.RANK_8) != 0)
+        if (twoWhiteRooksTrappingKing(board)) {
             eval += Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
+        }
 
         bitboard = board.getBlackRookBitboard();
         pieceSquareTemp = 0;
@@ -289,8 +292,9 @@ public final class Search implements Runnable {
 
         eval -= (pieceSquareTemp * Math.min(board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);
 
-        if (Long.bitCount(board.getBlackRookBitboard() & Bitboards.RANK_2) > 1 && (board.getWhiteKingBitboard() & Bitboards.RANK_1) != 0)
+        if (twoBlackRooksTrappingKing(board)) {
             eval -= Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
+        }
 
         bitboard = board.getWhiteKnightBitboard();
 
