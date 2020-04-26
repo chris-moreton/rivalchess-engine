@@ -12,7 +12,6 @@ import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.PawnHashIndex;
 import com.netsensia.rivalchess.model.SquareOccupant;
-import com.netsensia.rivalchess.util.Numbers;
 
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPassedPawns;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
@@ -21,6 +20,7 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePa
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.northFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
 
 public class BoardHash {
 
@@ -180,8 +180,8 @@ public class BoardHash {
 
     private void calculatePawnScore(EngineChessBoard board, PawnHashEntry pawnHashEntry) {
         pawnHashEntry.incPawnScore(
-                Numbers.linearScale(board.getBlackPieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore())
-                        - Numbers.linearScale(board.getWhitePieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()));
+                linearScale(board.getBlackPieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore())
+                        - linearScale(board.getWhitePieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()));
 
         if (board.getBlackPieceValues() < Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue()) {
             calculateLowWhiteMaterialPawnBonus(Colour.BLACK, board, pawnHashEntry);
@@ -216,7 +216,7 @@ public class BoardHash {
             final int kingYDistanceFromPawn = lowMaterialColour == Colour.WHITE ? kingY : Math.abs(kingY - 7);
             final int kingDistanceFromPawn = Math.max(kingXDistanceFromPawn, kingYDistanceFromPawn);
 
-            scoreAdjustment = Numbers.linearScale(
+            scoreAdjustment = linearScale(
                     lowMaterialSidePieceValues, 0,
                     Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(),
                     kingDistanceFromPawn * 4, 0);

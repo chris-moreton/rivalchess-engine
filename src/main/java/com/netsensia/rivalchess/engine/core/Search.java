@@ -36,7 +36,6 @@ import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.openings.OpeningLibrary;
 import com.netsensia.rivalchess.uci.EngineMonitor;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
-import com.netsensia.rivalchess.util.Numbers;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -47,7 +46,10 @@ import java.util.Timer;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whitePawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
@@ -220,11 +222,8 @@ public final class Search implements Runnable {
         int pieceSquareTemp = 0;
         int pieceSquareTempEndGame = 0;
 
-        eval += whitePawnPieceSquareEval(board);
-        eval -= blackPawnPieceSquareEval(board);
-
-        eval += Numbers.linearScale(board.getBlackPieceValues(), PieceValue.getValue(Piece.ROOK), Evaluation.OPENING_PHASE_MATERIAL.getValue(), PieceSquareTables.kingEndGame.get(board.getWhiteKingSquare()), PieceSquareTables.king.get(board.getWhiteKingSquare()))
-                - Numbers.linearScale(board.getWhitePieceValues(), PieceValue.getValue(Piece.ROOK), Evaluation.OPENING_PHASE_MATERIAL.getValue(), PieceSquareTables.kingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())), PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())));
+        eval += whitePawnPieceSquareEval(board) - blackPawnPieceSquareEval(board);
+        eval += whiteKingSquareEval(board) - blackKingSquareEval(board);
 
         int lastSq = -1;
         int file = -1;
@@ -307,7 +306,7 @@ public final class Search implements Runnable {
             eval -= Long.bitCount(knightAttacks & (blackPawnAttacks | board.getWhitePawnBitboard())) * Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue();
         }
 
-        eval += Numbers.linearScale(board.getBlackPieceValues() + board.getBlackPawnValues(), Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(), Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
+        eval += linearScale(board.getBlackPieceValues() + board.getBlackPawnValues(), Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(), Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
         pieceSquareTemp = 0;
         pieceSquareTempEndGame = 0;
@@ -324,7 +323,7 @@ public final class Search implements Runnable {
             eval += Long.bitCount(knightAttacks & (whitePawnAttacks | board.getBlackPawnBitboard())) * Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue();
         }
 
-        eval -= Numbers.linearScale(board.getWhitePieceValues() + board.getWhitePawnValues(), Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(), Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
+        eval -= linearScale(board.getWhitePieceValues() + board.getWhitePawnValues(), Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(), Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(), pieceSquareTempEndGame, pieceSquareTemp);
 
         bitboard = board.getWhiteQueenBitboard();
         while (bitboard != 0) {
@@ -362,8 +361,8 @@ public final class Search implements Runnable {
         eval += boardHash.getPawnHashEntry(board).getPawnScore();
 
         eval +=
-                Numbers.linearScale((materialDifference > 0) ? board.getWhitePawnValues() : board.getBlackPawnValues(), 0, Evaluation.TRADE_BONUS_UPPER_PAWNS.getValue(), -30 * materialDifference / 100, 0) +
-                        Numbers.linearScale((materialDifference > 0) ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues(), 0, Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.getValue(), 30 * materialDifference / 100, 0);
+                linearScale((materialDifference > 0) ? board.getWhitePawnValues() : board.getBlackPawnValues(), 0, Evaluation.TRADE_BONUS_UPPER_PAWNS.getValue(), -30 * materialDifference / 100, 0) +
+                        linearScale((materialDifference > 0) ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues(), 0, Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.getValue(), 30 * materialDifference / 100, 0);
 
         final int castlePrivs =
                 (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WK.getValue()) +
@@ -377,7 +376,7 @@ public final class Search implements Runnable {
             int kingSquareBonusEndGame = PieceSquareTables.kingEndGame.get(1) - PieceSquareTables.kingEndGame.get(3);
             int rookSquareBonus = PieceSquareTables.rook.get(3) - PieceSquareTables.rook.get(0);
             int kingSquareBonusScaled =
-                    Numbers.linearScale(
+                    linearScale(
                             board.getBlackPieceValues(),
                             Evaluation.CASTLE_BONUS_LOW_MATERIAL.getValue(),
                             Evaluation.CASTLE_BONUS_HIGH_MATERIAL.getValue(),
@@ -406,7 +405,7 @@ public final class Search implements Runnable {
             }
 
             kingSquareBonusScaled =
-                    Numbers.linearScale(
+                    linearScale(
                             board.getWhitePieceValues(),
                             Evaluation.CASTLE_BONUS_LOW_MATERIAL.getValue(),
                             Evaluation.CASTLE_BONUS_HIGH_MATERIAL.getValue(),
@@ -480,7 +479,7 @@ public final class Search implements Runnable {
             final int maxPenalty = (eval + bishopScore) / Evaluation.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR.getValue(); // mostly pawns as material is identical
 
             // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
-            bishopScore -= Numbers.linearScale(
+            bishopScore -= linearScale(
                     board.getWhitePieceValues() + board.getBlackPieceValues(),
                     Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_LOW.getValue(),
                     Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_HIGH.getValue(),
@@ -642,7 +641,7 @@ public final class Search implements Runnable {
             blackKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
 
             kingSafety =
-                    Numbers.linearScale(
+                    linearScale(
                             averagePiecesPerSide,
                             Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue(),
                             Evaluation.KINGSAFETY_MAX_PIECE_BALANCE.getValue(),
@@ -1106,7 +1105,7 @@ public final class Search implements Runnable {
         switch (board.getSquareOccupant(fromSquare).getPiece()) {
             case PAWN:
                 return
-                        Numbers.linearScale(
+                        linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
                                 Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(),
                                 Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(),
@@ -1114,7 +1113,7 @@ public final class Search implements Runnable {
                                 PieceSquareTables.pawn.get(toSquare) - PieceSquareTables.pawn.get(fromSquare));
             case KNIGHT:
                 return
-                        Numbers.linearScale(
+                        linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues()),
                                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(),
                                 Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(),
@@ -1128,7 +1127,7 @@ public final class Search implements Runnable {
                 return PieceSquareTables.queen.get(toSquare) - PieceSquareTables.queen.get(fromSquare);
             case KING:
                 return
-                        Numbers.linearScale(
+                        linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
                                 PieceValue.getValue(Piece.ROOK),
                                 Evaluation.OPENING_PHASE_MATERIAL.getValue(),
