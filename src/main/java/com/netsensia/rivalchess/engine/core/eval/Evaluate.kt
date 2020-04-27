@@ -117,5 +117,3 @@ fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
         Math.min(enemyPawnValues / PieceValue.getValue(Piece.PAWN), 6)
 
-fun rookPieceSquareEval(rookSquare: Int, enemyPawnValues: Int) =
-        PieceSquareTables.rook.get(rookSquare) * rookEnemyPawnMultiplier(enemyPawnValues)

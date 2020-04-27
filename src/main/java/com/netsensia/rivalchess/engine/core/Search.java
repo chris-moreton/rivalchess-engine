@@ -532,7 +532,7 @@ public final class Search implements Runnable {
 
         int temp = 0;
 
-        bitboard = whiteAttacksBitboard & blackPieces & ~board.getBlackKingBitboard();
+        bitboard = whiteAttacksBitboard;
 
         while (bitboard != 0) {
             bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
@@ -550,7 +550,7 @@ public final class Search implements Runnable {
 
         temp = 0;
 
-        bitboard = blackAttacksBitboard & whitePieces & ~board.getWhiteKingBitboard();
+        bitboard = blackAttacksBitboard;
 
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
