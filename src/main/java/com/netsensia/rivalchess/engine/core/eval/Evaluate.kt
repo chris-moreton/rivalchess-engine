@@ -116,9 +116,6 @@ fun blackRookOpenFilesEval(board: EngineChessBoard, file: Int): Int {
 
 fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
     Bitboards.magicBitboards.magicMovesRook[sq][
-                    (
-                            (board.getAllPiecesBitboard() and MagicBitboards.occupancyMaskRook[sq])
+                    ((board.getAllPiecesBitboard() and MagicBitboards.occupancyMaskRook[sq])
                             * MagicBitboards.magicNumberRook[sq]
-                            ushr MagicBitboards.magicNumberShiftsRook[sq]
-                    )
-                    as Int]
+                            ushr MagicBitboards.magicNumberShiftsRook[sq]).toInt()]

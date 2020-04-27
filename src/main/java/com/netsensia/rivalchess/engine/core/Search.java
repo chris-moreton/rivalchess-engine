@@ -48,12 +48,15 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePa
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDifference;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookAttacks;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoBlackRooksTrappingKing;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoWhiteRooksTrappingKing;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whitePawnPieceSquareEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteRookOpenFilesEval;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyKingRemains;
@@ -241,7 +244,7 @@ public final class Search implements Runnable {
 
             pieceSquareTemp += PieceSquareTables.rook.get(sq);
 
-            final long allAttacks = Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
+            final long allAttacks = rookAttacks(board, sq);
 
             eval += Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
             whiteAttacksBitboard |= allAttacks;
@@ -249,11 +252,7 @@ public final class Search implements Runnable {
 
             file = sq % 8;
 
-            if ((Bitboards.FILES.get(file) & board.getWhitePawnBitboard()) == 0)
-                if ((Bitboards.FILES.get(file) & board.getBlackPawnBitboard()) == 0)
-                    eval += Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue();
-                else
-                    eval += Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue();
+            eval += whiteRookOpenFilesEval(board, file);
 
             lastSq = sq;
         }
@@ -276,16 +275,13 @@ public final class Search implements Runnable {
 
             file = sq % 8;
 
-            final long allAttacks = Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
+            final long allAttacks = rookAttacks(board, sq);
+
             eval -= Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
             blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
 
-            if ((Bitboards.FILES.get(file) & board.getBlackPawnBitboard()) == 0)
-                if ((Bitboards.FILES.get(file) & board.getWhitePawnBitboard()) == 0)
-                    eval -= Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue();
-                else
-                    eval -= Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue();
+            eval -= blackRookOpenFilesEval(board, file);
 
             lastSq = sq;
         }
