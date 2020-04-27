@@ -46,6 +46,7 @@ import java.util.Timer;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.unsetBit;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
@@ -233,28 +234,30 @@ public final class Search implements Runnable {
                 - blackKingSquareEval(board);
 
         int lastSq = -1;
-        int file = -1;
 
         pieceSquareTemp = 0;
         bitboard = board.getWhiteRookBitboard();
         while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
+            final int rookSquare = Long.numberOfTrailingZeros(bitboard);
+            bitboard = unsetBit(bitboard, rookSquare);
 
-            if (lastSq != -1 && file == (lastSq % 8)) eval += Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
+            final long allAttacks = rookAttacks(board, rookSquare);
+            whiteAttacksBitboard |= allAttacks;
 
-            pieceSquareTemp += PieceSquareTables.rook.get(sq);
+            final int rookFile = rookSquare % 8;
 
-            final long allAttacks = rookAttacks(board, sq);
+            if (lastSq != -1 && rookFile == (lastSq % 8)) {
+                eval += Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
+            }
+
+            pieceSquareTemp += PieceSquareTables.rook.get(rookSquare);
 
             eval += Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
-            whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
 
-            file = sq % 8;
+            eval += whiteRookOpenFilesEval(board, rookFile);
 
-            eval += whiteRookOpenFilesEval(board, file);
-
-            lastSq = sq;
+            lastSq = rookSquare;
         }
 
         eval += (pieceSquareTemp * Math.min(board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);
@@ -267,23 +270,27 @@ public final class Search implements Runnable {
         pieceSquareTemp = 0;
         lastSq = -1;
         while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
 
-            if (lastSq != -1 && file == (lastSq % 8)) eval -= Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
+            final int rookSquare = Long.numberOfTrailingZeros(bitboard);
+            bitboard = unsetBit(bitboard, rookSquare);
 
-            pieceSquareTemp += PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
+            final long allAttacks = rookAttacks(board, rookSquare);
+            blackAttacksBitboard |= allAttacks;
 
-            file = sq % 8;
+            final int rookFile = rookSquare % 8;
 
-            final long allAttacks = rookAttacks(board, sq);
+            if (lastSq != -1 && rookFile == (lastSq % 8)) {
+                eval -= Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
+            }
+
+            pieceSquareTemp += PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(rookSquare));
 
             eval -= Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
-            blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
 
-            eval -= blackRookOpenFilesEval(board, file);
+            eval -= blackRookOpenFilesEval(board, rookFile);
 
-            lastSq = sq;
+            lastSq = rookSquare;
         }
 
         eval -= (pieceSquareTemp * Math.min(board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN), 6) / 6);

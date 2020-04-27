@@ -6,8 +6,9 @@ import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
 import com.netsensia.rivalchess.model.Piece
+import java.lang.Long.bitCount
 
-fun onlyKingRemains(board: EngineChessBoard) : Boolean =
+fun onlyKingRemains(board: EngineChessBoard) =
         board.getWhitePieceValues() +
         board.getBlackPieceValues() +
         board.getWhitePawnValues() +
@@ -57,7 +58,7 @@ fun blackPawnPieceSquareEval(board: EngineChessBoard) : Int {
     )
 }
 
-fun whiteKingSquareEval(board: EngineChessBoard) : Int =
+fun whiteKingSquareEval(board: EngineChessBoard) =
         linearScale(
                 board.getBlackPieceValues(),
                 PieceValue.getValue(Piece.ROOK),
@@ -66,7 +67,7 @@ fun whiteKingSquareEval(board: EngineChessBoard) : Int =
                 PieceSquareTables.king.get(board.getWhiteKingSquare())
         )
 
-fun blackKingSquareEval(board: EngineChessBoard) : Int =
+fun blackKingSquareEval(board: EngineChessBoard) =
         linearScale(
                 board.getWhitePieceValues(),
                 PieceValue.getValue(Piece.ROOK),
@@ -75,47 +76,46 @@ fun blackKingSquareEval(board: EngineChessBoard) : Int =
                 PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare()))
         )
 
-fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int): Int {
-    if (situation < ref1) return score1
-    return if (situation > ref2) score2 else (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
-}
+fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) =
+    if (situation < ref1) score1
+    else if (situation > ref2) score2
+    else (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
 
-fun materialDifference(board: EngineChessBoard) : Int {
-    return board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
-}
+fun materialDifference(board: EngineChessBoard) =
+    board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
 
-fun twoWhiteRooksTrappingKing(board: EngineChessBoard) : Boolean {
-    return java.lang.Long.bitCount(board.whiteRookBitboard and Bitboards.RANK_7) > 1
+fun twoWhiteRooksTrappingKing(board: EngineChessBoard) =
+    bitCount(board.whiteRookBitboard and Bitboards.RANK_7) > 1
             && board.getBitboard(BitboardType.BK) and Bitboards.RANK_8 != 0L
-}
 
-fun twoBlackRooksTrappingKing(board: EngineChessBoard) : Boolean {
-    return java.lang.Long.bitCount(board.blackRookBitboard and Bitboards.RANK_2) > 1
+fun twoBlackRooksTrappingKing(board: EngineChessBoard) =
+    bitCount(board.blackRookBitboard and Bitboards.RANK_2) > 1
             && board.whiteKingBitboard and Bitboards.RANK_1 != 0L
-}
 
-fun whiteRookOpenFilesEval(board: EngineChessBoard, file: Int): Int {
-    return if (Bitboards.FILES[file] and board.whitePawnBitboard == 0L)
-                if (Bitboards.FILES[file] and board.blackPawnBitboard == 0L)
-                    Evaluation.VALUE_ROOK_ON_OPEN_FILE.value
-                else
-                    Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.value
-            else
-                0
-}
+fun whiteRookOpenFilesEval(board: EngineChessBoard, file: Int) =
+    if (Bitboards.FILES[file] and board.whitePawnBitboard == 0L)
+        if (Bitboards.FILES[file] and board.blackPawnBitboard == 0L)
+            Evaluation.VALUE_ROOK_ON_OPEN_FILE.value
+        else
+            Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.value
+    else 0
 
-fun blackRookOpenFilesEval(board: EngineChessBoard, file: Int): Int {
-    return if ((Bitboards.FILES.get(file) and board.getBlackPawnBitboard()) == 0L)
-                if ((Bitboards.FILES.get(file) and board.getWhitePawnBitboard()) == 0L)
-                    Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue()
-                else
-                    Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue()
-            else
-                0
-}
+fun blackRookOpenFilesEval(board: EngineChessBoard, file: Int) =
+    if ((Bitboards.FILES.get(file) and board.getBlackPawnBitboard()) == 0L)
+        if ((Bitboards.FILES.get(file) and board.getWhitePawnBitboard()) == 0L)
+            Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue()
+        else
+            Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue()
+    else 0
 
 fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
     Bitboards.magicBitboards.magicMovesRook[sq][
                     ((board.getAllPiecesBitboard() and MagicBitboards.occupancyMaskRook[sq])
                             * MagicBitboards.magicNumberRook[sq]
                             ushr MagicBitboards.magicNumberShiftsRook[sq]).toInt()]
+
+fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
+        Math.min(enemyPawnValues / PieceValue.getValue(Piece.PAWN), 6) / 6
+
+fun rookPieceSquareEval(rookSquare: Int, enemyPawnValues: Int) =
+        PieceSquareTables.rook.get(rookSquare) * rookEnemyPawnMultiplier(enemyPawnValues)

@@ -76,3 +76,5 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long): Int {
     return ((allPieceBitboard and MagicBitboards.occupancyMaskRook[pieceSquare]) * MagicBitboards.magicNumberRook[pieceSquare]
             ushr MagicBitboards.magicNumberShiftsRook[pieceSquare]).toInt()
 }
+
+fun unsetBit(bitboard: Long, bit: Int) = bitboard xor (1L shl bit)
