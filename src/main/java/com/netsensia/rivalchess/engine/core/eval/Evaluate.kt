@@ -93,3 +93,32 @@ fun twoBlackRooksTrappingKing(board: EngineChessBoard) : Boolean {
     return java.lang.Long.bitCount(board.blackRookBitboard and Bitboards.RANK_2) > 1
             && board.whiteKingBitboard and Bitboards.RANK_1 != 0L
 }
+
+fun whiteRookOpenFilesEval(board: EngineChessBoard, file: Int): Int {
+    return if (Bitboards.FILES[file] and board.whitePawnBitboard == 0L)
+                if (Bitboards.FILES[file] and board.blackPawnBitboard == 0L)
+                    Evaluation.VALUE_ROOK_ON_OPEN_FILE.value
+                else
+                    Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.value
+            else
+                0
+}
+
+fun blackRookOpenFilesEval(board: EngineChessBoard, file: Int): Int {
+    return if ((Bitboards.FILES.get(file) and board.getBlackPawnBitboard()) == 0L)
+                if ((Bitboards.FILES.get(file) and board.getWhitePawnBitboard()) == 0L)
+                    Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue()
+                else
+                    Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue()
+            else
+                0
+}
+
+fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
+    Bitboards.magicBitboards.magicMovesRook[sq][
+                    (
+                            (board.getAllPiecesBitboard() and MagicBitboards.occupancyMaskRook[sq])
+                            * MagicBitboards.magicNumberRook[sq]
+                            ushr MagicBitboards.magicNumberShiftsRook[sq]
+                    )
+                    as Int]
