@@ -57,11 +57,10 @@ public class EpdTest {
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
-        runEpdSuite("winAtChess.epd", "WAC.226", true);
+        runEpdSuite("winAtChess.epd", "WAC.001", true);
     }
 
     @Test
-    @Ignore
     public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
         runEpdSuite("winAtChess.epd", "WAC.001", false);
     }
