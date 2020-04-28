@@ -55,8 +55,11 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.unsetBit;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookPieceSquareSum;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.combineAttacks;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDifference;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookAttacks;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookEnemyPawnMultiplier;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoBlackRooksTrappingKingEval;
@@ -64,6 +67,7 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoWhiteRooks
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whitePawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteRookOpenFilesEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteRookPieceSquareSum;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyKingRemains;
@@ -228,8 +232,8 @@ public final class Search implements Runnable {
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
         final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
 
-        int pieceSquareTemp = 0;
-        int pieceSquareTempEndGame = 0;
+        int pieceSquareTemp;
+        int pieceSquareTempEndGame;
 
         final int materialDifference = materialDifference(board);
 
@@ -242,17 +246,10 @@ public final class Search implements Runnable {
         int lastSq = -1;
 
         List<Integer> whiteRookSquares = squareList(board.getWhiteRookBitboard());
+        final Map<Integer, Long> whiteRookAttacks = rookAttackMap(board, whiteRookSquares);
+        whiteAttacksBitboard = combineAttacks(whiteAttacksBitboard, whiteRookAttacks);
 
-        Map<Integer, Long> whiteRookAttacks =
-                whiteRookSquares.stream()
-                .collect(Collectors.toMap(Function.identity(), wrs -> rookAttacks(board,wrs)));
 
-        whiteAttacksBitboard = whiteRookAttacks
-                .values()
-                .stream()
-                .reduce(whiteAttacksBitboard, (a,b) -> a | b);
-
-        pieceSquareTemp = 0;
         for (int rookSquare : whiteRookSquares) {
 
             final long allAttacks = whiteRookAttacks.get(rookSquare);
@@ -263,8 +260,6 @@ public final class Search implements Runnable {
                 eval += Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
             }
 
-            pieceSquareTemp += PieceSquareTables.rook.get(rookSquare);
-
             eval += Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
 
@@ -273,28 +268,28 @@ public final class Search implements Runnable {
             lastSq = rookSquare;
         }
 
-        eval += (pieceSquareTemp * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6);
+        eval += (whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6);
 
         eval += twoWhiteRooksTrappingKingEval(board);
 
+        final List<Integer> blackRookSquares = squareList(board.getBlackRookBitboard());
+        final  Map<Integer, Long> blackRookAttacks = rookAttackMap(board, blackRookSquares);
+        blackAttacksBitboard = combineAttacks(blackAttacksBitboard, blackRookAttacks);
+
         bitboard = board.getBlackRookBitboard();
-        pieceSquareTemp = 0;
         lastSq = -1;
         while (bitboard != 0) {
 
             final int rookSquare = Long.numberOfTrailingZeros(bitboard);
             bitboard = unsetBit(bitboard, rookSquare);
 
-            final long allAttacks = rookAttacks(board, rookSquare);
-            blackAttacksBitboard |= allAttacks;
+            final long allAttacks = blackRookAttacks.get(rookSquare);
 
             final int rookFile = rookSquare % 8;
 
             if (lastSq != -1 && rookFile == (lastSq % 8)) {
                 eval -= Evaluation.VALUE_ROOKS_ON_SAME_FILE.getValue();
             }
-
-            pieceSquareTemp += PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(rookSquare));
 
             eval -= Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
@@ -304,7 +299,7 @@ public final class Search implements Runnable {
             lastSq = rookSquare;
         }
 
-        eval -= (pieceSquareTemp * rookEnemyPawnMultiplier(board.getWhitePawnValues()) / 6);
+        eval -= (blackRookPieceSquareSum(blackRookSquares) * rookEnemyPawnMultiplier(board.getWhitePawnValues()) / 6);
 
         eval -= twoBlackRooksTrappingKingEval(board);
 
