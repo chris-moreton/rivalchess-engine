@@ -39,13 +39,18 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.unsetBit;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
@@ -236,14 +241,21 @@ public final class Search implements Runnable {
 
         int lastSq = -1;
 
-        pieceSquareTemp = 0;
-        bitboard = board.getWhiteRookBitboard();
-        while (bitboard != 0) {
-            final int rookSquare = Long.numberOfTrailingZeros(bitboard);
-            bitboard = unsetBit(bitboard, rookSquare);
+        List<Integer> whiteRookSquares = squareList(board.getWhiteRookBitboard());
 
-            final long allAttacks = rookAttacks(board, rookSquare);
-            whiteAttacksBitboard |= allAttacks;
+        Map<Integer, Long> whiteRookAttacks =
+                whiteRookSquares.stream()
+                .collect(Collectors.toMap(Function.identity(), wrs -> rookAttacks(board,wrs)));
+
+        whiteAttacksBitboard = whiteRookAttacks
+                .values()
+                .stream()
+                .reduce(whiteAttacksBitboard, (a,b) -> a | b);
+
+        pieceSquareTemp = 0;
+        for (int rookSquare : whiteRookSquares) {
+
+            final long allAttacks = whiteRookAttacks.get(rookSquare);
 
             final int rookFile = rookSquare % 8;
 

@@ -78,3 +78,15 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long): Int {
 }
 
 fun unsetBit(bitboard: Long, bit: Int) = bitboard xor (1L shl bit)
+
+fun squareList(bitboard: Long) : List<Int> {
+    val retList = mutableListOf<Int>()
+    var mutableBitboard = bitboard
+
+    while (mutableBitboard != 0L) {
+        val square = numberOfTrailingZeros(mutableBitboard)
+        retList.add(square)
+        mutableBitboard = unsetBit(mutableBitboard, square)
+    }
+    return retList
+}
