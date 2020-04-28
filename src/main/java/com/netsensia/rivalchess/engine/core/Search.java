@@ -59,8 +59,8 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDiffe
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookAttacks;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookEnemyPawnMultiplier;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoBlackRooksTrappingKing;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoWhiteRooksTrappingKing;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoBlackRooksTrappingKingEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoWhiteRooksTrappingKingEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whitePawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteRookOpenFilesEval;
@@ -275,9 +275,7 @@ public final class Search implements Runnable {
 
         eval += (pieceSquareTemp * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6);
 
-        if (twoWhiteRooksTrappingKing(board)) {
-            eval += Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
-        }
+        eval += twoWhiteRooksTrappingKingEval(board);
 
         bitboard = board.getBlackRookBitboard();
         pieceSquareTemp = 0;
@@ -308,9 +306,7 @@ public final class Search implements Runnable {
 
         eval -= (pieceSquareTemp * rookEnemyPawnMultiplier(board.getWhitePawnValues()) / 6);
 
-        if (twoBlackRooksTrappingKing(board)) {
-            eval -= Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue();
-        }
+        eval -= twoBlackRooksTrappingKingEval(board);
 
         bitboard = board.getWhiteKnightBitboard();
 
