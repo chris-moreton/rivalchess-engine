@@ -30,6 +30,9 @@ public class SearchTest {
 
     @Test
     public void testEvaluationScores() throws IllegalFenException {
+
+        assertEvaluationScore("r3k2r/p1ppqpb1/Bn2Pnp1/4N3/1p2P3/2N2Q2/PPPB1P1P/R3K2r w Qkq - 0 3", -660, true);
+
         assertEvaluationScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/1R6/1R6 b - -", -2035, true);
         assertEvaluationScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/2R5/1R6 b - -", -2034, true);
 
@@ -89,6 +92,7 @@ public class SearchTest {
 
     @Test
     public void testBestMoves() throws IllegalFenException, InterruptedException {
+
         assertBestMove("k7/5RP1/1P6/1K6/6r1/8/8/8 b - -", "g4g6", -1176);
         assertBestMove("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", "f7e6", -86);
         assertBestMove("8/3K4/2p5/p2b2r1/5k2/8/8/1q6 b - - 1 67", "g5g7", 9996);

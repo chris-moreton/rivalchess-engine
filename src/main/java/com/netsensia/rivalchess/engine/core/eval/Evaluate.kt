@@ -138,10 +138,9 @@ fun rookAttackMap(board: EngineChessBoard, whiteRookSquares: List<Int>) =
 fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 
 fun doubledRooksEval(squares: List<Int>) =
-        if (squares.size < 2) 0 else
-        if (squares.size == 2 && sameFile(squares.get(0), squares.get(1)))
+        if (squares.size > 1 && sameFile(squares.get(0), squares.get(1)))
             Evaluation.VALUE_ROOKS_ON_SAME_FILE.value else
-            if (squares.size == 3 && sameFile(squares.get(1), squares.get(2)))
+            if (squares.size > 2 && ( sameFile(squares.get(0), squares.get(2)) || sameFile(squares.get(1), squares.get(2))))
                 Evaluation.VALUE_ROOKS_ON_SAME_FILE.value else 0
 
 fun whiteRookPieceSquareSum(rookSquares: List<Int>) : Int =
