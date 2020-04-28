@@ -146,9 +146,15 @@ fun doubledRooksEval(squares: List<Int>) =
 fun whiteRookPieceSquareSum(rookSquares: List<Int>) : Int =
         rookSquares.stream().map(PieceSquareTables.rook::get).reduce(0, Integer::sum)
 
-fun blackRookPieceSquareSum(rookSquares: List<Int>) : Int =
+fun blackRookPieceSquareSum(rookSquares: List<Int>): Int =
         rookSquares.stream().map(
-                        {
-                            s -> PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(s))
+                        { s ->
+                            PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(s))
                         })
                 .reduce(0, Integer::sum)
+
+fun kingAttackCount(dangerZone: Long, attacks: Map<Int, Long>): Int {
+    return attacks.entries.stream()
+            .map { s: Map.Entry<Int, Long> -> bitCount(s.value and dangerZone) }
+            .reduce(0, Integer::sum)
+}

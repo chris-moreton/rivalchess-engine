@@ -54,6 +54,7 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpen
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookPieceSquareSum;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.combineAttacks;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.doubledRooksEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.kingAttackCount;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDifference;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookAttackMap;
@@ -245,20 +246,12 @@ public final class Search implements Runnable {
 
         eval += doubledRooksEval(whiteRookSquares);
 
-        for (int rookSquare : whiteRookSquares) {
-
-            final long allAttacks = whiteRookAttacks.get(rookSquare);
-
-            final int rookFile = rookSquare % 8;
-
-            eval += Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
-            blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
-
-            eval += whiteRookOpenFilesEval(board, rookFile);
-        }
+        blackKingAttackedCount += kingAttackCount(blackKingDangerZone, whiteRookAttacks);
+        eval += whiteRookSquares.stream().map(s -> whiteRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum);
+        eval += whiteRookSquares.stream().map(s -> Evaluation.getRookMobilityValue(
+                Long.bitCount(whiteRookAttacks.get(s) & ~whitePieces))).reduce(0, Integer::sum);
 
         eval += (whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6);
-
         eval += twoWhiteRooksTrappingKingEval(board);
 
         final List<Integer> blackRookSquares = squareList(board.getBlackRookBitboard());
@@ -267,18 +260,10 @@ public final class Search implements Runnable {
 
         eval -= doubledRooksEval(blackRookSquares);
 
-        for (int rookSquare : blackRookSquares) {
-
-            final long allAttacks = blackRookAttacks.get(rookSquare);
-
-            final int rookFile = rookSquare % 8;
-
-            eval -= Evaluation.getRookMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
-            whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
-
-            eval -= blackRookOpenFilesEval(board, rookFile);
-
-        }
+        whiteKingAttackedCount += kingAttackCount(whiteKingDangerZone, blackRookAttacks);
+        eval -= blackRookSquares.stream().map(s -> blackRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum);
+        eval -= blackRookSquares.stream().map(s -> Evaluation.getRookMobilityValue(
+                Long.bitCount(blackRookAttacks.get(s) & ~blackPieces))).reduce(0, Integer::sum);
 
         eval -= (blackRookPieceSquareSum(blackRookSquares) * rookEnemyPawnMultiplier(board.getWhitePawnValues()) / 6);
 
