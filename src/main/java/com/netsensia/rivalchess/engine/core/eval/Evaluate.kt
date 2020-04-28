@@ -7,6 +7,8 @@ import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
 import com.netsensia.rivalchess.model.Piece
 import java.lang.Long.bitCount
+import java.util.function.Function
+import java.util.stream.Collectors
 
 fun onlyKingRemains(board: EngineChessBoard) =
         board.getWhitePieceValues() +
@@ -84,13 +86,15 @@ fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) 
 fun materialDifference(board: EngineChessBoard) =
     board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
 
-fun twoWhiteRooksTrappingKing(board: EngineChessBoard) =
-    bitCount(board.whiteRookBitboard and Bitboards.RANK_7) > 1
-            && board.getBitboard(BitboardType.BK) and Bitboards.RANK_8 != 0L
+fun twoWhiteRooksTrappingKingEval(board: EngineChessBoard) =
+    if (bitCount(board.whiteRookBitboard and Bitboards.RANK_7) > 1
+            && board.getBitboard(BitboardType.BK) and Bitboards.RANK_8 != 0L)
+        Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue() else 0
 
-fun twoBlackRooksTrappingKing(board: EngineChessBoard) =
-    bitCount(board.blackRookBitboard and Bitboards.RANK_2) > 1
-            && board.whiteKingBitboard and Bitboards.RANK_1 != 0L
+fun twoBlackRooksTrappingKingEval(board: EngineChessBoard) =
+    if (bitCount(board.blackRookBitboard and Bitboards.RANK_2) > 1
+            && board.whiteKingBitboard and Bitboards.RANK_1 != 0L)
+        Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue() else 0
 
 fun whiteRookOpenFilesEval(board: EngineChessBoard, file: Int) =
     if (Bitboards.FILES[file] and board.whitePawnBitboard == 0L)
@@ -116,3 +120,36 @@ fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
 
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
         Math.min(enemyPawnValues / PieceValue.getValue(Piece.PAWN), 6)
+
+fun combineAttacks(whiteAttacksBitboard: Long, whiteRookAttacks: Map<Int, Long>): Long {
+    var whiteAttacksBitboard = whiteAttacksBitboard
+    whiteAttacksBitboard = whiteRookAttacks
+            .values
+            .stream()
+            .reduce(whiteAttacksBitboard) { a: Long, b: Long -> a or b }
+    return whiteAttacksBitboard
+}
+
+fun rookAttackMap(board: EngineChessBoard, whiteRookSquares: List<Int>) =
+    whiteRookSquares.stream()
+            .collect(Collectors.toMap<Int, Int, Long>(Function.identity(), Function { rs: Int -> rookAttacks(board, rs) }))
+
+
+fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
+
+fun doubledRooksEval(squares: List<Int>) =
+        if (squares.size < 2) 0 else
+        if (squares.size == 2 && sameFile(squares.get(0), squares.get(1)))
+            Evaluation.VALUE_ROOKS_ON_SAME_FILE.value else
+            if (squares.size == 3 && sameFile(squares.get(1), squares.get(2)))
+                Evaluation.VALUE_ROOKS_ON_SAME_FILE.value else 0
+
+fun whiteRookPieceSquareSum(rookSquares: List<Int>) : Int =
+        rookSquares.stream().map(PieceSquareTables.rook::get).reduce(0, Integer::sum)
+
+fun blackRookPieceSquareSum(rookSquares: List<Int>) : Int =
+        rookSquares.stream().map(
+                        {
+                            s -> PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(s))
+                        })
+                .reduce(0, Integer::sum)
