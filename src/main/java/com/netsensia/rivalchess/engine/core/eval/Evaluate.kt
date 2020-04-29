@@ -1,14 +1,12 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import kotlinx.coroutines.*
-
 import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
+import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
 import com.netsensia.rivalchess.model.Piece
-import kotlinx.coroutines.channels.Channel
 import java.lang.Long.bitCount
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -181,3 +179,20 @@ fun kingAttackCount(dangerZone: Long, attacks: Map<Int, Long>): Int {
             .reduce(0, Integer::sum)
 }
 
+fun whiteEvaluation(board: EngineChessBoard) : Int {
+    val whiteRookSquares = squareList(board.getBitboard(BitboardType.WR))
+
+    return whitePawnPieceSquareEval(board) +
+            whiteKingSquareEval(board) +
+            twoWhiteRooksTrappingKingEval(board) +
+            doubledRooksEval(whiteRookSquares)
+}
+
+fun blackEvaluation(board: EngineChessBoard) : Int {
+    val blackRookSquares = squareList(board.getBitboard(BitboardType.BR))
+
+    return blackPawnPieceSquareEval(board) +
+            blackKingSquareEval(board) +
+            twoBlackRooksTrappingKingEval(board) +
+            doubledRooksEval(blackRookSquares)
+}

@@ -52,8 +52,8 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePa
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteEvaluation;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackEvaluation;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookPieceSquareSum;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.combineAttacks;
@@ -260,6 +260,7 @@ public final class Search implements Runnable {
                 combineAttacks(whiteQueenAttacks) |
                 combineAttacks(whiteBishopAttacks) |
                 combineAttacks(whiteKnightAttacks);
+
         long blackAttacksBitboard = combineAttacks(blackRookAttacks) |
                 combineAttacks(blackQueenAttacks) |
                 combineAttacks(blackBishopAttacks) |
@@ -268,28 +269,14 @@ public final class Search implements Runnable {
 
         int eval = materialDifference;
         try {
-            List<CompletableFuture<Integer>> plusTasks = new ArrayList();
-            List<CompletableFuture<Integer>> minusTasks = new ArrayList();
+            CompletableFuture<Integer> white = CompletableFuture.supplyAsync(() -> whiteEvaluation(board));
+            CompletableFuture<Integer> black = CompletableFuture.supplyAsync(() -> blackEvaluation(board));
 
-            plusTasks.add(CompletableFuture.supplyAsync(() -> whitePawnPieceSquareEval(board)));
-            plusTasks.add(CompletableFuture.supplyAsync(() -> whiteKingSquareEval(board)));
-            plusTasks.add(CompletableFuture.supplyAsync(() -> doubledRooksEval(whiteRookSquares)));
-            plusTasks.add(CompletableFuture.supplyAsync(() -> twoWhiteRooksTrappingKingEval(board)));
+            Async.await(white);
+            Async.await(black);
+            eval += white.get() - black.get();
 
-            minusTasks.add(CompletableFuture.supplyAsync(() -> blackPawnPieceSquareEval(board)));
-            minusTasks.add(CompletableFuture.supplyAsync(() -> blackKingSquareEval(board)));
-            minusTasks.add(CompletableFuture.supplyAsync(() -> doubledRooksEval(blackRookSquares)));
-            minusTasks.add(CompletableFuture.supplyAsync(() -> twoBlackRooksTrappingKingEval(board)));
 
-            for (CompletableFuture<Integer> task : plusTasks) {
-                Async.await(task);
-                eval += task.get();
-            }
-
-            for (CompletableFuture<Integer> task : minusTasks) {
-                Async.await(task);
-                eval -= task.get();
-            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
@@ -326,6 +313,7 @@ public final class Search implements Runnable {
                         blackKnightSquares.stream().map(s -> PieceSquareTables.knightEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(s))).reduce(0, Integer::sum),
                         blackKnightSquares.stream().map(s -> PieceSquareTables.knight.get(Bitboards.bitFlippedHorizontalAxis.get(s))).reduce(0, Integer::sum)
                     )
+
                 ;
 
         bitboard = board.getWhiteQueenBitboard();
