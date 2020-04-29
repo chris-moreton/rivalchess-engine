@@ -227,8 +227,6 @@ public final class Search implements Runnable {
         int sq;
         long bitboard;
 
-        final long whitePawnAttacks = getWhitePawnAttacks(board.getWhitePawnBitboard());
-        final long blackPawnAttacks = getBlackPawnAttacks(board.getBlackPawnBitboard());
         final long whitePieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.FRIENDLY : BitboardType.ENEMY);
         final long blackPieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.ENEMY : BitboardType.FRIENDLY);
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
@@ -268,53 +266,22 @@ public final class Search implements Runnable {
 
 
         int eval = materialDifference;
-        try {
-            CompletableFuture<Integer> white = CompletableFuture.supplyAsync(() -> whiteEvaluation(board));
-            CompletableFuture<Integer> black = CompletableFuture.supplyAsync(() -> blackEvaluation(board));
+//        try {
+//            CompletableFuture<Integer> white = CompletableFuture.supplyAsync(() -> whiteEvaluation(board));
+//            CompletableFuture<Integer> black = CompletableFuture.supplyAsync(() -> blackEvaluation(board));
+//
+//            Async.await(white);
+//            Async.await(black);
+//            eval += white.get() - black.get();
+//
+//
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//        }
 
-            Async.await(white);
-            Async.await(black);
-            eval += white.get() - black.get();
-
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-
-        eval += whiteRookSquares.stream().map(s -> whiteRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum)
-                + whiteRookSquares.stream().map(s -> Evaluation.getRookMobilityValue(
-                  Long.bitCount(whiteRookAttacks.get(s) & ~whitePieces))).reduce(0, Integer::sum)
-                + (whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6)
-                - blackRookSquares.stream().map(s -> blackRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum)
-                - blackRookSquares.stream().map(s -> Evaluation.getRookMobilityValue(
-                        Long.bitCount(blackRookAttacks.get(s) & ~blackPieces))).reduce(0, Integer::sum)
-                - blackRookPieceSquareSum(blackRookSquares) * rookEnemyPawnMultiplier(board.getWhitePawnValues()) / 6
-                - whiteKnightSquares.stream()
-                        .map(s -> Long.bitCount(Bitboards.knightMoves.get(s) &
-                                (blackPawnAttacks | board.getWhitePawnBitboard())) *
-                                Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue())
-                        .reduce(0, Integer::sum)
-                + linearScale(board.getBlackPieceValues() + board.getBlackPawnValues(),
-                    Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(),
-                    Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(),
-                    whiteKnightSquares.stream().map(PieceSquareTables.knightEndGame::get).reduce(0, Integer::sum),
-                    whiteKnightSquares.stream().map(PieceSquareTables.knight::get).reduce(0, Integer::sum))
-                + blackKnightSquares.stream()
-                    .map(s -> Long.bitCount(Bitboards.knightMoves.get(s) &
-                            (whitePawnAttacks | board.getBlackPawnBitboard())) *
-                            Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue())
-                    .reduce(0, Integer::sum)
-                - linearScale(
-                    board.getWhitePieceValues() + board.getWhitePawnValues(),
-                        Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(),
-                        Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(),
-                        blackKnightSquares.stream().map(s -> PieceSquareTables.knightEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(s))).reduce(0, Integer::sum),
-                        blackKnightSquares.stream().map(s -> PieceSquareTables.knight.get(Bitboards.bitFlippedHorizontalAxis.get(s))).reduce(0, Integer::sum)
-                    )
-
-                ;
+        eval += whiteEvaluation(board) - blackEvaluation(board);
 
         bitboard = board.getWhiteQueenBitboard();
         while (bitboard != 0) {
