@@ -112,28 +112,26 @@ fun blackRookOpenFilesEval(board: EngineChessBoard, file: Int) =
             Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue()
     else 0
 
-fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
-    Bitboards.magicBitboards.magicMovesRook[sq][
-                    ((board.getAllPiecesBitboard() and MagicBitboards.occupancyMaskRook[sq])
-                            * MagicBitboards.magicNumberRook[sq]
-                            ushr MagicBitboards.magicNumberShiftsRook[sq]).toInt()]
-
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
         Math.min(enemyPawnValues / PieceValue.getValue(Piece.PAWN), 6)
 
-fun combineAttacks(whiteAttacksBitboard: Long, whiteRookAttacks: Map<Int, Long>): Long {
-    var whiteAttacksBitboard = whiteAttacksBitboard
-    whiteAttacksBitboard = whiteRookAttacks
-            .values
-            .stream()
-            .reduce(whiteAttacksBitboard) { a: Long, b: Long -> a or b }
-    return whiteAttacksBitboard
-}
+fun combineAttacks(attackMap: Map<Int, Long>) =
+    attackMap.values.stream().reduce(0) { a: Long, b: Long -> a or b }
+
+fun knightAttackMap(board: EngineChessBoard, squares: List<Int>) =
+        squares.stream()
+                .collect(Collectors.toMap<Int, Int, Long>(
+                        Function.identity(), Function { s: Int -> Bitboards.knightMoves.get(s) }))
+
+fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
+        Bitboards.magicBitboards.magicMovesRook[sq][
+                ((board.getAllPiecesBitboard() and MagicBitboards.occupancyMaskRook[sq])
+                        * MagicBitboards.magicNumberRook[sq]
+                        ushr MagicBitboards.magicNumberShiftsRook[sq]).toInt()]
 
 fun rookAttackMap(board: EngineChessBoard, whiteRookSquares: List<Int>) =
     whiteRookSquares.stream()
             .collect(Collectors.toMap<Int, Int, Long>(Function.identity(), Function { rs: Int -> rookAttacks(board, rs) }))
-
 
 fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 
