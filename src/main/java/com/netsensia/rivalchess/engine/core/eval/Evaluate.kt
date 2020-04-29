@@ -131,7 +131,29 @@ fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
 
 fun rookAttackMap(board: EngineChessBoard, whiteRookSquares: List<Int>) =
     whiteRookSquares.stream()
-            .collect(Collectors.toMap<Int, Int, Long>(Function.identity(), Function { rs: Int -> rookAttacks(board, rs) }))
+            .collect(Collectors.toMap<Int, Int, Long>(
+                    Function.identity(), Function { rs: Int -> rookAttacks(board, rs) })
+            )
+
+fun bishopAttacks(board: EngineChessBoard, sq: Int) =
+        Bitboards.magicBitboards.magicMovesBishop[sq][
+                ((board.getAllPiecesBitboard() and MagicBitboards.occupancyMaskBishop[sq])
+                        * MagicBitboards.magicNumberBishop[sq]
+                        ushr MagicBitboards.magicNumberShiftsBishop[sq]).toInt()]
+
+fun bishopAttackMap(board: EngineChessBoard, whiteBishopSquares: List<Int>) =
+        whiteBishopSquares.stream()
+                .collect(Collectors.toMap<Int, Int, Long>(
+                        Function.identity(), Function { rs: Int -> bishopAttacks(board, rs) })
+                )
+
+fun queenAttacks(board: EngineChessBoard, sq: Int) = rookAttacks(board, sq) or bishopAttacks(board, sq)
+
+fun queenAttackMap(board: EngineChessBoard, whiteQueenSquares: List<Int>) =
+        whiteQueenSquares.stream()
+                .collect(Collectors.toMap<Int, Int, Long>(
+                        Function.identity(), Function { rs: Int -> queenAttacks(board, rs) })
+                )
 
 fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 

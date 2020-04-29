@@ -48,6 +48,7 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPa
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
@@ -58,6 +59,7 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.kingAttackCou
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.knightAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDifference;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.queenAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookEnemyPawnMultiplier;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoBlackRooksTrappingKingEval;
@@ -224,16 +226,37 @@ public final class Search implements Runnable {
         final long blackPieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.ENEMY : BitboardType.FRIENDLY);
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
         final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
-        final List<Integer> whiteRookSquares = squareList(board.getWhiteRookBitboard());
+
+        final List<Integer> whiteRookSquares = squareList(board.getBitboard(BitboardType.WR));
         final Map<Integer, Long> whiteRookAttacks = rookAttackMap(board, whiteRookSquares);
-        final List<Integer> blackRookSquares = squareList(board.getBlackRookBitboard());
+        final List<Integer> blackRookSquares = squareList(board.getBitboard(BitboardType.BR));
         final  Map<Integer, Long> blackRookAttacks = rookAttackMap(board, blackRookSquares);
         final List<Integer> whiteKnightSquares = squareList(board.getBitboard(BitboardType.WN));
         final Map<Integer, Long> whiteKnightAttacks = knightAttackMap(board, whiteKnightSquares);
         final List<Integer> blackKnightSquares = squareList(board.getBitboard(BitboardType.BN));
         final Map<Integer, Long> blackKnightAttacks = knightAttackMap(board, blackKnightSquares);
-
+        final List<Integer> whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ));
+        final Map<Integer, Long> whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares);
+        final List<Integer> blackQueenSquares = squareList(board.getBitboard(BitboardType.BQ));
+        final  Map<Integer, Long> blackQueenAttacks = queenAttackMap(board, blackQueenSquares);
+        final List<Integer> whiteBishopSquares = squareList(board.getBitboard(BitboardType.WB));
+        final Map<Integer, Long> whiteBishopAttacks = bishopAttackMap(board, whiteBishopSquares);
+        final List<Integer> blackBishopSquares = squareList(board.getBitboard(BitboardType.BB));
+        final  Map<Integer, Long> blackBishopAttacks = bishopAttackMap(board, blackBishopSquares);
+        
         final int materialDifference = materialDifference(board);
+
+        int blackKingAttackedCount = kingAttackCount(blackKingDangerZone, whiteRookAttacks);
+        int whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, blackRookAttacks);
+
+        long whiteAttacksBitboard = combineAttacks(whiteRookAttacks) |
+                combineAttacks(whiteQueenAttacks) |
+                combineAttacks(whiteBishopAttacks) |
+                combineAttacks(whiteKnightAttacks);
+        long blackAttacksBitboard = combineAttacks(blackRookAttacks) |
+                combineAttacks(blackQueenAttacks) |
+                combineAttacks(blackBishopAttacks) |
+                combineAttacks(blackKnightAttacks);
 
         int eval = materialDifference
                 + whitePawnPieceSquareEval(board)
@@ -276,11 +299,7 @@ public final class Search implements Runnable {
                     )
                 ;
 
-        int blackKingAttackedCount = kingAttackCount(blackKingDangerZone, whiteRookAttacks);
-        int whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, blackRookAttacks);
 
-        long whiteAttacksBitboard = combineAttacks(whiteRookAttacks) | combineAttacks(whiteKnightAttacks);
-        long blackAttacksBitboard = combineAttacks(blackRookAttacks) | combineAttacks(blackKnightAttacks);
 
         bitboard = board.getWhiteQueenBitboard();
         while (bitboard != 0) {
@@ -292,12 +311,11 @@ public final class Search implements Runnable {
                     Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])] |
                             Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
 
-            whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone) * 2;
 
             eval += Evaluation.getQueenMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
         }
-
+        
         bitboard = board.getBlackQueenBitboard();
         while (bitboard != 0) {
             bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
@@ -308,7 +326,6 @@ public final class Search implements Runnable {
                     Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])] |
                             Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
 
-            blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone) * 2;
 
             eval -= Evaluation.getQueenMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
@@ -406,7 +423,6 @@ public final class Search implements Runnable {
             eval += PieceSquareTables.bishop.get(sq);
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])];
-            whiteAttacksBitboard |= allAttacks;
             blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
 
             bishopScore += Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
@@ -422,7 +438,6 @@ public final class Search implements Runnable {
             eval -= PieceSquareTables.bishop.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
 
             final long allAttacks = Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])];
-            blackAttacksBitboard |= allAttacks;
             whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
 
             bishopScore -= Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
