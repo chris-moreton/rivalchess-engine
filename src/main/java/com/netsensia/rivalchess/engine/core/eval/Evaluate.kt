@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.bitboards.util.getWhitePawnAttacks
 import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
+import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 import java.lang.Long.bitCount
@@ -287,4 +288,68 @@ fun blackEvaluation(board: EngineChessBoard) : Int {
                     blackKnightSquares.stream().map { s: Int -> PieceSquareTables.knight[Bitboards.bitFlippedHorizontalAxis[s]] }.reduce(0, Integer::sum)
             )
 
+}
+
+fun castlingEval(board: EngineChessBoard): Int {
+    var eval = 0
+    val castlePrivs = (board.castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value) +
+            (board.castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value) +
+            (board.castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value) +
+            (board.castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value)
+    if (castlePrivs != 0) {
+        // Value of moving King to its queenside castle destination in the middle game
+        val kingSquareBonusMiddleGame = PieceSquareTables.king[1] - PieceSquareTables.king[3]
+        val kingSquareBonusEndGame = PieceSquareTables.kingEndGame[1] - PieceSquareTables.kingEndGame[3]
+        val rookSquareBonus = PieceSquareTables.rook[3] - PieceSquareTables.rook[0]
+        var kingSquareBonusScaled = linearScale(
+                board.blackPieceValues,
+                Evaluation.CASTLE_BONUS_LOW_MATERIAL.value,
+                Evaluation.CASTLE_BONUS_HIGH_MATERIAL.value,
+                kingSquareBonusEndGame,
+                kingSquareBonusMiddleGame)
+
+        // don't want to exceed this value because otherwise castling would be discouraged due to the bonuses
+        // given by still having castling rights.
+        var castleValue = kingSquareBonusScaled + rookSquareBonus
+        if (castleValue > 0) {
+            var timeToCastleKingSide = 100
+            var timeToCastleQueenSide = 100
+            if (board.castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value != 0) {
+                timeToCastleKingSide = 2
+                if (board.allPiecesBitboard and (1L shl 1) != 0L) timeToCastleKingSide++
+                if (board.allPiecesBitboard and (1L shl 2) != 0L) timeToCastleKingSide++
+            }
+            if (board.castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value != 0) {
+                timeToCastleQueenSide = 2
+                if (board.allPiecesBitboard and (1L shl 6) != 0L) timeToCastleQueenSide++
+                if (board.allPiecesBitboard and (1L shl 5) != 0L) timeToCastleQueenSide++
+                if (board.allPiecesBitboard and (1L shl 4) != 0L) timeToCastleQueenSide++
+            }
+            eval += castleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide)
+        }
+        kingSquareBonusScaled = linearScale(
+                board.whitePieceValues,
+                Evaluation.CASTLE_BONUS_LOW_MATERIAL.value,
+                Evaluation.CASTLE_BONUS_HIGH_MATERIAL.value,
+                kingSquareBonusEndGame,
+                kingSquareBonusMiddleGame)
+        castleValue = kingSquareBonusScaled + rookSquareBonus
+        if (castleValue > 0) {
+            var timeToCastleKingSide = 100
+            var timeToCastleQueenSide = 100
+            if (board.castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value != 0) {
+                timeToCastleKingSide = 2
+                if (board.allPiecesBitboard and (1L shl 57) != 0L) timeToCastleKingSide++
+                if (board.allPiecesBitboard and (1L shl 58) != 0L) timeToCastleKingSide++
+            }
+            if (board.castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value != 0) {
+                timeToCastleQueenSide = 2
+                if (board.allPiecesBitboard and (1L shl 60) != 0L) timeToCastleQueenSide++
+                if (board.allPiecesBitboard and (1L shl 61) != 0L) timeToCastleQueenSide++
+                if (board.allPiecesBitboard and (1L shl 62) != 0L) timeToCastleQueenSide++
+            }
+            eval -= castleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide)
+        }
+    }
+    return eval
 }

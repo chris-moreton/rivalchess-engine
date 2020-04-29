@@ -52,6 +52,7 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePa
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.castlingEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePawnBonusWhenMoreMaterial;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePieceBonusWhenMoreMaterial;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteEvaluation;
@@ -273,97 +274,14 @@ public final class Search implements Runnable {
 
         int eval = materialDifference;
 
-        if (FeatureFlag.USE_PARALLEL_EVALUATION.isActive()) {
-            try {
-                CompletableFuture<Integer> white = CompletableFuture.supplyAsync(() -> whiteEvaluation(board));
-                CompletableFuture<Integer> black = CompletableFuture.supplyAsync(() -> blackEvaluation(board));
+        eval += whiteEvaluation(board) - blackEvaluation(board);
 
-                Async.await(white);
-                Async.await(black);
-                eval += white.get() - black.get();
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        } else {
-            eval += whiteEvaluation(board) - blackEvaluation(board);
-        }
-
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
-        eval += boardHash.getPawnHashEntry(board).getPawnScore();
+        eval += engineChessBoard.getBoardHashObject().getPawnHashEntry(board).getPawnScore();
 
         eval += tradePawnBonusWhenMoreMaterial(board, materialDifference);
         eval += tradePieceBonusWhenMoreMaterial(board, materialDifference);
 
-        final int castlePrivs =
-                (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WK.getValue()) +
-                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WQ.getValue()) +
-                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BK.getValue()) +
-                        (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BQ.getValue());
-
-        if (castlePrivs != 0) {
-            // Value of moving King to its queenside castle destination in the middle game
-            int kingSquareBonusMiddleGame = PieceSquareTables.king.get(1) - PieceSquareTables.king.get(3);
-            int kingSquareBonusEndGame = PieceSquareTables.kingEndGame.get(1) - PieceSquareTables.kingEndGame.get(3);
-            int rookSquareBonus = PieceSquareTables.rook.get(3) - PieceSquareTables.rook.get(0);
-            int kingSquareBonusScaled =
-                    linearScale(
-                            board.getBlackPieceValues(),
-                            Evaluation.CASTLE_BONUS_LOW_MATERIAL.getValue(),
-                            Evaluation.CASTLE_BONUS_HIGH_MATERIAL.getValue(),
-                            kingSquareBonusEndGame,
-                            kingSquareBonusMiddleGame);
-
-            // don't want to exceed this value because otherwise castling would be discouraged due to the bonuses
-            // given by still having castling rights.
-            int castleValue = kingSquareBonusScaled + rookSquareBonus;
-
-            if (castleValue > 0) {
-                int timeToCastleKingSide = 100;
-                int timeToCastleQueenSide = 100;
-                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WK.getValue()) != 0) {
-                    timeToCastleKingSide = 2;
-                    if ((board.getAllPiecesBitboard() & (1L << 1)) != 0) timeToCastleKingSide++;
-                    if ((board.getAllPiecesBitboard() & (1L << 2)) != 0) timeToCastleKingSide++;
-                }
-                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WQ.getValue()) != 0) {
-                    timeToCastleQueenSide = 2;
-                    if ((board.getAllPiecesBitboard() & (1L << 6)) != 0) timeToCastleQueenSide++;
-                    if ((board.getAllPiecesBitboard() & (1L << 5)) != 0) timeToCastleQueenSide++;
-                    if ((board.getAllPiecesBitboard() & (1L << 4)) != 0) timeToCastleQueenSide++;
-                }
-                eval += castleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide);
-            }
-
-            kingSquareBonusScaled =
-                    linearScale(
-                            board.getWhitePieceValues(),
-                            Evaluation.CASTLE_BONUS_LOW_MATERIAL.getValue(),
-                            Evaluation.CASTLE_BONUS_HIGH_MATERIAL.getValue(),
-                            kingSquareBonusEndGame,
-                            kingSquareBonusMiddleGame);
-
-            castleValue = kingSquareBonusScaled + rookSquareBonus;
-
-            if (castleValue > 0) {
-                int timeToCastleKingSide = 100;
-                int timeToCastleQueenSide = 100;
-                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BK.getValue()) != 0) {
-                    timeToCastleKingSide = 2;
-                    if ((board.getAllPiecesBitboard() & (1L << 57)) != 0) timeToCastleKingSide++;
-                    if ((board.getAllPiecesBitboard() & (1L << 58)) != 0) timeToCastleKingSide++;
-                }
-                if ((board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_BQ.getValue()) != 0) {
-                    timeToCastleQueenSide = 2;
-                    if ((board.getAllPiecesBitboard() & (1L << 60)) != 0) timeToCastleQueenSide++;
-                    if ((board.getAllPiecesBitboard() & (1L << 61)) != 0) timeToCastleQueenSide++;
-                    if ((board.getAllPiecesBitboard() & (1L << 62)) != 0) timeToCastleQueenSide++;
-                }
-                eval -= castleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide);
-            }
-        }
+        eval += castlingEval(board);
 
         final boolean whiteLightBishopExists = (board.getWhiteBishopBitboard() & Bitboards.LIGHT_SQUARES) != 0;
         final boolean whiteDarkBishopExists = (board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) != 0;
