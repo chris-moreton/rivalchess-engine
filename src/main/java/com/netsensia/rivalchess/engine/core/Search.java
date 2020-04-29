@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.ea.async.Async;
 import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
@@ -43,14 +44,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackKingSquareEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackPawnPieceSquareEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteEvaluation;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackEvaluation;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookPieceSquareSum;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.combineAttacks;
@@ -211,6 +214,10 @@ public final class Search implements Runnable {
         engineChessBoard.getBoardHashObject().clearHash();
     }
 
+    static {
+        Async.init();
+    }
+
     public int evaluate(EngineChessBoard board) {
 
         if (onlyKingRemains(board)) {
@@ -220,8 +227,6 @@ public final class Search implements Runnable {
         int sq;
         long bitboard;
 
-        final long whitePawnAttacks = getWhitePawnAttacks(board.getWhitePawnBitboard());
-        final long blackPawnAttacks = getBlackPawnAttacks(board.getBlackPawnBitboard());
         final long whitePieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.FRIENDLY : BitboardType.ENEMY);
         final long blackPieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.ENEMY : BitboardType.FRIENDLY);
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
@@ -232,9 +237,9 @@ public final class Search implements Runnable {
         final List<Integer> blackRookSquares = squareList(board.getBitboard(BitboardType.BR));
         final  Map<Integer, Long> blackRookAttacks = rookAttackMap(board, blackRookSquares);
         final List<Integer> whiteKnightSquares = squareList(board.getBitboard(BitboardType.WN));
-        final Map<Integer, Long> whiteKnightAttacks = knightAttackMap(board, whiteKnightSquares);
+        final Map<Integer, Long> whiteKnightAttacks = knightAttackMap(whiteKnightSquares);
         final List<Integer> blackKnightSquares = squareList(board.getBitboard(BitboardType.BN));
-        final Map<Integer, Long> blackKnightAttacks = knightAttackMap(board, blackKnightSquares);
+        final Map<Integer, Long> blackKnightAttacks = knightAttackMap(blackKnightSquares);
         final List<Integer> whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ));
         final Map<Integer, Long> whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares);
         final List<Integer> blackQueenSquares = squareList(board.getBitboard(BitboardType.BQ));
@@ -243,93 +248,28 @@ public final class Search implements Runnable {
         final Map<Integer, Long> whiteBishopAttacks = bishopAttackMap(board, whiteBishopSquares);
         final List<Integer> blackBishopSquares = squareList(board.getBitboard(BitboardType.BB));
         final  Map<Integer, Long> blackBishopAttacks = bishopAttackMap(board, blackBishopSquares);
-        
+
         final int materialDifference = materialDifference(board);
 
-        int blackKingAttackedCount = kingAttackCount(blackKingDangerZone, whiteRookAttacks);
-        int whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, blackRookAttacks);
+        int blackKingAttackedCount =
+                kingAttackCount(blackKingDangerZone, whiteRookAttacks) +
+                        kingAttackCount(blackKingDangerZone, whiteQueenAttacks) * 2;
+
+        int whiteKingAttackedCount =
+                kingAttackCount(whiteKingDangerZone, blackRookAttacks) +
+                        kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2;
 
         long whiteAttacksBitboard = combineAttacks(whiteRookAttacks) |
                 combineAttacks(whiteQueenAttacks) |
                 combineAttacks(whiteBishopAttacks) |
                 combineAttacks(whiteKnightAttacks);
+
         long blackAttacksBitboard = combineAttacks(blackRookAttacks) |
                 combineAttacks(blackQueenAttacks) |
                 combineAttacks(blackBishopAttacks) |
                 combineAttacks(blackKnightAttacks);
 
-        int eval = materialDifference
-                + whitePawnPieceSquareEval(board)
-                - blackPawnPieceSquareEval(board)
-                + whiteKingSquareEval(board)
-                - blackKingSquareEval(board)
-                + whiteRookSquares.stream().map(s -> whiteRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum)
-                + whiteRookSquares.stream().map(s -> Evaluation.getRookMobilityValue(
-                  Long.bitCount(whiteRookAttacks.get(s) & ~whitePieces))).reduce(0, Integer::sum)
-                + doubledRooksEval(whiteRookSquares)
-                + (whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6)
-                + twoWhiteRooksTrappingKingEval(board)
-                - doubledRooksEval(blackRookSquares)
-                - blackRookSquares.stream().map(s -> blackRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum)
-                - blackRookSquares.stream().map(s -> Evaluation.getRookMobilityValue(
-                        Long.bitCount(blackRookAttacks.get(s) & ~blackPieces))).reduce(0, Integer::sum)
-                - blackRookPieceSquareSum(blackRookSquares) * rookEnemyPawnMultiplier(board.getWhitePawnValues()) / 6
-                - twoBlackRooksTrappingKingEval(board)
-                - whiteKnightSquares.stream()
-                        .map(s -> Long.bitCount(Bitboards.knightMoves.get(s) &
-                                (blackPawnAttacks | board.getWhitePawnBitboard())) *
-                                Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue())
-                        .reduce(0, Integer::sum)
-                + linearScale(board.getBlackPieceValues() + board.getBlackPawnValues(),
-                    Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(),
-                    Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(),
-                    whiteKnightSquares.stream().map(PieceSquareTables.knightEndGame::get).reduce(0, Integer::sum),
-                    whiteKnightSquares.stream().map(PieceSquareTables.knight::get).reduce(0, Integer::sum))
-                + blackKnightSquares.stream()
-                    .map(s -> Long.bitCount(Bitboards.knightMoves.get(s) &
-                            (whitePawnAttacks | board.getBlackPawnBitboard())) *
-                            Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.getValue())
-                    .reduce(0, Integer::sum)
-                - linearScale(
-                    board.getWhitePieceValues() + board.getWhitePawnValues(),
-                        Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(),
-                        Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(),
-                        blackKnightSquares.stream().map(s -> PieceSquareTables.knightEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(s))).reduce(0, Integer::sum),
-                        blackKnightSquares.stream().map(s -> PieceSquareTables.knight.get(Bitboards.bitFlippedHorizontalAxis.get(s))).reduce(0, Integer::sum)
-                    )
-                ;
-
-
-
-        bitboard = board.getWhiteQueenBitboard();
-        while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-
-            eval += PieceSquareTables.queen.get(sq);
-
-            final long allAttacks =
-                    Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])] |
-                            Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
-
-            blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone) * 2;
-
-            eval += Evaluation.getQueenMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
-        }
-        
-        bitboard = board.getBlackQueenBitboard();
-        while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-
-            eval -= PieceSquareTables.queen.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
-
-            final long allAttacks =
-                    Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])] |
-                            Bitboards.magicBitboards.magicMovesRook[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskRook[sq]) * MagicBitboards.magicNumberRook[sq]) >>> MagicBitboards.magicNumberShiftsRook[sq])];
-
-            whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone) * 2;
-
-            eval -= Evaluation.getQueenMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
-        }
+        int eval = materialDifference + whiteEvaluation(board) - blackEvaluation(board);
 
         final BoardHash boardHash = engineChessBoard.getBoardHashObject();
         eval += boardHash.getPawnHashEntry(board).getPawnScore();
