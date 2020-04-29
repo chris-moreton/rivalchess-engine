@@ -52,6 +52,8 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePa
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePawnBonusWhenMoreMaterial;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePieceBonusWhenMoreMaterial;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteEvaluation;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackEvaluation;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
@@ -269,14 +271,31 @@ public final class Search implements Runnable {
                 combineAttacks(blackBishopAttacks) |
                 combineAttacks(blackKnightAttacks);
 
-        int eval = materialDifference + whiteEvaluation(board) - blackEvaluation(board);
+        int eval = materialDifference;
+
+        if (FeatureFlag.USE_PARALLEL_EVALUATION.isActive()) {
+            try {
+                CompletableFuture<Integer> white = CompletableFuture.supplyAsync(() -> whiteEvaluation(board));
+                CompletableFuture<Integer> black = CompletableFuture.supplyAsync(() -> blackEvaluation(board));
+
+                Async.await(white);
+                Async.await(black);
+                eval += white.get() - black.get();
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        } else {
+            eval += whiteEvaluation(board) - blackEvaluation(board);
+        }
 
         final BoardHash boardHash = engineChessBoard.getBoardHashObject();
         eval += boardHash.getPawnHashEntry(board).getPawnScore();
 
-        eval +=
-                linearScale((materialDifference > 0) ? board.getWhitePawnValues() : board.getBlackPawnValues(), 0, Evaluation.TRADE_BONUS_UPPER_PAWNS.getValue(), -30 * materialDifference / 100, 0) +
-                        linearScale((materialDifference > 0) ? board.getBlackPieceValues() + board.getBlackPawnValues() : board.getWhitePieceValues() + board.getWhitePawnValues(), 0, Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.getValue(), 30 * materialDifference / 100, 0);
+        eval += tradePawnBonusWhenMoreMaterial(board, materialDifference);
+        eval += tradePieceBonusWhenMoreMaterial(board, materialDifference);
 
         final int castlePrivs =
                 (board.getCastlePrivileges() & CastleBitMask.CASTLEPRIV_WK.getValue()) +

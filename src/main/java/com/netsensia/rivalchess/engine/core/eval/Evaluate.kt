@@ -191,6 +191,24 @@ fun kingAttackCount(dangerZone: Long, attacks: Map<Int, Long>): Int {
             .reduce(0, Integer::sum)
 }
 
+fun tradePieceBonusWhenMoreMaterial(board: EngineChessBoard, materialDifference: Int): Int {
+    return linearScale(
+            if (materialDifference > 0) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
+            0,
+            Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.value,
+            30 * materialDifference / 100,
+            0)
+}
+
+fun tradePawnBonusWhenMoreMaterial(board: EngineChessBoard, materialDifference: Int): Int {
+    return linearScale(
+            if (materialDifference > 0) board.whitePawnValues else board.blackPawnValues,
+            0,
+            Evaluation.TRADE_BONUS_UPPER_PAWNS.value,
+            -30 * materialDifference / 100,
+            0)
+}
+
 fun whiteEvaluation(board: EngineChessBoard) : Int {
     val whiteRookSquares = squareList(board.getBitboard(BitboardType.WR))
     val whiteRookAttacks = rookAttackMap(board, whiteRookSquares)
