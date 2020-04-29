@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.ea.async.Async;
 import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
@@ -43,6 +44,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
@@ -211,6 +214,10 @@ public final class Search implements Runnable {
         engineChessBoard.getBoardHashObject().clearHash();
     }
 
+    static {
+        Async.init();
+    }
+
     public int evaluate(EngineChessBoard board) {
 
         if (onlyKingRemains(board)) {
@@ -232,9 +239,9 @@ public final class Search implements Runnable {
         final List<Integer> blackRookSquares = squareList(board.getBitboard(BitboardType.BR));
         final  Map<Integer, Long> blackRookAttacks = rookAttackMap(board, blackRookSquares);
         final List<Integer> whiteKnightSquares = squareList(board.getBitboard(BitboardType.WN));
-        final Map<Integer, Long> whiteKnightAttacks = knightAttackMap(board, whiteKnightSquares);
+        final Map<Integer, Long> whiteKnightAttacks = knightAttackMap(whiteKnightSquares);
         final List<Integer> blackKnightSquares = squareList(board.getBitboard(BitboardType.BN));
-        final Map<Integer, Long> blackKnightAttacks = knightAttackMap(board, blackKnightSquares);
+        final Map<Integer, Long> blackKnightAttacks = knightAttackMap(blackKnightSquares);
         final List<Integer> whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ));
         final Map<Integer, Long> whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares);
         final List<Integer> blackQueenSquares = squareList(board.getBitboard(BitboardType.BQ));
@@ -258,23 +265,45 @@ public final class Search implements Runnable {
                 combineAttacks(blackBishopAttacks) |
                 combineAttacks(blackKnightAttacks);
 
-        int eval = materialDifference
-                + whitePawnPieceSquareEval(board)
-                - blackPawnPieceSquareEval(board)
-                + whiteKingSquareEval(board)
-                - blackKingSquareEval(board)
-                + whiteRookSquares.stream().map(s -> whiteRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum)
+
+        int eval = materialDifference;
+        try {
+            List<CompletableFuture<Integer>> plusTasks = new ArrayList();
+            List<CompletableFuture<Integer>> minusTasks = new ArrayList();
+
+            plusTasks.add(CompletableFuture.supplyAsync(() -> whitePawnPieceSquareEval(board)));
+            plusTasks.add(CompletableFuture.supplyAsync(() -> whiteKingSquareEval(board)));
+            plusTasks.add(CompletableFuture.supplyAsync(() -> doubledRooksEval(whiteRookSquares)));
+            plusTasks.add(CompletableFuture.supplyAsync(() -> twoWhiteRooksTrappingKingEval(board)));
+
+            minusTasks.add(CompletableFuture.supplyAsync(() -> blackPawnPieceSquareEval(board)));
+            minusTasks.add(CompletableFuture.supplyAsync(() -> blackKingSquareEval(board)));
+            minusTasks.add(CompletableFuture.supplyAsync(() -> doubledRooksEval(blackRookSquares)));
+            minusTasks.add(CompletableFuture.supplyAsync(() -> twoBlackRooksTrappingKingEval(board)));
+
+            for (CompletableFuture<Integer> task : plusTasks) {
+                Async.await(task);
+                eval += task.get();
+            }
+
+            for (CompletableFuture<Integer> task : minusTasks) {
+                Async.await(task);
+                eval -= task.get();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        eval += whiteRookSquares.stream().map(s -> whiteRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum)
                 + whiteRookSquares.stream().map(s -> Evaluation.getRookMobilityValue(
                   Long.bitCount(whiteRookAttacks.get(s) & ~whitePieces))).reduce(0, Integer::sum)
-                + doubledRooksEval(whiteRookSquares)
                 + (whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6)
-                + twoWhiteRooksTrappingKingEval(board)
-                - doubledRooksEval(blackRookSquares)
                 - blackRookSquares.stream().map(s -> blackRookOpenFilesEval(board, s % 8)).reduce(0, Integer::sum)
                 - blackRookSquares.stream().map(s -> Evaluation.getRookMobilityValue(
                         Long.bitCount(blackRookAttacks.get(s) & ~blackPieces))).reduce(0, Integer::sum)
                 - blackRookPieceSquareSum(blackRookSquares) * rookEnemyPawnMultiplier(board.getWhitePawnValues()) / 6
-                - twoBlackRooksTrappingKingEval(board)
                 - whiteKnightSquares.stream()
                         .map(s -> Long.bitCount(Bitboards.knightMoves.get(s) &
                                 (blackPawnAttacks | board.getWhitePawnBitboard())) *
@@ -298,8 +327,6 @@ public final class Search implements Runnable {
                         blackKnightSquares.stream().map(s -> PieceSquareTables.knight.get(Bitboards.bitFlippedHorizontalAxis.get(s))).reduce(0, Integer::sum)
                     )
                 ;
-
-
 
         bitboard = board.getWhiteQueenBitboard();
         while (bitboard != 0) {

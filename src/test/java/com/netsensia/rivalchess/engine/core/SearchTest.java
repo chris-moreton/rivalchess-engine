@@ -85,7 +85,7 @@ public class SearchTest {
 
         SECONDS.sleep(1);
 
-        await().atMost(30, SECONDS).until(() -> !search.isSearching());
+        await().atMost(60, SECONDS).until(() -> !search.isSearching());
 
         assertEquals(expectedNodes, search.getNodes());
     }

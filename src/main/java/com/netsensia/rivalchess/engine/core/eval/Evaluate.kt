@@ -1,11 +1,14 @@
 package com.netsensia.rivalchess.engine.core.eval
 
+import kotlinx.coroutines.*
+
 import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
 import com.netsensia.rivalchess.model.Piece
+import kotlinx.coroutines.channels.Channel
 import java.lang.Long.bitCount
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -14,7 +17,7 @@ fun onlyKingRemains(board: EngineChessBoard) =
         board.getWhitePieceValues() +
         board.getBlackPieceValues() +
         board.getWhitePawnValues() +
-        board.getBlackPawnValues() == 0;
+        board.getBlackPawnValues() == 0
 
 fun whitePawnPieceSquareEval(board: EngineChessBoard) : Int {
     var pieceSquareTemp = 0
@@ -118,7 +121,7 @@ fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
 fun combineAttacks(attackMap: Map<Int, Long>) =
     attackMap.values.stream().reduce(0) { a: Long, b: Long -> a or b }
 
-fun knightAttackMap(board: EngineChessBoard, squares: List<Int>) =
+fun knightAttackMap(squares: List<Int>) =
         squares.stream()
                 .collect(Collectors.toMap<Int, Int, Long>(
                         Function.identity(), Function { s: Int -> Bitboards.knightMoves.get(s) }))
@@ -167,10 +170,9 @@ fun whiteRookPieceSquareSum(rookSquares: List<Int>) : Int =
         rookSquares.stream().map(PieceSquareTables.rook::get).reduce(0, Integer::sum)
 
 fun blackRookPieceSquareSum(rookSquares: List<Int>): Int =
-        rookSquares.stream().map(
-                        { s ->
-                            PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(s))
-                        })
+        rookSquares.stream().map { s ->
+                    PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(s))
+                }
                 .reduce(0, Integer::sum)
 
 fun kingAttackCount(dangerZone: Long, attacks: Map<Int, Long>): Int {
@@ -178,3 +180,4 @@ fun kingAttackCount(dangerZone: Long, attacks: Map<Int, Long>): Int {
             .map { s: Map.Entry<Int, Long> -> bitCount(s.value and dangerZone) }
             .reduce(0, Integer::sum)
 }
+
