@@ -52,6 +52,7 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePa
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopScore;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.castlingEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePawnBonusWhenMoreMaterial;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePieceBonusWhenMoreMaterial;
@@ -227,9 +228,6 @@ public final class Search implements Runnable {
             return 0;
         }
 
-        int sq;
-        long bitboard;
-
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
         final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
 
@@ -272,73 +270,11 @@ public final class Search implements Runnable {
                 combineAttacks(blackBishopAttacks) |
                 combineAttacks(blackKnightAttacks);
 
-        int eval = materialDifference;
-
-        eval += whiteEvaluation(board) - blackEvaluation(board);
-
-        eval += engineChessBoard.getBoardHashObject().getPawnHashEntry(board).getPawnScore();
-
-        eval += tradePawnBonusWhenMoreMaterial(board, materialDifference);
-        eval += tradePieceBonusWhenMoreMaterial(board, materialDifference);
-
-        eval += castlingEval(board);
-
-        final boolean whiteLightBishopExists = (board.getWhiteBishopBitboard() & Bitboards.LIGHT_SQUARES) != 0;
-        final boolean whiteDarkBishopExists = (board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) != 0;
-        final boolean blackLightBishopExists = (board.getBlackBishopBitboard() & Bitboards.LIGHT_SQUARES) != 0;
-        final boolean blackDarkBishopExists = (board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) != 0;
-
-        final int whiteBishopColourCount = (whiteLightBishopExists ? 1 : 0) + (whiteDarkBishopExists ? 1 : 0);
-        final int blackBishopColourCount = (blackLightBishopExists ? 1 : 0) + (blackDarkBishopExists ? 1 : 0);
-
-        int bishopScore = 0;
-
-        if (whiteBishopColourCount == 2)
-            bishopScore += Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
-
-        if (blackBishopColourCount == 2)
-            bishopScore -= Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
-
-        if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.getWhitePieceValues() == board.getBlackPieceValues()) {
-            // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
-            final int maxPenalty = (eval + bishopScore) / Evaluation.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR.getValue(); // mostly pawns as material is identical
-
-            // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
-            bishopScore -= linearScale(
-                    board.getWhitePieceValues() + board.getBlackPieceValues(),
-                    Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_LOW.getValue(),
-                    Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_HIGH.getValue(),
-                    maxPenalty,
-                    0);
-        }
-
-        if (((board.getWhiteBishopBitboard() | board.getBlackBishopBitboard()) & Bitboards.A2A7H2H7) != 0) {
-            if ((board.getWhiteBishopBitboard() & (1L << Square.A7.getBitRef())) != 0 &&
-                    (board.getBlackPawnBitboard() & (1L << Square.B6.getBitRef())) != 0 &&
-                    (board.getBlackPawnBitboard() & (1L << Square.C7.getBitRef())) != 0)
-                bishopScore -= Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue();
-
-            if ((board.getWhiteBishopBitboard() & (1L << Square.H7.getBitRef())) != 0 &&
-                    (board.getBlackPawnBitboard() & (1L << Square.G6.getBitRef())) != 0 &&
-                    (board.getBlackPawnBitboard() & (1L << Square.F7.getBitRef())) != 0)
-                bishopScore -= (board.getWhiteQueenBitboard() == 0) ?
-                        Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue() :
-                        Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.getValue();
-
-            if ((board.getBlackBishopBitboard() & (1L << Square.A2.getBitRef())) != 0 &&
-                    (board.getWhitePawnBitboard() & (1L << Square.B3.getBitRef())) != 0 &&
-                    (board.getWhitePawnBitboard() & (1L << Square.C2.getBitRef())) != 0)
-                bishopScore += Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue();
-
-            if ((board.getBlackBishopBitboard() & (1L << Square.H2.getBitRef())) != 0 &&
-                    (board.getWhitePawnBitboard() & (1L << Square.G3.getBitRef())) != 0 &&
-                    (board.getWhitePawnBitboard() & (1L << Square.F2.getBitRef())) != 0)
-                bishopScore += (board.getBlackQueenBitboard() == 0) ?
-                        Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.getValue() :
-                        Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.getValue();
-        }
-
-        eval += bishopScore;
+        int eval = materialDifference + whiteEvaluation(board) - blackEvaluation(board) +
+                engineChessBoard.getBoardHashObject().getPawnHashEntry(board).getPawnScore() +
+                tradePawnBonusWhenMoreMaterial(board, materialDifference) +
+                tradePieceBonusWhenMoreMaterial(board, materialDifference) + castlingEval(board) +
+                bishopScore(board, materialDifference);
 
         // Everything white attacks with pieces.  Does not include attacked pawns.
         whiteAttacksBitboard &= board.getBlackKnightBitboard() | board.getBlackRookBitboard() | board.getBlackQueenBitboard() | board.getBlackBishopBitboard();
@@ -347,15 +283,12 @@ public final class Search implements Runnable {
 
         int temp = 0;
 
-        bitboard = whiteAttacksBitboard;
-
-        while (bitboard != 0) {
-            bitboard ^= ((1L << (sq = Long.numberOfTrailingZeros(bitboard))));
-            if (board.getSquareOccupant(sq) == SquareOccupant.BP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(sq) == SquareOccupant.BN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(sq) == SquareOccupant.BR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(sq) == SquareOccupant.BQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(sq) == SquareOccupant.BB) temp += PieceValue.getValue(Piece.BISHOP);
+        for (int attackSquare : squareList(whiteAttacksBitboard)) {
+            if (board.getSquareOccupant(attackSquare) == SquareOccupant.BP) temp += PieceValue.getValue(Piece.PAWN);
+            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.BN) temp += PieceValue.getValue(Piece.KNIGHT);
+            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.BR) temp += PieceValue.getValue(Piece.ROOK);
+            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.BQ) temp += PieceValue.getValue(Piece.QUEEN);
+            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.BB) temp += PieceValue.getValue(Piece.BISHOP);
         }
 
         int threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
@@ -364,16 +297,15 @@ public final class Search implements Runnable {
         blackAttacksBitboard |= getBlackPawnAttacks(board.getBlackPawnBitboard());
 
         temp = 0;
+        final List<Integer> blackAttackSquares = squareList(blackAttacksBitboard);
 
-        bitboard = blackAttacksBitboard;
+        for (int attackSquare : squareList(blackAttacksBitboard)) {
 
-        while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-            if (board.getSquareOccupant(sq) == SquareOccupant.WP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(sq) == SquareOccupant.WN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(sq) == SquareOccupant.WR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(sq) == SquareOccupant.WQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(sq) == SquareOccupant.WB) temp += PieceValue.getValue(Piece.BISHOP);
+            if (board.getSquareOccupant(attackSquare) == SquareOccupant.WP) temp += PieceValue.getValue(Piece.PAWN);
+            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.WN) temp += PieceValue.getValue(Piece.KNIGHT);
+            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.WR) temp += PieceValue.getValue(Piece.ROOK);
+            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.WQ) temp += PieceValue.getValue(Piece.QUEEN);
+            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.WB) temp += PieceValue.getValue(Piece.BISHOP);
         }
 
         threatScore -= temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));

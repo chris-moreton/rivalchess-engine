@@ -11,6 +11,7 @@ import com.netsensia.rivalchess.engine.core.EngineChessBoard
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
+import com.netsensia.rivalchess.model.Square
 import java.lang.Long.bitCount
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -217,6 +218,37 @@ fun tradePawnBonusWhenMoreMaterial(board: EngineChessBoard, materialDifference: 
             Evaluation.TRADE_BONUS_UPPER_PAWNS.value,
             -30 * materialDifference / 100,
             0)
+}
+
+fun bishopScore(board: EngineChessBoard, materialDifference: Int): Int {
+    val whiteLightBishopExists = board.whiteBishopBitboard and Bitboards.LIGHT_SQUARES != 0L
+    val whiteDarkBishopExists = board.whiteBishopBitboard and Bitboards.DARK_SQUARES != 0L
+    val blackLightBishopExists = board.blackBishopBitboard and Bitboards.LIGHT_SQUARES != 0L
+    val blackDarkBishopExists = board.blackBishopBitboard and Bitboards.DARK_SQUARES != 0L
+    val whiteBishopColourCount = (if (whiteLightBishopExists) 1 else 0) + if (whiteDarkBishopExists) 1 else 0
+    val blackBishopColourCount = (if (blackLightBishopExists) 1 else 0) + if (blackDarkBishopExists) 1 else 0
+    var bishopScore = 0
+    if (whiteBishopColourCount == 2) bishopScore += Evaluation.VALUE_BISHOP_PAIR.value + (8 - board.whitePawnValues / PieceValue.getValue(Piece.PAWN)) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value
+    if (blackBishopColourCount == 2) bishopScore -= Evaluation.VALUE_BISHOP_PAIR.value + (8 - board.blackPawnValues / PieceValue.getValue(Piece.PAWN)) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value
+    if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.whitePieceValues == board.blackPieceValues) {
+        // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
+        val maxPenalty = materialDifference / Evaluation.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR.value // mostly pawns as material is identical
+
+        // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
+        bishopScore -= linearScale(
+                board.whitePieceValues + board.blackPieceValues,
+                Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_LOW.value,
+                Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_HIGH.value,
+                maxPenalty,
+                0)
+    }
+    if (board.whiteBishopBitboard or board.blackBishopBitboard and Bitboards.A2A7H2H7 != 0L) {
+        if (board.whiteBishopBitboard and (1L shl Square.A7.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.B6.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.C7.bitRef) != 0L) bishopScore -= Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value
+        if (board.whiteBishopBitboard and (1L shl Square.H7.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.G6.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.F7.bitRef) != 0L) bishopScore -= if (board.whiteQueenBitboard == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.value
+        if (board.blackBishopBitboard and (1L shl Square.A2.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.B3.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.C2.bitRef) != 0L) bishopScore += Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value
+        if (board.blackBishopBitboard and (1L shl Square.H2.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.G3.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.F2.bitRef) != 0L) bishopScore += if (board.blackQueenBitboard == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.value
+    }
+    return bishopScore
 }
 
 fun whiteEvaluation(board: EngineChessBoard) : Int {
