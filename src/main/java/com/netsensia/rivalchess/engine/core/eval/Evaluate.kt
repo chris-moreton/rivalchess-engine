@@ -298,7 +298,7 @@ fun blackAttacksBitboard(board: EngineChessBoard): Long {
 
 fun threatEval(board: EngineChessBoard, whiteAttacksBitboard: Long, blackAttacksBitboard: Long): Int {
 
-    var temp = squareList(whiteAttacksBitboard)
+    val whiteAttackScore = squareList(whiteAttacksBitboard)
             .stream()
             .map {
                 when (board.getSquareOccupant(it)) {
@@ -312,9 +312,7 @@ fun threatEval(board: EngineChessBoard, whiteAttacksBitboard: Long, blackAttacks
             }
             .reduce(0, Integer::sum)
 
-    var threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN))
-
-    temp = squareList(blackAttacksBitboard)
+    val blackAttackScore = squareList(blackAttacksBitboard)
             .stream()
             .map {
                 when (board.getSquareOccupant(it)) {
@@ -328,10 +326,10 @@ fun threatEval(board: EngineChessBoard, whiteAttacksBitboard: Long, blackAttacks
             }
             .reduce(0, Integer::sum)
 
-    threatScore -= temp + temp * (temp / PieceValue.getValue(Piece.QUEEN))
-    threatScore /= Evaluation.THREAT_SCORE_DIVISOR.value
-
-    return threatScore
+    val whiteAdjustedScore = whiteAttackScore + whiteAttackScore * (whiteAttackScore / PieceValue.getValue(Piece.QUEEN))
+    val blackAdjustedScore = blackAttackScore + blackAttackScore * (blackAttackScore / PieceValue.getValue(Piece.QUEEN))
+    
+    return (whiteAdjustedScore - blackAdjustedScore) / Evaluation.THREAT_SCORE_DIVISOR.value
 }
 
 fun whiteEvaluation(board: EngineChessBoard) : Int {
