@@ -171,12 +171,21 @@ fun doubledRooksEval(squares: List<Int>) =
 fun whiteRookPieceSquareSum(rookSquares: List<Int>) : Int =
         rookSquares.stream().map(PieceSquareTables.rook::get).reduce(0, Integer::sum)
 
+fun whiteBishopPieceSquareSum(rookSquares: List<Int>) : Int =
+        rookSquares.stream().map(PieceSquareTables.bishop::get).reduce(0, Integer::sum)
+
 fun whiteQueenPieceSquareSum(squares: List<Int>) : Int =
         squares.stream().map(PieceSquareTables.queen::get).reduce(0, Integer::sum)
 
 fun blackRookPieceSquareSum(rookSquares: List<Int>): Int =
         rookSquares.stream().map { s ->
                     PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(s))
+                }
+                .reduce(0, Integer::sum)
+
+fun blackBishopPieceSquareSum(rookSquares: List<Int>): Int =
+        rookSquares.stream().map { s ->
+                    PieceSquareTables.bishop.get(Bitboards.bitFlippedHorizontalAxis.get(s))
                 }
                 .reduce(0, Integer::sum)
 
@@ -213,6 +222,8 @@ fun tradePawnBonusWhenMoreMaterial(board: EngineChessBoard, materialDifference: 
 fun whiteEvaluation(board: EngineChessBoard) : Int {
     val whiteRookSquares = squareList(board.getBitboard(BitboardType.WR))
     val whiteRookAttacks = rookAttackMap(board, whiteRookSquares)
+    val whiteBishopSquares = squareList(board.getBitboard(BitboardType.WB))
+    val whiteBishopAttacks = bishopAttackMap(board, whiteBishopSquares)
     val whitePieces = board.getBitboard(if (board.mover == Colour.WHITE) BitboardType.FRIENDLY else BitboardType.ENEMY)
     val whiteKnightSquares = squareList(board.getBitboard(BitboardType.WN))
     val blackPawnAttacks = getBlackPawnAttacks(board.blackPawnBitboard)
@@ -222,6 +233,7 @@ fun whiteEvaluation(board: EngineChessBoard) : Int {
     return whitePawnPieceSquareEval(board) +
             whiteKingSquareEval(board) +
             whiteQueenPieceSquareSum(whiteQueenSquares) +
+            whiteBishopPieceSquareSum(whiteBishopSquares) +
             twoWhiteRooksTrappingKingEval(board) +
             doubledRooksEval(whiteRookSquares) +
             whiteRookSquares.stream().map { s: Int -> whiteRookOpenFilesEval(board, s % 8) }.reduce(0, Integer::sum) +
@@ -232,6 +244,10 @@ fun whiteEvaluation(board: EngineChessBoard) : Int {
             whiteQueenSquares.stream().map { s: Int ->
                 Evaluation.getQueenMobilityValue(
                         bitCount(whiteQueenAttacks[s]!! and whitePieces.inv()))
+            }.reduce(0, Integer::sum) +
+            whiteBishopSquares.stream().map { s: Int ->
+                Evaluation.getBishopMobilityValue(
+                        bitCount(whiteBishopAttacks[s]!! and whitePieces.inv()))
             }.reduce(0, Integer::sum) +
             (whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6) -
             whiteKnightSquares.stream()
@@ -252,6 +268,8 @@ fun whiteEvaluation(board: EngineChessBoard) : Int {
 fun blackEvaluation(board: EngineChessBoard) : Int {
     val blackRookSquares = squareList(board.getBitboard(BitboardType.BR))
     val blackRookAttacks = rookAttackMap(board, blackRookSquares)
+    val blackBishopSquares = squareList(board.getBitboard(BitboardType.BB))
+    val blackBishopAttacks = bishopAttackMap(board, blackBishopSquares)
     val blackPieces = board.getBitboard(if (board.mover == Colour.WHITE) BitboardType.ENEMY else BitboardType.FRIENDLY)
     val blackKnightSquares = squareList(board.getBitboard(BitboardType.BN))
     val whitePawnAttacks = getWhitePawnAttacks(board.whitePawnBitboard)
@@ -261,6 +279,7 @@ fun blackEvaluation(board: EngineChessBoard) : Int {
     return blackPawnPieceSquareEval(board) +
             blackKingSquareEval(board) +
             blackQueenPieceSquareSum(blackQueenSquares) +
+            blackBishopPieceSquareSum(blackBishopSquares) +
             twoBlackRooksTrappingKingEval(board) +
             doubledRooksEval(blackRookSquares) +
             blackRookSquares.stream().map { s: Int -> blackRookOpenFilesEval(board, s % 8) }.reduce(0, Integer::sum) +
@@ -271,6 +290,10 @@ fun blackEvaluation(board: EngineChessBoard) : Int {
             blackQueenSquares.stream().map { s: Int ->
                 Evaluation.getQueenMobilityValue(
                         bitCount(blackQueenAttacks[s]!! and blackPieces.inv()))
+            }.reduce(0, Integer::sum) +
+            blackBishopSquares.stream().map { s: Int ->
+                Evaluation.getBishopMobilityValue(
+                        bitCount(blackBishopAttacks[s]!! and blackPieces.inv()))
             }.reduce(0, Integer::sum) +
             (blackRookPieceSquareSum(blackRookSquares) * rookEnemyPawnMultiplier(board.getWhitePawnValues()) / 6) -
             blackKnightSquares.stream()

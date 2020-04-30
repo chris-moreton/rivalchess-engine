@@ -230,8 +230,6 @@ public final class Search implements Runnable {
         int sq;
         long bitboard;
 
-        final long whitePieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.FRIENDLY : BitboardType.ENEMY);
-        final long blackPieces = board.getBitboard(board.getMover() == Colour.WHITE ? BitboardType.ENEMY : BitboardType.FRIENDLY);
         final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
         final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
 
@@ -256,11 +254,13 @@ public final class Search implements Runnable {
 
         int blackKingAttackedCount =
                 kingAttackCount(blackKingDangerZone, whiteRookAttacks) +
-                        kingAttackCount(blackKingDangerZone, whiteQueenAttacks) * 2;
+                        kingAttackCount(blackKingDangerZone, whiteQueenAttacks) * 2 +
+                        kingAttackCount(blackKingDangerZone, whiteBishopAttacks);
 
         int whiteKingAttackedCount =
                 kingAttackCount(whiteKingDangerZone, blackRookAttacks) +
-                        kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2;
+                        kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2 +
+                        kingAttackCount(whiteKingDangerZone, blackBishopAttacks);
 
         long whiteAttacksBitboard = combineAttacks(whiteRookAttacks) |
                 combineAttacks(whiteQueenAttacks) |
@@ -293,32 +293,8 @@ public final class Search implements Runnable {
 
         int bishopScore = 0;
 
-        bitboard = board.getWhiteBishopBitboard();
-        while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-
-            eval += PieceSquareTables.bishop.get(sq);
-
-            final long allAttacks = Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])];
-            blackKingAttackedCount += Long.bitCount(allAttacks & blackKingDangerZone);
-
-            bishopScore += Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~whitePieces));
-        }
-
         if (whiteBishopColourCount == 2)
             bishopScore += Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getWhitePawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
-
-        bitboard = board.getBlackBishopBitboard();
-        while (bitboard != 0) {
-            bitboard ^= (1L << (sq = Long.numberOfTrailingZeros(bitboard)));
-
-            eval -= PieceSquareTables.bishop.get(Bitboards.bitFlippedHorizontalAxis.get(sq));
-
-            final long allAttacks = Bitboards.magicBitboards.magicMovesBishop[sq][(int) (((board.getAllPiecesBitboard() & MagicBitboards.occupancyMaskBishop[sq]) * MagicBitboards.magicNumberBishop[sq]) >>> MagicBitboards.magicNumberShiftsBishop[sq])];
-            whiteKingAttackedCount += Long.bitCount(allAttacks & whiteKingDangerZone);
-
-            bishopScore -= Evaluation.getBishopMobilityValue(Long.bitCount(allAttacks & ~blackPieces));
-        }
 
         if (blackBishopColourCount == 2)
             bishopScore -= Evaluation.VALUE_BISHOP_PAIR.getValue() + ((8 - (board.getBlackPawnValues() / PieceValue.getValue(Piece.PAWN))) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.getValue());
