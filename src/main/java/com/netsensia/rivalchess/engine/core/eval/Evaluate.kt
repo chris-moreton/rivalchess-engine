@@ -18,9 +18,9 @@ import java.util.stream.Collectors
 
 fun onlyKingRemains(board: EngineChessBoard) =
         board.getWhitePieceValues() +
-        board.getBlackPieceValues() +
-        board.getWhitePawnValues() +
-        board.getBlackPawnValues() == 0
+                board.getBlackPieceValues() +
+                board.getWhitePawnValues() +
+                board.getBlackPawnValues() == 0
 
 fun whitePawnPieceSquareEval(board: EngineChessBoard) : Int {
     var pieceSquareTemp = 0
@@ -85,44 +85,44 @@ fun blackKingSquareEval(board: EngineChessBoard) =
         )
 
 fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) =
-    if (situation < ref1) score1
-    else if (situation > ref2) score2
-    else (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
+        if (situation < ref1) score1
+        else if (situation > ref2) score2
+        else (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
 
 fun materialDifference(board: EngineChessBoard) =
-    board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
+        board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
 
 fun twoWhiteRooksTrappingKingEval(board: EngineChessBoard) =
-    if (bitCount(board.whiteRookBitboard and Bitboards.RANK_7) > 1
-            && board.getBitboard(BitboardType.BK) and Bitboards.RANK_8 != 0L)
-        Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue() else 0
+        if (bitCount(board.whiteRookBitboard and Bitboards.RANK_7) > 1
+                && board.getBitboard(BitboardType.BK) and Bitboards.RANK_8 != 0L)
+            Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue() else 0
 
 fun twoBlackRooksTrappingKingEval(board: EngineChessBoard) =
-    if (bitCount(board.blackRookBitboard and Bitboards.RANK_2) > 1
-            && board.whiteKingBitboard and Bitboards.RANK_1 != 0L)
-        Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue() else 0
+        if (bitCount(board.blackRookBitboard and Bitboards.RANK_2) > 1
+                && board.whiteKingBitboard and Bitboards.RANK_1 != 0L)
+            Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.getValue() else 0
 
 fun whiteRookOpenFilesEval(board: EngineChessBoard, file: Int) =
-    if (Bitboards.FILES[file] and board.whitePawnBitboard == 0L)
-        if (Bitboards.FILES[file] and board.blackPawnBitboard == 0L)
-            Evaluation.VALUE_ROOK_ON_OPEN_FILE.value
-        else
-            Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.value
-    else 0
+        if (Bitboards.FILES[file] and board.whitePawnBitboard == 0L)
+            if (Bitboards.FILES[file] and board.blackPawnBitboard == 0L)
+                Evaluation.VALUE_ROOK_ON_OPEN_FILE.value
+            else
+                Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.value
+        else 0
 
 fun blackRookOpenFilesEval(board: EngineChessBoard, file: Int) =
-    if ((Bitboards.FILES.get(file) and board.getBlackPawnBitboard()) == 0L)
-        if ((Bitboards.FILES.get(file) and board.getWhitePawnBitboard()) == 0L)
-            Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue()
-        else
-            Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue()
-    else 0
+        if ((Bitboards.FILES.get(file) and board.getBlackPawnBitboard()) == 0L)
+            if ((Bitboards.FILES.get(file) and board.getWhitePawnBitboard()) == 0L)
+                Evaluation.VALUE_ROOK_ON_OPEN_FILE.getValue()
+            else
+                Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.getValue()
+        else 0
 
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
         Math.min(enemyPawnValues / PieceValue.getValue(Piece.PAWN), 6)
 
 fun combineAttacks(attackMap: Map<Int, Long>) =
-    attackMap.values.stream().reduce(0) { a: Long, b: Long -> a or b }
+        attackMap.values.stream().reduce(0) { a: Long, b: Long -> a or b }
 
 fun knightAttackMap(squares: List<Int>) =
         squares.stream()
@@ -136,10 +136,10 @@ fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
                         ushr MagicBitboards.magicNumberShiftsRook[sq]).toInt()]
 
 fun rookAttackMap(board: EngineChessBoard, whiteRookSquares: List<Int>) =
-    whiteRookSquares.stream()
-            .collect(Collectors.toMap<Int, Int, Long>(
-                    Function.identity(), Function { rs: Int -> rookAttacks(board, rs) })
-            )
+        whiteRookSquares.stream()
+                .collect(Collectors.toMap<Int, Int, Long>(
+                        Function.identity(), Function { rs: Int -> rookAttacks(board, rs) })
+                )
 
 fun bishopAttacks(board: EngineChessBoard, sq: Int) =
         Bitboards.magicBitboards.magicMovesBishop[sq][
@@ -249,6 +249,50 @@ fun bishopScore(board: EngineChessBoard, materialDifference: Int): Int {
         if (board.blackBishopBitboard and (1L shl Square.H2.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.G3.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.F2.bitRef) != 0L) bishopScore += if (board.blackQueenBitboard == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.value
     }
     return bishopScore
+}
+
+fun whiteAttacksBitboard(board: EngineChessBoard): Long {
+    val whiteRookSquares = squareList(board.getBitboard(BitboardType.WR))
+    val whiteRookAttacks = rookAttackMap(board, whiteRookSquares)
+    val whiteBishopSquares = squareList(board.getBitboard(BitboardType.WB))
+    val whiteBishopAttacks = bishopAttackMap(board, whiteBishopSquares)
+    val whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ))
+    val whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares)
+    val whiteKnightSquares = squareList(board.getBitboard(BitboardType.WN))
+    val whiteKnightAttacks = knightAttackMap(whiteKnightSquares)
+    
+    var whiteAttacksBitboard = combineAttacks(whiteRookAttacks) or
+            combineAttacks(whiteQueenAttacks) or
+            combineAttacks(whiteBishopAttacks) or
+            combineAttacks(whiteKnightAttacks)
+
+    // Everything white attacks with pieces.  Does not include attacked pawns.
+    whiteAttacksBitboard = whiteAttacksBitboard and (board.blackKnightBitboard or board.blackRookBitboard or board.blackQueenBitboard or board.blackBishopBitboard)
+    // Plus anything white attacks with pawns.
+    whiteAttacksBitboard = whiteAttacksBitboard or getWhitePawnAttacks(board.whitePawnBitboard)
+    return whiteAttacksBitboard
+}
+
+fun blackAttacksBitboard(board: EngineChessBoard): Long {
+    val blackRookSquares = squareList(board.getBitboard(BitboardType.BR))
+    val blackRookAttacks = rookAttackMap(board, blackRookSquares)
+    val blackBishopSquares = squareList(board.getBitboard(BitboardType.BB))
+    val blackBishopAttacks = bishopAttackMap(board, blackBishopSquares)
+    val blackQueenSquares = squareList(board.getBitboard(BitboardType.BQ))
+    val blackQueenAttacks = queenAttackMap(board, blackQueenSquares)
+    val blackKnightSquares = squareList(board.getBitboard(BitboardType.BN))
+    val blackKnightAttacks = knightAttackMap(blackKnightSquares)
+
+    var blackAttacksBitboard = combineAttacks(blackRookAttacks) or
+            combineAttacks(blackQueenAttacks) or
+            combineAttacks(blackBishopAttacks) or
+            combineAttacks(blackKnightAttacks)
+
+    // Everything white attacks with pieces.  Does not include attacked pawns.
+    blackAttacksBitboard = blackAttacksBitboard and (board.whiteKnightBitboard or board.whiteRookBitboard or board.whiteQueenBitboard or board.whiteBishopBitboard)
+    // Plus anything white attacks with pawns.
+    blackAttacksBitboard = blackAttacksBitboard or getBlackPawnAttacks(board.blackPawnBitboard)
+    return blackAttacksBitboard
 }
 
 fun whiteEvaluation(board: EngineChessBoard) : Int {

@@ -53,9 +53,11 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopScore;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackAttacksBitboard;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.castlingEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePawnBonusWhenMoreMaterial;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePieceBonusWhenMoreMaterial;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteAttacksBitboard;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteEvaluation;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackEvaluation;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
@@ -235,10 +237,6 @@ public final class Search implements Runnable {
         final Map<Integer, Long> whiteRookAttacks = rookAttackMap(board, whiteRookSquares);
         final List<Integer> blackRookSquares = squareList(board.getBitboard(BitboardType.BR));
         final  Map<Integer, Long> blackRookAttacks = rookAttackMap(board, blackRookSquares);
-        final List<Integer> whiteKnightSquares = squareList(board.getBitboard(BitboardType.WN));
-        final Map<Integer, Long> whiteKnightAttacks = knightAttackMap(whiteKnightSquares);
-        final List<Integer> blackKnightSquares = squareList(board.getBitboard(BitboardType.BN));
-        final Map<Integer, Long> blackKnightAttacks = knightAttackMap(blackKnightSquares);
         final List<Integer> whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ));
         final Map<Integer, Long> whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares);
         final List<Integer> blackQueenSquares = squareList(board.getBitboard(BitboardType.BQ));
@@ -260,26 +258,14 @@ public final class Search implements Runnable {
                         kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2 +
                         kingAttackCount(whiteKingDangerZone, blackBishopAttacks);
 
-        long whiteAttacksBitboard = combineAttacks(whiteRookAttacks) |
-                combineAttacks(whiteQueenAttacks) |
-                combineAttacks(whiteBishopAttacks) |
-                combineAttacks(whiteKnightAttacks);
-
-        long blackAttacksBitboard = combineAttacks(blackRookAttacks) |
-                combineAttacks(blackQueenAttacks) |
-                combineAttacks(blackBishopAttacks) |
-                combineAttacks(blackKnightAttacks);
+        long whiteAttacksBitboard = whiteAttacksBitboard(board);
+        long blackAttacksBitboard = blackAttacksBitboard(board);
 
         int eval = materialDifference + whiteEvaluation(board) - blackEvaluation(board) +
                 engineChessBoard.getBoardHashObject().getPawnHashEntry(board).getPawnScore() +
                 tradePawnBonusWhenMoreMaterial(board, materialDifference) +
                 tradePieceBonusWhenMoreMaterial(board, materialDifference) + castlingEval(board) +
                 bishopScore(board, materialDifference);
-
-        // Everything white attacks with pieces.  Does not include attacked pawns.
-        whiteAttacksBitboard &= board.getBlackKnightBitboard() | board.getBlackRookBitboard() | board.getBlackQueenBitboard() | board.getBlackBishopBitboard();
-        // Plus anything white attacks with pawns.
-        whiteAttacksBitboard |= getWhitePawnAttacks(board.getWhitePawnBitboard());
 
         int temp = 0;
 
@@ -293,11 +279,7 @@ public final class Search implements Runnable {
 
         int threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
 
-        blackAttacksBitboard &= board.getWhiteKnightBitboard() | board.getWhiteRookBitboard() | board.getWhiteQueenBitboard() | board.getWhiteBishopBitboard();
-        blackAttacksBitboard |= getBlackPawnAttacks(board.getBlackPawnBitboard());
-
         temp = 0;
-        final List<Integer> blackAttackSquares = squareList(blackAttacksBitboard);
 
         for (int attackSquare : squareList(blackAttacksBitboard)) {
 
@@ -314,8 +296,8 @@ public final class Search implements Runnable {
         eval += threatScore;
 
         final int averagePiecesPerSide = (board.getWhitePieceValues() + board.getBlackPieceValues()) / 2;
-        int whiteKingSafety = 0;
-        int blackKingSafety = 0;
+        int whiteKingSafety;
+        int blackKingSafety;
         int kingSafety = 0;
         if (averagePiecesPerSide > Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue()) {
 
