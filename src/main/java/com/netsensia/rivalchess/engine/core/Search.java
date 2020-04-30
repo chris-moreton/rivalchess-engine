@@ -55,6 +55,7 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackM
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopScore;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackAttacksBitboard;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.castlingEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.threatEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePawnBonusWhenMoreMaterial;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePieceBonusWhenMoreMaterial;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteAttacksBitboard;
@@ -258,42 +259,15 @@ public final class Search implements Runnable {
                         kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2 +
                         kingAttackCount(whiteKingDangerZone, blackBishopAttacks);
 
-        long whiteAttacksBitboard = whiteAttacksBitboard(board);
-        long blackAttacksBitboard = blackAttacksBitboard(board);
+        final long whiteAttacksBitboard = whiteAttacksBitboard(board);
+        final long blackAttacksBitboard = blackAttacksBitboard(board);
 
         int eval = materialDifference + whiteEvaluation(board) - blackEvaluation(board) +
                 engineChessBoard.getBoardHashObject().getPawnHashEntry(board).getPawnScore() +
                 tradePawnBonusWhenMoreMaterial(board, materialDifference) +
                 tradePieceBonusWhenMoreMaterial(board, materialDifference) + castlingEval(board) +
-                bishopScore(board, materialDifference);
-
-        int temp = 0;
-
-        for (int attackSquare : squareList(whiteAttacksBitboard)) {
-            if (board.getSquareOccupant(attackSquare) == SquareOccupant.BP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.BN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.BR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.BQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.BB) temp += PieceValue.getValue(Piece.BISHOP);
-        }
-
-        int threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
-
-        temp = 0;
-
-        for (int attackSquare : squareList(blackAttacksBitboard)) {
-
-            if (board.getSquareOccupant(attackSquare) == SquareOccupant.WP) temp += PieceValue.getValue(Piece.PAWN);
-            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.WN) temp += PieceValue.getValue(Piece.KNIGHT);
-            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.WR) temp += PieceValue.getValue(Piece.ROOK);
-            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.WQ) temp += PieceValue.getValue(Piece.QUEEN);
-            else if (board.getSquareOccupant(attackSquare) == SquareOccupant.WB) temp += PieceValue.getValue(Piece.BISHOP);
-        }
-
-        threatScore -= temp + temp * (temp / PieceValue.getValue(Piece.QUEEN));
-        threatScore /= Evaluation.THREAT_SCORE_DIVISOR.getValue();
-
-        eval += threatScore;
+                bishopScore(board, materialDifference)
+                + threatEval(board, whiteAttacksBitboard, blackAttacksBitboard);
 
         final int averagePiecesPerSide = (board.getWhitePieceValues() + board.getBlackPieceValues()) / 2;
         int whiteKingSafety;

@@ -12,6 +12,7 @@ import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.Square
+import com.netsensia.rivalchess.model.SquareOccupant
 import java.lang.Long.bitCount
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -293,6 +294,44 @@ fun blackAttacksBitboard(board: EngineChessBoard): Long {
     // Plus anything white attacks with pawns.
     blackAttacksBitboard = blackAttacksBitboard or getBlackPawnAttacks(board.blackPawnBitboard)
     return blackAttacksBitboard
+}
+
+fun threatEval(board: EngineChessBoard, whiteAttacksBitboard: Long, blackAttacksBitboard: Long): Int {
+
+    var temp = squareList(whiteAttacksBitboard)
+            .stream()
+            .map {
+                when (board.getSquareOccupant(it)) {
+                    SquareOccupant.BP -> PieceValue.getValue(Piece.PAWN)
+                    SquareOccupant.BB -> PieceValue.getValue(Piece.BISHOP)
+                    SquareOccupant.BR -> PieceValue.getValue(Piece.ROOK)
+                    SquareOccupant.BQ -> PieceValue.getValue(Piece.QUEEN)
+                    SquareOccupant.BN -> PieceValue.getValue(Piece.KNIGHT)
+                    else -> 0
+                }
+            }
+            .reduce(0, Integer::sum)
+
+    var threatScore = temp + temp * (temp / PieceValue.getValue(Piece.QUEEN))
+
+    temp = squareList(blackAttacksBitboard)
+            .stream()
+            .map {
+                when (board.getSquareOccupant(it)) {
+                    SquareOccupant.WP -> PieceValue.getValue(Piece.PAWN)
+                    SquareOccupant.WB -> PieceValue.getValue(Piece.BISHOP)
+                    SquareOccupant.WR -> PieceValue.getValue(Piece.ROOK)
+                    SquareOccupant.WQ -> PieceValue.getValue(Piece.QUEEN)
+                    SquareOccupant.WN -> PieceValue.getValue(Piece.KNIGHT)
+                    else -> 0
+                }
+            }
+            .reduce(0, Integer::sum)
+
+    threatScore -= temp + temp * (temp / PieceValue.getValue(Piece.QUEEN))
+    threatScore /= Evaluation.THREAT_SCORE_DIVISOR.value
+
+    return threatScore
 }
 
 fun whiteEvaluation(board: EngineChessBoard) : Int {
