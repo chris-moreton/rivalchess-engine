@@ -245,13 +245,30 @@ fun bishopScore(board: EngineChessBoard, materialDifference: Int): Int {
                 maxPenalty,
                 0)
     }
-    if (board.whiteBishopBitboard or board.blackBishopBitboard and Bitboards.A2A7H2H7 != 0L) {
-        if (board.whiteBishopBitboard and (1L shl Square.A7.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.B6.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.C7.bitRef) != 0L) bishopScore -= Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value
-        if (board.whiteBishopBitboard and (1L shl Square.H7.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.G6.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.F7.bitRef) != 0L) bishopScore -= if (board.whiteQueenBitboard == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.value
-        if (board.blackBishopBitboard and (1L shl Square.A2.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.B3.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.C2.bitRef) != 0L) bishopScore += Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value
-        if (board.blackBishopBitboard and (1L shl Square.H2.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.G3.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.F2.bitRef) != 0L) bishopScore += if (board.blackQueenBitboard == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.value
-    }
+    bishopScore += trappedBishopEval(board)
     return bishopScore
+}
+
+private fun trappedBishopEval(board: EngineChessBoard): Int {
+
+    if (board.whiteBishopBitboard or board.blackBishopBitboard and Bitboards.A2A7H2H7 != 0L) {
+        val whiteA7 = if (board.whiteBishopBitboard and (1L shl Square.A7.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.B6.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.C7.bitRef) != 0L)
+            Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else 0
+
+        val whiteH7 = if (board.whiteBishopBitboard and (1L shl Square.H7.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.G6.bitRef) != 0L && board.blackPawnBitboard and (1L shl Square.F7.bitRef) != 0L)
+            if (board.whiteQueenBitboard == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.value else 0
+
+        val blackA2 = if (board.blackBishopBitboard and (1L shl Square.A2.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.B3.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.C2.bitRef) != 0L)
+            Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else 0
+
+        val blackH2 = if (board.blackBishopBitboard and (1L shl Square.H2.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.G3.bitRef) != 0L && board.whitePawnBitboard and (1L shl Square.F2.bitRef) != 0L)
+            if (board.blackQueenBitboard == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value else Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.value else 0
+
+        return blackA2 + blackH2 - whiteA7 - whiteH7
+
+    }
+
+    return 0
 }
 
 fun whiteAttacksBitboard(board: EngineChessBoard): Long {
