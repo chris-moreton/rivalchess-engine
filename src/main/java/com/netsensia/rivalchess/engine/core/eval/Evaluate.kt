@@ -5,9 +5,11 @@ import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.bitboards.util.getBlackPawnAttacks
 import com.netsensia.rivalchess.bitboards.util.getWhitePawnAttacks
+import com.netsensia.rivalchess.bitboards.util.southFill
 import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
+import com.netsensia.rivalchess.engine.core.Evaluate
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
@@ -328,8 +330,90 @@ fun threatEval(board: EngineChessBoard, whiteAttacksBitboard: Long, blackAttacks
 
     val whiteAdjustedScore = whiteAttackScore + whiteAttackScore * (whiteAttackScore / PieceValue.getValue(Piece.QUEEN))
     val blackAdjustedScore = blackAttackScore + blackAttackScore * (blackAttackScore / PieceValue.getValue(Piece.QUEEN))
-    
+
     return (whiteAdjustedScore - blackAdjustedScore) / Evaluation.THREAT_SCORE_DIVISOR.value
+}
+
+fun kingSafetyEval(board: EngineChessBoard, blackKingAttackedCount: Int, whiteKingAttackedCount: Int): Int {
+    val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
+    var whiteKingSafety: Int
+    var blackKingSafety: Int
+    var kingSafety = 0
+    if (averagePiecesPerSide > Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.value) {
+        whiteKingSafety = Evaluate.getWhiteKingRightWayScore(board)
+        blackKingSafety = Evaluate.getBlackKingRightWayScore(board)
+        var halfOpenFilePenalty = 0
+        var shieldValue = 0
+        if (board.whiteKingSquare / 8 < 2) {
+            val kingShield = Bitboards.whiteKingShieldMask[board.whiteKingSquare % 8]
+            shieldValue += (Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.value * bitCount(board.whitePawnBitboard and kingShield)
+                    - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.value * bitCount(board.blackPawnBitboard and (kingShield or (kingShield shl 8)))
+                    + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.value * bitCount(board.whitePawnBitboard and (kingShield shl 8))
+                    - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.value * bitCount(board.blackPawnBitboard and (kingShield shl 16)))
+            shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value)
+            if (board.whiteKingBitboard and Bitboards.F1G1 != 0L &&
+                    board.whiteRookBitboard and Bitboards.G1H1 != 0L &&
+                    board.whitePawnBitboard and Bitboards.FILE_G != 0L &&
+                    board.whitePawnBitboard and Bitboards.FILE_H != 0L) {
+                shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
+            } else if (board.whiteKingBitboard and Bitboards.B1C1 != 0L &&
+                    board.whiteRookBitboard and Bitboards.A1B1 != 0L &&
+                    board.whitePawnBitboard and Bitboards.FILE_A != 0L &&
+                    board.whitePawnBitboard and Bitboards.FILE_B != 0L) {
+                shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
+            }
+            val whiteOpen = southFill(kingShield, 8) and southFill(board.whitePawnBitboard, 8).inv() and Bitboards.RANK_1
+            if (whiteOpen != 0L) {
+                halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(whiteOpen and Bitboards.MIDDLE_FILES_8_BIT)
+                halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(whiteOpen and Bitboards.NONMID_FILES_8_BIT)
+            }
+            val blackOpen = southFill(kingShield, 8) and southFill(board.blackPawnBitboard, 8).inv() and Bitboards.RANK_1
+            if (blackOpen != 0L) {
+                halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(blackOpen and Bitboards.MIDDLE_FILES_8_BIT)
+                halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(blackOpen and Bitboards.NONMID_FILES_8_BIT)
+            }
+        }
+        whiteKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.value + shieldValue - halfOpenFilePenalty
+        shieldValue = 0
+        halfOpenFilePenalty = 0
+        if (board.blackKingSquare / 8 >= 6) {
+            val kingShield = Bitboards.whiteKingShieldMask[board.blackKingSquare % 8] shl 40
+            shieldValue += (Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.value * bitCount(board.blackPawnBitboard and kingShield)
+                    - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.value * bitCount(board.whitePawnBitboard and (kingShield or (kingShield ushr 8)))
+                    + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.value * bitCount(board.blackPawnBitboard and (kingShield ushr 8))
+                    - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.value * bitCount(board.whitePawnBitboard and (kingShield ushr 16)))
+            shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value)
+            if (board.blackKingBitboard and Bitboards.F8G8 != 0L &&
+                    board.blackRookBitboard and Bitboards.G8H8 != 0L &&
+                    board.blackPawnBitboard and Bitboards.FILE_G != 0L &&
+                    board.blackPawnBitboard and Bitboards.FILE_H != 0L) {
+                shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
+            } else if (board.blackKingBitboard and Bitboards.B8C8 != 0L &&
+                    board.blackRookBitboard and Bitboards.A8B8 != 0L &&
+                    board.blackPawnBitboard and Bitboards.FILE_A != 0L &&
+                    board.blackPawnBitboard and Bitboards.FILE_B != 0L) {
+                shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
+            }
+            val whiteOpen = southFill(kingShield, 8) and southFill(board.whitePawnBitboard, 8).inv() and Bitboards.RANK_1
+            if (whiteOpen != 0L) {
+                halfOpenFilePenalty += (Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(whiteOpen and Bitboards.MIDDLE_FILES_8_BIT)
+                        + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(whiteOpen and Bitboards.NONMID_FILES_8_BIT))
+            }
+            val blackOpen = southFill(kingShield, 8) and southFill(board.blackPawnBitboard, 8).inv() and Bitboards.RANK_1
+            if (blackOpen != 0L) {
+                halfOpenFilePenalty += (Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(blackOpen and Bitboards.MIDDLE_FILES_8_BIT)
+                        + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(blackOpen and Bitboards.NONMID_FILES_8_BIT))
+            }
+        }
+        blackKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.value + shieldValue - halfOpenFilePenalty
+        kingSafety = linearScale(
+                averagePiecesPerSide,
+                Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.value,
+                Evaluation.KINGSAFETY_MAX_PIECE_BALANCE.value,
+                0,
+                whiteKingSafety - blackKingSafety + (blackKingAttackedCount - whiteKingAttackedCount) * Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.value)
+    }
+    return kingSafety
 }
 
 fun whiteEvaluation(board: EngineChessBoard) : Int {

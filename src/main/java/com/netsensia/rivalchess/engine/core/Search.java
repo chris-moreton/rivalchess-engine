@@ -55,6 +55,7 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackM
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopScore;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackAttacksBitboard;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.castlingEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.kingSafetyEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.threatEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePawnBonusWhenMoreMaterial;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePieceBonusWhenMoreMaterial;
@@ -267,111 +268,15 @@ public final class Search implements Runnable {
                 tradePawnBonusWhenMoreMaterial(board, materialDifference) +
                 tradePieceBonusWhenMoreMaterial(board, materialDifference) + castlingEval(board) +
                 bishopScore(board, materialDifference)
-                + threatEval(board, whiteAttacksBitboard, blackAttacksBitboard);
-
-        final int averagePiecesPerSide = (board.getWhitePieceValues() + board.getBlackPieceValues()) / 2;
-        int whiteKingSafety;
-        int blackKingSafety;
-        int kingSafety = 0;
-        if (averagePiecesPerSide > Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue()) {
-
-            whiteKingSafety = Evaluate.getWhiteKingRightWayScore(board);
-            blackKingSafety = Evaluate.getBlackKingRightWayScore(board);
-
-            int halfOpenFilePenalty = 0;
-            int shieldValue = 0;
-            if (board.getWhiteKingSquare() / 8 < 2) {
-                final long kingShield = Bitboards.whiteKingShieldMask.get(board.getWhiteKingSquare() % 8);
-
-                shieldValue += Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & kingShield)
-                        - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield | (kingShield << 8)))
-                        + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield << 8))
-                        - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield << 16));
-
-                shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.getValue());
-
-                if (((board.getWhiteKingBitboard() & Bitboards.F1G1) != 0) &&
-                        ((board.getWhiteRookBitboard() & Bitboards.G1H1) != 0) &&
-                        ((board.getWhitePawnBitboard() & Bitboards.FILE_G) != 0) &&
-                        ((board.getWhitePawnBitboard() & Bitboards.FILE_H) != 0)) {
-                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
-                } else if (((board.getWhiteKingBitboard() & Bitboards.B1C1) != 0) &&
-                        ((board.getWhiteRookBitboard() & Bitboards.A1B1) != 0) &&
-                        ((board.getWhitePawnBitboard() & Bitboards.FILE_A) != 0) &&
-                        ((board.getWhitePawnBitboard() & Bitboards.FILE_B) != 0)) {
-                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
-                }
-
-                final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
-                if (whiteOpen != 0) {
-                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT);
-                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
-                }
-                final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
-                if (blackOpen != 0) {
-                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT);
-                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
-                }
-            }
-
-            whiteKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
-
-            shieldValue = 0;
-            halfOpenFilePenalty = 0;
-            if (board.getBlackKingSquare() / 8 >= 6) {
-                final long kingShield = Bitboards.whiteKingShieldMask.get(board.getBlackKingSquare() % 8) << 40;
-                shieldValue += Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & kingShield)
-                        - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield | (kingShield >>> 8)))
-                        + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.getValue() * Long.bitCount(board.getBlackPawnBitboard() & (kingShield >>> 8))
-                        - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.getValue() * Long.bitCount(board.getWhitePawnBitboard() & (kingShield >>> 16));
-
-                shieldValue = Math.min(shieldValue, Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.getValue());
-
-                if (((board.getBlackKingBitboard() & Bitboards.F8G8) != 0) &&
-                        ((board.getBlackRookBitboard() & Bitboards.G8H8) != 0) &&
-                        ((board.getBlackPawnBitboard() & Bitboards.FILE_G) != 0) &&
-                        ((board.getBlackPawnBitboard() & Bitboards.FILE_H) != 0)) {
-                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
-                } else if (((board.getBlackKingBitboard() & Bitboards.B8C8) != 0) &&
-                        ((board.getBlackRookBitboard() & Bitboards.A8B8) != 0) &&
-                        ((board.getBlackPawnBitboard() & Bitboards.FILE_A) != 0) &&
-                        ((board.getBlackPawnBitboard() & Bitboards.FILE_B) != 0)) {
-                    shieldValue -= Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.getValue();
-                }
-
-                final long whiteOpen = southFill(kingShield, 8) & (~southFill(board.getWhitePawnBitboard(), 8)) & Bitboards.RANK_1;
-                if (whiteOpen != 0) {
-                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.MIDDLE_FILES_8_BIT)
-                            + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(whiteOpen & Bitboards.NONMID_FILES_8_BIT);
-                }
-                final long blackOpen = southFill(kingShield, 8) & (~southFill(board.getBlackPawnBitboard(), 8)) & Bitboards.RANK_1;
-                if (blackOpen != 0) {
-                    halfOpenFilePenalty += Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.MIDDLE_FILES_8_BIT)
-                            + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.getValue() * Long.bitCount(blackOpen & Bitboards.NONMID_FILES_8_BIT);
-                }
-            }
-
-            blackKingSafety += Evaluation.KINGSAFETY_SHIELD_BASE.getValue() + shieldValue - halfOpenFilePenalty;
-
-            kingSafety =
-                    linearScale(
-                            averagePiecesPerSide,
-                            Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.getValue(),
-                            Evaluation.KINGSAFETY_MAX_PIECE_BALANCE.getValue(),
-                            0,
-                            (whiteKingSafety - blackKingSafety) + (blackKingAttackedCount - whiteKingAttackedCount) * Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.getValue());
-
-        }
-
-        eval += kingSafety;
+                + threatEval(board, whiteAttacksBitboard, blackAttacksBitboard)
+                + kingSafetyEval(board, blackKingAttackedCount, whiteKingAttackedCount);
 
         if (board.getWhitePieceValues() + board.getWhitePawnValues() + board.getBlackPieceValues() + board.getBlackPawnValues() <= Evaluation.EVAL_ENDGAME_TOTAL_PIECES.getValue()) {
             eval = endGameAdjustment(board, eval);
         }
 
-        eval = board.getMover() == Colour.WHITE ? eval : -eval;
+        return board.getMover() == Colour.WHITE ? eval : -eval;
 
-        return eval;
     }
 
     public int endGameAdjustment(EngineChessBoard board, int currentScore) {
