@@ -15,6 +15,9 @@ import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import java.lang.Long.bitCount
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -26,46 +29,27 @@ fun onlyKingsRemain(board: EngineChessBoard) =
                 board.getBlackPawnValues() == 0
 
 fun whitePawnPieceSquareEval(board: EngineChessBoard) : Int {
-    var pieceSquareTemp = 0
-    var pieceSquareTempEndGame = 0
-    var bitboard: Long
-    var sq: Int
 
-    bitboard = board.whitePawnBitboard
-    while (bitboard != 0L) {
-        bitboard = bitboard xor (1L shl java.lang.Long.numberOfTrailingZeros(bitboard).also { sq = it })
-        pieceSquareTemp += PieceSquareTables.pawn[sq]
-        pieceSquareTempEndGame += PieceSquareTables.pawnEndGame[sq]
-    }
+    val pawnSquares = squareList(board.whitePawnBitboard)
 
     return linearScale(
             board.blackPieceValues,
             Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
             Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
-            pieceSquareTempEndGame,
-            pieceSquareTemp
+            pawnSquares.stream().map(PieceSquareTables.pawnEndGame::get).reduce(0, Integer::sum),
+            pawnSquares.stream().map(PieceSquareTables.pawn::get).reduce(0, Integer::sum)
     )
 }
 
 fun blackPawnPieceSquareEval(board: EngineChessBoard) : Int {
-    var pieceSquareTemp = 0
-    var pieceSquareTempEndGame = 0
-    var bitboard: Long
-    var sq: Int
-
-    bitboard = board.blackPawnBitboard
-    while (bitboard != 0L) {
-        bitboard = bitboard xor (1L shl java.lang.Long.numberOfTrailingZeros(bitboard).also { sq = it })
-        pieceSquareTemp += PieceSquareTables.pawn[Bitboards.bitFlippedHorizontalAxis[sq]]
-        pieceSquareTempEndGame += PieceSquareTables.pawnEndGame[Bitboards.bitFlippedHorizontalAxis[sq]]
-    }
+    val pawnSquares = squareList(board.blackPawnBitboard)
 
     return linearScale(
             board.whitePieceValues,
             Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
             Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
-            pieceSquareTempEndGame,
-            pieceSquareTemp
+            pawnSquares.stream().map {PieceSquareTables.pawnEndGame[Bitboards.bitFlippedHorizontalAxis[it]]}.reduce(0, Integer::sum),
+            pawnSquares.stream().map {PieceSquareTables.pawn[Bitboards.bitFlippedHorizontalAxis[it]]}.reduce(0, Integer::sum)
     )
 }
 
@@ -230,7 +214,9 @@ fun bishopScore(board: EngineChessBoard, materialDifference: Int): Int {
     val blackDarkBishopExists = board.blackBishopBitboard and Bitboards.DARK_SQUARES != 0L
     val whiteBishopColourCount = (if (whiteLightBishopExists) 1 else 0) + if (whiteDarkBishopExists) 1 else 0
     val blackBishopColourCount = (if (blackLightBishopExists) 1 else 0) + if (blackDarkBishopExists) 1 else 0
+
     var bishopScore = 0
+
     if (whiteBishopColourCount == 2) bishopScore += Evaluation.VALUE_BISHOP_PAIR.value + (8 - board.whitePawnValues / PieceValue.getValue(Piece.PAWN)) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value
     if (blackBishopColourCount == 2) bishopScore -= Evaluation.VALUE_BISHOP_PAIR.value + (8 - board.blackPawnValues / PieceValue.getValue(Piece.PAWN)) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value
     if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.whitePieceValues == board.blackPieceValues) {
@@ -423,7 +409,7 @@ fun kingSafetyEval(board: EngineChessBoard, blackKingAttackedCount: Int, whiteKi
     return kingSafety
 }
 
-fun whiteEvaluation(board: EngineChessBoard) : Int {
+suspend fun whiteEvaluation(board: EngineChessBoard) : Int {
     val whiteRookSquares = squareList(board.getBitboard(BitboardType.WR))
     val whiteRookAttacks = rookAttackMap(board, whiteRookSquares)
     val whiteBishopSquares = squareList(board.getBitboard(BitboardType.WB))
@@ -434,39 +420,44 @@ fun whiteEvaluation(board: EngineChessBoard) : Int {
     val whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ))
     val whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares)
 
-    return whitePawnPieceSquareEval(board) +
-            whiteKingSquareEval(board) +
-            whiteQueenPieceSquareSum(whiteQueenSquares) +
-            whiteBishopPieceSquareSum(whiteBishopSquares) +
-            twoWhiteRooksTrappingKingEval(board) +
-            doubledRooksEval(whiteRookSquares) +
-            whiteRookSquares.stream().map { s: Int -> whiteRookOpenFilesEval(board, s % 8) }.reduce(0, Integer::sum) +
-            whiteRookSquares.stream().map { s: Int ->
+    val coroutines = listOf(
+            GlobalScope.async { whitePawnPieceSquareEval(board) },
+            GlobalScope.async { whiteKingSquareEval(board) },
+            GlobalScope.async {  whiteQueenPieceSquareSum(whiteQueenSquares) },
+            GlobalScope.async { whiteBishopPieceSquareSum(whiteBishopSquares) },
+            GlobalScope.async { twoWhiteRooksTrappingKingEval(board) },
+            GlobalScope.async { doubledRooksEval(whiteRookSquares) },
+            GlobalScope.async { whiteRookSquares.stream().map { s: Int -> whiteRookOpenFilesEval(board, s % 8) }.reduce(0, Integer::sum) },
+            GlobalScope.async { whiteRookSquares.stream().map { s: Int ->
                 Evaluation.getRookMobilityValue(
                         bitCount(whiteRookAttacks[s]!! and whitePieces.inv()))
-            }.reduce(0, Integer::sum) +
-            whiteQueenSquares.stream().map { s: Int ->
+            }.reduce(0, Integer::sum) },
+            GlobalScope.async { whiteQueenSquares.stream().map { s: Int ->
                 Evaluation.getQueenMobilityValue(
                         bitCount(whiteQueenAttacks[s]!! and whitePieces.inv()))
-            }.reduce(0, Integer::sum) +
-            whiteBishopSquares.stream().map { s: Int ->
+            }.reduce(0, Integer::sum) },
+            GlobalScope.async { whiteBishopSquares.stream().map { s: Int ->
                 Evaluation.getBishopMobilityValue(
                         bitCount(whiteBishopAttacks[s]!! and whitePieces.inv()))
-            }.reduce(0, Integer::sum) +
-            (whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6) -
-            whiteKnightSquares.stream()
+            }.reduce(0, Integer::sum) },
+            GlobalScope.async { (whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(board.getBlackPawnValues()) / 6) },
+            GlobalScope.async { -whiteKnightSquares.stream()
                     .map { s: Int ->
                         bitCount(Bitboards.knightMoves[s] and
                                 (blackPawnAttacks or board.whitePawnBitboard)) *
                                 Evaluation.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY.value
                     }
-                    .reduce(0, Integer::sum) +
-            linearScale(board.blackPieceValues + board.blackPawnValues,
+                    .reduce(0, Integer::sum) },
+            GlobalScope.async { linearScale(board.blackPieceValues + board.blackPawnValues,
                     Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
                     Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
                     whiteKnightSquares.stream().map { i: Int -> PieceSquareTables.knightEndGame[i] }.reduce(0, Integer::sum),
                     whiteKnightSquares.stream().map { i: Int -> PieceSquareTables.knight[i] }.reduce(0, Integer::sum)
-            )
+            ) }
+    )
+
+    return coroutines.stream().map { runBlocking {  it.await() } }.reduce(0, Integer::sum)
+
 }
 
 fun blackEvaluation(board: EngineChessBoard) : Int {
@@ -637,7 +628,7 @@ fun endGameAdjustment(board: EngineChessBoard, currentScore: Int): Int {
     return eval
 }
 
-fun evaluate(board: EngineChessBoard) =
+fun evaluate(board: EngineChessBoard) = runBlocking {
     if (onlyKingsRemain(board)) {
         0
     } else {
@@ -662,13 +653,23 @@ fun evaluate(board: EngineChessBoard) =
                 kingAttackCount(whiteKingDangerZone, blackBishopAttacks)
         val whiteAttacksBitboard = whiteAttacksBitboard(board)
         val blackAttacksBitboard = blackAttacksBitboard(board)
-        val eval: Int = (materialDifference + whiteEvaluation(board) - blackEvaluation(board) +
-                board.getBoardHashObject().getPawnHashEntry(board).getPawnScore() +
-                tradePawnBonusWhenMoreMaterial(board, materialDifference) +
-                tradePieceBonusWhenMoreMaterial(board, materialDifference) + castlingEval(board) +
-                bishopScore(board, materialDifference)
-                + threatEval(board, whiteAttacksBitboard, blackAttacksBitboard)
-                + kingSafetyEval(board, blackKingAttackedCount, whiteKingAttackedCount))
+
+        val coroutines = listOf(
+                GlobalScope.async { whiteEvaluation(board) },
+                GlobalScope.async { -blackEvaluation(board) },
+                GlobalScope.async { board.getBoardHashObject().getPawnHashEntry(board).getPawnScore() },
+                GlobalScope.async { tradePawnBonusWhenMoreMaterial(board, materialDifference) },
+                GlobalScope.async { tradePieceBonusWhenMoreMaterial(board, materialDifference) },
+                GlobalScope.async { castlingEval(board) },
+                GlobalScope.async { bishopScore(board, materialDifference) },
+                GlobalScope.async { threatEval(board, whiteAttacksBitboard, blackAttacksBitboard) },
+                GlobalScope.async { kingSafetyEval(board, blackKingAttackedCount, whiteKingAttackedCount) }
+        )
+
+        val eval = materialDifference + coroutines.stream().map { runBlocking { it.await() } }.reduce(0, Integer::sum)
+
         val endGameAdjustedScore = if (isEndGame(board)) endGameAdjustment(board, eval) else eval
         if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
     }
+}
+
