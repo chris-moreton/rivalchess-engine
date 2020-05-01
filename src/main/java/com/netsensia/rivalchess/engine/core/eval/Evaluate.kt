@@ -334,6 +334,13 @@ fun threatEval(board: EngineChessBoard, whiteAttacksBitboard: Long, blackAttacks
     return (whiteAdjustedScore - blackAdjustedScore) / Evaluation.THREAT_SCORE_DIVISOR.value
 }
 
+fun isEndGame(board: EngineChessBoard) : Boolean {
+    return (board.getWhitePieceValues() +
+            board.getWhitePawnValues() +
+            board.getBlackPieceValues() +
+            board.getBlackPawnValues()) <= Evaluation.EVAL_ENDGAME_TOTAL_PIECES.getValue()
+}
+
 fun kingSafetyEval(board: EngineChessBoard, blackKingAttackedCount: Int, whiteKingAttackedCount: Int): Int {
     val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
     var whiteKingSafety: Int

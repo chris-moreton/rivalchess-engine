@@ -55,6 +55,7 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackM
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopScore;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackAttacksBitboard;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.castlingEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.isEndGame;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.kingSafetyEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.threatEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePawnBonusWhenMoreMaterial;
@@ -250,12 +251,12 @@ public final class Search implements Runnable {
 
         final int materialDifference = materialDifference(board);
 
-        int blackKingAttackedCount =
+        final int blackKingAttackedCount =
                 kingAttackCount(blackKingDangerZone, whiteRookAttacks) +
                         kingAttackCount(blackKingDangerZone, whiteQueenAttacks) * 2 +
                         kingAttackCount(blackKingDangerZone, whiteBishopAttacks);
 
-        int whiteKingAttackedCount =
+        final int whiteKingAttackedCount =
                 kingAttackCount(whiteKingDangerZone, blackRookAttacks) +
                         kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2 +
                         kingAttackCount(whiteKingDangerZone, blackBishopAttacks);
@@ -263,7 +264,7 @@ public final class Search implements Runnable {
         final long whiteAttacksBitboard = whiteAttacksBitboard(board);
         final long blackAttacksBitboard = blackAttacksBitboard(board);
 
-        int eval = materialDifference + whiteEvaluation(board) - blackEvaluation(board) +
+        final int eval = materialDifference + whiteEvaluation(board) - blackEvaluation(board) +
                 engineChessBoard.getBoardHashObject().getPawnHashEntry(board).getPawnScore() +
                 tradePawnBonusWhenMoreMaterial(board, materialDifference) +
                 tradePieceBonusWhenMoreMaterial(board, materialDifference) + castlingEval(board) +
@@ -271,11 +272,9 @@ public final class Search implements Runnable {
                 + threatEval(board, whiteAttacksBitboard, blackAttacksBitboard)
                 + kingSafetyEval(board, blackKingAttackedCount, whiteKingAttackedCount);
 
-        if (board.getWhitePieceValues() + board.getWhitePawnValues() + board.getBlackPieceValues() + board.getBlackPawnValues() <= Evaluation.EVAL_ENDGAME_TOTAL_PIECES.getValue()) {
-            eval = endGameAdjustment(board, eval);
-        }
+        final int endGameAdjustedScore = isEndGame(board) ? endGameAdjustment(board, eval) : eval;
 
-        return board.getMover() == Colour.WHITE ? eval : -eval;
+        return board.getMover() == Colour.WHITE ? endGameAdjustedScore : -endGameAdjustedScore;
 
     }
 
