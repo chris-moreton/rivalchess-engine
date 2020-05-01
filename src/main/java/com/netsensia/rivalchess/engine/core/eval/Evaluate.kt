@@ -230,9 +230,9 @@ fun bishopScore(board: EngineChessBoard, materialDifference: Int): Int {
     val blackDarkBishopExists = board.blackBishopBitboard and Bitboards.DARK_SQUARES != 0L
     val whiteBishopColourCount = (if (whiteLightBishopExists) 1 else 0) + if (whiteDarkBishopExists) 1 else 0
     val blackBishopColourCount = (if (blackLightBishopExists) 1 else 0) + if (blackDarkBishopExists) 1 else 0
-    var bishopScore = 0
-    if (whiteBishopColourCount == 2) bishopScore += Evaluation.VALUE_BISHOP_PAIR.value + (8 - board.whitePawnValues / PieceValue.getValue(Piece.PAWN)) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value
-    if (blackBishopColourCount == 2) bishopScore -= Evaluation.VALUE_BISHOP_PAIR.value + (8 - board.blackPawnValues / PieceValue.getValue(Piece.PAWN)) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value
+
+    var bishopScore = bishopPairEval(whiteBishopColourCount, board, blackBishopColourCount)
+
     if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.whitePieceValues == board.blackPieceValues) {
         // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
         val maxPenalty = materialDifference / Evaluation.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR.value // mostly pawns as material is identical
@@ -245,8 +245,14 @@ fun bishopScore(board: EngineChessBoard, materialDifference: Int): Int {
                 maxPenalty,
                 0)
     }
-    bishopScore += trappedBishopEval(board)
-    return bishopScore
+    return bishopScore + trappedBishopEval(board)
+
+}
+
+private fun bishopPairEval(whiteBishopColourCount: Int, board: EngineChessBoard, blackBishopColourCount: Int): Int {
+    val whitePair = if (whiteBishopColourCount == 2) Evaluation.VALUE_BISHOP_PAIR.value + (8 - board.whitePawnValues / PieceValue.getValue(Piece.PAWN)) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value else 0
+    val blackPair = if (blackBishopColourCount == 2) Evaluation.VALUE_BISHOP_PAIR.value + (8 - board.blackPawnValues / PieceValue.getValue(Piece.PAWN)) * Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value else 0
+    return whitePair - blackPair
 }
 
 private fun trappedBishopEval(board: EngineChessBoard): Int {
