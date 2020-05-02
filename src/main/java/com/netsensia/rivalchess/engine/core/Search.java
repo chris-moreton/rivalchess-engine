@@ -38,32 +38,13 @@ import com.netsensia.rivalchess.util.ChessBoardConversion;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
 
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopScore;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackAttacksBitboard;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.castlingEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.evaluate;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.isEndGame;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.kingSafetyEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.threatEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePawnBonusWhenMoreMaterial;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePieceBonusWhenMoreMaterial;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteAttacksBitboard;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteEvaluation;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackEvaluation;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.kingAttackCount;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDifference;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.queenAttackMap;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookAttackMap;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyKingsRemain;
 
 public final class Search implements Runnable {
 
