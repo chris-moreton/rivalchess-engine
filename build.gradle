@@ -3,7 +3,9 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.71'
 }
 
-sourceCompatibility = 1.8
+apply plugin: 'kotlin-kapt'
+
+def arrow_version = "0.10.4"
 
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
@@ -29,6 +31,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     jcenter()
+    maven { url "https://dl.bintray.com/arrow-kt/arrow-kt/" }
 }
 
 dependencies {
@@ -38,6 +41,9 @@ dependencies {
     implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '1.3.5'
     compile group: 'com.ea.async', name: 'ea-async', version: '1.2.3'
 
+    compile "io.arrow-kt:arrow-core:$arrow_version"
+    compile "io.arrow-kt:arrow-syntax:$arrow_version"
+    kapt    "io.arrow-kt:arrow-meta:$arrow_version"
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.awaitility:awaitility:4.0.2'

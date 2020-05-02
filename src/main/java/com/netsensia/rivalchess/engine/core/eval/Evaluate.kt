@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core.eval
 
+import arrow.syntax.function.memoize
 import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
@@ -35,7 +36,7 @@ fun whitePawnPieceSquareEval(board: EngineChessBoard) : Int {
             Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
             pawnSquares.stream().map(PieceSquareTables.pawnEndGame::get).reduce(0, Integer::sum),
             pawnSquares.stream().map(PieceSquareTables.pawn::get).reduce(0, Integer::sum)
-    )
+    ).invoke()
 }
 
 fun blackPawnPieceSquareEval(board: EngineChessBoard) : Int {
@@ -50,7 +51,7 @@ fun blackPawnPieceSquareEval(board: EngineChessBoard) : Int {
                     .reduce(0, Integer::sum),
             pawnSquares.stream().map { PieceSquareTables.pawn.get(Bitboards.bitFlippedHorizontalAxis.get(it)) }
                     .reduce(0, Integer::sum)
-    )
+    ).invoke()
 }
 
 fun whiteKingSquareEval(board: EngineChessBoard) =
@@ -60,7 +61,7 @@ fun whiteKingSquareEval(board: EngineChessBoard) =
                 Evaluation.OPENING_PHASE_MATERIAL.getValue(),
                 PieceSquareTables.kingEndGame.get(board.getWhiteKingSquare()),
                 PieceSquareTables.king.get(board.getWhiteKingSquare())
-        )
+        ).invoke()
 
 fun blackKingSquareEval(board: EngineChessBoard) =
         linearScale(
@@ -69,12 +70,13 @@ fun blackKingSquareEval(board: EngineChessBoard) =
                 Evaluation.OPENING_PHASE_MATERIAL.getValue(),
                 PieceSquareTables.kingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare())),
                 PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare()))
-        )
+        ).invoke()
 
-fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) =
-        if (situation < ref1) score1
-        else if (situation > ref2) score2
-        else (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
+fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) = {
+    if (situation < ref1) score1
+    else if (situation > ref2) score2
+    else (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
+}.memoize()
 
 fun materialDifference(board: EngineChessBoard) =
         board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
@@ -195,7 +197,7 @@ fun tradePieceBonusWhenMoreMaterial(board: EngineChessBoard, materialDifference:
             0,
             Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.value,
             30 * materialDifference / 100,
-            0)
+            0).invoke()
 }
 
 fun tradePawnBonusWhenMoreMaterial(board: EngineChessBoard, materialDifference: Int): Int {
@@ -204,7 +206,7 @@ fun tradePawnBonusWhenMoreMaterial(board: EngineChessBoard, materialDifference: 
             0,
             Evaluation.TRADE_BONUS_UPPER_PAWNS.value,
             -30 * materialDifference / 100,
-            0)
+            0).invoke()
 }
 
 fun bishopScore(board: EngineChessBoard, materialDifference: Int) =
@@ -231,7 +233,7 @@ private fun oppositeColourBishopsEval(board: EngineChessBoard, materialDifferenc
                 Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_LOW.value,
                 Evaluation.WRONG_COLOUR_BISHOP_MATERIAL_HIGH.value,
                 maxPenalty,
-                0)
+                0).invoke()
     }
     return 0
 }
@@ -358,7 +360,7 @@ fun kingSafetyEval(board: EngineChessBoard, blackKingAttackedCount: Int, whiteKi
                 whiteKingSafety -
                         blackKingSafety +
                         (blackKingAttackedCount - whiteKingAttackedCount) *
-                        Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.value)
+                        Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.value).invoke()
 
 }
 
@@ -503,7 +505,7 @@ fun whiteEvaluation(board: EngineChessBoard) : Int {
                     Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
                     whiteKnightSquares.stream().map { i: Int -> PieceSquareTables.knightEndGame[i] }.reduce(0, Integer::sum),
                     whiteKnightSquares.stream().map { i: Int -> PieceSquareTables.knight[i] }.reduce(0, Integer::sum)
-            )
+            ).invoke()
 }
 
 fun blackEvaluation(board: EngineChessBoard) : Int {
@@ -550,7 +552,7 @@ fun blackEvaluation(board: EngineChessBoard) : Int {
                     Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
                     blackKnightSquares.stream().map { s: Int -> PieceSquareTables.knightEndGame[Bitboards.bitFlippedHorizontalAxis[s]] }.reduce(0, Integer::sum),
                     blackKnightSquares.stream().map { s: Int -> PieceSquareTables.knight[Bitboards.bitFlippedHorizontalAxis[s]] }.reduce(0, Integer::sum)
-            )
+            ).invoke()
 
 }
 
@@ -570,7 +572,7 @@ fun castlingEval(board: EngineChessBoard): Int {
                 Evaluation.CASTLE_BONUS_LOW_MATERIAL.value,
                 Evaluation.CASTLE_BONUS_HIGH_MATERIAL.value,
                 kingSquareBonusEndGame,
-                kingSquareBonusMiddleGame)
+                kingSquareBonusMiddleGame).invoke()
 
         // don't want to exceed this value because otherwise castling would be discouraged due to the bonuses
         // given by still having castling rights.
@@ -596,7 +598,7 @@ fun castlingEval(board: EngineChessBoard): Int {
                 Evaluation.CASTLE_BONUS_LOW_MATERIAL.value,
                 Evaluation.CASTLE_BONUS_HIGH_MATERIAL.value,
                 kingSquareBonusEndGame,
-                kingSquareBonusMiddleGame)
+                kingSquareBonusMiddleGame).invoke()
         castleValue = kingSquareBonusScaled + rookSquareBonus
         if (castleValue > 0) {
             var timeToCastleKingSide = 100
