@@ -640,7 +640,7 @@ public final class EngineChessBoard {
 
         this.halfMoveCount = 0;
         this.engineBitboards.xorPieceBitboard(capturePiece.getIndex(), toMask);
-        if (capturePiece != SquareOccupant.WP && capturePiece == SquareOccupant.WR) {
+        if (capturePiece == SquareOccupant.WR) {
             if (toMask == Bitboards.WHITEKINGSIDEROOKMASK) {
                 this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_WK.getValue();
             }
@@ -722,7 +722,7 @@ public final class EngineChessBoard {
         this.halfMoveCount = 0;
         this.engineBitboards.xorPieceBitboard(capturePiece.getIndex(), toMask);
 
-        if (capturePiece != SquareOccupant.BP && capturePiece == SquareOccupant.BR) {
+        if (capturePiece == SquareOccupant.BR) {
             if (toMask == Bitboards.BLACKKINGSIDEROOKMASK) {
                 this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_BK.getValue();
             }
