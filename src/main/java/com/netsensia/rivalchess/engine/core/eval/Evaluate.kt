@@ -71,11 +71,11 @@ fun blackKingSquareEval(board: EngineChessBoard) =
                 PieceSquareTables.king.get(Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare()))
         )
 
-fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) = {
+fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) =
     if (situation < ref1) score1
     else if (situation > ref2) score2
     else (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
-}
+
 
 fun materialDifference(board: EngineChessBoard) =
         board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
