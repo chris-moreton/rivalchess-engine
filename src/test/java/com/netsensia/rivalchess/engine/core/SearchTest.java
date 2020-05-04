@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.config.Limit;
+import com.netsensia.rivalchess.engine.core.eval.EvaluateKt;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -18,7 +19,7 @@ public class SearchTest {
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
         Search search = new Search();
-        int actualScore = search.evaluate(engineChessBoard);
+        int actualScore = EvaluateKt.evaluate(engineChessBoard);
 
         assertEquals(expectedScore, actualScore);
 

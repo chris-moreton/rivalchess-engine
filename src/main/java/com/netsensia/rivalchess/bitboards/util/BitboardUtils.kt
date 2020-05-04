@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.bitboards.util
 
+import arrow.syntax.function.memoize
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.model.Colour
@@ -79,7 +80,7 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long): Int {
 
 fun unsetBit(bitboard: Long, bit: Int) = bitboard xor (1L shl bit)
 
-fun squareList(bitboard: Long) : List<Int> {
+fun squareListMemoize(bitboard: Long) : () -> List<Int> = {
     val retList = mutableListOf<Int>()
     var mutableBitboard = bitboard
 
@@ -88,5 +89,7 @@ fun squareList(bitboard: Long) : List<Int> {
         retList.add(square)
         mutableBitboard = unsetBit(mutableBitboard, square)
     }
-    return retList
-}
+    retList
+}.memoize()
+
+fun squareList(bitboard: Long) = squareListMemoize(bitboard).invoke()

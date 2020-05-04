@@ -3,7 +3,6 @@ package com.netsensia.rivalchess.engine.core;
 import com.ea.async.Async;
 import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.bitboards.Bitboards;
-import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.config.Evaluation;
 import com.netsensia.rivalchess.config.Extensions;
 import com.netsensia.rivalchess.config.FeatureFlag;
@@ -14,7 +13,6 @@ import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.config.Uci;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
 import com.netsensia.rivalchess.engine.core.eval.PieceValue;
-import com.netsensia.rivalchess.enums.CastleBitMask;
 import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.MoveOrder;
@@ -31,7 +29,6 @@ import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.Piece;
-import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.openings.OpeningLibrary;
@@ -44,17 +41,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.squareList;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.bishopScore;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackAttacksBitboard;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.castlingEval;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.evaluate;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.isEndGame;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.kingSafetyEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.threatEval;
@@ -63,26 +56,14 @@ import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.tradePieceBon
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteAttacksBitboard;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteEvaluation;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackEvaluation;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookOpenFilesEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.blackRookPieceSquareSum;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.combineAttacks;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.doubledRooksEval;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.kingAttackCount;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.knightAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.materialDifference;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.queenAttackMap;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookAttackMap;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.rookEnemyPawnMultiplier;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoBlackRooksTrappingKingEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.twoWhiteRooksTrappingKingEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteKingSquareEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whitePawnPieceSquareEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteRookOpenFilesEval;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.whiteRookPieceSquareSum;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyKingRemains;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyKingsRemain;
 
 public final class Search implements Runnable {
 
@@ -143,8 +124,6 @@ public final class Search implements Runnable {
     private String currentPathString;
 
     private boolean m_isUCIMode = false;
-
-    private static final byte[] rivalKPKBitbase = null;
 
     public Search() throws IllegalFenException {
         this(System.out, FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
@@ -225,190 +204,6 @@ public final class Search implements Runnable {
 
     static {
         Async.init();
-    }
-
-    public int evaluate(EngineChessBoard board) {
-
-        if (onlyKingRemains(board)) {
-            return 0;
-        }
-
-        final long whiteKingDangerZone = Bitboards.kingMoves.get(board.getWhiteKingSquare()) | (Bitboards.kingMoves.get(board.getWhiteKingSquare()) << 8);
-        final long blackKingDangerZone = Bitboards.kingMoves.get(board.getBlackKingSquare()) | (Bitboards.kingMoves.get(board.getBlackKingSquare()) >>> 8);
-
-        final List<Integer> whiteRookSquares = squareList(board.getBitboard(BitboardType.WR));
-        final Map<Integer, Long> whiteRookAttacks = rookAttackMap(board, whiteRookSquares);
-        final List<Integer> blackRookSquares = squareList(board.getBitboard(BitboardType.BR));
-        final  Map<Integer, Long> blackRookAttacks = rookAttackMap(board, blackRookSquares);
-        final List<Integer> whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ));
-        final Map<Integer, Long> whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares);
-        final List<Integer> blackQueenSquares = squareList(board.getBitboard(BitboardType.BQ));
-        final  Map<Integer, Long> blackQueenAttacks = queenAttackMap(board, blackQueenSquares);
-        final List<Integer> whiteBishopSquares = squareList(board.getBitboard(BitboardType.WB));
-        final Map<Integer, Long> whiteBishopAttacks = bishopAttackMap(board, whiteBishopSquares);
-        final List<Integer> blackBishopSquares = squareList(board.getBitboard(BitboardType.BB));
-        final  Map<Integer, Long> blackBishopAttacks = bishopAttackMap(board, blackBishopSquares);
-
-        final int materialDifference = materialDifference(board);
-
-        final int blackKingAttackedCount =
-                kingAttackCount(blackKingDangerZone, whiteRookAttacks) +
-                        kingAttackCount(blackKingDangerZone, whiteQueenAttacks) * 2 +
-                        kingAttackCount(blackKingDangerZone, whiteBishopAttacks);
-
-        final int whiteKingAttackedCount =
-                kingAttackCount(whiteKingDangerZone, blackRookAttacks) +
-                        kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2 +
-                        kingAttackCount(whiteKingDangerZone, blackBishopAttacks);
-
-        final long whiteAttacksBitboard = whiteAttacksBitboard(board);
-        final long blackAttacksBitboard = blackAttacksBitboard(board);
-
-        final int eval = materialDifference + whiteEvaluation(board) - blackEvaluation(board) +
-                engineChessBoard.getBoardHashObject().getPawnHashEntry(board).getPawnScore() +
-                tradePawnBonusWhenMoreMaterial(board, materialDifference) +
-                tradePieceBonusWhenMoreMaterial(board, materialDifference) + castlingEval(board) +
-                bishopScore(board, materialDifference)
-                + threatEval(board, whiteAttacksBitboard, blackAttacksBitboard)
-                + kingSafetyEval(board, blackKingAttackedCount, whiteKingAttackedCount);
-
-        final int endGameAdjustedScore = isEndGame(board) ? endGameAdjustment(board, eval) : eval;
-
-        return board.getMover() == Colour.WHITE ? endGameAdjustedScore : -endGameAdjustedScore;
-
-    }
-
-    public int endGameAdjustment(EngineChessBoard board, int currentScore) {
-        int eval = currentScore;
-
-        if (rivalKPKBitbase != null && board.getWhitePieceValues() + board.getBlackPieceValues() == 0 && board.getWhitePawnValues() + board.getBlackPawnValues() == PieceValue.getValue(Piece.PAWN)) {
-            if (board.getWhitePawnValues() == PieceValue.getValue(Piece.PAWN)) {
-                return kpkLookup(
-                        board.getWhiteKingSquare(),
-                        board.getBlackKingSquare(),
-                        Long.numberOfTrailingZeros(board.getWhitePawnBitboard()),
-                        board.getMover() == Colour.WHITE);
-            } else {
-                // flip the position so that the black pawn becomes white, and negate the result
-                return -kpkLookup(
-                        Bitboards.bitFlippedHorizontalAxis.get(board.getBlackKingSquare()),
-                        Bitboards.bitFlippedHorizontalAxis.get(board.getWhiteKingSquare()),
-                        Bitboards.bitFlippedHorizontalAxis.get(Long.numberOfTrailingZeros(board.getBlackPawnBitboard())),
-                        board.getMover() == Colour.BLACK);
-            }
-        }
-
-        if (board.getWhitePawnValues() + board.getBlackPawnValues() == 0 && board.getWhitePieceValues() < PieceValue.getValue(Piece.ROOK) && board.getBlackPieceValues() < PieceValue.getValue(Piece.ROOK))
-            return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
-
-        if (eval > 0) {
-            if (board.getWhitePawnValues() == 0 && (board.getWhitePieceValues() == PieceValue.getValue(Piece.KNIGHT) || board.getWhitePieceValues() == PieceValue.getValue(Piece.BISHOP)))
-                return eval - (int) (board.getWhitePieceValues() * Evaluation.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
-            else if (board.getWhitePawnValues() == 0 && board.getWhitePieceValues() - PieceValue.getValue(Piece.BISHOP) <= board.getBlackPieceValues())
-                return eval / Evaluation.ENDGAME_PROBABLE_DRAW_DIVISOR.getValue();
-            else if (Long.bitCount(board.getAllPiecesBitboard()) > 3 && (board.getWhiteRookBitboard() | board.getWhiteKnightBitboard() | board.getWhiteQueenBitboard()) == 0) {
-                // If this is not yet a KPK ending, and if white has only A pawns and has no dark bishop and the black king is on a8/a7/b8/b7 then this is probably a draw.
-                // Do the same for H pawns
-
-                if (((board.getWhitePawnBitboard() & ~Bitboards.FILE_A) == 0) &&
-                        ((board.getWhiteBishopBitboard() & Bitboards.LIGHT_SQUARES) == 0) &&
-                        ((board.getBlackKingBitboard() & Bitboards.A8A7B8B7) != 0) || ((board.getWhitePawnBitboard() & ~Bitboards.FILE_H) == 0) &&
-                                ((board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) == 0) &&
-                                ((board.getBlackKingBitboard() & Bitboards.H8H7G8G7) != 0)) {
-                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
-                }
-
-            }
-            if (board.getBlackPawnValues() == 0) {
-                if (board.getWhitePieceValues() - board.getBlackPieceValues() > PieceValue.getValue(Piece.BISHOP)) {
-                    int whiteKnightCount = Long.bitCount(board.getWhiteKnightBitboard());
-                    int whiteBishopCount = Long.bitCount(board.getWhiteBishopBitboard());
-                    if ((whiteKnightCount == 2) && (board.getWhitePieceValues() == 2 * PieceValue.getValue(Piece.KNIGHT)) && (board.getBlackPieceValues() == 0))
-                        return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
-                    else if ((whiteKnightCount == 1) && (whiteBishopCount == 1) && (board.getWhitePieceValues() == PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP)) && board.getBlackPieceValues() == 0) {
-                        eval = PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.getValue() + (eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.getValue());
-                        final int kingSquare = board.getBlackKingSquare();
-
-                        if ((board.getWhiteBishopBitboard() & Bitboards.DARK_SQUARES) != 0)
-                            eval += (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
-                        else
-                            eval += (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
-
-                        return eval;
-                    } else
-                        return eval + Evaluation.VALUE_SHOULD_WIN.getValue();
-                }
-            }
-        }
-        if (eval < 0) {
-            if (board.getBlackPawnValues() == 0 && (board.getBlackPieceValues() == PieceValue.getValue(Piece.KNIGHT) || board.getBlackPieceValues() == PieceValue.getValue(Piece.BISHOP)))
-                return eval + (int) (board.getBlackPieceValues() * Evaluation.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER);
-            else if (board.getBlackPawnValues() == 0 && board.getBlackPieceValues() - PieceValue.getValue(Piece.BISHOP) <= board.getWhitePieceValues())
-                return eval / Evaluation.ENDGAME_PROBABLE_DRAW_DIVISOR.getValue();
-            else if (Long.bitCount(board.getAllPiecesBitboard()) > 3 && (board.getBlackRookBitboard() | board.getBlackKnightBitboard() | board.getBlackQueenBitboard()) == 0) {
-                if (((board.getBlackPawnBitboard() & ~Bitboards.FILE_A) == 0) &&
-                        ((board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) == 0) &&
-                        ((board.getWhiteKingBitboard() & Bitboards.A1A2B1B2) != 0))
-                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
-                else if (((board.getBlackPawnBitboard() & ~Bitboards.FILE_H) == 0) &&
-                        ((board.getBlackBishopBitboard() & Bitboards.LIGHT_SQUARES) == 0) &&
-                        ((board.getWhiteKingBitboard() & Bitboards.H1H2G1G2) != 0))
-                    return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
-            }
-            if (board.getWhitePawnValues() == 0) {
-                if (board.getBlackPieceValues() - board.getWhitePieceValues() > PieceValue.getValue(Piece.BISHOP)) {
-                    int blackKnightCount = Long.bitCount(board.getBlackKnightBitboard());
-                    int blackBishopCount = Long.bitCount(board.getBlackBishopBitboard());
-                    if ((blackKnightCount == 2) && (board.getBlackPieceValues() == 2 * PieceValue.getValue(Piece.KNIGHT)) && (board.getWhitePieceValues() == 0))
-                        return eval / Evaluation.ENDGAME_DRAW_DIVISOR.getValue();
-                    else if ((blackKnightCount == 1) && (blackBishopCount == 1) && (board.getBlackPieceValues() == PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP)) && board.getWhitePieceValues() == 0) {
-                        eval = -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.getValue()) + (eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.getValue());
-                        final int kingSquare = board.getWhiteKingSquare();
-                        if ((board.getBlackBishopBitboard() & Bitboards.DARK_SQUARES) != 0) {
-                            eval -= (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
-                        } else {
-                            eval -= (7 - Bitboards.distanceToH1OrA8.get(kingSquare)) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.getValue();
-                        }
-                        return eval;
-                    } else
-                        return eval - Evaluation.VALUE_SHOULD_WIN.getValue();
-                }
-            }
-        }
-
-        return eval;
-    }
-
-    public int kpkLookup(int attackingKingSquare, int defendingKingSquare, int pawnSquare, boolean isAttackerToMove) {
-        if (attackingKingSquare % 8 >= 4) {
-            /*
-             * Flip board on vertical axis to bring White king to right-hand side of board
-             */
-            attackingKingSquare = Bitboards.bitFlippedVerticalAxis.get(attackingKingSquare);
-            defendingKingSquare = Bitboards.bitFlippedVerticalAxis.get(defendingKingSquare);
-            pawnSquare = Bitboards.bitFlippedVerticalAxis.get(pawnSquare);
-        }
-
-        int attackingKingBitbaseIndex = (attackingKingSquare / 8) * 4 + (attackingKingSquare % 8);
-        int pawnBitbaseIndex = pawnSquare - 8;
-
-        int index =
-                (attackingKingBitbaseIndex * 64 * 48 * 2) +
-                        (defendingKingSquare * 48 * 2) +
-                        (pawnBitbaseIndex * 2) +
-                        (isAttackerToMove ? 0 : 1);
-
-        int byteIndex = index / 8;
-        int bitIndex = index % 8;
-
-        int byteElement = rivalKPKBitbase[byteIndex];
-        boolean isWon = (byteElement & (1L << bitIndex)) != 0;
-
-        if (!isWon) return 0;
-
-        int pawnDistanceFromPromotion = 7 - (pawnSquare / 8);
-
-        return PieceValue.getValue(Piece.QUEEN) - Evaluation.ENDGAME_KPK_PAWN_PENALTY_PER_SQUARE.getValue() * pawnDistanceFromPromotion;
     }
 
     private int[] scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
