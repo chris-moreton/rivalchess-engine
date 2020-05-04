@@ -522,7 +522,7 @@ public final class Search implements Runnable {
                                 Evaluation.PAWN_STAGE_MATERIAL_LOW.getValue(),
                                 Evaluation.PAWN_STAGE_MATERIAL_HIGH.getValue(),
                                 PieceSquareTables.pawnEndGame.get(toSquare) - PieceSquareTables.pawnEndGame.get(fromSquare),
-                                PieceSquareTables.pawn.get(toSquare) - PieceSquareTables.pawn.get(fromSquare)).invoke();
+                                PieceSquareTables.pawn.get(toSquare) - PieceSquareTables.pawn.get(fromSquare));
             case KNIGHT:
                 return
                         linearScale(
@@ -530,7 +530,7 @@ public final class Search implements Runnable {
                                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.getValue(),
                                 Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.getValue(),
                                 PieceSquareTables.knightEndGame.get(toSquare) - PieceSquareTables.knightEndGame.get(fromSquare),
-                                PieceSquareTables.knight.get(toSquare) - PieceSquareTables.knight.get(fromSquare)).invoke();
+                                PieceSquareTables.knight.get(toSquare) - PieceSquareTables.knight.get(fromSquare));
             case BISHOP:
                 return PieceSquareTables.bishop.get(toSquare) - PieceSquareTables.bishop.get(fromSquare);
             case ROOK:
@@ -544,7 +544,7 @@ public final class Search implements Runnable {
                                 PieceValue.getValue(Piece.ROOK),
                                 Evaluation.OPENING_PHASE_MATERIAL.getValue(),
                                 PieceSquareTables.kingEndGame.get(toSquare) - PieceSquareTables.kingEndGame.get(fromSquare),
-                                PieceSquareTables.king.get(toSquare) - PieceSquareTables.king.get(fromSquare)).invoke();
+                                PieceSquareTables.king.get(toSquare) - PieceSquareTables.king.get(fromSquare));
             default:
                 return 0;
         }

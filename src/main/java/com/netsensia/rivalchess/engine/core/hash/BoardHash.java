@@ -180,8 +180,8 @@ public class BoardHash {
 
     private void calculatePawnScore(EngineChessBoard board, PawnHashEntry pawnHashEntry) {
         pawnHashEntry.incPawnScore(
-                linearScale(board.getBlackPieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore()).invoke()
-                        - linearScale(board.getWhitePieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()).invoke());
+                linearScale(board.getBlackPieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getWhitePassedPawnScore() * 2, pawnHashEntry.getWhitePassedPawnScore())
+                        - linearScale(board.getWhitePieceValues(), 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(), pawnHashEntry.getBlackPassedPawnScore() * 2, pawnHashEntry.getBlackPassedPawnScore()));
 
         if (board.getBlackPieceValues() < Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue()) {
             calculateLowWhiteMaterialPawnBonus(Colour.BLACK, board, pawnHashEntry);
@@ -219,7 +219,7 @@ public class BoardHash {
             scoreAdjustment = linearScale(
                     lowMaterialSidePieceValues, 0,
                     Evaluation.PAWN_ADJUST_MAX_MATERIAL.getValue(),
-                    kingDistanceFromPawn * 4, 0).invoke();
+                    kingDistanceFromPawn * 4, 0);
 
             final int moverAdjustment = lowMaterialColour == board.getMover() ? 1 : 0;
             if ((pawnDistance < (kingDistanceFromPawn - moverAdjustment)) && (lowMaterialSidePieceValues == 0)) {
