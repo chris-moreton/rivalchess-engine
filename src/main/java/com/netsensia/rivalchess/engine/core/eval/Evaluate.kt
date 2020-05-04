@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import arrow.syntax.function.memoize
 import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
@@ -109,13 +108,10 @@ fun blackRookOpenFilesEval(board: EngineChessBoard, file: Int) =
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
         Math.min(enemyPawnValues / PieceValue.getValue(Piece.PAWN), 6)
 
-fun combineAttacks(attackMap: Map<Int, Long>) =
-        attackMap.values.stream().reduce(0) { a: Long, b: Long -> a or b }
+fun orList(list: List<Long>) = list.stream().reduce(0, Long::or)
 
-fun knightAttackMap(squares: List<Int>) =
-        squares.stream()
-                .collect(Collectors.toMap<Int, Int, Long>(
-                        Function.identity(), Function { s: Int -> Bitboards.knightMoves.get(s) }))
+fun knightAttackList(squares: List<Int>) =
+        squares.stream().map { Bitboards.knightMoves.get(it) }.collect(Collectors.toList())
 
 fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
         Bitboards.magicBitboards.magicMovesRook[sq][
@@ -126,8 +122,11 @@ fun rookAttacks(board: EngineChessBoard, sq: Int) : Long =
 fun rookAttackMap(board: EngineChessBoard, whiteRookSquares: List<Int>) =
         whiteRookSquares.stream()
                 .collect(Collectors.toMap<Int, Int, Long>(
-                        Function.identity(), Function { rs: Int -> rookAttacks(board, rs) })
+                        Function.identity(), Function { rookAttacks(board, it) })
                 )
+
+fun rookAttackList(board: EngineChessBoard, whiteRookSquares: List<Int>) =
+        whiteRookSquares.stream().map { s -> rookAttacks(board, s)}.collect(Collectors.toList())
 
 fun bishopAttacks(board: EngineChessBoard, sq: Int) =
         Bitboards.magicBitboards.magicMovesBishop[sq][
@@ -141,6 +140,9 @@ fun bishopAttackMap(board: EngineChessBoard, whiteBishopSquares: List<Int>) =
                         Function.identity(), Function { bishopAttacks(board, it) })
                 )
 
+fun bishopAttackList(board: EngineChessBoard, whiteBishopSquares: List<Int>) =
+        whiteBishopSquares.stream().map { s -> bishopAttacks(board, s)}.collect(Collectors.toList())
+
 fun queenAttacks(board: EngineChessBoard, sq: Int) = rookAttacks(board, sq) or bishopAttacks(board, sq)
 
 fun queenAttackMap(board: EngineChessBoard, whiteQueenSquares: List<Int>) =
@@ -148,6 +150,9 @@ fun queenAttackMap(board: EngineChessBoard, whiteQueenSquares: List<Int>) =
                 .collect(Collectors.toMap<Int, Int, Long>(
                         Function.identity(), Function { rs: Int -> queenAttacks(board, rs) })
                 )
+
+fun queenAttackList(board: EngineChessBoard, whiteQueenSquares: List<Int>) =
+        whiteQueenSquares.stream().map { s -> queenAttacks(board, s)}.collect(Collectors.toList())
 
 fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 
@@ -163,26 +168,19 @@ fun whiteRookPieceSquareSum(rookSquares: List<Int>) : Int =
 fun whiteBishopPieceSquareSum(rookSquares: List<Int>) : Int =
         rookSquares.stream().map(PieceSquareTables.bishop::get).reduce(0, Integer::sum)
 
-fun whiteQueenPieceSquareSum(squares: List<Int>) : Int =
-        squares.stream().map(PieceSquareTables.queen::get).reduce(0, Integer::sum)
+fun whiteQueenPieceSquareSum(whiteQueenSquares: List<Int>) : Int =
+        whiteQueenSquares.stream().map(PieceSquareTables.queen::get).reduce(0, Integer::sum)
+
+fun flippedSquareTableScore(table: List<Int>, bit: Int) = table.get(Bitboards.bitFlippedHorizontalAxis.get(bit))
 
 fun blackRookPieceSquareSum(rookSquares: List<Int>): Int =
-        rookSquares.stream().map { s ->
-                    PieceSquareTables.rook.get(Bitboards.bitFlippedHorizontalAxis.get(s))
-                }
-                .reduce(0, Integer::sum)
+        rookSquares.stream().map {flippedSquareTableScore(PieceSquareTables.rook, it)}.reduce(0, Integer::sum)
 
-fun blackBishopPieceSquareSum(rookSquares: List<Int>): Int =
-        rookSquares.stream().map { s ->
-                    PieceSquareTables.bishop.get(Bitboards.bitFlippedHorizontalAxis.get(s))
-                }
-                .reduce(0, Integer::sum)
+fun blackBishopPieceSquareSum(bishopSquares: List<Int>): Int =
+        bishopSquares.stream().map {flippedSquareTableScore(PieceSquareTables.bishop, it)}.reduce(0, Integer::sum)
 
-fun blackQueenPieceSquareSum(squares: List<Int>): Int =
-        squares.stream().map { s ->
-                    PieceSquareTables.queen.get(Bitboards.bitFlippedHorizontalAxis.get(s))
-                }
-                .reduce(0, Integer::sum)
+fun blackQueenPieceSquareSum(queenSquares: List<Int>): Int =
+        queenSquares.stream().map {flippedSquareTableScore(PieceSquareTables.queen, it)}.reduce(0, Integer::sum)
 
 fun kingAttackCount(dangerZone: Long, attacks: Map<Int, Long>): Int {
     return attacks.entries.stream()
@@ -212,11 +210,18 @@ fun bishopScore(board: EngineChessBoard, materialDifference: Int) =
     bishopPairEval(board) + oppositeColourBishopsEval(board, materialDifference) + trappedBishopEval(board)
 
 fun whiteLightBishopExists(board: EngineChessBoard) = board.whiteBishopBitboard and Bitboards.LIGHT_SQUARES != 0L
+
 fun whiteDarkBishopExists(board: EngineChessBoard) = board.whiteBishopBitboard and Bitboards.DARK_SQUARES != 0L
+
 fun blackLightBishopExists(board: EngineChessBoard) = board.blackBishopBitboard and Bitboards.LIGHT_SQUARES != 0L
+
 fun blackDarkBishopExists(board: EngineChessBoard) = board.blackBishopBitboard and Bitboards.DARK_SQUARES != 0L
-fun whiteBishopColourCount(board: EngineChessBoard) = (if (whiteLightBishopExists(board)) 1 else 0) + if (whiteDarkBishopExists(board)) 1 else 0
-fun blackBishopColourCount(board: EngineChessBoard) = (if (blackLightBishopExists(board)) 1 else 0) + if (blackDarkBishopExists(board)) 1 else 0
+
+fun whiteBishopColourCount(board: EngineChessBoard) =
+        (if (whiteLightBishopExists(board)) 1 else 0) + if (whiteDarkBishopExists(board)) 1 else 0
+
+fun blackBishopColourCount(board: EngineChessBoard) =
+        (if (blackLightBishopExists(board)) 1 else 0) + if (blackDarkBishopExists(board)) 1 else 0
 
 private fun oppositeColourBishopsEval(board: EngineChessBoard, materialDifference: Int): Int {
 
@@ -281,22 +286,25 @@ private fun whiteA7PawnTrappedEval(board: EngineChessBoard): Int {
 }
 
 fun whiteAttacksBitboard(board: EngineChessBoard) =
-        ((combineAttacks(rookAttackMap(board, squareList(board.getBitboard(BitboardType.WR)))) or
-            combineAttacks(queenAttackMap(board, squareList(board.getBitboard(BitboardType.WQ)))) or
-            combineAttacks(bishopAttackMap(board, squareList(board.getBitboard(BitboardType.WB)))) or
-            combineAttacks(knightAttackMap(squareList(board.getBitboard(BitboardType.WN))))) and
+        ((orList(rookAttackList(board, squareList(board.getBitboard(BitboardType.WR)))) or
+                orList(queenAttackList(board, squareList(board.getBitboard(BitboardType.WQ)))) or
+                orList(bishopAttackList(board, squareList(board.getBitboard(BitboardType.WB)))) or
+                orList(knightAttackList(squareList(board.getBitboard(BitboardType.WN))))) and
             (board.blackKnightBitboard or board.blackRookBitboard or board.blackQueenBitboard or board.blackBishopBitboard)) or
             getWhitePawnAttacks(board.whitePawnBitboard)
 
 fun blackAttacksBitboard(board: EngineChessBoard) =
-        ((combineAttacks(rookAttackMap(board, squareList(board.getBitboard(BitboardType.BR)))) or
-            combineAttacks(queenAttackMap(board, squareList(board.getBitboard(BitboardType.BQ)))) or
-            combineAttacks(bishopAttackMap(board, squareList(board.getBitboard(BitboardType.BB)))) or
-            combineAttacks(knightAttackMap(squareList(board.getBitboard(BitboardType.BN))))) and
+        ((orList(rookAttackList(board, squareList(board.getBitboard(BitboardType.BR)))) or
+                orList(queenAttackList(board, squareList(board.getBitboard(BitboardType.BQ)))) or
+                orList(bishopAttackList(board, squareList(board.getBitboard(BitboardType.BB)))) or
+                orList(knightAttackList(squareList(board.getBitboard(BitboardType.BN))))) and
             (board.whiteKnightBitboard or board.whiteRookBitboard or board.whiteQueenBitboard or board.whiteBishopBitboard)) or
             getBlackPawnAttacks(board.blackPawnBitboard)
 
-fun threatEval(board: EngineChessBoard, whiteAttacksBitboard: Long, blackAttacksBitboard: Long): Int {
+fun threatEval(board: EngineChessBoard): Int {
+
+    val whiteAttacksBitboard = whiteAttacksBitboard(board)
+    val blackAttacksBitboard = blackAttacksBitboard(board)
 
     val whiteAttackScore = squareList(whiteAttacksBitboard)
             .stream()
@@ -338,7 +346,26 @@ fun isEndGame(board: EngineChessBoard) =
             board.blackPieceValues +
             board.blackPawnValues) <= Evaluation.EVAL_ENDGAME_TOTAL_PIECES.getValue()
 
-fun kingSafetyEval(board: EngineChessBoard, blackKingAttackedCount: Int, whiteKingAttackedCount: Int): Int {
+fun kingSafetyEval(board: EngineChessBoard): Int {
+    val whiteKingDangerZone = Bitboards.kingMoves[board.whiteKingSquare] or (Bitboards.kingMoves[board.whiteKingSquare] shl 8)
+    val blackKingDangerZone = Bitboards.kingMoves[board.blackKingSquare] or (Bitboards.kingMoves[board.blackKingSquare] ushr 8)
+    val whiteRookSquares = squareList(board.getBitboard(BitboardType.WR))
+    val whiteRookAttacks = rookAttackMap(board, whiteRookSquares)
+    val blackRookSquares = squareList(board.getBitboard(BitboardType.BR))
+    val blackRookAttacks = rookAttackMap(board, blackRookSquares)
+    val whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ))
+    val whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares)
+    val blackQueenSquares = squareList(board.getBitboard(BitboardType.BQ))
+    val blackQueenAttacks = queenAttackMap(board, blackQueenSquares)
+    val whiteBishopSquares = squareList(board.getBitboard(BitboardType.WB))
+    val whiteBishopAttacks = bishopAttackMap(board, whiteBishopSquares)
+    val blackBishopSquares = squareList(board.getBitboard(BitboardType.BB))
+    val blackBishopAttacks = bishopAttackMap(board, blackBishopSquares)
+    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, whiteRookAttacks) + kingAttackCount(blackKingDangerZone, whiteQueenAttacks) * 2 +
+            kingAttackCount(blackKingDangerZone, whiteBishopAttacks)
+    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, blackRookAttacks) + kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2 +
+            kingAttackCount(whiteKingDangerZone, blackBishopAttacks)
+
     val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
 
     if (averagePiecesPerSide <= Evaluation.KINGSAFETY_MIN_PIECE_BALANCE.value) {
@@ -679,35 +706,15 @@ fun evaluate(board: EngineChessBoard) =
     if (onlyKingsRemain(board)) {
         0
     } else {
-        val whiteKingDangerZone = Bitboards.kingMoves[board.whiteKingSquare] or (Bitboards.kingMoves[board.whiteKingSquare] shl 8)
-        val blackKingDangerZone = Bitboards.kingMoves[board.blackKingSquare] or (Bitboards.kingMoves[board.blackKingSquare] ushr 8)
-        val whiteRookSquares = squareList(board.getBitboard(BitboardType.WR))
-        val whiteRookAttacks = rookAttackMap(board, whiteRookSquares)
-        val blackRookSquares = squareList(board.getBitboard(BitboardType.BR))
-        val blackRookAttacks = rookAttackMap(board, blackRookSquares)
-        val whiteQueenSquares = squareList(board.getBitboard(BitboardType.WQ))
-        val whiteQueenAttacks = queenAttackMap(board, whiteQueenSquares)
-        val blackQueenSquares = squareList(board.getBitboard(BitboardType.BQ))
-        val blackQueenAttacks = queenAttackMap(board, blackQueenSquares)
-        val whiteBishopSquares = squareList(board.getBitboard(BitboardType.WB))
-        val whiteBishopAttacks = bishopAttackMap(board, whiteBishopSquares)
-        val blackBishopSquares = squareList(board.getBitboard(BitboardType.BB))
-        val blackBishopAttacks = bishopAttackMap(board, blackBishopSquares)
         val materialDifference = materialDifference(board)
-        val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, whiteRookAttacks) + kingAttackCount(blackKingDangerZone, whiteQueenAttacks) * 2 +
-                kingAttackCount(blackKingDangerZone, whiteBishopAttacks)
-        val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, blackRookAttacks) + kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2 +
-                kingAttackCount(whiteKingDangerZone, blackBishopAttacks)
-        val whiteAttacksBitboard = whiteAttacksBitboard(board)
-        val blackAttacksBitboard = blackAttacksBitboard(board)
 
         val eval: Int = (materialDifference + whiteEvaluation(board) - blackEvaluation(board) +
                 board.getBoardHashObject().getPawnHashEntry(board).getPawnScore() +
                 tradePawnBonusWhenMoreMaterial(board, materialDifference) +
                 tradePieceBonusWhenMoreMaterial(board, materialDifference) + castlingEval(board) +
                 bishopScore(board, materialDifference)
-                + threatEval(board, whiteAttacksBitboard, blackAttacksBitboard)
-                + kingSafetyEval(board, blackKingAttackedCount, whiteKingAttackedCount))
+                + threatEval(board)
+                + kingSafetyEval(board))
 
         val endGameAdjustedScore = if (isEndGame(board)) endGameAdjustment(board, eval) else eval
 

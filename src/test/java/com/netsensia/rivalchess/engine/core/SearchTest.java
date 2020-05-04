@@ -18,7 +18,6 @@ public class SearchTest {
 
         EngineChessBoard engineChessBoard = new EngineChessBoard();
         engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
-        Search search = new Search();
         int actualScore = EvaluateKt.evaluate(engineChessBoard);
 
         assertEquals(expectedScore, actualScore);
@@ -45,7 +44,7 @@ public class SearchTest {
         assertEvaluationScore("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 52, true);
         assertEvaluationScore("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", -60, true);
         assertEvaluationScore("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 6, true);
-    }
+}
 
     private void assertBestMove(String fen, String expectedMove, int expectedScore) throws IllegalFenException, InterruptedException {
 

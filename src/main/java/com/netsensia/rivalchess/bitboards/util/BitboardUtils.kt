@@ -74,22 +74,18 @@ fun isRookAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboar
 }
 
 fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long): Int {
-    return ((allPieceBitboard and MagicBitboards.occupancyMaskRook[pieceSquare]) * MagicBitboards.magicNumberRook[pieceSquare]
+    return ((allPieceBitboard and MagicBitboards.occupancyMaskRook[pieceSquare]) *
+            MagicBitboards.magicNumberRook[pieceSquare]
             ushr MagicBitboards.magicNumberShiftsRook[pieceSquare]).toInt()
 }
 
 fun unsetBit(bitboard: Long, bit: Int) = bitboard xor (1L shl bit)
 
-fun squareListMemoize(bitboard: Long) : () -> List<Int> = {
-    val retList = mutableListOf<Int>()
-    var mutableBitboard = bitboard
-
-    while (mutableBitboard != 0L) {
-        val square = numberOfTrailingZeros(mutableBitboard)
-        retList.add(square)
-        mutableBitboard = unsetBit(mutableBitboard, square)
+tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : List<Int> =
+    when (bitboard) {
+        0L -> squareList
+        else -> {
+            val square: Int = numberOfTrailingZeros(bitboard)
+            squareList(unsetBit(bitboard, square), squareList + square)
+        }
     }
-    retList
-}.memoize()
-
-fun squareList(bitboard: Long) = squareListMemoize(bitboard).invoke()
