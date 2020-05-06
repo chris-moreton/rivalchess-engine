@@ -454,31 +454,6 @@ fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
          else 0)
 
-fun whiteKingShieldEval(bitboards: BitboardData) : Int {
-    var shieldValue = 0
-
-    if (whiteKingOnFirstTwoRanks(bitboards)) {
-        with(whiteKingShield(bitboards)) {
-
-            shieldValue = Math.min(whitePawnShieldEval(bitboards, this), Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value) -
-                    uncastledTrappedWhiteRookEval(bitboards)
-
-            val whiteOpen = southFill(this, 8) and southFill(bitboards.whitePawns, 8).inv() and Bitboards.RANK_1
-            if (whiteOpen != 0L) {
-                shieldValue -= Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(whiteOpen and Bitboards.MIDDLE_FILES_8_BIT)
-                shieldValue -= Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(whiteOpen and Bitboards.NONMID_FILES_8_BIT)
-            }
-            val blackOpen = southFill(this, 8) and southFill(bitboards.blackPawns, 8).inv() and Bitboards.RANK_1
-            if (blackOpen != 0L) {
-                shieldValue -= Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(blackOpen and Bitboards.MIDDLE_FILES_8_BIT)
-                shieldValue -= Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(blackOpen and Bitboards.NONMID_FILES_8_BIT)
-            }
-        }
-    }
-
-    return shieldValue
-}
-
 fun blackPawnShieldEval(bitboards: BitboardData, blackPawnShield: Long) =
         (Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.value * bitCount(bitboards.blackPawns and blackPawnShield)
                 - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.value * bitCount(bitboards.whitePawns and (blackPawnShield or (blackPawnShield ushr 8)))
@@ -498,24 +473,51 @@ fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
         else 0)
 
+private fun openFiles(kingShield: Long, pawnBitboard: Long) =
+        southFill(kingShield, 8) and southFill(pawnBitboard, 8).inv() and Bitboards.RANK_1
+
+fun whiteKingShieldEval(bitboards: BitboardData) : Int {
+    var shieldValue = 0
+
+    if (whiteKingOnFirstTwoRanks(bitboards)) {
+        val kingShield = whiteKingShield(bitboards)
+
+        shieldValue = Math.min(whitePawnShieldEval(bitboards, kingShield), Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value) -
+                uncastledTrappedWhiteRookEval(bitboards)
+
+        val whiteOpen = openFiles(kingShield, bitboards.whitePawns)
+        if (whiteOpen != 0L) {
+            shieldValue -= Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(whiteOpen and Bitboards.MIDDLE_FILES_8_BIT)
+            shieldValue -= Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(whiteOpen and Bitboards.NONMID_FILES_8_BIT)
+        }
+        val blackOpen = openFiles(kingShield, bitboards.blackPawns)
+        if (blackOpen != 0L) {
+            shieldValue -= Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(blackOpen and Bitboards.MIDDLE_FILES_8_BIT)
+            shieldValue -= Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(blackOpen and Bitboards.NONMID_FILES_8_BIT)
+        }
+    }
+
+    return shieldValue
+}
+
 fun blackKingShieldEval(bitboards: BitboardData): Int {
     var shieldValue = 0
     if (blackKingOnFirstTwoRanks(bitboards)) {
-        with(blackKingShield(bitboards)) {
-            shieldValue =
-                    Math.min(blackPawnShieldEval(bitboards, this), Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value) -
-                            uncastledTrappedBlackRookEval(bitboards)
+        val kingShield = blackKingShield(bitboards)
+        val whiteOpen = openFiles(kingShield, bitboards.whitePawns)
+        val blackOpen = openFiles(kingShield, bitboards.blackPawns)
 
-            val whiteOpen = southFill(this, 8) and southFill(bitboards.whitePawns, 8).inv() and Bitboards.RANK_1
-            if (whiteOpen != 0L) {
-                shieldValue -= (Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(whiteOpen and Bitboards.MIDDLE_FILES_8_BIT)
-                        + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(whiteOpen and Bitboards.NONMID_FILES_8_BIT))
-            }
-            val blackOpen = southFill(this, 8) and southFill(bitboards.blackPawns, 8).inv() and Bitboards.RANK_1
-            if (blackOpen != 0L) {
-                shieldValue -= (Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(blackOpen and Bitboards.MIDDLE_FILES_8_BIT)
-                        + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(blackOpen and Bitboards.NONMID_FILES_8_BIT))
-            }
+        shieldValue =
+                Math.min(blackPawnShieldEval(bitboards, kingShield), Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value) -
+                        uncastledTrappedBlackRookEval(bitboards)
+
+        if (whiteOpen != 0L) {
+            shieldValue -= (Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(whiteOpen and Bitboards.MIDDLE_FILES_8_BIT)
+                    + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(whiteOpen and Bitboards.NONMID_FILES_8_BIT))
+        }
+        if (blackOpen != 0L) {
+            shieldValue -= (Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(blackOpen and Bitboards.MIDDLE_FILES_8_BIT)
+                    + Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(blackOpen and Bitboards.NONMID_FILES_8_BIT))
         }
     }
     return shieldValue
