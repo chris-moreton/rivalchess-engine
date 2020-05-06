@@ -39,6 +39,27 @@ data class BitboardData(
         val enPassantSquare: Long = 0L
 )
 
+fun initBitboardData(board: EngineChessBoard): BitboardData {
+    return BitboardData(
+            whitePawns = board.getBitboard(WP),
+            whiteBishops = board.getBitboard(WB),
+            whiteKnights = board.getBitboard(WN),
+            whiteKing = board.getBitboard(WK),
+            whiteQueens = board.getBitboard(WQ),
+            whiteRooks = board.getBitboard(WR),
+            blackPawns = board.getBitboard(BP),
+            blackBishops = board.getBitboard(BB),
+            blackKnights = board.getBitboard(BN),
+            blackKing = board.getBitboard(BK),
+            blackQueen = board.getBitboard(BQ),
+            blackRook = board.getBitboard(BR),
+            enPassantSquare = board.getBitboard(ENPASSANTSQUARE),
+            enemy = board.getBitboard(ENEMY),
+            all = board.getBitboard(ALL),
+            friendly = board.getBitboard(FRIENDLY)
+    )
+}
+
 fun onlyOneBitSet(bitboard: Long) = (bitboard and (bitboard - 1)) == 0L
 
 fun onlyKingsRemain(bitboards: BitboardData) = onlyOneBitSet(bitboards.enemy) and onlyOneBitSet(bitboards.friendly)
@@ -667,27 +688,6 @@ fun blackPawnValues(bitboards: BitboardData): Int {
 fun whiteKingSquare(bitboards: BitboardData) = numberOfTrailingZeros(bitboards.whiteKing)
 
 fun blackKingSquare(bitboards: BitboardData) = numberOfTrailingZeros(bitboards.blackKing)
-
-private fun initBitboardData(board: EngineChessBoard): BitboardData {
-    return BitboardData(
-            whitePawns = board.getBitboard(WP),
-            whiteBishops = board.getBitboard(WB),
-            whiteKnights = board.getBitboard(WN),
-            whiteKing = board.getBitboard(WK),
-            whiteQueens = board.getBitboard(WQ),
-            whiteRooks = board.getBitboard(WR),
-            blackPawns = board.getBitboard(BP),
-            blackBishops = board.getBitboard(BB),
-            blackKnights = board.getBitboard(BN),
-            blackKing = board.getBitboard(BK),
-            blackQueen = board.getBitboard(BQ),
-            blackRook = board.getBitboard(BR),
-            enPassantSquare = board.getBitboard(ENPASSANTSQUARE),
-            enemy = board.getBitboard(ENEMY),
-            all = board.getBitboard(ALL),
-            friendly = board.getBitboard(FRIENDLY)
-    )
-}
 
 private fun blackKnightPieceSquareEval(bitboards: BitboardData, blackKnightSquares: List<Int>) =
         linearScale(
