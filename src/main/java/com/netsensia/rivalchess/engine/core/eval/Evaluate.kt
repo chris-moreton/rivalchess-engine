@@ -414,13 +414,13 @@ fun kingSafetyEval(bitboards: BitboardData, board: EngineChessBoard): Int {
 
 }
 
-private fun whitePawnShieldEval(bitboards: BitboardData, whitePawnShield: Long) =
+fun whitePawnShieldEval(bitboards: BitboardData, whitePawnShield: Long) =
         (Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.value * bitCount(bitboards.whitePawns and whitePawnShield)
                 - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.value * bitCount(bitboards.blackPawns and (whitePawnShield or (whitePawnShield shl 8)))
                 + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.value * bitCount(bitboards.whitePawns and (whitePawnShield shl 8))
                 - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.value * bitCount(bitboards.blackPawns and (whitePawnShield shl 16)))
 
-private fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
+fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
         if (bitboards.whiteKing and Bitboards.F1G1 != 0L &&
                 bitboards.whiteRooks and Bitboards.G1H1 != 0L &&
                 bitboards.whitePawns and Bitboards.FILE_G != 0L &&
@@ -433,7 +433,7 @@ private fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
          else 0)
 
-private fun whiteKingShieldEval(bitboards: BitboardData) : Int {
+fun whiteKingShieldEval(bitboards: BitboardData) : Int {
     var shieldValue = 0
 
     if (whiteKingOnFirstTwoRanks(bitboards)) {
@@ -458,13 +458,13 @@ private fun whiteKingShieldEval(bitboards: BitboardData) : Int {
     return shieldValue
 }
 
-private fun blackPawnShieldEval(bitboards: BitboardData, blackPawnShield: Long) =
+fun blackPawnShieldEval(bitboards: BitboardData, blackPawnShield: Long) =
         (Evaluation.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT.value * bitCount(bitboards.blackPawns and blackPawnShield)
                 - Evaluation.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT.value * bitCount(bitboards.whitePawns and (blackPawnShield or (blackPawnShield ushr 8)))
                 + Evaluation.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT.value * bitCount(bitboards.blackPawns and (blackPawnShield ushr 8))
                 - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.value * bitCount(bitboards.whitePawns and (blackPawnShield ushr 16)))
 
-private fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
+fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
         if (bitboards.blackKing and Bitboards.F8G8 != 0L &&
                 bitboards.blackRook and Bitboards.G8H8 != 0L &&
                 bitboards.blackPawns and Bitboards.FILE_G != 0L &&
@@ -477,7 +477,7 @@ private fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
         else 0)
 
-private fun blackKingShieldEval(bitboards: BitboardData): Int {
+fun blackKingShieldEval(bitboards: BitboardData): Int {
     var shieldValue = 0
     if (blackKingOnFirstTwoRanks(bitboards)) {
         with(blackKingShield(bitboards)) {
@@ -512,59 +512,66 @@ private fun blackKingShield(bitboards: BitboardData) =
 private fun whiteKingShield(bitboards: BitboardData) =
         Bitboards.whiteKingShieldMask[whiteKingSquare(bitboards) % 8]
 
-fun castlingEval(bitboards: BitboardData, castlePrivileges: Int): Int {
-    var eval = 0
-    if (isAnyCastleAvailable(castlePrivileges)) {
-        // Value of moving King to its queenside castle destination in the middle game
-        val kingSquareBonusMiddleGame = PieceSquareTables.king[1] - PieceSquareTables.king[3]
-        val kingSquareBonusEndGame = PieceSquareTables.kingEndGame[1] - PieceSquareTables.kingEndGame[3]
-        val rookSquareBonus = PieceSquareTables.rook[3] - PieceSquareTables.rook[0]
+fun whiteCastlingEval(bitboards: BitboardData, castlePrivileges: Int) : Int {
 
-        val whiteCastleValue = maxCastleValue(blackPieceValues(bitboards), kingSquareBonusEndGame, kingSquareBonusMiddleGame, rookSquareBonus)
+    val whiteCastleValue = maxCastleValue(blackPieceValues(bitboards))
 
-        if (whiteCastleValue > 0) {
-            var timeToCastleKingSide = 100
-            var timeToCastleQueenSide = 100
-            if (castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value != 0) {
-                timeToCastleKingSide = 2
-                if (bitboards.all and (1L shl 1) != 0L) timeToCastleKingSide++
-                if (bitboards.all and (1L shl 2) != 0L) timeToCastleKingSide++
-            }
-            if (castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value != 0) {
-                timeToCastleQueenSide = 2
-                if (bitboards.all and (1L shl 6) != 0L) timeToCastleQueenSide++
-                if (bitboards.all and (1L shl 5) != 0L) timeToCastleQueenSide++
-                if (bitboards.all and (1L shl 4) != 0L) timeToCastleQueenSide++
-            }
-            eval += whiteCastleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide)
+    return if (whiteCastleValue > 0) {
+        var timeToCastleKingSide = 100
+        var timeToCastleQueenSide = 100
+        if (castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value != 0) {
+            timeToCastleKingSide = 2
+            if (bitboards.all and (1L shl 1) != 0L) timeToCastleKingSide++
+            if (bitboards.all and (1L shl 2) != 0L) timeToCastleKingSide++
         }
-
-        val blackCastleValue = maxCastleValue(whitePieceValues(bitboards), kingSquareBonusEndGame, kingSquareBonusMiddleGame, rookSquareBonus)
-
-        if (blackCastleValue > 0) {
-            var timeToCastleKingSide = 100
-            var timeToCastleQueenSide = 100
-            if (castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value != 0) {
-                timeToCastleKingSide = 2
-                if (bitboards.all and (1L shl 57) != 0L) timeToCastleKingSide++
-                if (bitboards.all and (1L shl 58) != 0L) timeToCastleKingSide++
-            }
-            if (castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value != 0) {
-                timeToCastleQueenSide = 2
-                if (bitboards.all and (1L shl 60) != 0L) timeToCastleQueenSide++
-                if (bitboards.all and (1L shl 61) != 0L) timeToCastleQueenSide++
-                if (bitboards.all and (1L shl 62) != 0L) timeToCastleQueenSide++
-            }
-            eval -= blackCastleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide)
+        if (castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value != 0) {
+            timeToCastleQueenSide = 2
+            if (bitboards.all and (1L shl 6) != 0L) timeToCastleQueenSide++
+            if (bitboards.all and (1L shl 5) != 0L) timeToCastleQueenSide++
+            if (bitboards.all and (1L shl 4) != 0L) timeToCastleQueenSide++
         }
-    }
-    return eval
+        whiteCastleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide)
+    } else 0
 }
+
+fun blackCastlingEval(bitboards: BitboardData, castlePrivileges: Int) : Int {
+    // Value of moving King to its queenside castle destination in the middle game
+
+    val blackCastleValue = maxCastleValue(whitePieceValues(bitboards))
+
+    return if (blackCastleValue > 0) {
+        var timeToCastleKingSide = 100
+        var timeToCastleQueenSide = 100
+        if (castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value != 0) {
+            timeToCastleKingSide = 2
+            if (bitboards.all and (1L shl 57) != 0L) timeToCastleKingSide++
+            if (bitboards.all and (1L shl 58) != 0L) timeToCastleKingSide++
+        }
+        if (castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value != 0) {
+            timeToCastleQueenSide = 2
+            if (bitboards.all and (1L shl 60) != 0L) timeToCastleQueenSide++
+            if (bitboards.all and (1L shl 61) != 0L) timeToCastleQueenSide++
+            if (bitboards.all and (1L shl 62) != 0L) timeToCastleQueenSide++
+        }
+        blackCastleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide)
+    } else 0
+}
+
+private fun rookSquareBonus() = PieceSquareTables.rook[3] - PieceSquareTables.rook[0]
+
+private fun kingSquareBonusEndGame() = PieceSquareTables.kingEndGame[1] - PieceSquareTables.kingEndGame[3]
+
+private fun kingSquareBonusMiddleGame() = PieceSquareTables.king[1] - PieceSquareTables.king[3]
+
+fun castlingEval(bitboards: BitboardData, castlePrivileges: Int) =
+    if (isAnyCastleAvailable(castlePrivileges)) {
+        whiteCastlingEval(bitboards, castlePrivileges) - blackCastlingEval(bitboards, castlePrivileges)
+    } else 0
 
 // don't want to exceed this value because otherwise castling would be discouraged due to the bonuses
 // given by still having castling rights.
-fun maxCastleValue(pieceValues: Int, kingSquareBonusEndGame: Int, kingSquareBonusMiddleGame: Int, rookSquareBonus: Int) =
-        kingSquareBonusScaled(pieceValues, kingSquareBonusEndGame, kingSquareBonusMiddleGame) + rookSquareBonus
+fun maxCastleValue(pieceValues: Int) =
+        kingSquareBonusScaled(pieceValues, kingSquareBonusEndGame(), kingSquareBonusMiddleGame()) + rookSquareBonus()
 
 private fun kingSquareBonusScaled(pieceValues: Int, kingSquareBonusEndGame: Int, kingSquareBonusMiddleGame: Int) =
     linearScale(
