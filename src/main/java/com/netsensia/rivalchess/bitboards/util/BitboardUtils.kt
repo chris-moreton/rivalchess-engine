@@ -54,7 +54,7 @@ fun getPawnMovesCaptureOfColour(colour: Colour): List<Long> {
 }
 
 fun getFirstOccupiedSquare(bitboard: Long): Int {
-    return java.lang.Long.numberOfTrailingZeros(bitboard)
+    return numberOfTrailingZeros(bitboard)
 }
 
 fun isBishopAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long): Boolean {
@@ -84,7 +84,7 @@ tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : Li
     when (bitboard) {
         0L -> squareList
         else -> {
-            val square: Int = numberOfTrailingZeros(bitboard)
+            val square = numberOfTrailingZeros(bitboard)
             squareList(unsetBit(bitboard, square), squareList + square)
         }
     }

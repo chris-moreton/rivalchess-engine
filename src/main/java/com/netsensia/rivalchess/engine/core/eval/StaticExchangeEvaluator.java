@@ -6,5 +6,5 @@ import com.netsensia.rivalchess.exception.InvalidMoveException;
 
 public interface StaticExchangeEvaluator {
 
-    public int staticExchangeEvaluation(EngineChessBoard board, EngineMove move) throws InvalidMoveException;
+    int staticExchangeEvaluation(EngineChessBoard board, EngineMove move) throws InvalidMoveException;
 }
