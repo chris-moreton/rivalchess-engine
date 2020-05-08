@@ -31,8 +31,8 @@ data class BitboardData(
         val blackBishops: Long = 0L,
         val blackKnights: Long = 0L,
         val blackKing: Long = 0L,
-        val blackQueen: Long = 0L,
-        val blackRook: Long = 0L,
+        val blackQueens: Long = 0L,
+        val blackRooks: Long = 0L,
         val enemy: Long = 0L,
         val friendly: Long = 0L,
         val all: Long = 0L,
@@ -51,8 +51,8 @@ fun initBitboardData(board: EngineChessBoard): BitboardData {
             blackBishops = board.getBitboard(BB),
             blackKnights = board.getBitboard(BN),
             blackKing = board.getBitboard(BK),
-            blackQueen = board.getBitboard(BQ),
-            blackRook = board.getBitboard(BR),
+            blackQueens = board.getBitboard(BQ),
+            blackRooks = board.getBitboard(BR),
             enPassantSquare = board.getBitboard(ENPASSANTSQUARE),
             enemy = board.getBitboard(ENEMY),
             all = board.getBitboard(ALL),
@@ -64,24 +64,17 @@ fun onlyOneBitSet(bitboard: Long) = (bitboard and (bitboard - 1)) == 0L
 
 fun onlyKingsRemain(bitboards: BitboardData) = onlyOneBitSet(bitboards.enemy) and onlyOneBitSet(bitboards.friendly)
 
-fun whitePawnPieceSquareEval(bitboards: BitboardData) : Int {
-
-    val pawnSquares = squareList(bitboards.whitePawns)
-
-    return linearScale(
+fun whitePawnPieceSquareEval(bitboards: BitboardData, pawnSquares: List<Int>) =
+        linearScale(
             blackPieceValues(bitboards),
             Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
             Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
             pawnSquares.stream().map(PieceSquareTables.pawnEndGame::get).reduce(0, Integer::sum),
             pawnSquares.stream().map(PieceSquareTables.pawn::get).reduce(0, Integer::sum)
-    )
-}
+        )
 
-fun blackPawnPieceSquareEval(bitboards: BitboardData) : Int {
-
-    val pawnSquares = squareList(bitboards.blackPawns)
-
-    return linearScale(
+fun blackPawnPieceSquareEval(bitboards: BitboardData, pawnSquares: List<Int>) =
+    linearScale(
             whitePieceValues(bitboards),
             Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
             Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
@@ -90,7 +83,6 @@ fun blackPawnPieceSquareEval(bitboards: BitboardData) : Int {
             pawnSquares.stream().map { PieceSquareTables.pawn[Bitboards.bitFlippedHorizontalAxis[it]] }
                     .reduce(0, Integer::sum)
     )
-}
 
 fun whiteKingSquareEval(bitboards: BitboardData) =
         linearScale(
@@ -126,7 +118,7 @@ fun twoWhiteRooksTrappingKingEval(bitboards: BitboardData) =
             Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.value else 0
 
 fun twoBlackRooksTrappingKingEval(bitboards: BitboardData) =
-        if (bitCount(bitboards.blackRook and Bitboards.RANK_2) > 1
+        if (bitCount(bitboards.blackRooks and Bitboards.RANK_2) > 1
                 && bitboards.whiteKing and Bitboards.RANK_1 != 0L)
             Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.value else 0
 
@@ -167,7 +159,7 @@ fun rookAttackMap(bitboards: BitboardData, whiteRookSquares: List<Int>) : Map<In
                 )
 
 fun rookAttackList(bitboards: BitboardData, whiteRookSquares: List<Int>) : List<Long> =
-        whiteRookSquares.stream().map { s -> rookAttacks(bitboards, s)}.collect(Collectors.toList())
+        whiteRookSquares.stream().map { s -> rookAttacks(bitboards, s) }.collect(Collectors.toList())
 
 fun bishopAttacks(bitboards: BitboardData, sq: Int) =
         Bitboards.magicBitboards.magicMovesBishop[sq][
@@ -310,7 +302,7 @@ private fun blackH2TrappedBishopEval(bitboards: BitboardData) =
         if (bitboards.blackBishops and (1L shl Square.H2.bitRef) != 0L &&
                 bitboards.whitePawns and (1L shl Square.G3.bitRef) != 0L &&
                 bitboards.whitePawns and (1L shl Square.F2.bitRef) != 0L)
-            if (bitboards.blackQueen == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value
+            if (bitboards.blackQueens == 0L) Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value
             else Evaluation.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY.value
         else 0
 
@@ -337,27 +329,44 @@ private fun whiteA7TrappedBishopEval(bitboards: BitboardData) =
         else 0
 
 fun whiteAttacksBitboard(bitboards: BitboardData) =
-        ((orList(rookAttackList(bitboards, squareList(bitboards.whiteRooks))) or
-                orList(queenAttackList(bitboards, squareList(bitboards.whiteQueens))) or
-                orList(bishopAttackList(bitboards, squareList(bitboards.whiteBishops))) or
-                orList(knightAttackList(squareList(bitboards.whiteKnights)))) and
-                (bitboards.blackKnights or bitboards.blackRook or bitboards.blackQueen or bitboards.blackBishops)) or
+        (orList(whitePieceAttackList(bitboards)) and blackPieceBitboard(bitboards)) or
                 getWhitePawnAttacks(bitboards.whitePawns)
 
+private fun blackPieceBitboard(bitboards: BitboardData) =
+        (bitboards.blackKnights or bitboards.blackRooks or bitboards.blackQueens or bitboards.blackBishops)
+
+private fun whitePieceBitboard(bitboards: BitboardData) =
+        (bitboards.whiteKnights or bitboards.whiteRooks or bitboards.whiteQueens or bitboards.whiteBishops)
+
+private fun whitePieceAttackList(bitboards: BitboardData): List<Long> {
+    return rookAttackList(bitboards, squareList(bitboards.whiteRooks)) +
+            queenAttackList(bitboards, squareList(bitboards.whiteQueens)) +
+            bishopAttackList(bitboards, squareList(bitboards.whiteBishops)) +
+            knightAttackList(squareList(bitboards.whiteKnights))
+}
+
+private fun blackPieceAttackList(bitboards: BitboardData): List<Long> {
+    return rookAttackList(bitboards, squareList(bitboards.blackRooks)) +
+            queenAttackList(bitboards, squareList(bitboards.blackQueens)) +
+            bishopAttackList(bitboards, squareList(bitboards.blackBishops)) +
+            knightAttackList(squareList(bitboards.blackKnights))
+}
+
 fun blackAttacksBitboard(bitboards: BitboardData) =
-        ((orList(rookAttackList(bitboards, squareList(bitboards.blackRook))) or
-                orList(queenAttackList(bitboards, squareList(bitboards.blackQueen))) or
-                orList(bishopAttackList(bitboards, squareList(bitboards.blackBishops))) or
-                orList(knightAttackList(squareList(bitboards.blackKnights)))) and
-                (bitboards.whiteKnights or bitboards.whiteRooks or bitboards.whiteQueens or bitboards.whiteBishops)) or
+        (orList(blackPieceAttackList(bitboards)) and whitePieceBitboard(bitboards)) or
                 getBlackPawnAttacks(bitboards.blackPawns)
 
 fun threatEval(bitboards: BitboardData, board: EngineChessBoard): Int {
+    return (adjustedAttackScore(whiteAttackScore(bitboards, board)) -
+            adjustedAttackScore(blackAttackScore(bitboards, board))) /
+            Evaluation.THREAT_SCORE_DIVISOR.value
+}
 
-    val whiteAttacksBitboard = whiteAttacksBitboard(bitboards)
-    val blackAttacksBitboard = blackAttacksBitboard(bitboards)
+private fun adjustedAttackScore(attackScore: Int) =
+        attackScore + attackScore * (attackScore / PieceValue.getValue(Piece.QUEEN))
 
-    val whiteAttackScore = squareList(whiteAttacksBitboard)
+private fun whiteAttackScore(bitboards: BitboardData, board: EngineChessBoard): Int {
+    return squareList(whiteAttacksBitboard(bitboards))
             .stream()
             .map {
                 when (board.getSquareOccupant(it)) {
@@ -370,8 +379,10 @@ fun threatEval(bitboards: BitboardData, board: EngineChessBoard): Int {
                 }
             }
             .reduce(0, Integer::sum)
+}
 
-    val blackAttackScore = squareList(blackAttacksBitboard)
+private fun blackAttackScore(bitboards: BitboardData, board: EngineChessBoard): Int {
+    return squareList(blackAttacksBitboard(bitboards))
             .stream()
             .map {
                 when (board.getSquareOccupant(it)) {
@@ -384,11 +395,6 @@ fun threatEval(bitboards: BitboardData, board: EngineChessBoard): Int {
                 }
             }
             .reduce(0, Integer::sum)
-
-    val whiteAdjustedScore = whiteAttackScore + whiteAttackScore * (whiteAttackScore / PieceValue.getValue(Piece.QUEEN))
-    val blackAdjustedScore = blackAttackScore + blackAttackScore * (blackAttackScore / PieceValue.getValue(Piece.QUEEN))
-
-    return (whiteAdjustedScore - blackAdjustedScore) / Evaluation.THREAT_SCORE_DIVISOR.value
 }
 
 fun isEndGame(bitboards: BitboardData) =
@@ -404,11 +410,11 @@ fun kingSafetyEval(bitboards: BitboardData, board: EngineChessBoard): Int {
             (Bitboards.kingMoves[blackKingSquare(bitboards)] ushr 8)
     val whiteRookSquares = squareList(bitboards.whiteRooks)
     val whiteRookAttacks = rookAttackMap(bitboards, whiteRookSquares)
-    val blackRookSquares = squareList(bitboards.blackRook)
+    val blackRookSquares = squareList(bitboards.blackRooks)
     val blackRookAttacks = rookAttackMap(bitboards, blackRookSquares)
     val whiteQueenSquares = squareList(bitboards.whiteQueens)
     val whiteQueenAttacks = queenAttackMap(bitboards, whiteQueenSquares)
-    val blackQueenSquares = squareList(bitboards.blackQueen)
+    val blackQueenSquares = squareList(bitboards.blackQueens)
     val blackQueenAttacks = queenAttackMap(bitboards, blackQueenSquares)
     val whiteBishopSquares = squareList(bitboards.whiteBishops)
     val whiteBishopAttacks = bishopAttackMap(bitboards, whiteBishopSquares)
@@ -464,12 +470,12 @@ fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShield: Lo
 
 fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
         if (bitboards.blackKing and Bitboards.F8G8 != 0L &&
-                bitboards.blackRook and Bitboards.G8H8 != 0L &&
+                bitboards.blackRooks and Bitboards.G8H8 != 0L &&
                 bitboards.blackPawns and Bitboards.FILE_G != 0L &&
                 bitboards.blackPawns and Bitboards.FILE_H != 0L)
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
         else (if (bitboards.blackKing and Bitboards.B8C8 != 0L &&
-                bitboards.blackRook and Bitboards.A8B8 != 0L &&
+                bitboards.blackRooks and Bitboards.A8B8 != 0L &&
                 bitboards.blackPawns and Bitboards.FILE_A != 0L &&
                 bitboards.blackPawns and Bitboards.FILE_B != 0L)
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
@@ -527,58 +533,46 @@ fun whiteCastlingEval(bitboards: BitboardData, castlePrivileges: Int) : Int {
     } else 0
 }
 
-private fun whiteTimeToCastleQueenSide(castlePrivileges: Int, bitboards: BitboardData): Int {
-    var timeToCastleQueenSide = 100
+private fun whiteTimeToCastleQueenSide(castlePrivileges: Int, bitboards: BitboardData) =
     if (castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value != 0) {
-        timeToCastleQueenSide = 2
-        if (bitboards.all and (1L shl 6) != 0L) timeToCastleQueenSide++
-        if (bitboards.all and (1L shl 5) != 0L) timeToCastleQueenSide++
-        if (bitboards.all and (1L shl 4) != 0L) timeToCastleQueenSide++
-    }
-    return timeToCastleQueenSide
-}
+        2 +
+        (if (bitboards.all and (1L shl 6) != 0L) 1 else 0) +
+        (if (bitboards.all and (1L shl 5) != 0L) 1 else 0) +
+        (if (bitboards.all and (1L shl 4) != 0L) 1 else 0)
+    } else 100
 
-private fun whiteTimeToCastleKingSide(castlePrivileges: Int, bitboards: BitboardData): Int {
-    var timeToCastleKingSide = 100
+
+private fun whiteTimeToCastleKingSide(castlePrivileges: Int, bitboards: BitboardData) =
     if (castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value != 0) {
-        timeToCastleKingSide = 2
-        if (bitboards.all and (1L shl 1) != 0L) timeToCastleKingSide++
-        if (bitboards.all and (1L shl 2) != 0L) timeToCastleKingSide++
-    }
-    return timeToCastleKingSide
-}
+        2 +
+        (if (bitboards.all and (1L shl 1) != 0L) 1 else 0) +
+        (if (bitboards.all and (1L shl 2) != 0L) 1 else 0)
+    } else 100
+
+private fun blackTimeToCastleQueenSide(castlePrivileges: Int, bitboards: BitboardData) =
+    if (castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value != 0) {
+        2 +
+        (if (bitboards.all and (1L shl 60) != 0L) 1 else 0) +
+        (if (bitboards.all and (1L shl 61) != 0L) 1 else 0) +
+        (if (bitboards.all and (1L shl 62) != 0L) 1 else 0)
+    } else 100
+
+
+private fun blackTimeToCastleKingSide(castlePrivileges: Int, bitboards: BitboardData) =
+    if (castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value != 0) {
+        2 +
+        (if (bitboards.all and (1L shl 57) != 0L) 1 else 0) +
+        (if (bitboards.all and (1L shl 58) != 0L) 1 else 0)
+    } else 100
 
 fun blackCastlingEval(bitboards: BitboardData, castlePrivileges: Int) : Int {
     // Value of moving King to its queenside castle destination in the middle game
     val blackCastleValue = maxCastleValue(whitePieceValues(bitboards))
 
     return if (blackCastleValue > 0) {
-        blackCastleValue / Math.min(
-                blackTimeToCastleKingSide(castlePrivileges, bitboards),
-                blackTimeToCastleQueenSide(castlePrivileges, bitboards)
-        )
+        blackCastleValue / blackTimeToCastleKingSide(castlePrivileges, bitboards)
+                .coerceAtMost(blackTimeToCastleQueenSide(castlePrivileges, bitboards))
     } else 0
-}
-
-private fun blackTimeToCastleQueenSide(castlePrivileges: Int, bitboards: BitboardData): Int {
-    var timeToCastleQueenSide = 100
-    if (castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value != 0) {
-        timeToCastleQueenSide = 2
-        if (bitboards.all and (1L shl 60) != 0L) timeToCastleQueenSide++
-        if (bitboards.all and (1L shl 61) != 0L) timeToCastleQueenSide++
-        if (bitboards.all and (1L shl 62) != 0L) timeToCastleQueenSide++
-    }
-    return timeToCastleQueenSide
-}
-
-private fun blackTimeToCastleKingSide(castlePrivileges: Int, bitboards: BitboardData): Int {
-    var timeToCastleKingSide = 100
-    if (castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value != 0) {
-        timeToCastleKingSide = 2
-        if (bitboards.all and (1L shl 57) != 0L) timeToCastleKingSide++
-        if (bitboards.all and (1L shl 58) != 0L) timeToCastleKingSide++
-    }
-    return timeToCastleKingSide
 }
 
 private fun rookSquareBonus() = PieceSquareTables.rook[3] - PieceSquareTables.rook[0]
@@ -662,11 +656,9 @@ private fun enemyKingCloseToDarkCornerMateSquareValue(kingSquare: Int) =
 private fun enemyKingCloseToLightCornerMateSquareValue(kingSquare: Int) =
         (7 - Bitboards.distanceToH1OrA8[kingSquare]) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.value
 
-private fun blackShouldWinWithKnightAndBishopValue(eval: Int): Int {
-    var eval1 = eval
-    eval1 = -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.value) + eval1 / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.value
-    return eval1
-}
+private fun blackShouldWinWithKnightAndBishopValue(eval: Int) =
+     -(PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.value) +
+            eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.value
 
 private fun whiteShouldWinWithKnightAndBishopValue(eval: Int) =
         PieceValue.getValue(Piece.KNIGHT) + PieceValue.getValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.value + eval / Evaluation.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR.value
@@ -690,7 +682,7 @@ private fun whiteMoreThanABishopUpInNonPawns(bitboards: BitboardData) =
         whitePieceValues(bitboards) - blackPieceValues(bitboards) > PieceValue.getValue(Piece.BISHOP)
 
 private fun noBlackRooksQueensOrBishops(bitboards: BitboardData) =
-        bitboards.blackRook or bitboards.blackKnights or bitboards.blackQueen == 0L
+        bitboards.blackRooks or bitboards.blackKnights or bitboards.blackQueens == 0L
 
 private fun bothSidesHaveOnlyOneKnightOrBishopEach(bitboards: BitboardData) =
         noPawnsRemain(bitboards) && whitePieceValues(bitboards) < PieceValue.getValue(Piece.ROOK) &&
@@ -748,9 +740,9 @@ fun whitePieceValues(bitboards: BitboardData) =
 
 fun blackPieceValues(bitboards: BitboardData) =
         bitCount(bitboards.blackKnights) * PieceValue.getValue(Piece.KNIGHT) +
-                bitCount(bitboards.blackRook) * PieceValue.getValue(Piece.ROOK) +
+                bitCount(bitboards.blackRooks) * PieceValue.getValue(Piece.ROOK) +
                 bitCount(bitboards.blackBishops) * PieceValue.getValue(Piece.BISHOP) +
-                bitCount(bitboards.blackQueen) * PieceValue.getValue(Piece.QUEEN)
+                bitCount(bitboards.blackQueens) * PieceValue.getValue(Piece.QUEEN)
 
 fun whitePawnValues(bitboards: BitboardData): Int {
     return bitCount(bitboards.whitePawns) * PieceValue.getValue(Piece.PAWN)
@@ -806,38 +798,43 @@ fun evaluate(board: EngineChessBoard) : Int {
         val blackPawnAttacks = getBlackPawnAttacks(bitboards.blackPawns)
         val whiteQueenSquares = squareList(bitboards.whiteQueens)
         val whiteQueenAttacks = queenAttackMap(bitboards, whiteQueenSquares)
-        val blackRookSquares = squareList(bitboards.blackRook)
+        val blackRookSquares = squareList(bitboards.blackRooks)
         val blackRookAttacks = rookAttackMap(bitboards, blackRookSquares)
         val blackBishopSquares = squareList(bitboards.blackBishops)
         val blackBishopAttacks = bishopAttackMap(bitboards, blackBishopSquares)
         val blackPieces = if (board.mover == Colour.WHITE) bitboards.enemy else bitboards.friendly
         val blackKnightSquares = squareList(bitboards.blackKnights)
         val whitePawnAttacks = getWhitePawnAttacks(bitboards.whitePawns)
-        val blackQueenSquares = squareList(bitboards.blackQueen)
+        val blackQueenSquares = squareList(bitboards.blackQueens)
         val blackQueenAttacks = queenAttackMap(bitboards, blackQueenSquares)
 
-        val eval: Int = (materialDifference
-                + whitePawnPieceSquareEval(bitboards)
+        val eval: Int =
+                (materialDifference
+                + whitePawnPieceSquareEval(bitboards, squareList(bitboards.whitePawns))
                 + whiteKingSquareEval(bitboards)
                 + whiteQueenPieceSquareSum(whiteQueenSquares)
                 + whiteBishopPieceSquareSum(whiteBishopSquares)
                 + twoWhiteRooksTrappingKingEval(bitboards)
                 + doubledRooksEval(whiteRookSquares)
-                + whiteRookSquares.stream().map { whiteRookOpenFilesEval(bitboards, it % 8) }.reduce(0, Integer::sum)
-                + whiteRookSquares.stream().map { Evaluation.getRookMobilityValue(bitCount((whiteRookAttacks[it] ?: error("")) and whitePieces.inv())) }.reduce(0, Integer::sum)
+                + whiteRookSquares.stream().map {
+                            whiteRookOpenFilesEval(bitboards, it % 8) +
+                            Evaluation.getRookMobilityValue(bitCount((whiteRookAttacks[it] ?: error("")) and whitePieces.inv()))
+                }.reduce(0, Integer::sum)
                 + whiteQueenSquares.stream().map { Evaluation.getQueenMobilityValue( bitCount((whiteQueenAttacks[it] ?: error("")) and whitePieces.inv())) }.reduce(0, Integer::sum)
                 + whiteBishopSquares.stream().map { Evaluation.getBishopMobilityValue(bitCount((whiteBishopAttacks[it] ?: error("")) and whitePieces.inv())) }.reduce(0, Integer::sum)
                 + whiteRookPieceSquareSum(whiteRookSquares) * rookEnemyPawnMultiplier(blackPawnValues(bitboards)) / 6
                 - whiteKnightSquares.stream().map { blockedKnightPenaltyEval(it, blackPawnAttacks, bitboards.whitePawns) }.reduce(0, Integer::sum)
                 + whiteKnightPieceSquareEval(bitboards, whiteKnightSquares)
-                - blackPawnPieceSquareEval(bitboards)
+                - blackPawnPieceSquareEval(bitboards, squareList(bitboards.blackPawns))
                 - blackKingSquareEval(bitboards)
                 - blackQueenPieceSquareSum(blackQueenSquares)
                 - blackBishopPieceSquareSum(blackBishopSquares)
                 - twoBlackRooksTrappingKingEval(bitboards)
                 - doubledRooksEval(blackRookSquares)
-                - blackRookSquares.stream().map { blackRookOpenFilesEval(bitboards, it % 8) }.reduce(0, Integer::sum)
-                - blackRookSquares.stream().map {Evaluation.getRookMobilityValue(bitCount((blackRookAttacks[it] ?: error("")) and blackPieces.inv())) }.reduce(0, Integer::sum)
+                - blackRookSquares.stream().map {
+                            blackRookOpenFilesEval(bitboards, it % 8)  +
+                            Evaluation.getRookMobilityValue(bitCount((blackRookAttacks[it] ?: error("")) and blackPieces.inv()))
+                }.reduce(0, Integer::sum)
                 - blackQueenSquares.stream().map { Evaluation.getQueenMobilityValue(bitCount((blackQueenAttacks[it] ?: error("")) and blackPieces.inv())) }.reduce(0, Integer::sum)
                 - blackBishopSquares.stream().map { Evaluation.getBishopMobilityValue(bitCount((blackBishopAttacks[it] ?: error("")) and blackPieces.inv())) }.reduce(0, Integer::sum)
                 - (blackRookPieceSquareSum(blackRookSquares) * rookEnemyPawnMultiplier(whitePawnValues(bitboards)) / 6)
