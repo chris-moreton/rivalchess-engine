@@ -38,10 +38,12 @@ data class BitboardData(
 )
 
 data class PieceSquareLists(
+        val whitePawns: List<Int>,
         val whiteRooks: List<Int>,
         val whiteBishops : List<Int>,
         val whiteKnights : List<Int>,
         val whiteQueens : List<Int>,
+        val blackPawns: List<Int>,
         val blackRooks: List<Int>,
         val blackBishops : List<Int>,
         val blackKnights : List<Int>,
@@ -71,10 +73,12 @@ fun initBitboardData(board: EngineChessBoard) =
 
 fun initPieceSquareLists(bitboards: BitboardData) =
     PieceSquareLists(
+            whitePawns = squareList(bitboards.whitePawns),
             whiteRooks = squareList(bitboards.whiteRooks),
             whiteBishops = squareList(bitboards.whiteBishops),
             whiteKnights = squareList(bitboards.whiteKnights),
             whiteQueens = squareList(bitboards.whiteQueens),
+            blackPawns = squareList(bitboards.blackPawns),
             blackRooks = squareList(bitboards.blackRooks),
             blackBishops = squareList(bitboards.blackBishops),
             blackKnights = squareList(bitboards.blackKnights),
@@ -91,28 +95,6 @@ fun onlyOneBitSet(bitboard: Long) = (bitboard and (bitboard - 1)) == 0L
 
 @Contract(pure = true)
 fun onlyKingsRemain(bitboards: BitboardData) = onlyOneBitSet(bitboards.enemy) and onlyOneBitSet(bitboards.friendly)
-
-@Contract(pure = true)
-fun whitePawnPieceSquareEval(bitboards: BitboardData, pawnSquares: List<Int>) =
-        linearScale(
-                blackPieceValues(bitboards),
-                Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
-                Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
-                pawnSquares.stream().map(PieceSquareTables.pawnEndGame::get).reduce(0, Integer::sum),
-                pawnSquares.stream().map(PieceSquareTables.pawn::get).reduce(0, Integer::sum)
-        )
-
-@Contract(pure = true)
-fun blackPawnPieceSquareEval(bitboards: BitboardData, pawnSquares: List<Int>) =
-        linearScale(
-                whitePieceValues(bitboards),
-                Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
-                Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
-                pawnSquares.stream().map { PieceSquareTables.pawnEndGame[Bitboards.bitFlippedHorizontalAxis[it]] }
-                        .reduce(0, Integer::sum),
-                pawnSquares.stream().map { PieceSquareTables.pawn[Bitboards.bitFlippedHorizontalAxis[it]] }
-                        .reduce(0, Integer::sum)
-        )
 
 @Contract(pure = true)
 fun whiteKingSquareEval(bitboards: BitboardData) =
@@ -213,7 +195,7 @@ fun queenAttacks(bitboards: BitboardData, sq: Int) = rookAttacks(bitboards, sq) 
 fun queenAttackMap(bitboards: BitboardData, whiteQueenSquares: List<Int>) : Map<Int, Long> =
         whiteQueenSquares.stream()
                 .collect(Collectors.toMap<Int, Int, Long>(
-                        Function.identity(), Function { rs: Int -> queenAttacks(bitboards, rs) })
+                        Function.identity(), Function { queenAttacks(bitboards, it) })
                 )
 
 fun queenAttackList(bitboards: BitboardData, whiteQueenSquares: List<Int>) : List<Long> =
@@ -370,20 +352,20 @@ fun blackAttacksBitboard(bitboards: BitboardData, pieceSquareLists: PieceSquareL
         (orList(blackPieceAttackList(bitboards, pieceSquareLists)) and whitePieceBitboard(bitboards)) or
                 blackPawnAttacks(bitboards.blackPawns)
 
-fun threatEval(bitboards: BitboardData, pieceSquareLists: PieceSquareLists, board: EngineChessBoard): Int {
-    return (adjustedAttackScore(whiteAttackScore(bitboards, pieceSquareLists, board)) -
-            adjustedAttackScore(blackAttackScore(bitboards, pieceSquareLists, board))) /
+fun threatEval(bitboards: BitboardData, pieceSquareLists: PieceSquareLists, squareOccupants: List<SquareOccupant>): Int {
+    return (adjustedAttackScore(whiteAttackScore(bitboards, pieceSquareLists, squareOccupants)) -
+            adjustedAttackScore(blackAttackScore(bitboards, pieceSquareLists, squareOccupants))) /
             Evaluation.THREAT_SCORE_DIVISOR.value
 }
 
 private fun adjustedAttackScore(attackScore: Int) =
         attackScore + attackScore * (attackScore / PieceValue.getValue(Piece.QUEEN))
 
-private fun whiteAttackScore(bitboards: BitboardData, pieceSquareLists: PieceSquareLists, board: EngineChessBoard): Int {
+private fun whiteAttackScore(bitboards: BitboardData, pieceSquareLists: PieceSquareLists, squareOccupants: List<SquareOccupant>): Int {
     return squareList(whiteAttacksBitboard(bitboards, pieceSquareLists))
             .stream()
             .map {
-                when (board.getSquareOccupant(it)) {
+                when (squareOccupants[it]) {
                     SquareOccupant.BP -> PieceValue.getValue(Piece.PAWN)
                     SquareOccupant.BB -> PieceValue.getValue(Piece.BISHOP)
                     SquareOccupant.BR -> PieceValue.getValue(Piece.ROOK)
@@ -395,11 +377,11 @@ private fun whiteAttackScore(bitboards: BitboardData, pieceSquareLists: PieceSqu
             .reduce(0, Integer::sum)
 }
 
-private fun blackAttackScore(bitboards: BitboardData, pieceSquareLists: PieceSquareLists, board: EngineChessBoard): Int {
+private fun blackAttackScore(bitboards: BitboardData, pieceSquareLists: PieceSquareLists, squareOccupants: List<SquareOccupant>): Int {
     return squareList(blackAttacksBitboard(bitboards, pieceSquareLists))
             .stream()
             .map {
-                when (board.getSquareOccupant(it)) {
+                when (squareOccupants[it]) {
                     SquareOccupant.WP -> PieceValue.getValue(Piece.PAWN)
                     SquareOccupant.WB -> PieceValue.getValue(Piece.BISHOP)
                     SquareOccupant.WR -> PieceValue.getValue(Piece.ROOK)
@@ -780,6 +762,7 @@ fun evaluate(board: EngineChessBoard) : Int {
 
     val bitboards = initBitboardData(board)
     val pieceSquareLists = initPieceSquareLists(bitboards)
+    val squareOccupants = board.squareOccupants
 
     if (onlyKingsRemain(bitboards)) {
         return 0
@@ -791,7 +774,15 @@ fun evaluate(board: EngineChessBoard) : Int {
 
         val eval: Int =
                 (materialDifference
-                        + whitePawnPieceSquareEval(bitboards, squareList(bitboards.whitePawns))
+                        + pieceSquareLists.whitePawns.stream().map {
+                            linearScale(
+                                    blackPieceValues(bitboards),
+                                    Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
+                                    Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
+                                    PieceSquareTables.pawnEndGame[it],
+                                    PieceSquareTables.pawn[it]
+                            )
+                        }.reduce(0, Integer::sum)
                         + whiteKingSquareEval(bitboards)
                         + twoWhiteRooksTrappingKingEval(bitboards)
                         + doubledRooksEval(pieceSquareLists.whiteRooks)
@@ -817,7 +808,15 @@ fun evaluate(board: EngineChessBoard) : Int {
                                         PieceSquareTables.knight[it]
                                 )
                             }.reduce(0, Integer::sum)
-                        - blackPawnPieceSquareEval(bitboards, squareList(bitboards.blackPawns))
+                        - pieceSquareLists.blackPawns.stream().map {
+                                linearScale(
+                                        whitePieceValues(bitboards),
+                                        Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
+                                        Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
+                                        PieceSquareTables.pawnEndGame[Bitboards.bitFlippedHorizontalAxis[it]],
+                                        PieceSquareTables.pawn[Bitboards.bitFlippedHorizontalAxis[it]]
+                                )
+                            }.reduce(0, Integer::sum)
                         - blackKingSquareEval(bitboards)
                         - twoBlackRooksTrappingKingEval(bitboards)
                         - doubledRooksEval(pieceSquareLists.blackRooks)
@@ -849,7 +848,7 @@ fun evaluate(board: EngineChessBoard) : Int {
                         + tradePieceBonusWhenMoreMaterial(bitboards, materialDifference)
                         + castlingEval(bitboards, board.castlePrivileges)
                         + bishopScore(bitboards, materialDifference)
-                        + threatEval(bitboards, pieceSquareLists, board)
+                        + threatEval(bitboards, pieceSquareLists, squareOccupants)
                         + kingSafetyEval(bitboards, pieceSquareLists, board))
 
         val endGameAdjustedScore = if (isEndGame(bitboards)) endGameAdjustment(bitboards, eval) else eval

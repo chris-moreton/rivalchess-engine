@@ -87,6 +87,10 @@ public final class EngineChessBoard {
         return squareContents[bitRef];
     }
 
+    public List<SquareOccupant> getSquareOccupants() {
+        return Arrays.asList(squareContents);
+    }
+
     public Piece getPiece(int bitRef) {
         switch (squareContents[bitRef]) {
             case WP:
