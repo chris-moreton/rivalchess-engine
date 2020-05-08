@@ -18,7 +18,7 @@ tailrec fun northFill(bitboard: Long, shiftBy: Int = 8): Long {
 
 fun getBlackPassedPawns(whitePawns: Long, blackPawns: Long): Long {
     return blackPawns and
-            northFill(whitePawns or getWhitePawnAttacks(whitePawns) or (blackPawns shl 8)).inv()
+            northFill(whitePawns or whitePawnAttacks(whitePawns) or (blackPawns shl 8)).inv()
 }
 
 fun getPawnFiles(pawns: Long): Long {
@@ -27,14 +27,14 @@ fun getPawnFiles(pawns: Long): Long {
 
 fun getWhitePassedPawns(whitePawns: Long, blackPawns: Long): Long {
     return whitePawns and
-            southFill(blackPawns or getBlackPawnAttacks(blackPawns) or (whitePawns ushr 8)).inv()
+            southFill(blackPawns or blackPawnAttacks(blackPawns) or (whitePawns ushr 8)).inv()
 }
 
-fun getBlackPawnAttacks(blackPawns: Long): Long {
+fun blackPawnAttacks(blackPawns: Long): Long {
     return blackPawns and Bitboards.FILE_A.inv() ushr 7 or (blackPawns and Bitboards.FILE_H.inv() ushr 9)
 }
 
-fun getWhitePawnAttacks(whitePawns: Long): Long {
+fun whitePawnAttacks(whitePawns: Long): Long {
     return whitePawns and Bitboards.FILE_A.inv() shl 9 or (whitePawns and Bitboards.FILE_H.inv() shl 7)
 }
 

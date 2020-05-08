@@ -14,10 +14,10 @@ import com.netsensia.rivalchess.enums.PawnHashIndex;
 import com.netsensia.rivalchess.model.SquareOccupant;
 
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPassedPawns;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPawnAttacks;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.blackPawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getPawnFiles;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePassedPawns;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePawnAttacks;
+import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.whitePawnAttacks;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.northFill;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
@@ -232,8 +232,8 @@ public class BoardHash {
     }
 
     private void populatePawnHashEntry(EngineChessBoard board, PawnHashEntry pawnHashEntry, int pawnHashIndex) {
-        final long whitePawnAttacks = getWhitePawnAttacks(board.getWhitePawnBitboard());
-        final long blackPawnAttacks = getBlackPawnAttacks(board.getBlackPawnBitboard());
+        final long whitePawnAttacks = whitePawnAttacks(board.getWhitePawnBitboard());
+        final long blackPawnAttacks = blackPawnAttacks(board.getBlackPawnBitboard());
         final long whitePawnFiles = getPawnFiles(board.getWhitePawnBitboard());
         final long blackPawnFiles = getPawnFiles(board.getBlackPawnBitboard());
 
@@ -241,11 +241,11 @@ public class BoardHash {
 
         pawnHashEntry.setWhitePassedPawnsBitboard(getWhitePassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
 
-        final long whiteGuardedPassedPawns = pawnHashEntry.getWhitePassedPawnsBitboard() & (getWhitePawnAttacks(board.getWhitePawnBitboard()));
+        final long whiteGuardedPassedPawns = pawnHashEntry.getWhitePassedPawnsBitboard() & (whitePawnAttacks(board.getWhitePawnBitboard()));
 
         pawnHashEntry.setBlackPassedPawnsBitboard(getBlackPassedPawns(board.getWhitePawnBitboard(), board.getBlackPawnBitboard()));
 
-        long blackGuardedPassedPawns = pawnHashEntry.getBlackPassedPawnsBitboard() & (getBlackPawnAttacks(board.getBlackPawnBitboard()));
+        long blackGuardedPassedPawns = pawnHashEntry.getBlackPassedPawnsBitboard() & (blackPawnAttacks(board.getBlackPawnBitboard()));
 
         pawnHashEntry.setWhitePassedPawnScore(Long.bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.getValue());
         pawnHashEntry.setBlackPassedPawnScore(Long.bitCount(blackGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.getValue());
@@ -269,7 +269,7 @@ public class BoardHash {
                                 ~((board.getWhitePawnBitboard() | board.getBlackPawnBitboard()) >>> 8) &
                                 (blackPawnAttacks >>> 8) &
                                 ~northFill(whitePawnAttacks, 8) &
-                                (getBlackPawnAttacks(board.getWhitePawnBitboard())) &
+                                (blackPawnAttacks(board.getWhitePawnBitboard())) &
                                 ~northFill(blackPawnFiles, 8)
                 ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.getValue());
 
@@ -278,7 +278,7 @@ public class BoardHash {
                         ~((board.getBlackPawnBitboard() | board.getWhitePawnBitboard()) << 8) &
                         (whitePawnAttacks << 8) &
                         ~southFill(blackPawnAttacks, 8) &
-                        (getWhitePawnAttacks(board.getBlackPawnBitboard())) &
+                        (whitePawnAttacks(board.getBlackPawnBitboard())) &
                         ~northFill(whitePawnFiles, 8)
         ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.getValue());
 

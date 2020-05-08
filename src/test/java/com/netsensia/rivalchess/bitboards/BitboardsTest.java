@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.*;
 
 public class BitboardsTest {
 
@@ -133,7 +132,7 @@ public class BitboardsTest {
                     "11100101" +
                     "00000000", 2).longValue();
 
-        assertEquals(expected, BitboardUtilsKt.getBlackPawnAttacks(bitboard));
+        assertEquals(expected, BitboardUtilsKt.blackPawnAttacks(bitboard));
     }
 
     @Test
@@ -158,7 +157,7 @@ public class BitboardsTest {
                     "00000000" +
                     "00000000", 2).longValue();
 
-        assertEquals(expected, BitboardUtilsKt.getWhitePawnAttacks(bitboard));
+        assertEquals(expected, BitboardUtilsKt.whitePawnAttacks(bitboard));
     }
 
     @Test
