@@ -53,7 +53,7 @@ public class EpdTest {
             "WAC.041","WAC.157","WAC.204","WAC.242","WAC.291",
             "WAC.090","WAC.287",
             "WAC.089","WAC.193","WAC.226",
-            "WAC.280"
+            "WAC.145"
     ));
 
     @Test
