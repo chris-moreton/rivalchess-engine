@@ -1,12 +1,10 @@
 package com.netsensia.rivalchess.engine.core.eval
 
+import arrow.syntax.function.memoize
 import com.netsensia.rivalchess.bitboards.BitboardType.*
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
-import com.netsensia.rivalchess.bitboards.util.getBlackPawnAttacks
-import com.netsensia.rivalchess.bitboards.util.getWhitePawnAttacks
-import com.netsensia.rivalchess.bitboards.util.southFill
-import com.netsensia.rivalchess.bitboards.util.squareList
+import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
 import com.netsensia.rivalchess.engine.core.Evaluate
@@ -102,8 +100,12 @@ fun blackKingSquareEval(bitboards: BitboardData) =
                 PieceSquareTables.king[Bitboards.bitFlippedHorizontalAxis[blackKingSquare(bitboards)]]
         )
 
-fun materialDifferenceEval(bitboards: BitboardData) =
-        whitePieceValues(bitboards) - blackPieceValues(bitboards) + whitePawnValues(bitboards) - blackPawnValues(bitboards)
+fun materialDifferenceEvalMemoize(bitboards: BitboardData) : () -> Int = {
+    whitePieceValues(bitboards) - blackPieceValues(bitboards) +
+            whitePawnValues(bitboards) - blackPawnValues(bitboards)
+}.memoize()
+
+fun materialDifferenceEval(bitboards: BitboardData) : Int = materialDifferenceEvalMemoize(bitboards).invoke()
 
 fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) =
         when {
@@ -140,8 +142,6 @@ fun blackRookOpenFilesEval(bitboards: BitboardData, file: Int) =
 
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
         (enemyPawnValues / PieceValue.getValue(Piece.PAWN)).coerceAtMost(6)
-
-fun orList(list: List<Long>) : Long = list.stream().reduce(0, Long::or)
 
 fun knightAttackList(squares: List<Int>) : List<Long> =
         squares.stream().map { Bitboards.knightMoves[it] }.collect(Collectors.toList())
@@ -486,14 +486,16 @@ private fun openFiles(kingShield: Long, pawnBitboard: Long) =
 
 fun whiteKingShieldEval(bitboards: BitboardData) =
     if (whiteKingOnFirstTwoRanks(bitboards)) {
-        val kingShield = whiteKingShield(bitboards)
-
-         pawnShieldEval(bitboards.whitePawns, bitboards.blackPawns, kingShield, Long::shl).coerceAtMost(Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value) -
-                uncastledTrappedWhiteRookEval(bitboards) -
-                openFilesKingShieldEval(openFiles(kingShield, bitboards.whitePawns)) -
-                openFilesKingShieldEval(openFiles(kingShield, bitboards.blackPawns))
-
+        combineWhiteKingShieldEval(bitboards, whiteKingShield(bitboards))
     } else 0
+
+private fun combineWhiteKingShieldEval(bitboards: BitboardData, kingShield: Long) =
+     pawnShieldEval(bitboards.whitePawns, bitboards.blackPawns, kingShield, Long::shl)
+        .coerceAtMost(Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value) -
+        uncastledTrappedWhiteRookEval(bitboards) -
+        openFilesKingShieldEval(openFiles(kingShield, bitboards.whitePawns)) -
+        openFilesKingShieldEval(openFiles(kingShield, bitboards.blackPawns))
+
 
 private fun openFilesKingShieldEval(openFiles: Long) =
     if (openFiles != 0L) {
@@ -503,13 +505,15 @@ private fun openFilesKingShieldEval(openFiles: Long) =
 
 fun blackKingShieldEval(bitboards: BitboardData) =
     if (blackKingOnFirstTwoRanks(bitboards)) {
-        val kingShield = blackKingShield(bitboards)
-
-            pawnShieldEval(bitboards.blackPawns, bitboards.whitePawns, kingShield, Long::ushr).coerceAtMost(Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value) -
-                    uncastledTrappedBlackRookEval(bitboards) -
-                    openFilesKingShieldEval(openFiles(kingShield, bitboards.whitePawns)) -
-                    openFilesKingShieldEval(openFiles(kingShield, bitboards.blackPawns))
+        combineBlackKingShieldEval(bitboards, blackKingShield(bitboards))
     } else 0
+
+private fun combineBlackKingShieldEval(bitboards: BitboardData, kingShield: Long) =
+    pawnShieldEval(bitboards.blackPawns, bitboards.whitePawns, kingShield, Long::ushr)
+        .coerceAtMost(Evaluation.KINGSAFTEY_MAXIMUM_SHIELD_BONUS.value) -
+        uncastledTrappedBlackRookEval(bitboards) -
+        openFilesKingShieldEval(openFiles(kingShield, bitboards.whitePawns)) -
+        openFilesKingShieldEval(openFiles(kingShield, bitboards.blackPawns))
 
 private fun whiteKingOnFirstTwoRanks(bitboards: BitboardData) =
         whiteKingSquare(bitboards) / 8 < 2

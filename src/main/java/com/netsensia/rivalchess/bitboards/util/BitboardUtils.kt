@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.bitboards.util
 
-import arrow.syntax.function.memoize
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.model.Colour
@@ -89,3 +88,5 @@ tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : Li
             squareList(unsetBit(bitboard, square), squareList + square)
         }
     }
+
+fun orList(list: List<Long>) : Long = list.stream().reduce(0, Long::or)
