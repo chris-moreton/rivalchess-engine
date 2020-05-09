@@ -12,12 +12,15 @@ import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
+import kotlinx.coroutines.newSingleThreadContext
 import org.jetbrains.annotations.Contract
 import java.lang.Long.bitCount
 import java.lang.Long.numberOfTrailingZeros
-import java.util.Arrays.asList
 import java.util.function.Function
 import java.util.stream.Collectors
+
+import arrow.fx.extensions.io.concurrent.dispatchers
+import arrow.fx.extensions.io.async.*
 
 data class BitboardData(
         val whitePawns: Long = 0L,
@@ -772,93 +775,92 @@ fun evaluate(board: EngineChessBoard) : Int {
 
         val materialDifference = materialDifferenceEval(bitboards)
 
-        val eval = listOf(0,1).parallelStream().map { it ->
-            when (it) {
-                0 ->    materialDifference +
-                        pieceSquareLists.blackBishops.stream().map {
-                            -(Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and blackPieces.inv())) +
-                            flippedSquareTableScore(PieceSquareTables.bishop, it))
-                        }.reduce(0, Integer::sum) +
-                        pieceSquareLists.whiteBishops.stream().map {
-                            Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and whitePieces.inv())) +
-                            PieceSquareTables.bishop[it]
-                        }.reduce(0, Integer::sum) +
-                        board.boardHashObject.getPawnHashEntry(board).pawnScore +
-                        tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
-                        tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
-                        whiteKingSquareEval(bitboards) +
-                        twoWhiteRooksTrappingKingEval(bitboards) +
-                        doubledRooksEval(pieceSquareLists.whiteRooks) +
+        val eval =  materialDifference +
+                    (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
+                    (doubledRooksEval(pieceSquareLists.whiteRooks) - doubledRooksEval(pieceSquareLists.blackRooks)) +
+                    board.boardHashObject.getPawnHashEntry(board).pawnScore +
+                    (whiteBishopEval(pieceSquareLists, bitboards, whitePieces) - blackBishopsEval(pieceSquareLists, bitboards, blackPieces)) +
+                    tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
+                    tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
+                    (whiteKingSquareEval(bitboards) - blackKingSquareEval(bitboards) ) +
                         pieceSquareLists.whitePawns.stream().map {
-                            linearScale(
-                                    blackPieceValues(bitboards),
-                                    Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
-                                    Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
-                                    PieceSquareTables.pawnEndGame[it],
-                                    PieceSquareTables.pawn[it]
-                            )
-                        }.reduce(0, Integer::sum) +
-                        pieceSquareLists.whiteRooks.stream().map {
-                            whiteRookOpenFilesEval(bitboards, it % 8) +
-                                    Evaluation.getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and whitePieces.inv())) +
-                                    PieceSquareTables.rook[it] * rookEnemyPawnMultiplier(blackPawnValues(bitboards)) / 6
-                        }.reduce(0, Integer::sum) +
-                        pieceSquareLists.whiteQueens.stream().map {
-                            Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and whitePieces.inv()))  +
-                                    PieceSquareTables.queen[it]
-                        }.reduce(0, Integer::sum)
-                1 ->    pieceSquareLists.blackKnights.stream().map {
-                            blockedKnightPenaltyEval(it, whitePawnAttacks(bitboards.whitePawns), bitboards.blackPawns) -
-                            linearScale(
-                                    whitePieceValues(bitboards) + whitePawnValues(bitboards),
-                                    Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
-                                    Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
-                                    PieceSquareTables.knightEndGame[Bitboards.bitFlippedHorizontalAxis[it]],
-                                    PieceSquareTables.knight[Bitboards.bitFlippedHorizontalAxis[it]]
-                            )
-                        }.reduce(0, Integer::sum) +
-                        pieceSquareLists.whiteKnights.stream().map {
-                            -blockedKnightPenaltyEval(it, blackPawnAttacks(bitboards.blackPawns), bitboards.whitePawns) +
-                            linearScale(blackPieceValues(bitboards) + blackPawnValues(bitboards),
-                                    Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
-                                    Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
-                                    PieceSquareTables.knightEndGame[it],
-                                    PieceSquareTables.knight[it]
-                            )
-                        }.reduce(0, Integer::sum) +
-                        castlingEval(bitboards, board.castlePrivileges) +
-                        bishopScore(bitboards, materialDifference) +
-                        threatEval(bitboards, pieceSquareLists, squareOccupants) +
-                        kingSafetyEval(bitboards, pieceSquareLists, board) +
-                        -blackKingSquareEval(bitboards) +
-                        -twoBlackRooksTrappingKingEval(bitboards) +
-                        -doubledRooksEval(pieceSquareLists.blackRooks) +
-                        -pieceSquareLists.blackPawns.stream().map {
-                            linearScale(
-                                    whitePieceValues(bitboards),
-                                    Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
-                                    Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
-                                    PieceSquareTables.pawnEndGame[Bitboards.bitFlippedHorizontalAxis[it]],
-                                    PieceSquareTables.pawn[Bitboards.bitFlippedHorizontalAxis[it]]
-                            )
-                        }.reduce(0, Integer::sum) +
-                        -pieceSquareLists.blackRooks.stream().map {
-                            blackRookOpenFilesEval(bitboards, it % 8)  +
-                                    Evaluation.getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and blackPieces.inv())) +
-                                    flippedSquareTableScore(PieceSquareTables.rook, it) * rookEnemyPawnMultiplier(whitePawnValues(bitboards)) / 6
-                        }.reduce(0, Integer::sum) +
-                        -pieceSquareLists.blackQueens.stream().map {
-                            Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and blackPieces.inv())) +
-                                    flippedSquareTableScore(PieceSquareTables.queen, it)
-                        }.reduce(0, Integer::sum)
-                else -> 0
-            }
-        }.reduce(0, Integer::sum)
+                        linearScale(
+                                blackPieceValues(bitboards),
+                                Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
+                                Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
+                                PieceSquareTables.pawnEndGame[it],
+                                PieceSquareTables.pawn[it]
+                        )
+                    }.reduce(0, Integer::sum) +
+                    pieceSquareLists.whiteRooks.stream().map {
+                        whiteRookOpenFilesEval(bitboards, it % 8) +
+                                Evaluation.getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and whitePieces.inv())) +
+                                PieceSquareTables.rook[it] * rookEnemyPawnMultiplier(blackPawnValues(bitboards)) / 6
+                    }.reduce(0, Integer::sum) +
+                    pieceSquareLists.whiteQueens.stream().map {
+                        Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and whitePieces.inv()))  +
+                                PieceSquareTables.queen[it]
+                    }.reduce(0, Integer::sum) +
+                    pieceSquareLists.blackKnights.stream().map {
+                        blockedKnightPenaltyEval(it, whitePawnAttacks(bitboards.whitePawns), bitboards.blackPawns) -
+                        linearScale(
+                                whitePieceValues(bitboards) + whitePawnValues(bitboards),
+                                Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
+                                Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
+                                PieceSquareTables.knightEndGame[Bitboards.bitFlippedHorizontalAxis[it]],
+                                PieceSquareTables.knight[Bitboards.bitFlippedHorizontalAxis[it]]
+                        )
+                    }.reduce(0, Integer::sum) +
+                    pieceSquareLists.whiteKnights.stream().map {
+                        -blockedKnightPenaltyEval(it, blackPawnAttacks(bitboards.blackPawns), bitboards.whitePawns) +
+                        linearScale(blackPieceValues(bitboards) + blackPawnValues(bitboards),
+                                Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
+                                Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
+                                PieceSquareTables.knightEndGame[it],
+                                PieceSquareTables.knight[it]
+                        )
+                    }.reduce(0, Integer::sum) +
+                    castlingEval(bitboards, board.castlePrivileges) +
+                    bishopScore(bitboards, materialDifference) +
+                    threatEval(bitboards, pieceSquareLists, squareOccupants) +
+                    kingSafetyEval(bitboards, pieceSquareLists, board) +
+                    -pieceSquareLists.blackPawns.stream().map {
+                        linearScale(
+                                whitePieceValues(bitboards),
+                                Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
+                                Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
+                                PieceSquareTables.pawnEndGame[Bitboards.bitFlippedHorizontalAxis[it]],
+                                PieceSquareTables.pawn[Bitboards.bitFlippedHorizontalAxis[it]]
+                        )
+                    }.reduce(0, Integer::sum) +
+                    -pieceSquareLists.blackRooks.stream().map {
+                        blackRookOpenFilesEval(bitboards, it % 8)  +
+                                Evaluation.getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and blackPieces.inv())) +
+                                flippedSquareTableScore(PieceSquareTables.rook, it) * rookEnemyPawnMultiplier(whitePawnValues(bitboards)) / 6
+                    }.reduce(0, Integer::sum) +
+                    -pieceSquareLists.blackQueens.stream().map {
+                        Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and blackPieces.inv())) +
+                                flippedSquareTableScore(PieceSquareTables.queen, it)
+                    }.reduce(0, Integer::sum)
 
         val endGameAdjustedScore = if (isEndGame(bitboards)) endGameAdjustment(bitboards, eval) else eval
 
         return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
     }
+}
+
+private fun blackBishopsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, blackPieces: Long): Int {
+    return pieceSquareLists.blackBishops.stream().map {
+        Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and blackPieces.inv())) +
+                flippedSquareTableScore(PieceSquareTables.bishop, it)
+    }.reduce(0, Integer::sum)
+}
+
+private fun whiteBishopEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, whitePieces: Long): Int {
+    return pieceSquareLists.whiteBishops.stream().map {
+        Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and whitePieces.inv())) +
+                PieceSquareTables.bishop[it]
+    }.reduce(0, Integer::sum)
 }
 
 

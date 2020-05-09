@@ -52,6 +52,7 @@ dependencies {
     compile group: 'com.ea.async', name: 'ea-async', version: '1.2.3'
 
     compile "io.arrow-kt:arrow-core:$arrow_version"
+    compile "io.arrow-kt:arrow-fx:$arrow_version"
     compile "io.arrow-kt:arrow-syntax:$arrow_version"
     kapt    "io.arrow-kt:arrow-meta:$arrow_version"
 
