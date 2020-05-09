@@ -337,12 +337,25 @@ fun whitePieceBitboard(bitboards: BitboardData) =
         (bitboards.whiteKnights or bitboards.whiteRooks or bitboards.whiteQueens or bitboards.whiteBishops)
 
 fun whitePieceAttackList(attackLists: AttackLists): List<Long> {
-    return attackLists.whiteRooks + attackLists.whiteQueens + attackLists.whiteBishops + attackLists.whiteKnights
+    val result = ArrayList<Long>()
+
+    result.addAll(attackLists.whiteRooks)
+    result.addAll(attackLists.whiteQueens)
+    result.addAll(attackLists.whiteBishops)
+    result.addAll(attackLists.whiteKnights)
+
+    return result
 }
 
 fun blackPieceAttackList(attackLists: AttackLists): List<Long> {
-    return attackLists.blackRooks + attackLists.blackQueens + attackLists.blackBishops + attackLists.blackKnights
 
+    val result = ArrayList<Long>()
+    result.addAll(attackLists.blackRooks)
+    result.addAll(attackLists.blackQueens)
+    result.addAll(attackLists.blackBishops)
+    result.addAll(attackLists.blackKnights)
+
+    return result
 }
 
 fun blackAttacksBitboard(bitboards: BitboardData, attackLists: AttackLists) =
@@ -398,22 +411,17 @@ fun isEndGame(bitboards: BitboardData) =
 
 fun kingSafetyEval(bitboards: BitboardData, attackLists: AttackLists, board: EngineChessBoard): Int {
 
-    val whiteKingDangerZone = Bitboards.kingMoves[whiteKingSquare(bitboards)] or
-            (Bitboards.kingMoves[whiteKingSquare(bitboards)] shl 8)
-    val blackKingDangerZone = Bitboards.kingMoves[blackKingSquare(bitboards)] or
-            (Bitboards.kingMoves[blackKingSquare(bitboards)] ushr 8)
+    val whiteKingDangerZone = whiteKingDangerZone(bitboards)
 
-    val whiteRookAttacks = attackLists.whiteRooks
-    val blackRookAttacks = attackLists.blackRooks
-    val whiteQueenAttacks = attackLists.whiteQueens
-    val blackQueenAttacks = attackLists.blackQueens
-    val whiteBishopAttacks = attackLists.whiteBishops
-    val blackBishopAttacks = attackLists.blackBishops
+    val blackKingDangerZone = blackKingDangerZone(bitboards)
 
-    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, whiteRookAttacks) + kingAttackCount(blackKingDangerZone, whiteQueenAttacks) * 2 +
-            kingAttackCount(blackKingDangerZone, whiteBishopAttacks)
-    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, blackRookAttacks) + kingAttackCount(whiteKingDangerZone, blackQueenAttacks) * 2 +
-            kingAttackCount(whiteKingDangerZone, blackBishopAttacks)
+    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attackLists.whiteRooks) +
+            kingAttackCount(blackKingDangerZone, attackLists.whiteQueens) * 2 +
+            kingAttackCount(blackKingDangerZone, attackLists.whiteBishops)
+
+    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attackLists.blackRooks) +
+            kingAttackCount(whiteKingDangerZone, attackLists.blackQueens) * 2 +
+            kingAttackCount(whiteKingDangerZone, attackLists.blackBishops)
 
     val averagePiecesPerSide = (whitePieceValues(bitboards) + blackPieceValues(bitboards)) / 2
 
@@ -438,6 +446,14 @@ fun kingSafetyEval(bitboards: BitboardData, attackLists: AttackLists, board: Eng
                     Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.value)
 
 }
+
+private fun blackKingDangerZone(bitboards: BitboardData) =
+        Bitboards.kingMoves[blackKingSquare(bitboards)] or
+                (Bitboards.kingMoves[blackKingSquare(bitboards)] ushr 8)
+
+private fun whiteKingDangerZone(bitboards: BitboardData) =
+        Bitboards.kingMoves[whiteKingSquare(bitboards)] or
+                (Bitboards.kingMoves[whiteKingSquare(bitboards)] shl 8)
 
 fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
         if (bitboards.whiteKing and Bitboards.F1G1 != 0L &&
