@@ -375,14 +375,10 @@ fun whiteAttackScore(bitboards: BitboardData, attackLists: AttackLists, squareOc
     return squareList(whiteAttacksBitboard(bitboards, attackLists))
             .stream()
             .map {
-                when (squareOccupants[it]) {
-                    SquareOccupant.BP -> PieceValue.getValue(Piece.PAWN)
-                    SquareOccupant.BB -> PieceValue.getValue(Piece.BISHOP)
-                    SquareOccupant.BR -> PieceValue.getValue(Piece.ROOK)
-                    SquareOccupant.BQ -> PieceValue.getValue(Piece.QUEEN)
-                    SquareOccupant.BN -> PieceValue.getValue(Piece.KNIGHT)
-                    else -> 0
-                }
+                if (squareOccupants[it] != SquareOccupant.NONE &&
+                        squareOccupants[it].piece != Piece.KING &&
+                        squareOccupants[it].colour == Colour.BLACK
+                ) PieceValue.getValue(squareOccupants[it].piece) else 0
             }
             .reduce(0, Integer::sum)
 }
@@ -391,14 +387,10 @@ fun blackAttackScore(bitboards: BitboardData, attackLists: AttackLists, squareOc
     return squareList(blackAttacksBitboard(bitboards, attackLists))
             .stream()
             .map {
-                when (squareOccupants[it]) {
-                    SquareOccupant.WP -> PieceValue.getValue(Piece.PAWN)
-                    SquareOccupant.WB -> PieceValue.getValue(Piece.BISHOP)
-                    SquareOccupant.WR -> PieceValue.getValue(Piece.ROOK)
-                    SquareOccupant.WQ -> PieceValue.getValue(Piece.QUEEN)
-                    SquareOccupant.WN -> PieceValue.getValue(Piece.KNIGHT)
-                    else -> 0
-                }
+                if (squareOccupants[it] != SquareOccupant.NONE &&
+                        squareOccupants[it].piece != Piece.KING &&
+                        squareOccupants[it].colour == Colour.WHITE)
+                    PieceValue.getValue(squareOccupants[it].piece) else 0
             }
             .reduce(0, Integer::sum)
 }
@@ -529,7 +521,7 @@ fun blackKingOnFirstTwoRanks(bitboards: BitboardData) =
 fun blackKingShield(bitboards: BitboardData) =
         Bitboards.whiteKingShieldMask[blackKingSquare(bitboards) % 8] shl 40
 
-fun whiteKingShield(bitboards: BitboardData) =
+fun whiteKingShield(bitboards: BitboardData): Long =
         Bitboards.whiteKingShieldMask[whiteKingSquare(bitboards) % 8]
 
 fun whiteCastlingEval(bitboards: BitboardData, castlePrivileges: Int) : Int {

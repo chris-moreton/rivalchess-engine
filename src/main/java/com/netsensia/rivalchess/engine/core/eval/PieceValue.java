@@ -12,6 +12,7 @@ public class PieceValue {
             case ROOK: return 595;
             case KING: return 30000;
             case QUEEN: return 1175;
+            case NONE: return 0;
             default:
                 throw new RuntimeException("Unknown piece");
         }
