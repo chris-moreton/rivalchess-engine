@@ -13,6 +13,7 @@ import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import java.lang.Long.bitCount
 import java.lang.Long.numberOfTrailingZeros
+import kotlin.math.abs
 
 data class BitboardData(
         val whitePawns: Long = 0L,
@@ -981,7 +982,7 @@ fun calculateLowMaterialPawnBonus(
                 val pawnDistance = pawnDistanceFromPromotion(lowMaterialColour, it).coerceAtMost(5)
                 val kingXDistanceFromPawn = difference(kingX, it)
                 val kingYDistanceFromPawn = difference(colourAdjustedYRank(lowMaterialColour, kingY), it)
-                val kingDistanceFromPawn = Math.max(kingXDistanceFromPawn, kingYDistanceFromPawn)
+                val kingDistanceFromPawn = kingXDistanceFromPawn.coerceAtLeast(kingYDistanceFromPawn)
 
                 val moverAdjustment = if (lowMaterialColour == mover) 1 else 0
 
@@ -1001,9 +1002,9 @@ fun calculateLowMaterialPawnBonus(
 }
 
 private fun colourAdjustedYRank(colour: Colour, yRank: Int) =
-        if (colour == Colour.WHITE) yRank else Math.abs(yRank - 7)
+        if (colour == Colour.WHITE) yRank else abs(yRank - 7)
 
-private fun difference(kingX: Int, it: Int) = Math.abs(kingX - xCoordOfSquare(it))
+private fun difference(kingX: Int, it: Int) = abs(kingX - xCoordOfSquare(it))
 
 private fun xCoordOfSquare(it: Int) = it % 8
 
@@ -1021,7 +1022,7 @@ fun scoreRightWayPositions(
     val offset = if (isWhite) 0 else 6
     val friendlyPawns = board.getBitboard(fromIndex(SquareOccupant.WP.index + offset))
     val friendlyRooks = board.getBitboard(fromIndex(SquareOccupant.WR.index + offset))
-    val friendlyKnights = board.getBitboard(fromIndex(SquareOccupant.WK.index + offset))
+    val friendlyKnights = board.getBitboard(fromIndex(SquareOccupant.WN.index + offset))
     val friendlyBishops = board.getBitboard(fromIndex(SquareOccupant.WB.index + offset))
 
     if (board.allPiecesBitboard and (1L shl rightWaySquares.h1) != 0L ||
@@ -1077,7 +1078,6 @@ fun checkForPositionsBOrC(friendlyPawns: Long, friendlyBishops: Long, rightWaySq
         })
     } else 0
 
-
 fun checkForPositionsAOrD(
         friendlyPawns: Long,
         friendlyKnights: Long,
@@ -1089,7 +1089,6 @@ fun checkForPositionsAOrD(
     } else {
         checkForPositionD(friendlyPawns, friendlyKnights, friendlyBishops, rightWaySquares, cornerColour)
     }
-
 
 fun checkForPositionD(friendlyPawns: Long, friendlyKnights: Long, friendlyBishops: Long, rightWaySquares: RightWaySquares, cornerColour: Int): Int {
     var safety = 0
