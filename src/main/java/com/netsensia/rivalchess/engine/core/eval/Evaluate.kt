@@ -326,10 +326,6 @@ fun whiteA7TrappedBishopEval(bitboards: BitboardData) =
             Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value
         else 0
 
-fun whiteAttacksBitboard(bitboards: BitboardData, attackLists: AttackLists) =
-        (orList(whitePieceAttackList(attackLists)) and blackPieceBitboard(bitboards)) or
-                whitePawnAttacks(bitboards.whitePawns)
-
 fun blackPieceBitboard(bitboards: BitboardData) =
         (bitboards.blackKnights or bitboards.blackRooks or bitboards.blackQueens or bitboards.blackBishops)
 
@@ -358,9 +354,13 @@ fun blackPieceAttackList(attackLists: AttackLists): List<Long> {
     return result
 }
 
+fun whiteAttacksBitboard(bitboards: BitboardData, attackLists: AttackLists) =
+        (orList(whitePieceAttackList(attackLists)) or whitePawnAttacks(bitboards.whitePawns)) and
+                blackPieceBitboard(bitboards)
+
 fun blackAttacksBitboard(bitboards: BitboardData, attackLists: AttackLists) =
-        (orList(blackPieceAttackList(attackLists)) and whitePieceBitboard(bitboards)) or
-                blackPawnAttacks(bitboards.blackPawns)
+        (orList(blackPieceAttackList(attackLists)) or blackPawnAttacks(bitboards.blackPawns)) and
+                whitePieceBitboard(bitboards)
 
 fun threatEval(bitboards: BitboardData, attackLists: AttackLists, squareOccupants: List<SquareOccupant>): Int {
     return (adjustedAttackScore(whiteAttackScore(bitboards, attackLists, squareOccupants)) -
@@ -374,24 +374,14 @@ fun adjustedAttackScore(attackScore: Int) =
 fun whiteAttackScore(bitboards: BitboardData, attackLists: AttackLists, squareOccupants: List<SquareOccupant>): Int {
     return squareList(whiteAttacksBitboard(bitboards, attackLists))
             .stream()
-            .map {
-                if (squareOccupants[it] != SquareOccupant.NONE &&
-                        squareOccupants[it].piece != Piece.KING &&
-                        squareOccupants[it].colour == Colour.BLACK
-                ) PieceValue.getValue(squareOccupants[it].piece) else 0
-            }
+            .map { PieceValue.getValue(squareOccupants[it].piece) }
             .reduce(0, Integer::sum)
 }
 
 fun blackAttackScore(bitboards: BitboardData, attackLists: AttackLists, squareOccupants: List<SquareOccupant>): Int {
     return squareList(blackAttacksBitboard(bitboards, attackLists))
             .stream()
-            .map {
-                if (squareOccupants[it] != SquareOccupant.NONE &&
-                        squareOccupants[it].piece != Piece.KING &&
-                        squareOccupants[it].colour == Colour.WHITE)
-                    PieceValue.getValue(squareOccupants[it].piece) else 0
-            }
+            .map {PieceValue.getValue(squareOccupants[it].piece) }
             .reduce(0, Integer::sum)
 }
 
