@@ -71,6 +71,18 @@ data class KingSquares(
         val black: Int
 )
 
+data class RightWaySquares(
+        val h1: Int,
+        val h2: Int,
+        val h3: Int,
+        val g2: Int,
+        val g3: Int,
+        val f1: Int,
+        val f2: Int,
+        val f3: Int,
+        val f4: Int
+)
+
 fun initBitboardData(board: EngineChessBoard) =
     BitboardData(
             whitePawns = board.getBitboard(WP),
@@ -122,16 +134,16 @@ fun initAttackLists(bitboards: BitboardData, pieceSquareLists: PieceSquareLists)
 
 fun initMaterialValues(bitboards: BitboardData) =
         MaterialValues(
-                whitePieces = whitePieceValues(bitboards),
-                blackPieces = blackPieceValues(bitboards),
-                whitePawns = whitePawnValues(bitboards),
-                blackPawns = blackPawnValues(bitboards)
+            whitePieces = whitePieceValues(bitboards),
+            blackPieces = blackPieceValues(bitboards),
+            whitePawns = whitePawnValues(bitboards),
+            blackPawns = blackPawnValues(bitboards)
         )
 
 fun initKingSquares(bitboards: BitboardData) =
         KingSquares(
-                white = whiteKingSquare(bitboards),
-                black = blackKingSquare(bitboards)
+            white = whiteKingSquare(bitboards),
+            black = blackKingSquare(bitboards)
         )
 
 fun materialDifferenceEval(materialValues: MaterialValues) =
@@ -1000,104 +1012,94 @@ private fun pawnDistanceFromPromotion(colour: Colour, square: Int) =
 
 private fun yCoordOfSquare(kingSquare: Int) = kingSquare / 8
 
-fun scoreRightWayPositions(board: EngineChessBoard, h1: Int, h2: Int, h3: Int, g2: Int, g3: Int, f1: Int, f2: Int, f3: Int, f4: Int, isWhite: Boolean, cornerColour: Int): Int {
-    var safety = 0
+fun scoreRightWayPositions(
+        board: EngineChessBoard,
+        rightWaySquares: RightWaySquares,
+        isWhite: Boolean,
+        cornerColour: Int
+): Int {
     val offset = if (isWhite) 0 else 6
-    if (board.allPiecesBitboard and (1L shl h1) != 0L ||
-            board.getBitboardByIndex(SquareOccupant.WR.index + offset) and (1L shl f1) == 0L) {
+    val friendlyPawns = board.getBitboard(fromIndex(SquareOccupant.WP.index + offset))
+    val friendlyRooks = board.getBitboard(fromIndex(SquareOccupant.WR.index + offset))
+    val friendlyKnights = board.getBitboard(fromIndex(SquareOccupant.WK.index + offset))
+    val friendlyBishops = board.getBitboard(fromIndex(SquareOccupant.WB.index + offset))
+
+    if (board.allPiecesBitboard and (1L shl rightWaySquares.h1) != 0L ||
+            friendlyRooks and (1L shl rightWaySquares.f1) == 0L) {
         return 0
     }
-    safety = if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl f2) != 0L) {
-        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl g2) != 0L) {
-            checkForPositionsAOrD(board, h2, h3, f3, isWhite, cornerColour, safety)
+    return  if (friendlyPawns and (1L shl rightWaySquares.f2) != 0L) {
+        if (friendlyPawns and (1L shl rightWaySquares.g2) != 0L) {
+            checkForPositionsAOrD(friendlyPawns, friendlyKnights, friendlyBishops, rightWaySquares, cornerColour)
         } else {
-            checkForPositionsBOrC(board, h2, h3, g2, g3, isWhite, safety)
+            checkForPositionsBOrC(friendlyPawns, friendlyBishops, rightWaySquares)
         }
     } else {
-        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl f4) != 0L) {
-            checkForPositionE(board, h2, g2, f3, isWhite, safety)
+        if (friendlyPawns and (1L shl rightWaySquares.f4) != 0L) {
+            checkForPositionE(friendlyPawns, friendlyKnights, rightWaySquares)
         } else {
-            checkForPositionFOrH(board, h2, h3, g2, f3, isWhite, safety)
+            checkForPositionFOrH(friendlyPawns, rightWaySquares)
         }
-    }
-    return safety / 4
+    } / 4
 }
 
-fun checkForPositionFOrH(board: EngineChessBoard, h2: Int, h3: Int, g2: Int, f3: Int, isWhite: Boolean, safety: Int): Int {
-    var safety = safety
-    val offset = if (isWhite) 0 else 6
-    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl f3) != 0L
-            && board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl g2) != 0L) {
-        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L) {
-            // (F)
-            safety -= 10
-        } else {
-            if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h3) != 0L) {
-                // (H)
-                safety -= 30
-            }
-        }
-    }
-    return safety
-}
+fun checkForPositionFOrH(friendlyPawns: Long, rightWaySquares: RightWaySquares) =
+        if (friendlyPawns and (1L shl rightWaySquares.f3) != 0L && friendlyPawns and (1L shl rightWaySquares.g2) != 0L)
+            (if (friendlyPawns and (1L shl rightWaySquares.h2) != 0L) -10 // (F)
+            else (if (friendlyPawns and (1L shl rightWaySquares.h3) != 0L) -30 else 0)) // (H)
+        else 0
 
-fun checkForPositionE(board: EngineChessBoard, h2: Int, g2: Int, f3: Int, isWhite: Boolean, safety: Int): Int {
-    var safety = safety
-    val offset = if (isWhite) 0 else 6
-    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl g2) != 0L
-            && board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L) {
+fun checkForPositionE(friendlyPawns: Long, friendlyKnights: Long, rightWaySquares: RightWaySquares): Int {
+    var safety = 0
+    if (friendlyPawns and (1L shl rightWaySquares.g2) != 0L
+            && friendlyPawns and (1L shl rightWaySquares.h2) != 0L) {
         // (E)
         safety += 80
-        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L
-                && board.getBitboardByIndex(SquareOccupant.WN.index + offset) and (1L shl f3) != 0L) {
+        if (friendlyPawns and (1L shl rightWaySquares.h2) != 0L
+                && friendlyKnights and (1L shl rightWaySquares.f3) != 0L) {
             safety += 40
         }
     }
     return safety
 }
 
-fun checkForPositionsBOrC(board: EngineChessBoard, h2: Int, h3: Int, g2: Int, g3: Int, isWhite: Boolean, safety: Int): Int {
-    var safety = safety
-    val offset = if (isWhite) 0 else 6
-    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl g3) != 0L) {
-        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L) {
-            if (board.getBitboardByIndex(SquareOccupant.WB.index + offset) and (1L shl g2) != 0L) {
-                // (B)
-                safety += 100
-            }
+fun checkForPositionsBOrC(friendlyPawns: Long, friendlyBishops: Long, rightWaySquares: RightWaySquares) =
+    if (friendlyPawns and (1L shl rightWaySquares.g3) != 0L) {
+        (if (friendlyPawns and (1L shl rightWaySquares.h2) != 0L) {
+            (if (friendlyBishops and (1L shl rightWaySquares.g2) != 0L) {
+                100 // (B)
+            } else 0)
         } else {
-            if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h3) != 0L
-                    && board.getBitboardByIndex(SquareOccupant.WB.index + offset) and (1L shl g2) != 0L) {
-                // (C)
-                safety += 70
-            }
-        }
-    }
-    return safety
-}
+            (if (friendlyPawns and (1L shl rightWaySquares.h3) != 0L
+                    && friendlyBishops and (1L shl rightWaySquares.g2) != 0L) {
+                70 // (C)
+            } else 0)
+        })
+    } else 0
 
-fun checkForPositionsAOrD(board: EngineChessBoard, h2: Int, h3: Int, f3: Int, isWhite: Boolean, cornerColour: Int, safety: Int): Int {
-    var safety = safety
-    val offset = if (isWhite) 0 else 6
-    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L) {
-        // (A)
-        safety += 120
+
+fun checkForPositionsAOrD(
+        friendlyPawns: Long,
+        friendlyKnights: Long,
+        friendlyBishops: Long,
+        rightWaySquares: RightWaySquares,
+        cornerColour: Int
+) = if (friendlyPawns and (1L shl rightWaySquares.h2) != 0L) {
+        120 // (A)
     } else {
-        safety = checkForPositionD(board, h3, f3, isWhite, cornerColour, safety)
+        checkForPositionD(friendlyPawns, friendlyKnights, friendlyBishops, rightWaySquares, cornerColour)
     }
-    return safety
-}
 
-fun checkForPositionD(board: EngineChessBoard, h3: Int, f3: Int, isWhite: Boolean, cornerColour: Int, safety: Int): Int {
-    var safety = safety
-    val offset = if (isWhite) 0 else 6
-    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h3) != 0L
-            && board.getBitboardByIndex(SquareOccupant.WN.index + offset) and (1L shl f3) != 0L) {
+
+fun checkForPositionD(friendlyPawns: Long, friendlyKnights: Long, friendlyBishops: Long, rightWaySquares: RightWaySquares, cornerColour: Int): Int {
+    var safety = 0
+    if (friendlyPawns and (1L shl rightWaySquares.h3) != 0L
+            && friendlyKnights and (1L shl rightWaySquares.f3) != 0L) {
         // (D)
         safety += 70
         // check for bishop of same colour as h3
         val bits = if (cornerColour == Colour.WHITE.value.toInt()) Bitboards.LIGHT_SQUARES else Bitboards.DARK_SQUARES
-        if (bits and board.getBitboardByIndex(SquareOccupant.WB.index + offset) != 0L) {
+        if (bits and friendlyBishops != 0L) {
             safety -= 30
         }
     }
@@ -1107,7 +1109,7 @@ fun checkForPositionD(board: EngineChessBoard, h3: Int, f3: Int, isWhite: Boolea
 fun getWhiteKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
     return if (engineChessBoard.whiteKingSquare == 1 || engineChessBoard.whiteKingSquare == 8) {
         scoreRightWayPositions(engineChessBoard,
-                0, 8, 16, 9, 17, 2, 10, 18, 26, true,
+                RightWaySquares(0, 8, 16, 9, 17, 2, 10, 18, 26), true,
                 Colour.WHITE.value.toInt())
     } else 0
 }
@@ -1115,7 +1117,7 @@ fun getWhiteKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
 fun getBlackKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
     return if (engineChessBoard.blackKingSquare == 57 || engineChessBoard.blackKingSquare == 48) {
         scoreRightWayPositions(engineChessBoard,
-                56, 48, 40, 49, 41, 58, 50, 42, 34, false,
+                RightWaySquares(56, 48, 40, 49, 41, 58, 50, 42, 34), false,
                 Colour.BLACK.value.toInt())
     } else 0
 }
