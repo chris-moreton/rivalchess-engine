@@ -1,12 +1,12 @@
 package com.netsensia.rivalchess.engine.core.eval
 
+import arrow.syntax.function.memoize
 import com.netsensia.rivalchess.bitboards.BitboardType.*
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.EngineChessBoard
-import com.netsensia.rivalchess.engine.core.Evaluate
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
@@ -419,10 +419,10 @@ fun kingSafetyEval(bitboards: BitboardData, attackLists: AttackLists, board: Eng
         return 0
     }
 
-    val whiteKingSafety: Int = Evaluate.getWhiteKingRightWayScore(board) +
+    val whiteKingSafety: Int = getWhiteKingRightWayScore(board) +
             Evaluation.KINGSAFETY_SHIELD_BASE.value + whiteKingShieldEval(bitboards)
 
-    val blackKingSafety: Int = Evaluate.getBlackKingRightWayScore(board) +
+    val blackKingSafety: Int = getBlackKingRightWayScore(board) +
             Evaluation.KINGSAFETY_SHIELD_BASE.value + blackKingShieldEval(bitboards)
 
     return linearScale(
@@ -854,23 +854,29 @@ fun whiteRooksEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, 
     }.fold(0) { acc, i -> acc + i }
 }
 
-fun pawnScore(board: EngineChessBoard, attackLists: AttackLists, materialValues: MaterialValues): Int {
+fun pawnScore(whitePawnBitboard: Long,
+                     blackPawnBitboard: Long,
+                     attackLists: AttackLists,
+                     materialValues: MaterialValues,
+                     whiteKingSquare: Int,
+                     blackKingSquare: Int,
+                     mover: Colour): Int {
 
     val whitePawnAttacks = attackLists.whitePawns
     val blackPawnAttacks = attackLists.blackPawns
 
-    val whitePawnFiles = getPawnFiles(board.whitePawnBitboard)
-    val blackPawnFiles = getPawnFiles(board.blackPawnBitboard)
+    val whitePawnFiles = getPawnFiles(whitePawnBitboard)
+    val blackPawnFiles = getPawnFiles(blackPawnBitboard)
 
-    val whitePassedPawnsBitboard = getWhitePassedPawns(board.whitePawnBitboard, board.blackPawnBitboard)
+    val whitePassedPawnsBitboard = getWhitePassedPawns(whitePawnBitboard, blackPawnBitboard)
     val whiteGuardedPassedPawns = whitePassedPawnsBitboard and whitePawnAttacks
-    val blackPassedPawnsBitboard = getBlackPassedPawns(board.whitePawnBitboard, board.blackPawnBitboard)
+    val blackPassedPawnsBitboard = getBlackPassedPawns(whitePawnBitboard, blackPawnBitboard)
     val blackGuardedPassedPawns = blackPassedPawnsBitboard and blackPawnAttacks
 
     val whiteIsolatedPawns = whitePawnFiles and (whitePawnFiles shl 1).inv() and (whitePawnFiles ushr 1).inv()
     val blackIsolatedPawns = blackPawnFiles and (blackPawnFiles shl 1).inv() and (blackPawnFiles ushr 1).inv()
-    val whiteOccupiedFileMask = southFill(board.whitePawnBitboard, 8) and Bitboards.RANK_1
-    val blackOccupiedFileMask = southFill(board.blackPawnBitboard, 8) and Bitboards.RANK_1
+    val whiteOccupiedFileMask = southFill(whitePawnBitboard, 8) and Bitboards.RANK_1
+    val blackOccupiedFileMask = southFill(blackPawnBitboard, 8) and Bitboards.RANK_1
 
     val whitePassedPawnScore = bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value +
             squareList(whitePassedPawnsBitboard).asSequence()
@@ -885,45 +891,67 @@ fun pawnScore(board: EngineChessBoard, attackLists: AttackLists, materialValues:
             (if (whiteIsolatedPawns and Bitboards.FILE_D != 0L) Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.value else 0) +
             (if (blackIsolatedPawns and Bitboards.FILE_D != 0L) Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.value else 0) -
             (bitCount(
-                    board.whitePawnBitboard and
-                            (board.whitePawnBitboard or board.blackPawnBitboard ushr 8).inv() and
+                    whitePawnBitboard and
+                            (whitePawnBitboard or blackPawnBitboard ushr 8).inv() and
                             (blackPawnAttacks ushr 8) and
                             northFill(whitePawnAttacks, 8).inv() and
-                            blackPawnAttacks(board.whitePawnBitboard) and
+                            blackPawnAttacks(whitePawnBitboard) and
                             northFill(blackPawnFiles, 8).inv()
             ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.value) +
             (bitCount(
-                    board.blackPawnBitboard and
-                            (board.blackPawnBitboard or board.whitePawnBitboard shl 8).inv() and
+                    blackPawnBitboard and
+                            (blackPawnBitboard or whitePawnBitboard shl 8).inv() and
                             (whitePawnAttacks shl 8) and
                             southFill(blackPawnAttacks, 8).inv() and
-                            whitePawnAttacks(board.blackPawnBitboard) and
+                            whitePawnAttacks(blackPawnBitboard) and
                             northFill(whitePawnFiles, 8).inv()
             ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.value) -
-            ((bitCount(board.whitePawnBitboard and Bitboards.FILE_A) + bitCount(board.whitePawnBitboard and Bitboards.FILE_H))
+            ((bitCount(whitePawnBitboard and Bitboards.FILE_A) + bitCount(whitePawnBitboard and Bitboards.FILE_H))
                     * Evaluation.VALUE_SIDE_PAWN_PENALTY.value) +
-            ((bitCount(board.blackPawnBitboard and Bitboards.FILE_A) + bitCount(board.blackPawnBitboard and Bitboards.FILE_H))
+            ((bitCount(blackPawnBitboard and Bitboards.FILE_A) + bitCount(blackPawnBitboard and Bitboards.FILE_H))
                     * Evaluation.VALUE_SIDE_PAWN_PENALTY.value) -
-            Evaluation.VALUE_DOUBLED_PAWN_PENALTY.value * (board.whitePawnValues / 100 - bitCount(whiteOccupiedFileMask)) -
+            Evaluation.VALUE_DOUBLED_PAWN_PENALTY.value * (materialValues.whitePawns / 100 - bitCount(whiteOccupiedFileMask)) -
             bitCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.value +
-            Evaluation.VALUE_DOUBLED_PAWN_PENALTY.value * (board.blackPawnValues / 100 - bitCount(blackOccupiedFileMask)) +
+            Evaluation.VALUE_DOUBLED_PAWN_PENALTY.value * (materialValues.blackPawns / 100 - bitCount(blackOccupiedFileMask)) +
             bitCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.value +
             (linearScale(materialValues.blackPieces, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, whitePassedPawnScore * 2, whitePassedPawnScore)) -
             (linearScale(materialValues.whitePieces, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, blackPassedPawnScore * 2, blackPassedPawnScore)) +
             (if (materialValues.blackPieces < Evaluation.PAWN_ADJUST_MAX_MATERIAL.value)
-                calculateLowMaterialPawnBonus(Colour.BLACK, board, whitePassedPawnsBitboard, blackPassedPawnsBitboard)
+                calculateLowMaterialPawnBonus(
+                        Colour.BLACK,
+                        whiteKingSquare,
+                        blackKingSquare,
+                        materialValues,
+                        whitePassedPawnsBitboard,
+                        blackPassedPawnsBitboard,
+                        mover)
             else 0) +
             (if (materialValues.whitePieces < Evaluation.PAWN_ADJUST_MAX_MATERIAL.value)
-                calculateLowMaterialPawnBonus(Colour.WHITE, board, whitePassedPawnsBitboard, blackPassedPawnsBitboard)
+                calculateLowMaterialPawnBonus(
+                        Colour.WHITE,
+                        whiteKingSquare,
+                        blackKingSquare,
+                        materialValues,
+                        whitePassedPawnsBitboard,
+                        blackPassedPawnsBitboard,
+                        mover)
             else 0)
 }
 
-fun calculateLowMaterialPawnBonus(lowMaterialColour: Colour, board: EngineChessBoard, whitePassedPawnsBitboard: Long, blackPassedPawnsBitboard: Long): Int {
+fun calculateLowMaterialPawnBonus(
+        lowMaterialColour: Colour,
+        whiteKingSquare: Int,
+        blackKingSquare: Int,
+        materialValues: MaterialValues,
+        whitePassedPawnsBitboard: Long,
+        blackPassedPawnsBitboard: Long,
+        mover: Colour
+): Int {
 
-    val kingSquare = if (lowMaterialColour == Colour.WHITE) board.whiteKingSquare else board.blackKingSquare
+    val kingSquare = if (lowMaterialColour == Colour.WHITE) whiteKingSquare else blackKingSquare
     val kingX = xCoordOfSquare(kingSquare)
     val kingY = yCoordOfSquare(kingSquare)
-    val lowMaterialSidePieceValues = if (lowMaterialColour == Colour.WHITE) board.whitePieceValues else board.blackPieceValues
+    val lowMaterialSidePieceValues = if (lowMaterialColour == Colour.WHITE) materialValues.whitePieces else materialValues.blackPieces
 
     return squareList(if (lowMaterialColour == Colour.WHITE) blackPassedPawnsBitboard else whitePassedPawnsBitboard)
             .asSequence().map {
@@ -932,7 +960,7 @@ fun calculateLowMaterialPawnBonus(lowMaterialColour: Colour, board: EngineChessB
                 val kingYDistanceFromPawn = difference(colourAdjustedYRank(lowMaterialColour, kingY), it)
                 val kingDistanceFromPawn = Math.max(kingXDistanceFromPawn, kingYDistanceFromPawn)
 
-                val moverAdjustment = if (lowMaterialColour == board.mover) 1 else 0
+                val moverAdjustment = if (lowMaterialColour == mover) 1 else 0
 
                 val scoreAdjustment = linearScale(
                         lowMaterialSidePieceValues,
@@ -979,7 +1007,12 @@ fun evaluate(board: EngineChessBoard) : Int {
         val eval =  materialDifference +
                     (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
                     (doubledRooksEval(pieceSquareLists.whiteRooks) - doubledRooksEval(pieceSquareLists.blackRooks)) +
-                    pawnScore(board, attackLists, materialValues) +
+                    pawnScore(bitboards.whitePawns,
+                            bitboards.blackPawns,
+                            attackLists, materialValues,
+                            board.whiteKingSquare,
+                            board.blackKingSquare,
+                            board.mover) +
                     (whiteBishopEval(pieceSquareLists, bitboards, whitePieces) - blackBishopsEval(pieceSquareLists, bitboards, blackPieces)) +
                     (whiteKnightsEval(pieceSquareLists, bitboards) - blackKnightsEval(pieceSquareLists, bitboards)) +
                     tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
@@ -997,4 +1030,124 @@ fun evaluate(board: EngineChessBoard) : Int {
 
         return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
     }
+}
+
+fun scoreRightWayPositions(board: EngineChessBoard, h1: Int, h2: Int, h3: Int, g2: Int, g3: Int, f1: Int, f2: Int, f3: Int, f4: Int, isWhite: Boolean, cornerColour: Int): Int {
+    var safety = 0
+    val offset = if (isWhite) 0 else 6
+    if (board.allPiecesBitboard and (1L shl h1) != 0L ||
+            board.getBitboardByIndex(SquareOccupant.WR.index + offset) and (1L shl f1) == 0L) {
+        return 0
+    }
+    safety = if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl f2) != 0L) {
+        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl g2) != 0L) {
+            checkForPositionsAOrD(board, h2, h3, f3, isWhite, cornerColour, safety)
+        } else {
+            checkForPositionsBOrC(board, h2, h3, g2, g3, isWhite, safety)
+        }
+    } else {
+        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl f4) != 0L) {
+            checkForPositionE(board, h2, g2, f3, isWhite, safety)
+        } else {
+            checkForPositionFOrH(board, h2, h3, g2, f3, isWhite, safety)
+        }
+    }
+    return safety / 4
+}
+
+fun checkForPositionFOrH(board: EngineChessBoard, h2: Int, h3: Int, g2: Int, f3: Int, isWhite: Boolean, safety: Int): Int {
+    var safety = safety
+    val offset = if (isWhite) 0 else 6
+    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl f3) != 0L
+            && board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl g2) != 0L) {
+        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L) {
+            // (F)
+            safety -= 10
+        } else {
+            if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h3) != 0L) {
+                // (H)
+                safety -= 30
+            }
+        }
+    }
+    return safety
+}
+
+fun checkForPositionE(board: EngineChessBoard, h2: Int, g2: Int, f3: Int, isWhite: Boolean, safety: Int): Int {
+    var safety = safety
+    val offset = if (isWhite) 0 else 6
+    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl g2) != 0L
+            && board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L) {
+        // (E)
+        safety += 80
+        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L
+                && board.getBitboardByIndex(SquareOccupant.WN.index + offset) and (1L shl f3) != 0L) {
+            safety += 40
+        }
+    }
+    return safety
+}
+
+fun checkForPositionsBOrC(board: EngineChessBoard, h2: Int, h3: Int, g2: Int, g3: Int, isWhite: Boolean, safety: Int): Int {
+    var safety = safety
+    val offset = if (isWhite) 0 else 6
+    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl g3) != 0L) {
+        if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L) {
+            if (board.getBitboardByIndex(SquareOccupant.WB.index + offset) and (1L shl g2) != 0L) {
+                // (B)
+                safety += 100
+            }
+        } else {
+            if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h3) != 0L
+                    && board.getBitboardByIndex(SquareOccupant.WB.index + offset) and (1L shl g2) != 0L) {
+                // (C)
+                safety += 70
+            }
+        }
+    }
+    return safety
+}
+
+fun checkForPositionsAOrD(board: EngineChessBoard, h2: Int, h3: Int, f3: Int, isWhite: Boolean, cornerColour: Int, safety: Int): Int {
+    var safety = safety
+    val offset = if (isWhite) 0 else 6
+    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h2) != 0L) {
+        // (A)
+        safety += 120
+    } else {
+        safety = checkForPositionD(board, h3, f3, isWhite, cornerColour, safety)
+    }
+    return safety
+}
+
+fun checkForPositionD(board: EngineChessBoard, h3: Int, f3: Int, isWhite: Boolean, cornerColour: Int, safety: Int): Int {
+    var safety = safety
+    val offset = if (isWhite) 0 else 6
+    if (board.getBitboardByIndex(SquareOccupant.WP.index + offset) and (1L shl h3) != 0L
+            && board.getBitboardByIndex(SquareOccupant.WN.index + offset) and (1L shl f3) != 0L) {
+        // (D)
+        safety += 70
+        // check for bishop of same colour as h3
+        val bits = if (cornerColour == Colour.WHITE.value.toInt()) Bitboards.LIGHT_SQUARES else Bitboards.DARK_SQUARES
+        if (bits and board.getBitboardByIndex(SquareOccupant.WB.index + offset) != 0L) {
+            safety -= 30
+        }
+    }
+    return safety
+}
+
+fun getWhiteKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
+    return if (engineChessBoard.whiteKingSquare == 1 || engineChessBoard.whiteKingSquare == 8) {
+        scoreRightWayPositions(engineChessBoard,
+                0, 8, 16, 9, 17, 2, 10, 18, 26, true,
+                Colour.WHITE.value.toInt())
+    } else 0
+}
+
+fun getBlackKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
+    return if (engineChessBoard.blackKingSquare == 57 || engineChessBoard.blackKingSquare == 48) {
+        scoreRightWayPositions(engineChessBoard,
+                56, 48, 40, 49, 41, 58, 50, 42, 34, false,
+                Colour.BLACK.value.toInt())
+    } else 0
 }

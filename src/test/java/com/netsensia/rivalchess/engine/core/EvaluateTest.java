@@ -1,8 +1,8 @@
 package com.netsensia.rivalchess.engine.core;
 
+import com.netsensia.rivalchess.engine.core.eval.EvaluateKt;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.util.FenUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.function.Function;
@@ -14,8 +14,8 @@ public class EvaluateTest {
     private void assertRightWayScore(String fen, int expectedScore) throws IllegalFenException {
 
         EngineChessBoard engineBoard = new EngineChessBoard();
-        Function<EngineChessBoard, Integer> whiteFunc = Evaluate::getWhiteKingRightWayScore;
-        Function<EngineChessBoard, Integer> blackFunc = Evaluate::getBlackKingRightWayScore;
+        Function<EngineChessBoard, Integer> whiteFunc = EvaluateKt::getWhiteKingRightWayScore;
+        Function<EngineChessBoard, Integer> blackFunc = EvaluateKt::getBlackKingRightWayScore;
 
         engineBoard.setBoard(FenUtils.getBoardModel(fen));
         assertEquals(expectedScore, whiteFunc.apply(engineBoard).intValue());
