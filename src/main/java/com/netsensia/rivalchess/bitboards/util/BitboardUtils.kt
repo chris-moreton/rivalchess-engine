@@ -89,4 +89,4 @@ tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : Li
         }
     }
 
-fun orList(list: List<Long>) : Long = list.stream().reduce(0, Long::or)
+fun orList(list: List<Long>) : Long = list.asSequence().fold(0L) { acc, i -> acc or i }

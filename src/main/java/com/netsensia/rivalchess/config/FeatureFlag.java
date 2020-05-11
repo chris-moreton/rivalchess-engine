@@ -5,7 +5,7 @@ public enum FeatureFlag {
     USE_HASH_TABLES (true),
     USE_HEIGHT_REPLACE_HASH (true),
     USE_ALWAYS_REPLACE_HASH (true),
-    USE_PAWN_HASH (true),
+    USE_PAWN_HASH (false),
     USE_QUICK_PAWN_HASH_RETURN (true),
     USE_ASPIRATION_WINDOW (true),
     USE_NULL_MOVE_PRUNING (true),
@@ -20,12 +20,11 @@ public enum FeatureFlag {
     USE_PV_SEARCH (true),
     USE_INTERNAL_ITERATIVE_DEEPENING (true),
     USE_SUPER_VERIFY_ON_HASH (false),
-    USE_PARALLEL_EVALUATION (false),
     ;
 
     private boolean active;
 
-    private FeatureFlag(boolean active) {
+    FeatureFlag(boolean active) {
         this.active = active;
     }
 
