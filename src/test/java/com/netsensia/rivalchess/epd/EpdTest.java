@@ -52,7 +52,7 @@ public class EpdTest {
             "WAC.265","WAC.275","WAC.293","WAC.297",
             "WAC.041","WAC.157","WAC.204","WAC.242","WAC.291",
             "WAC.090","WAC.287",
-            "WAC.193","WAC.226",
+            "WAC.193",
             "WAC.145"
     ));
 
