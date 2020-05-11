@@ -48,6 +48,8 @@ data class PieceSquareLists(
 )
 
 data class AttackLists(
+        val whitePawns: Long,
+        val blackPawns: Long,
         val whiteRooks: List<Long>,
         val blackRooks: List<Long>,
         val whiteQueens: List<Long>,
@@ -56,6 +58,13 @@ data class AttackLists(
         val whiteBishops: List<Long>,
         val blackBishops: List<Long>,
         val blackKnights: List<Long>
+)
+
+data class MaterialValues(
+        val whitePieces: Int,
+        val blackPieces: Int,
+        val whitePawns: Int,
+        val blackPawns: Int
 )
 
 fun initBitboardData(board: EngineChessBoard) =
@@ -95,6 +104,8 @@ fun initPieceSquareLists(bitboards: BitboardData) =
 
 fun initAttackLists(bitboards: BitboardData, pieceSquareLists: PieceSquareLists) =
         AttackLists(
+            whitePawns = whitePawnAttacks(bitboards.whitePawns),
+            blackPawns = blackPawnAttacks(bitboards.blackPawns),
             whiteRooks = rookAttackList(bitboards, pieceSquareLists.whiteRooks),
             whiteBishops = bishopAttackList(bitboards, pieceSquareLists.whiteBishops),
             whiteQueens = queenAttackList(bitboards, pieceSquareLists.whiteQueens),
@@ -105,9 +116,17 @@ fun initAttackLists(bitboards: BitboardData, pieceSquareLists: PieceSquareLists)
             blackKnights = knightAttackList(pieceSquareLists.blackKnights)
         )
 
-fun materialDifferenceEval(bitboards: BitboardData) =
-        whitePieceValues(bitboards) - blackPieceValues(bitboards) +
-                whitePawnValues(bitboards) - blackPawnValues(bitboards)
+fun initMaterialValues(bitboards: BitboardData) =
+        MaterialValues(
+                whitePieces = whitePieceValues(bitboards),
+                blackPieces = blackPieceValues(bitboards),
+                whitePawns = whitePawnValues(bitboards),
+                blackPawns = blackPawnValues(bitboards)
+        )
+
+fun materialDifferenceEval(materialValues: MaterialValues) =
+        materialValues.whitePieces - materialValues.blackPieces +
+                materialValues.whitePawns - materialValues.blackPawns
 
 fun onlyOneBitSet(bitboard: Long) = (bitboard and (bitboard - 1)) == 0L
 
@@ -344,11 +363,11 @@ fun blackPieceAttackList(attackLists: AttackLists): List<Long> {
 }
 
 fun whiteAttacksBitboard(bitboards: BitboardData, attackLists: AttackLists) =
-        (orList(whitePieceAttackList(attackLists)) or whitePawnAttacks(bitboards.whitePawns)) and
+        (orList(whitePieceAttackList(attackLists)) or attackLists.whitePawns) and
                 blackPieceBitboard(bitboards)
 
 fun blackAttacksBitboard(bitboards: BitboardData, attackLists: AttackLists) =
-        (orList(blackPieceAttackList(attackLists)) or blackPawnAttacks(bitboards.blackPawns)) and
+        (orList(blackPieceAttackList(attackLists)) or attackLists.blackPawns) and
                 whitePieceBitboard(bitboards)
 
 fun threatEval(bitboards: BitboardData, attackLists: AttackLists, squareOccupants: List<SquareOccupant>): Int {
@@ -835,20 +854,24 @@ fun whiteRooksEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, 
     }.fold(0) { acc, i -> acc + i }
 }
 
-fun pawnScore(board: EngineChessBoard): Int {
+fun pawnScore(board: EngineChessBoard, attackLists: AttackLists, materialValues: MaterialValues): Int {
 
-    val whitePawnAttacks = whitePawnAttacks(board.whitePawnBitboard)
-    val blackPawnAttacks = blackPawnAttacks(board.blackPawnBitboard)
+    val whitePawnAttacks = attackLists.whitePawns
+    val blackPawnAttacks = attackLists.blackPawns
+
     val whitePawnFiles = getPawnFiles(board.whitePawnBitboard)
     val blackPawnFiles = getPawnFiles(board.blackPawnBitboard)
+
     val whitePassedPawnsBitboard = getWhitePassedPawns(board.whitePawnBitboard, board.blackPawnBitboard)
-    val whiteGuardedPassedPawns = whitePassedPawnsBitboard and whitePawnAttacks(board.whitePawnBitboard)
+    val whiteGuardedPassedPawns = whitePassedPawnsBitboard and whitePawnAttacks
     val blackPassedPawnsBitboard = getBlackPassedPawns(board.whitePawnBitboard, board.blackPawnBitboard)
-    val blackGuardedPassedPawns = blackPassedPawnsBitboard and blackPawnAttacks(board.blackPawnBitboard)
+    val blackGuardedPassedPawns = blackPassedPawnsBitboard and blackPawnAttacks
+
     val whiteIsolatedPawns = whitePawnFiles and (whitePawnFiles shl 1).inv() and (whitePawnFiles ushr 1).inv()
     val blackIsolatedPawns = blackPawnFiles and (blackPawnFiles shl 1).inv() and (blackPawnFiles ushr 1).inv()
     val whiteOccupiedFileMask = southFill(board.whitePawnBitboard, 8) and Bitboards.RANK_1
     val blackOccupiedFileMask = southFill(board.blackPawnBitboard, 8) and Bitboards.RANK_1
+
     val whitePassedPawnScore = bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value +
             squareList(whitePassedPawnsBitboard).asSequence()
                     .map { Evaluation.getPassedPawnBonus(yCoordOfSquare(it)) }.fold(0) { acc, i -> acc + i }
@@ -885,12 +908,12 @@ fun pawnScore(board: EngineChessBoard): Int {
             bitCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.value +
             Evaluation.VALUE_DOUBLED_PAWN_PENALTY.value * (board.blackPawnValues / 100 - bitCount(blackOccupiedFileMask)) +
             bitCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.value +
-            (linearScale(board.blackPieceValues, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, whitePassedPawnScore * 2, whitePassedPawnScore)) -
-            (linearScale(board.whitePieceValues, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, blackPassedPawnScore * 2, blackPassedPawnScore)) +
-            (if (board.blackPieceValues < Evaluation.PAWN_ADJUST_MAX_MATERIAL.value)
+            (linearScale(materialValues.blackPieces, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, whitePassedPawnScore * 2, whitePassedPawnScore)) -
+            (linearScale(materialValues.whitePieces, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, blackPassedPawnScore * 2, blackPassedPawnScore)) +
+            (if (materialValues.blackPieces < Evaluation.PAWN_ADJUST_MAX_MATERIAL.value)
                 calculateLowMaterialPawnBonus(Colour.BLACK, board, whitePassedPawnsBitboard, blackPassedPawnsBitboard)
             else 0) +
-            (if (board.whitePieceValues < Evaluation.PAWN_ADJUST_MAX_MATERIAL.value)
+            (if (materialValues.whitePieces < Evaluation.PAWN_ADJUST_MAX_MATERIAL.value)
                 calculateLowMaterialPawnBonus(Colour.WHITE, board, whitePassedPawnsBitboard, blackPassedPawnsBitboard)
             else 0)
 }
@@ -943,6 +966,7 @@ fun evaluate(board: EngineChessBoard) : Int {
     val bitboards = initBitboardData(board)
     val pieceSquareLists = initPieceSquareLists(bitboards)
     val attackLists = initAttackLists(bitboards, pieceSquareLists)
+    val materialValues = initMaterialValues(bitboards)
 
     if (onlyKingsRemain(bitboards)) {
         return 0
@@ -950,12 +974,12 @@ fun evaluate(board: EngineChessBoard) : Int {
         val whitePieces = if (board.mover == Colour.WHITE) bitboards.friendly else bitboards.enemy
         val blackPieces = if (board.mover == Colour.WHITE) bitboards.enemy else bitboards.friendly
 
-        val materialDifference = materialDifferenceEval(bitboards)
+        val materialDifference = materialDifferenceEval(materialValues)
 
         val eval =  materialDifference +
                     (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
                     (doubledRooksEval(pieceSquareLists.whiteRooks) - doubledRooksEval(pieceSquareLists.blackRooks)) +
-                    pawnScore(board) +
+                    pawnScore(board, attackLists, materialValues) +
                     (whiteBishopEval(pieceSquareLists, bitboards, whitePieces) - blackBishopsEval(pieceSquareLists, bitboards, blackPieces)) +
                     (whiteKnightsEval(pieceSquareLists, bitboards) - blackKnightsEval(pieceSquareLists, bitboards)) +
                     tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
