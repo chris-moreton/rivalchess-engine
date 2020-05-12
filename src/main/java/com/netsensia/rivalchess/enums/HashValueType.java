@@ -1,9 +1,9 @@
 package com.netsensia.rivalchess.enums;
 
 public enum HashValueType {
-    UPPERBOUND (0),
-    LOWERBOUND (1),
-    EXACTSCORE (2),
+    UPPER(0),
+    LOWER(1),
+    EXACT(2),
     EMPTY (3),
     ;
 

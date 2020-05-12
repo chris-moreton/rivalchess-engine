@@ -10,7 +10,7 @@ import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import junit.framework.TestCase;
 
-public class SearchHashHelperTest extends TestCase {
+public class SearchHashTest extends TestCase {
 
     public void testIsHeightHashTableEntryValid() throws InvalidMoveException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
@@ -25,7 +25,7 @@ public class SearchHashHelperTest extends TestCase {
 
         boardHash.storeHashMove(
                 ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
-                engineBoard, 2, (byte)HashValueType.EXACTSCORE.getIndex(), 4);
+                engineBoard, 2, (byte)HashValueType.EXACT.getIndex(), 4);
 
         engineBoard.unMakeMove();
         engineBoard.unMakeMove();
@@ -36,63 +36,63 @@ public class SearchHashHelperTest extends TestCase {
         engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b8c6"));
         engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
 
-        assertFalse(SearchHashHelper.isHeightHashTableEntryValid(2, engineBoard));
+        assertFalse(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
 
         engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g8f6"));
 
-        assertTrue(SearchHashHelper.isHeightHashTableEntryValid(2, engineBoard));
+        assertTrue(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
 
         // gets correct move from use height hash table
         assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
-                boardHash.getHashTableUseHeight(
-                        boardHash.getHashIndex(engineBoard) + HashIndex.HASHENTRY_MOVE.getIndex()));
+                boardHash.useHeight(
+                        boardHash.getHashIndex(engineBoard) + HashIndex.MOVE.getIndex()));
 
         // has not been added to always replace table, no need as it was accepted by use height table
         assertFalse(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact ==
-                boardHash.getHashTableIgnoreHeight(
-                        boardHash.getHashIndex(engineBoard) + HashIndex.HASHENTRY_MOVE.getIndex()));
+                boardHash.ignoreHeight(
+                        boardHash.getHashIndex(engineBoard) + HashIndex.MOVE.getIndex()));
 
         // entry does not have enough height
-        assertFalse(SearchHashHelper.isHeightHashTableEntryValid(5, engineBoard));
+        assertFalse(SearchHashKt.isHeightHashTableEntryValid(5, engineBoard));
 
         // try to store another move with lower height
         boardHash.storeHashMove(
                 ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
-                engineBoard, 2, (byte)HashValueType.EXACTSCORE.getIndex(), 3);
+                engineBoard, 2, (byte)HashValueType.EXACT.getIndex(), 3);
 
         // move from original entry still valid
         assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
-                boardHash.getHashTableUseHeight(
-                        boardHash.getHashIndex(engineBoard) + HashIndex.HASHENTRY_MOVE.getIndex()));
+                boardHash.useHeight(
+                        boardHash.getHashIndex(engineBoard) + HashIndex.MOVE.getIndex()));
 
         // new move valid in always replace table
         assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
-                boardHash.getHashTableIgnoreHeight(
-                        boardHash.getHashIndex(engineBoard) + HashIndex.HASHENTRY_MOVE.getIndex()));
+                boardHash.ignoreHeight(
+                        boardHash.getHashIndex(engineBoard) + HashIndex.MOVE.getIndex()));
 
         // try to store another move with heigher height
         boardHash.storeHashMove(
                 ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
-                engineBoard, 2, (byte)HashValueType.EXACTSCORE.getIndex(), 6);
+                engineBoard, 2, (byte)HashValueType.EXACT.getIndex(), 6);
 
         // move from new entry now valid
         assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
-                boardHash.getHashTableUseHeight(
-                        boardHash.getHashIndex(engineBoard) + HashIndex.HASHENTRY_MOVE.getIndex()));
+                boardHash.useHeight(
+                        boardHash.getHashIndex(engineBoard) + HashIndex.MOVE.getIndex()));
 
         // old entry has been added to always replace table
         assertEquals(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
-                boardHash.getHashTableIgnoreHeight(
-                        boardHash.getHashIndex(engineBoard) + HashIndex.HASHENTRY_MOVE.getIndex()));
+                boardHash.ignoreHeight(
+                        boardHash.getHashIndex(engineBoard) + HashIndex.MOVE.getIndex()));
 
         for (int i = 0; i < SearchConfig.MAXIMUM_HASH_AGE.getValue(); i++) {
             boardHash.incVersion();
-            assertTrue(SearchHashHelper.isHeightHashTableEntryValid(2, engineBoard));
+            assertTrue(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
         }
 
         boardHash.incVersion();
         // Hash table is too old
-        assertFalse(SearchHashHelper.isHeightHashTableEntryValid(2, engineBoard));
+        assertFalse(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
 
     }
 

@@ -14,7 +14,6 @@ import com.netsensia.rivalchess.config.Uci;
 import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
-import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.MoveOrder;
 import com.netsensia.rivalchess.enums.PromotionPieceMask;
@@ -45,8 +44,12 @@ import java.util.Timer;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.evaluate;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
-import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
-import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
+import static com.netsensia.rivalchess.engine.core.hash.SearchHashKt.isAlwaysReplaceHashTableEntryValid;
+import static com.netsensia.rivalchess.engine.core.hash.SearchHashKt.isHeightHashTableEntryValid;
+import static com.netsensia.rivalchess.enums.HashIndex.FLAG;
+import static com.netsensia.rivalchess.enums.HashIndex.MOVE;
+import static com.netsensia.rivalchess.enums.HashIndex.SCORE;
+import static com.netsensia.rivalchess.enums.HashIndex.VERSION;
 
 public final class Search implements Runnable {
 
@@ -549,7 +552,15 @@ public final class Search implements Runnable {
         return 0;
     }
 
-    public SearchPath search(EngineBoard board, final int depth, int ply, int low, int high, int extensions, int recaptureSquare, boolean isCheck) throws InvalidMoveException {
+    public SearchPath search(
+            final EngineBoard board,
+            final int depth,
+            final int ply,
+            int low,
+            int high,
+            final int extensions,
+            final int recaptureSquare,
+            boolean isCheck) throws InvalidMoveException {
 
         nodes++;
 
@@ -576,7 +587,7 @@ public final class Search implements Runnable {
 
         final int depthRemaining = depth + (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue());
 
-        int flag = HashValueType.UPPERBOUND.getIndex();
+        int flag = HashValueType.UPPER.getIndex();
 
         final BoardHash boardHash = board.getBoardHashObject();
         final int hashIndex = boardHash.getHashIndex(board);
@@ -584,21 +595,18 @@ public final class Search implements Runnable {
 
         if (FeatureFlag.USE_HASH_TABLES.isActive()) {
             if (FeatureFlag.USE_HEIGHT_REPLACE_HASH.isActive() && isHeightHashTableEntryValid(depthRemaining, board)) {
-                boardHash.setHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_VERSION.getIndex(), boardHash.getHashTableVersion());
-                hashMove = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_MOVE.getIndex());
+                boardHash.setHashTableUseHeight(hashIndex + VERSION.getIndex(), boardHash.getHashTableVersion());
+                hashMove = boardHash.useHeight(hashIndex + MOVE.getIndex());
 
-                if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.LOWERBOUND.getIndex()) {
-                    if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) > low) {
-                        low = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
-                    }
-                } else if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.UPPERBOUND.getIndex()) {
-                    if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) < high) {
-                        high = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
-                    }
-                }
+                if (boardHash.useHeight(hashIndex + FLAG.getIndex()) == HashValueType.LOWER.getIndex()) {
+                    if (boardHash.useHeight(hashIndex + SCORE.getIndex()) > low)
+                        low = boardHash.useHeight(hashIndex + SCORE.getIndex());
+                } else if (boardHash.useHeight(hashIndex + FLAG.getIndex()) == HashValueType.UPPER.getIndex() &&
+                      (boardHash.useHeight(hashIndex + SCORE.getIndex()) < high))
+                    high = boardHash.useHeight(hashIndex + SCORE.getIndex());
 
-                if (boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.EXACTSCORE.getIndex() || low >= high) {
-                    bestPath.score = boardHash.getHashTableUseHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
+                if (boardHash.useHeight(hashIndex + FLAG.getIndex()) == HashValueType.EXACT.getIndex() || low >= high) {
+                    bestPath.score = boardHash.useHeight(hashIndex + SCORE.getIndex());
                     bestPath.setPath(hashMove);
                     return bestPath;
                 }
@@ -606,17 +614,16 @@ public final class Search implements Runnable {
 
             if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive() && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
 
-                hashMove = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_MOVE.getIndex());
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.LOWERBOUND.getIndex()) {
-                    if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) > low)
-                        low = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
-                } else if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.UPPERBOUND.getIndex()) {
-                    if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()) < high)
-                        high = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
-                }
+                hashMove = boardHash.ignoreHeight(hashIndex + MOVE.getIndex());
+                if (boardHash.ignoreHeight(hashIndex + FLAG.getIndex()) == HashValueType.LOWER.getIndex()) {
+                    if (boardHash.ignoreHeight(hashIndex + SCORE.getIndex()) > low)
+                        low = boardHash.ignoreHeight(hashIndex + SCORE.getIndex());
+                } else if (boardHash.ignoreHeight(hashIndex + FLAG.getIndex()) == HashValueType.UPPER.getIndex() &&
+                       (boardHash.ignoreHeight(hashIndex + SCORE.getIndex()) < high))
+                        high = boardHash.ignoreHeight(hashIndex + SCORE.getIndex());
 
-                if (boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()) == HashValueType.EXACTSCORE.getIndex() || low >= high) {
-                    bestPath.score = boardHash.getHashTableIgnoreHeight(hashIndex + HashIndex.HASHENTRY_SCORE.getIndex());
+                if (boardHash.ignoreHeight(hashIndex + FLAG.getIndex()) == HashValueType.EXACT.getIndex() || low >= high) {
+                    bestPath.score = boardHash.ignoreHeight(hashIndex + SCORE.getIndex());
                     bestPath.setPath(hashMove);
                     return bestPath;
                 }
@@ -632,10 +639,10 @@ public final class Search implements Runnable {
 
         if (depthRemaining <= 0) {
             bestPath = quiesce(board, Limit.MAX_QUIESCE_DEPTH.getValue() - 1, ply, 0, low, high, isCheck);
-            if (bestPath.score < low) flag = HashValueType.UPPERBOUND.getIndex();
-            else if (bestPath.score > high) flag = HashValueType.LOWERBOUND.getIndex();
+            if (bestPath.score < low) flag = HashValueType.UPPER.getIndex();
+            else if (bestPath.score > high) flag = HashValueType.LOWER.getIndex();
             else
-                flag = HashValueType.EXACTSCORE.getIndex();
+                flag = HashValueType.EXACT.getIndex();
 
             boardHash.storeHashMove(0, board, bestPath.score, (byte)flag, 0);
             return bestPath;
@@ -865,7 +872,7 @@ public final class Search implements Runnable {
 
                             board.unMakeMove();
                             bestPath.setPath(move, newPath);
-                            boardHash.storeHashMove(move, board, newPath.score, (byte)HashValueType.LOWERBOUND.getIndex(), depthRemaining);
+                            boardHash.storeHashMove(move, board, newPath.score, (byte)HashValueType.LOWER.getIndex(), depthRemaining);
 
                             if (SearchConfig.NUM_KILLER_MOVES.getValue() > 0) {
                                 if ((board.getBitboard(BitboardType.ENEMY) & (move & 63)) == 0
@@ -902,7 +909,7 @@ public final class Search implements Runnable {
                         }
 
                         if (newPath.score > low) {
-                            flag = HashValueType.EXACTSCORE.getIndex();
+                            flag = HashValueType.EXACT.getIndex();
                             bestMoveForHash = move;
                             low = newPath.score;
                             scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive() && depth - reductions
@@ -924,7 +931,7 @@ public final class Search implements Runnable {
             if (!this.m_abortingSearch) {
                 if (legalMoveCount == 0) {
                     bestPath.score = board.isCheck() ? -Evaluation.VALUE_MATE.getValue() : 0;
-                    boardHash.storeHashMove(0, board, bestPath.score, (byte)HashValueType.EXACTSCORE.getIndex(), Limit.MAX_SEARCH_DEPTH.getValue());
+                    boardHash.storeHashMove(0, board, bestPath.score, (byte)HashValueType.EXACT.getIndex(), Limit.MAX_SEARCH_DEPTH.getValue());
                     return bestPath;
                 }
 
@@ -944,7 +951,7 @@ public final class Search implements Runnable {
         setNodes(getNodes() + 1);
 
         int numMoves = 0;
-        int flag = HashValueType.UPPERBOUND.getIndex();
+        int flag = HashValueType.UPPER.getIndex();
         int move;
         int bestMoveForHash = 0;
 
@@ -1031,7 +1038,7 @@ public final class Search implements Runnable {
                     if (newPath.score >= high) {
                         board.unMakeMove();
                         bestPath.setPath(move, newPath);
-                        boardHash.storeHashMove(move, board, newPath.score, (byte)HashValueType.LOWERBOUND.getIndex(), depth);
+                        boardHash.storeHashMove(move, board, newPath.score, (byte)HashValueType.LOWER.getIndex(), depth);
                         depthZeroMoveScores[numMoves] = newPath.score;
                         return bestPath;
                     }
@@ -1041,7 +1048,7 @@ public final class Search implements Runnable {
                     }
 
                     if (newPath.score > low) {
-                        flag = HashValueType.EXACTSCORE.getIndex();
+                        flag = HashValueType.EXACT.getIndex();
                         bestMoveForHash = move;
                         low = newPath.score;
 

@@ -3,11 +3,11 @@ package com.netsensia.rivalchess.enums;
 import com.netsensia.rivalchess.config.FeatureFlag;
 
 public enum HashIndex {
-    HASHENTRY_MOVE(0),
-    HASHENTRY_SCORE(1),
+    MOVE(0),
+    SCORE(1),
     HASHENTRY_HEIGHT(2),
-    HASHENTRY_FLAG(3),
-    HASHENTRY_VERSION(4),
+    FLAG(3),
+    VERSION(4),
     HASHENTRY_64BIT1(5),
     HASHENTRY_64BIT2(6),
     HASHENTRY_LOCK1(7),
