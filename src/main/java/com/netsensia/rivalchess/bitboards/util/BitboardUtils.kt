@@ -2,6 +2,8 @@ package com.netsensia.rivalchess.bitboards.util
 
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
+import com.netsensia.rivalchess.engine.core.eval.blackPawnAttacks
+import com.netsensia.rivalchess.engine.core.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
 import java.util.*
@@ -30,13 +32,7 @@ fun getWhitePassedPawns(whitePawns: Long, blackPawns: Long): Long {
             southFill(blackPawns or blackPawnAttacks(blackPawns) or (whitePawns ushr 8)).inv()
 }
 
-fun blackPawnAttacks(blackPawns: Long): Long {
-    return blackPawns and Bitboards.FILE_A.inv() ushr 7 or (blackPawns and Bitboards.FILE_H.inv() ushr 9)
-}
 
-fun whitePawnAttacks(whitePawns: Long): Long {
-    return whitePawns and Bitboards.FILE_A.inv() shl 9 or (whitePawns and Bitboards.FILE_H.inv() shl 7)
-}
 
 tailrec fun getSetBits(bitboard: Long, setBits: MutableList<Int> = ArrayList()): List<Int> {
     return when (bitboard) {
@@ -79,14 +75,5 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long): Int {
 }
 
 fun unsetBit(bitboard: Long, bit: Int) = bitboard xor (1L shl bit)
-
-tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : List<Int> =
-    when (bitboard) {
-        0L -> squareList
-        else -> {
-            val square = numberOfTrailingZeros(bitboard)
-            squareList(unsetBit(bitboard, square), squareList + square)
-        }
-    }
 
 fun orList(list: List<Long>) : Long = list.asSequence().fold(0L) { acc, i -> acc or i }
