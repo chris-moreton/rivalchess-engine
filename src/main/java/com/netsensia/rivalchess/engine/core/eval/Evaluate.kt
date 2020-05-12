@@ -9,7 +9,6 @@ import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.Square
-import com.netsensia.rivalchess.model.SquareOccupant
 import java.lang.Long.bitCount
 import kotlin.math.abs
 
@@ -235,13 +234,13 @@ fun kingSafetyEval(bitboards: BitboardData, attacks: Attacks, board: EngineChess
 
     val blackKingDangerZone = blackKingDangerZone(kingSquares)
 
-    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attacks.whiteRooks) +
-            kingAttackCount(blackKingDangerZone, attacks.whiteQueens) * 2 +
-            kingAttackCount(blackKingDangerZone, attacks.whiteBishops)
+    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attacks.whiteRookPair.first) +
+            kingAttackCount(blackKingDangerZone, attacks.whiteQueens.first) * 2 +
+            kingAttackCount(blackKingDangerZone, attacks.whiteBishopPair.first)
 
-    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attacks.blackRooks) +
-            kingAttackCount(whiteKingDangerZone, attacks.blackQueens) * 2 +
-            kingAttackCount(whiteKingDangerZone, attacks.blackBishops)
+    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attacks.blackRookPair.first) +
+            kingAttackCount(whiteKingDangerZone, attacks.blackQueens.first) * 2 +
+            kingAttackCount(whiteKingDangerZone, attacks.blackBishops.first)
 
     val averagePiecesPerSide = (whitePieceValues(bitboards) + blackPieceValues(bitboards)) / 2
 

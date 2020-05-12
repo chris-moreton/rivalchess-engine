@@ -9,13 +9,13 @@ import com.netsensia.rivalchess.model.SquareOccupant
 class Attacks(bitboardData: BitboardData, pieceSquareLists: PieceSquareLists) {
     val whitePawns = whitePawnAttacks(bitboardData.whitePawns)
     val blackPawns = blackPawnAttacks(bitboardData.blackPawns)
-    val whiteRooks = rookAttackList(bitboardData, pieceSquareLists.whiteRooks)
-    val whiteBishops = bishopAttackList(bitboardData, pieceSquareLists.whiteBishops)
-    val whiteQueens = queenAttackList(bitboardData, pieceSquareLists.whiteQueens)
+    val whiteRookPair = attackList(bitboardData, pieceSquareLists.whiteRooks, ::rookAttacks)
+    val whiteBishopPair = attackList(bitboardData, pieceSquareLists.whiteBishops, ::bishopAttacks)
+    val whiteQueens = attackList(bitboardData, pieceSquareLists.whiteQueens, ::queenAttacks)
     val whiteKnights = knightAttackList(pieceSquareLists.whiteKnights)
-    val blackRooks = rookAttackList(bitboardData, pieceSquareLists.blackRooks)
-    val blackBishops = bishopAttackList(bitboardData, pieceSquareLists.blackBishops)
-    val blackQueens = queenAttackList(bitboardData, pieceSquareLists.blackQueens)
+    val blackRookPair = attackList(bitboardData, pieceSquareLists.blackRooks, ::rookAttacks)
+    val blackBishops = attackList(bitboardData, pieceSquareLists.blackBishops, ::bishopAttacks)
+    val blackQueens = attackList(bitboardData, pieceSquareLists.blackQueens, ::queenAttacks)
     val blackKnights = knightAttackList(pieceSquareLists.blackKnights)
 }
 
@@ -25,14 +25,18 @@ fun whitePawnAttacks(whitePawns: Long) =
 fun blackPawnAttacks(blackPawns: Long) =
         blackPawns and Bitboards.FILE_A.inv() ushr 7 or (blackPawns and Bitboards.FILE_H.inv() ushr 9)
 
-fun rookAttackList(bitboards: BitboardData, rookSquares: List<Int>) =
-        rookSquares.asSequence().map { rookAttacks(bitboards, it) }.toList()
+fun attackList(bitboards: BitboardData, squares: List<Int>, fn: (BitboardData, Int) -> Long): Pair<List<Long>, Long> {
+    var list = mutableListOf<Long>()
+    var orred = 0L
 
-fun bishopAttackList(bitboards: BitboardData, whiteBishopSquares: List<Int>) =
-        whiteBishopSquares.asSequence().map { s -> bishopAttacks(bitboards, s)}.toList()
+    for (square in squares) {
+        val attacks = fn(bitboards, square)
+        list.add(attacks)
+        orred = orred or attacks
+    }
 
-fun queenAttackList(bitboards: BitboardData, whiteQueenSquares: List<Int>) =
-        whiteQueenSquares.asSequence().map { s -> queenAttacks(bitboards, s)}.toList()
+    return Pair(list, orred)
+}
 
 fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
     return squareList(whiteAttacksBitboard(bitboards, attacks))
@@ -49,15 +53,15 @@ fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants:
 }
 
 fun whitePieceAttacks(attacks: Attacks) =
-        orList(attacks.whiteRooks) or
-                orList(attacks.whiteQueens) or
-                orList(attacks.whiteBishops) or
+        attacks.whiteRookPair.second or
+                attacks.whiteQueens.second or
+                attacks.whiteBishopPair.second or
                 orList(attacks.whiteKnights)
 
 fun blackPieceAttacks(attacks: Attacks) =
-        orList(attacks.blackRooks) or
-                orList(attacks.blackQueens) or
-                orList(attacks.blackBishops) or
+        attacks.blackRookPair.second or
+                attacks.blackQueens.second or
+                attacks.blackBishops.second or
                 orList(attacks.blackKnights)
 
 fun whiteAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
