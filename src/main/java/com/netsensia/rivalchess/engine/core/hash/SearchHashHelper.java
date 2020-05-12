@@ -2,9 +2,8 @@ package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.config.FeatureFlag;
-import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.exception.HashVerificationException;
@@ -14,7 +13,7 @@ public class SearchHashHelper {
 
     private SearchHashHelper() {}
 
-    public static boolean isHeightHashTableEntryValid(int depthRemaining, EngineChessBoard board) {
+    public static boolean isHeightHashTableEntryValid(int depthRemaining, EngineBoard board) {
         final BoardHash boardHash = board.getBoardHashObject();
         final long hashValue = boardHash.getTrackedHashValue();
         final int hashIndex = boardHash.getHashIndex(board);
@@ -39,7 +38,7 @@ public class SearchHashHelper {
         return false;
     }
 
-    public static boolean isAlwaysReplaceHashTableEntryValid(int depthRemaining, EngineChessBoard board) {
+    public static boolean isAlwaysReplaceHashTableEntryValid(int depthRemaining, EngineBoard board) {
 
         final BoardHash boardHash = board.getBoardHashObject();
         final long hashValue = boardHash.getTrackedHashValue();
@@ -62,7 +61,7 @@ public class SearchHashHelper {
         return false;
     }
 
-    private static void superVerifyUseHeightHash(EngineChessBoard board) {
+    private static void superVerifyUseHeightHash(EngineBoard board) {
         final BoardHash boardHash = board.getBoardHashObject();
         final int hashIndex = boardHash.getHashIndex(board);
 
@@ -77,7 +76,7 @@ public class SearchHashHelper {
         }
     }
 
-    private static void superVerifyAlwaysReplaceHash(EngineChessBoard board) {
+    private static void superVerifyAlwaysReplaceHash(EngineBoard board) {
         final BoardHash boardHash = board.getBoardHashObject();
         final int hashIndex = boardHash.getHashIndex(board);
 

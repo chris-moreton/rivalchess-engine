@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.model.SquareOccupant;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.engine.core.type.MoveDetail;
 import com.netsensia.rivalchess.model.Move;
@@ -16,9 +16,9 @@ public class ZorbristHashTracker {
     final long switchMoverHashValue =
             ZorbristHashCalculator.getWhiteMoverHashValue() ^ ZorbristHashCalculator.getBlackMoverHashValue();
 
-    public void initHash(final EngineChessBoard engineChessBoard) {
-        trackedBoardHash = ZorbristHashCalculator.calculateHash(engineChessBoard);
-        trackedPawnHash = ZorbristHashCalculator.calculatePawnHash(engineChessBoard);
+    public void initHash(final EngineBoard engineBoard) {
+        trackedBoardHash = ZorbristHashCalculator.calculateHash(engineBoard);
+        trackedPawnHash = ZorbristHashCalculator.calculatePawnHash(engineBoard);
     }
 
     private void replaceWithEmptySquare(final SquareOccupant squareOccupant, final int bitRef) {
@@ -219,7 +219,7 @@ public class ZorbristHashTracker {
         switchMover();
     }
 
-    public void makeMove(final EngineChessBoard board, final EngineMove engineMove) {
+    public void makeMove(final EngineBoard board, final EngineMove engineMove) {
 
         final Move move = ChessBoardConversion.getMoveRefFromEngineMove(engineMove.compact);
         final int bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.getSrcBoardRef());

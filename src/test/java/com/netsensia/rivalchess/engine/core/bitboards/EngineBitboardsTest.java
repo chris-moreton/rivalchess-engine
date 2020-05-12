@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.engine.core.bitboards;
 import com.netsensia.rivalchess.bitboards.EngineBitboards;
 import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.model.Colour;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Square;
@@ -69,8 +69,8 @@ public class EngineBitboardsTest {
 
     @Test
     public void isSquareAttacked() throws IllegalFenException {
-        final EngineChessBoard engineChessBoard =
-                new EngineChessBoard(FenUtils.getBoardModel("6k1/p5p1/5p2/2P2Q2/3pN2p/3PbK1P/7P/6q1 b - -"));
+        final EngineBoard engineBoard =
+                new EngineBoard(FenUtils.getBoardModel("6k1/p5p1/5p2/2P2Q2/3pN2p/3PbK1P/7P/6q1 b - -"));
 
         boolean[][] expectedWhiteAttacks = {
                 {false,false,true,false,false,false,false,false},
@@ -94,7 +94,7 @@ public class EngineBitboardsTest {
                 {true,true,true,true,true,true,true,true}
         };
 
-        EngineBitboards engineBitboards = engineChessBoard.getEngineBitboards();
+        EngineBitboards engineBitboards = engineBoard.getEngineBitboards();
 
         for (int y=0; y<8; y++) {
             for (int x=0; x<8; x++) {

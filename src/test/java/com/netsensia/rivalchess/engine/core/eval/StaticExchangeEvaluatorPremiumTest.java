@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.eval;
 
 import com.netsensia.rivalchess.model.Piece;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
@@ -16,9 +16,9 @@ public class StaticExchangeEvaluatorPremiumTest extends TestCase {
     private StaticExchangeEvaluator staticExchangeEvaluator = new StaticExchangeEvaluatorPremium();
 
     public void assertSeeScore (final String fen, final String move, final int expectedScore) throws InvalidMoveException {
-        EngineChessBoard engineChessBoard = new EngineChessBoard(FenUtils.getBoardModel(fen));
+        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(fen));
         assertEquals(expectedScore, staticExchangeEvaluator.staticExchangeEvaluation(
-                engineChessBoard,
+                engineBoard,
                 ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move)));
     }
 

@@ -1,12 +1,11 @@
-package com.netsensia.rivalchess.engine.core.eval;
+package com.netsensia.rivalchess.engine.core.eval
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*
 
-public class PieceSquareTables {
+object PieceSquareTables {
 
-    public static final List<Integer> pawn = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val pawn: List<Int> = Collections.unmodifiableList(listOf(
             0, 0, 0, 0, 0, 0, 0, 0,
             -6, 4, 4, -15, -15, 4, 4, -6,
             -6, 4, 2, 5, 5, 2, 4, -6,
@@ -14,9 +13,10 @@ public class PieceSquareTables {
             -5, 4, 10, 20, 20, 10, 4, -5,
             3, 12, 20, 28, 28, 20, 12, 3,
             8, 16, 24, 32, 32, 24, 16, 8,
-            0, 0, 0, 0, 0, 0, 0, 0));
+            0, 0, 0, 0, 0, 0, 0, 0))
 
-    public static final List<Integer> pawnEndGame = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val pawnEndGame: List<Int> = Collections.unmodifiableList(listOf(
             0, 0, 0, 0, 0, 0, 0, 0,
             -20, 0, 0, 0, 0, 0, 0, -20,
             -15, 5, 5, 5, 5, 5, 5, -15,
@@ -25,9 +25,10 @@ public class PieceSquareTables {
             20, 30, 35, 35, 35, 35, 30, 20,
             25, 40, 45, 45, 45, 45, 40, 25,
             0, 0, 0, 0, 0, 0, 0, 0
-    ));
+    ))
 
-    public static final List<Integer> knight = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val knight: List<Int> = Collections.unmodifiableList(listOf(
             -50, -40, -30, -20, -20, -30, -40, -50,
             -40, -30, -10, 0, 0, -10, -30, -40,
             -20, -10, 0, 0, 0, 0, -10, -20,
@@ -36,9 +37,10 @@ public class PieceSquareTables {
             -20, 5, 7, 15, 15, 7, 5, -20,
             -40, -30, -10, 0, 0, -10, -30, -40,
             -50, -40, -30, -20, -20, -30, -40, -50
-    ));
+    ))
 
-    public static final List<Integer> knightEndGame = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val knightEndGame: List<Int> = Collections.unmodifiableList(listOf(
             -50, -40, -30, -20, -20, -30, -40, -50,
             -40, -30, -10, -5, -5, -10, -30, -40,
             -30, -10, 0, 10, 10, 0, -10, -30,
@@ -47,9 +49,10 @@ public class PieceSquareTables {
             -30, -10, 0, 10, 10, 0, -10, -30,
             -40, -30, -10, -5, -5, -10, -30, -40,
             -50, -40, -30, -20, -20, -30, -40, -50
-    ));
+    ))
 
-    public static final List<Integer> bishop = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val bishop: List<Int> = Collections.unmodifiableList(listOf(
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 5, 2, 2, 2, 2, 5, 0,
             0, 3, 5, 5, 5, 5, 3, 0,
@@ -58,9 +61,10 @@ public class PieceSquareTables {
             0, 2, 5, 5, 5, 5, 2, 0,
             0, 5, 2, 2, 2, 2, 5, 0,
             0, 0, 0, 0, 0, 0, 0, 0
-    ));
+    ))
 
-    public static final List<Integer> rook = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val rook: List<Int> = Collections.unmodifiableList(listOf(
             0, 3, 5, 5, 5, 5, 3, 0,
             -3, 2, 5, 5, 5, 5, 2, -3,
             -2, 0, 0, 2, 2, 0, 0, -2,
@@ -69,9 +73,10 @@ public class PieceSquareTables {
             0, 0, 0, 0, 0, 0, 0, 0,
             15, 20, 20, 20, 20, 20, 20, 15,
             0, 3, 5, 5, 5, 5, 3, 0
-    ));
+    ))
 
-    public static final List<Integer> queen = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val queen: List<Int> = Collections.unmodifiableList(listOf(
             -10, -5, 0, 0, 0, 0, -5, -10,
             -5, 0, 5, 5, 5, 5, 0, -5,
             0, 5, 5, 6, 6, 5, 5, 0,
@@ -80,9 +85,10 @@ public class PieceSquareTables {
             0, 5, 5, 6, 6, 5, 5, 0,
             -5, 0, 5, 5, 5, 5, 0, -5,
             -10, -5, 0, 0, 0, 0, -5, -10
-    ));
+    ))
 
-    public static final List<Integer> king = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val king: List<Int> = Collections.unmodifiableList(listOf(
             24, 24, 9, 0, 0, 9, 24, 24,
             16, 14, 7, -3, -3, 7, 14, 16,
             4, -2, -5, -15, -15, -5, -2, 4,
@@ -91,9 +97,10 @@ public class PieceSquareTables {
             -25, -35, -40, -45, -45, -40, -35, -25,
             -22, -35, -40, -40, -40, -40, -35, -22,
             -22, -35, -40, -40, -40, -40, -35, -22
-    ));
+    ))
 
-    public static final List<Integer> kingEndGame = Collections.unmodifiableList(Arrays.asList(
+    @JvmField
+    val kingEndGame: List<Int> = Collections.unmodifiableList(listOf(
             0, 8, 16, 24, 24, 16, 8, 0,
             8, 16, 24, 32, 32, 24, 16, 8,
             16, 24, 32, 40, 40, 32, 24, 16,
@@ -102,5 +109,5 @@ public class PieceSquareTables {
             16, 24, 32, 40, 40, 32, 24, 16,
             8, 16, 24, 32, 32, 24, 16, 8,
             0, 8, 16, 24, 24, 16, 8, 0
-    ));
+    ))
 }

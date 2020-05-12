@@ -1,10 +1,9 @@
 package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.Bitboards
-import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.config.Evaluation
-import com.netsensia.rivalchess.engine.core.EngineChessBoard
+import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
@@ -209,7 +208,7 @@ fun isEndGame(bitboards: BitboardData) =
                 blackPieceValues(bitboards) +
                 blackPawnValues(bitboards)) <= Evaluation.EVAL_ENDGAME_TOTAL_PIECES.value
 
-fun kingSafetyEval(bitboards: BitboardData, attacks: Attacks, board: EngineChessBoard, kingSquares: KingSquares): Int {
+fun kingSafetyEval(bitboards: BitboardData, attacks: Attacks, board: EngineBoard, kingSquares: KingSquares): Int {
 
     val whiteKingDangerZone = whiteKingDangerZone(kingSquares)
 
@@ -787,7 +786,7 @@ private fun pawnDistanceFromPromotion(colour: Colour, square: Int) =
 
 private fun yCoordOfSquare(kingSquare: Int) = kingSquare / 8
 
-fun evaluate(board: EngineChessBoard) : Int {
+fun evaluate(board: EngineBoard) : Int {
 
     val bitboards = BitboardData(board)
     val pieceSquareLists = PieceSquareLists(bitboards)

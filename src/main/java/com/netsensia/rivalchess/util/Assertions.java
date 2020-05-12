@@ -1,13 +1,12 @@
 package com.netsensia.rivalchess.util;
 
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
-import com.netsensia.rivalchess.engine.core.hash.ZorbristHashTracker;
 
 public class Assertions {
 
-    public static boolean checkTrackedHash(EngineChessBoard board, String message) {
+    public static boolean checkTrackedHash(EngineBoard board, String message) {
         final BoardHash boardHash = board.getBoardHashObject();
 
         final long tv = boardHash.getTrackedHashValue();
@@ -23,7 +22,7 @@ public class Assertions {
         return true;
     }
 
-    public static boolean checkTrackedHash(EngineChessBoard board) {
+    public static boolean checkTrackedHash(EngineBoard board) {
         return checkTrackedHash(board, "");
     }
 }

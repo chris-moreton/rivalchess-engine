@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.engine.core.hash;
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.config.FeatureFlag;
 import com.netsensia.rivalchess.config.Hash;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
@@ -56,7 +56,7 @@ public class BoardHash {
         }
     }
 
-    public void storeHashMove(int move, EngineChessBoard board, int score, byte flag, int height) {
+    public void storeHashMove(int move, EngineBoard board, int score, byte flag, int height) {
         final int hashIndex = (int) (board.trackedBoardHashCode() % maxHashEntries) * HashIndex.getNumHashFields();
 
         if (height >= this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_HEIGHT.getIndex()] || hashTableVersion > this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_VERSION.getIndex()]) {
@@ -84,7 +84,7 @@ public class BoardHash {
         this.hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_VERSION.getIndex()] = this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_VERSION.getIndex()];
     }
 
-    private void storeMoveInHashTable(int move, EngineChessBoard board, int score, byte flag, int height, int hashIndex, int[] hashTableUseHeight) {
+    private void storeMoveInHashTable(int move, EngineBoard board, int score, byte flag, int height, int hashIndex, int[] hashTableUseHeight) {
         hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_MOVE.getIndex()] = move;
         hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_SCORE.getIndex()] = score;
         hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_FLAG.getIndex()] = flag;
@@ -94,7 +94,7 @@ public class BoardHash {
         hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_VERSION.getIndex()] = hashTableVersion;
     }
 
-    private void storeSuperVerifyAlwaysReplaceInformation(EngineChessBoard board, final int hashIndex) {
+    private void storeSuperVerifyAlwaysReplaceInformation(EngineBoard board, final int hashIndex) {
         if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive()) {
             for (int i = SquareOccupant.WP.getIndex(); i <= SquareOccupant.BR.getIndex(); i++) {
                 this.hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.getIndex() + i] = (int) (board.getBitboardByIndex(i) >>> 32);
@@ -103,7 +103,7 @@ public class BoardHash {
         }
     }
 
-    private void storeSuperVerifyUseHeightInformation(EngineChessBoard board, final int hashIndex) {
+    private void storeSuperVerifyUseHeightInformation(EngineBoard board, final int hashIndex) {
         if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive()) {
             for (int i = SquareOccupant.WP.getIndex(); i <= SquareOccupant.BR.getIndex(); i++) {
                 if (hashTableVersion == this.hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_VERSION.getIndex()]) {
@@ -128,24 +128,24 @@ public class BoardHash {
         setHashTable();
     }
 
-    public synchronized void initialiseHashCode(EngineChessBoard engineChessBoard) {
-        hashTracker.initHash(engineChessBoard);
+    public synchronized void initialiseHashCode(EngineBoard engineBoard) {
+        hashTracker.initHash(engineBoard);
     }
 
-    public int getHashIndex(EngineChessBoard engineChessBoard) {
-        return getHashIndex(engineChessBoard.trackedBoardHashCode());
+    public int getHashIndex(EngineBoard engineBoard) {
+        return getHashIndex(engineBoard.trackedBoardHashCode());
     }
 
     public int getHashIndex(long hashValue) {
         return (int) (hashValue % maxHashEntries) * HashIndex.getNumHashFields();
     }
 
-    public void move(EngineChessBoard engineChessBoard, EngineMove move) {
-        hashTracker.makeMove(engineChessBoard, move);
+    public void move(EngineBoard engineBoard, EngineMove move) {
+        hashTracker.makeMove(engineBoard, move);
     }
 
-    public void unMove(EngineChessBoard engineChessBoard) {
-        hashTracker.unMakeMove(engineChessBoard.getLastMoveMade());
+    public void unMove(EngineBoard engineBoard) {
+        hashTracker.unMakeMove(engineBoard.getLastMoveMade());
     }
 
     public void makeNullMove() {

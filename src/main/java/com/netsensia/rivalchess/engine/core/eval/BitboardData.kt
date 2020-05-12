@@ -1,9 +1,9 @@
 package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.BitboardType
-import com.netsensia.rivalchess.engine.core.EngineChessBoard
+import com.netsensia.rivalchess.engine.core.board.EngineBoard
 
-class BitboardData(board: EngineChessBoard) {
+class BitboardData(board: EngineBoard) {
     val whitePawns: Long = board.getBitboard(BitboardType.WP)
     val whiteBishops: Long = board.getBitboard(BitboardType.WB)
     val whiteKnights: Long = board.getBitboard(BitboardType.WN)

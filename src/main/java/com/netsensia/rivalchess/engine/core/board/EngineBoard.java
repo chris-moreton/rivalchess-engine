@@ -1,4 +1,4 @@
-package com.netsensia.rivalchess.engine.core;
+package com.netsensia.rivalchess.engine.core.board;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.config.Hash;
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.bitboards.EngineBitboards;
+import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.engine.core.type.MoveDetail;
@@ -24,13 +25,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getSetBits;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyOneBitSet;
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
 
 /**
  * R
  * epresents the state of a chessboard including bitboard states and the Zorbrish hash value.
  */
-public final class EngineChessBoard {
+public final class EngineBoard {
 
     private final EngineBitboards engineBitboards = new EngineBitboards();
     private final BoardHash boardHash = new BoardHash();
@@ -52,11 +54,11 @@ public final class EngineChessBoard {
 
     private int halfMoveCount = 0;
 
-    public EngineChessBoard() {
+    public EngineBoard() {
         this(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     }
 
-    public EngineChessBoard(Board board) {
+    public EngineBoard(Board board) {
         initArrays();
         setBoard(board);
     }
