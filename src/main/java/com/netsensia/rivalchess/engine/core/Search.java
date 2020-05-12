@@ -11,8 +11,9 @@ import com.netsensia.rivalchess.config.LateMoveReductions;
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.config.Uci;
+import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
-import com.netsensia.rivalchess.engine.core.eval.PieceValue;
 import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.MoveOrder;
@@ -43,6 +44,7 @@ import java.util.Timer;
 
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.evaluate;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
+import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 
@@ -56,8 +58,8 @@ public final class Search implements Runnable {
 
     private final List<List<Long>> drawnPositionsAtRoot;
     private final List<Integer> drawnPositionsAtRootCount = new ArrayList<>();
-    private EngineChessBoard engineChessBoard
-            = new EngineChessBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
+    private EngineBoard engineBoard
+            = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     private final List<Integer> mateKiller = new ArrayList<>();
 
     private final int[][] killerMoves;
@@ -120,7 +122,7 @@ public final class Search implements Runnable {
 
     public Search(PrintStream printStream, Board board) throws IllegalFenException {
 
-        this.engineChessBoard.setBoard(board);
+        this.engineBoard.setBoard(board);
 
         drawnPositionsAtRoot = new ArrayList<>();
         drawnPositionsAtRoot.add(new ArrayList<>());
@@ -159,35 +161,35 @@ public final class Search implements Runnable {
     }
 
     public synchronized void setHashSizeMB(int hashSizeMB) {
-        engineChessBoard.getBoardHashObject().setHashSizeMB(hashSizeMB);
+        engineBoard.getBoardHashObject().setHashSizeMB(hashSizeMB);
     }
 
     public synchronized void setBoard(Board board) {
-        engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(board);
-        setBoard(engineChessBoard);
+        engineBoard = new EngineBoard();
+        engineBoard.setBoard(board);
+        setBoard(engineBoard);
     }
 
-    public synchronized void setBoard(EngineChessBoard engineBoard) {
-        this.setEngineChessBoard(engineBoard);
-        engineChessBoard.getBoardHashObject().incVersion();
-        engineChessBoard.getBoardHashObject().setHashTable();
+    public synchronized void setBoard(EngineBoard engineBoard) {
+        this.setEngineBoard(engineBoard);
+        this.engineBoard.getBoardHashObject().incVersion();
+        this.engineBoard.getBoardHashObject().setHashTable();
     }
 
     public synchronized void clearHash() {
-        engineChessBoard.getBoardHashObject().clearHash();
+        engineBoard.getBoardHashObject().clearHash();
     }
 
     public synchronized void newGame() {
         m_inBook = this.useOpeningBook;
-        engineChessBoard.getBoardHashObject().clearHash();
+        engineBoard.getBoardHashObject().clearHash();
     }
 
     static {
         Async.init();
     }
 
-    private int[] scoreQuiesceMoves(EngineChessBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
+    private int[] scoreQuiesceMoves(EngineBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
 
         int moveCount = 0;
 
@@ -213,14 +215,14 @@ public final class Search implements Runnable {
         return movesForSorting;
     }
 
-    private int getScore(EngineChessBoard board, int move, boolean includeChecks, boolean isCapture) throws InvalidMoveException {
+    private int getScore(EngineBoard board, int move, boolean includeChecks, boolean isCapture) throws InvalidMoveException {
         int score = 0;
 
         final int promotionMask = (move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue());
         if (isCapture) {
             final int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
             if (see > 0) {
-                score = 100 + (int) (((double) see / PieceValue.getValue(Piece.QUEEN)) * 10);
+                score = 100 + (int) (((double) see / pieceValue(Piece.QUEEN)) * 10);
             }
             if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
                 score += 9;
@@ -233,7 +235,7 @@ public final class Search implements Runnable {
         return score;
     }
 
-    private int getHighScoreMove(EngineChessBoard board, int ply, int hashMove) throws InvalidMoveException {
+    private int getHighScoreMove(EngineBoard board, int ply, int hashMove) throws InvalidMoveException {
         if (moveOrderStatus[ply] == MoveOrder.NONE && hashMove != 0) {
             for (int c = 0; orderedMoves[ply][c] != 0; c++) {
                 if (orderedMoves[ply][c] == hashMove) {
@@ -283,7 +285,7 @@ public final class Search implements Runnable {
         return bestMove & 0x00FFFFFF;
     }
 
-    public SearchPath quiesce(EngineChessBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) throws InvalidMoveException {
+    public SearchPath quiesce(EngineBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) throws InvalidMoveException {
 
         setNodes(getNodes() + 1);
 
@@ -347,10 +349,10 @@ public final class Search implements Runnable {
         return bestPath;
     }
 
-    private boolean shouldDeltaPrune(EngineChessBoard board, int low, int evalScore, int move, boolean isCheck) {
+    private boolean shouldDeltaPrune(EngineBoard board, int low, int evalScore, int move, boolean isCheck) {
         if (FeatureFlag.USE_DELTA_PRUNING.isActive() && !isCheck) {
             final int materialIncrease = (board.lastCapturePiece() != SquareOccupant.NONE
-                    ? PieceValue.getValue(board.lastCapturePiece().getPiece())
+                    ? pieceValue(board.lastCapturePiece().getPiece())
                     : 0) + getMaterialIncreaseForPromotion(move);
 
             return materialIncrease + evalScore + SearchConfig.DELTA_PRUNING_MARGIN.getValue() < low;
@@ -366,19 +368,19 @@ public final class Search implements Runnable {
         }
         switch (PromotionPieceMask.fromValue(promotionMaskValue)) {
             case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                return PieceValue.getValue(Piece.QUEEN) - PieceValue.getValue(Piece.PAWN);
+                return pieceValue(Piece.QUEEN) - pieceValue(Piece.PAWN);
             case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                return PieceValue.getValue(Piece.BISHOP) - PieceValue.getValue(Piece.PAWN);
+                return pieceValue(Piece.BISHOP) - pieceValue(Piece.PAWN);
             case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                return PieceValue.getValue(Piece.KNIGHT) - PieceValue.getValue(Piece.PAWN);
+                return pieceValue(Piece.KNIGHT) - pieceValue(Piece.PAWN);
             case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                return PieceValue.getValue(Piece.ROOK) - PieceValue.getValue(Piece.PAWN);
+                return pieceValue(Piece.ROOK) - pieceValue(Piece.PAWN);
             default:
                 return 0;
         }
     }
 
-    private int scoreFullWidthCaptures(EngineChessBoard board, int ply) throws InvalidMoveException {
+    private int scoreFullWidthCaptures(EngineBoard board, int ply) throws InvalidMoveException {
         int i, score;
         int count = 0;
 
@@ -404,7 +406,7 @@ public final class Search implements Runnable {
                 } else if (capturePiece != Piece.NONE) {
                     int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(movesForSorting[i]));
                     if (see > -Integer.MAX_VALUE) {
-                        see = (int) (((double) see / PieceValue.getValue(Piece.QUEEN)) * 10);
+                        see = (int) (((double) see / pieceValue(Piece.QUEEN)) * 10);
                     }
 
                     if (see > 0) {
@@ -435,7 +437,7 @@ public final class Search implements Runnable {
         return count;
     }
 
-    private int scoreLosingCapturesWithWinningHistory(EngineChessBoard board, int ply, int i, int score, int[] movesForSorting, int toSquare) {
+    private int scoreLosingCapturesWithWinningHistory(EngineBoard board, int ply, int i, int score, int[] movesForSorting, int toSquare) {
         final int historyScore = historyScore(board.getMover() == Colour.WHITE, ((movesForSorting[i] >>> 16) & 63), toSquare);
 
         if (historyScore > 5) {
@@ -461,7 +463,7 @@ public final class Search implements Runnable {
         return 0;
     }
 
-    private void scoreFullWidthMoves(EngineChessBoard board, int ply) {
+    private void scoreFullWidthMoves(EngineBoard board, int ply) {
 
         int[] movesForSorting = orderedMoves[ply];
 
@@ -489,7 +491,7 @@ public final class Search implements Runnable {
         }
     }
 
-    private int scorePieceSquareValues(EngineChessBoard board, int fromSquare, int toSquare) {
+    private int scorePieceSquareValues(EngineBoard board, int fromSquare, int toSquare) {
         if (board.getMover() == Colour.BLACK) {
             // piece square tables are set up from white's PoV
             fromSquare = Bitboards.bitFlippedHorizontalAxis.get(fromSquare);
@@ -522,7 +524,7 @@ public final class Search implements Runnable {
                 return
                         linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
-                                PieceValue.getValue(Piece.ROOK),
+                                pieceValue(Piece.ROOK),
                                 Evaluation.OPENING_PHASE_MATERIAL.getValue(),
                                 PieceSquareTables.kingEndGame.get(toSquare) - PieceSquareTables.kingEndGame.get(fromSquare),
                                 PieceSquareTables.king.get(toSquare) - PieceSquareTables.king.get(fromSquare));
@@ -531,7 +533,7 @@ public final class Search implements Runnable {
         }
     }
 
-    private int scoreHistoryHeuristic(EngineChessBoard board, int score, int fromSquare, int toSquare) {
+    private int scoreHistoryHeuristic(EngineBoard board, int score, int fromSquare, int toSquare) {
         if (score == 0 && FeatureFlag.USE_HISTORY_HEURISTIC.isActive() && historyMovesSuccess[board.getMover() == Colour.WHITE ? 0 : 1][fromSquare][toSquare] > 0) {
             score = 90 + historyScore(board.getMover() == Colour.WHITE, fromSquare, toSquare);
         }
@@ -547,7 +549,7 @@ public final class Search implements Runnable {
         return 0;
     }
 
-    public SearchPath search(EngineChessBoard board, final int depth, int ply, int low, int high, int extensions, int recaptureSquare, boolean isCheck) throws InvalidMoveException {
+    public SearchPath search(EngineBoard board, final int depth, int ply, int low, int high, int extensions, int recaptureSquare, boolean isCheck) throws InvalidMoveException {
 
         nodes++;
 
@@ -567,7 +569,7 @@ public final class Search implements Runnable {
             return bestPath;
         }
 
-        if (board.getWhitePieceValues() + board.getBlackPieceValues() + board.getWhitePawnValues() + board.getBlackPawnValues() == 0) {
+        if (BoardExtensionsKt.onlyKingsRemain(board)) {
             bestPath.score = 0;
             return bestPath;
         }
@@ -814,13 +816,13 @@ public final class Search implements Runnable {
                         do {
                             lmrResearch = false;
                             if (scoutSearch) {
-                                newPath = search(engineChessBoard, (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, newRecaptureSquare, isCheck);
+                                newPath = search(engineBoard, (byte) (depth - 1) - reductions, ply + 1, -low - 1, -low, newExtensions, newRecaptureSquare, isCheck);
                                 if (newPath != null)
                                     if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
                                     else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                                 if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                                     // research with normal window
-                                    newPath = search(engineChessBoard, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, newRecaptureSquare, isCheck);
+                                    newPath = search(engineBoard, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, newRecaptureSquare, isCheck);
                                     if (newPath != null)
                                         if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
                                         else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
@@ -937,7 +939,7 @@ public final class Search implements Runnable {
         return null;
     }
 
-    public SearchPath searchZero(EngineChessBoard board, byte depth, int ply, int low, int high) throws InvalidMoveException {
+    public SearchPath searchZero(EngineBoard board, byte depth, int ply, int low, int high) throws InvalidMoveException {
 
         setNodes(getNodes() + 1);
 
@@ -960,7 +962,7 @@ public final class Search implements Runnable {
         int pawnExtend;
 
         while (move != 0 && !this.m_abortingSearch) {
-            if (engineChessBoard.makeMove(new EngineMove(move))) {
+            if (engineBoard.makeMove(new EngineMove(move))) {
                 final boolean isCheck = board.isCheck();
 
                 checkExtend = 0;
@@ -984,15 +986,15 @@ public final class Search implements Runnable {
                 currentDepthZeroMove = move;
                 currentDepthZeroMoveNumber = numLegalMovesAtDepthZero;
 
-                final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+                final BoardHash boardHash = engineBoard.getBoardHashObject();
 
-                if (isDrawnAtRoot(engineChessBoard, 0)) {
+                if (isDrawnAtRoot(engineBoard, 0)) {
                     newPath = new SearchPath();
                     newPath.score = 0;
                     newPath.setPath(move);
                 } else {
                     if (scoutSearch) {
-                        newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, -1, isCheck);
+                        newPath = search(engineBoard, (byte) (depth - 1), ply + 1, -low - 1, -low, newExtensions, -1, isCheck);
                         if (newPath != null) {
                             if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
                                 newPath.score--;
@@ -1002,7 +1004,7 @@ public final class Search implements Runnable {
                             }
                         }
                         if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
-                            newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
+                            newPath = search(engineBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
                             if (newPath != null) {
                                 if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
                                     newPath.score--;
@@ -1014,7 +1016,7 @@ public final class Search implements Runnable {
                             }
                         }
                     } else {
-                        newPath = search(engineChessBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
+                        newPath = search(engineBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
                         if (newPath != null) {
                             if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
                             else {
@@ -1051,7 +1053,7 @@ public final class Search implements Runnable {
 
                     depthZeroMoveScores[numMoves] = newPath.score;
                 }
-                engineChessBoard.unMakeMove();
+                engineBoard.unMakeMove();
             } else {
                 depthZeroMoveScores[numMoves] = -Integer.MAX_VALUE;
             }
@@ -1065,7 +1067,7 @@ public final class Search implements Runnable {
                 m_currentPath.setPath(bestPath); // otherwise we will crash!
                 currentPathString = "" + m_currentPath;
             } else {
-                final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+                final BoardHash boardHash = engineBoard.getBoardHashObject();
                 boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, (byte)flag, depth);
             }
 
@@ -1076,11 +1078,11 @@ public final class Search implements Runnable {
     }
 
     public Colour getMover() {
-        return engineChessBoard.getMover();
+        return engineBoard.getMover();
     }
 
     public void makeMove(EngineMove engineMove) throws InvalidMoveException {
-        engineChessBoard.makeMove(engineMove);
+        engineBoard.makeMove(engineMove);
     }
 
     public void go() {
@@ -1094,7 +1096,7 @@ public final class Search implements Runnable {
 
         try {
 
-            engineChessBoard.setLegalMoves(depthZeroLegalMoves);
+            engineBoard.setLegalMoves(depthZeroLegalMoves);
             int depthZeroMoveCount = 0;
 
             int c = 0;
@@ -1106,7 +1108,7 @@ public final class Search implements Runnable {
             int bestNewbieScore = -Integer.MAX_VALUE;
 
             while (move != 0) {
-                if (engineChessBoard.makeMove(new EngineMove(move))) {
+                if (engineBoard.makeMove(new EngineMove(move))) {
 
                     List<Boolean> plyDraw = new ArrayList<>();
                     plyDraw.add(false);
@@ -1116,7 +1118,7 @@ public final class Search implements Runnable {
 
                     if (this.iterativeDeepeningCurrentDepth < 1) // super beginner mode
                     {
-                        SearchPath sp = quiesce(engineChessBoard, 40, 1, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE, engineChessBoard.isCheck());
+                        SearchPath sp = quiesce(engineBoard, 40, 1, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE, engineBoard.isCheck());
                         sp.score = -sp.score;
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score;
@@ -1132,31 +1134,31 @@ public final class Search implements Runnable {
                         m_currentPath.score = 0;
                         currentPathString = m_currentPath.toString();
                     }
-                    if (engineChessBoard.previousOccurrencesOfThisPosition() == 2) {
+                    if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
                         plyDraw.set(0, true);
                     }
 
-                    engineChessBoard.setLegalMoves(depth1MovesTemp);
+                    engineBoard.setLegalMoves(depth1MovesTemp);
 
                     int c1 = -1;
 
                     while ((depth1MovesTemp[++c1] & 0x00FFFFFF) != 0) {
-                        if (engineChessBoard.makeMove(new EngineMove(depth1MovesTemp[c1] & 0x00FFFFFF))) {
-                            if (engineChessBoard.previousOccurrencesOfThisPosition() == 2) {
+                        if (engineBoard.makeMove(new EngineMove(depth1MovesTemp[c1] & 0x00FFFFFF))) {
+                            if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
                                 plyDraw.set(1, true);
                             }
-                            engineChessBoard.unMakeMove();
+                            engineBoard.unMakeMove();
                         }
                     }
 
-                    final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+                    final BoardHash boardHash = engineBoard.getBoardHashObject();
                     for (int i=0; i<=1; i++) {
                         if (Boolean.TRUE.equals(plyDraw.get(i))) {
                             drawnPositionsAtRoot.get(i).add(boardHash.getTrackedHashValue());
                         }
                     }
 
-                    engineChessBoard.unMakeMove();
+                    engineBoard.unMakeMove();
 
                 }
 
@@ -1187,7 +1189,7 @@ public final class Search implements Runnable {
 
             while (depthZeroLegalMoves[depthZeroMoveCount] != 0) depthZeroMoveCount++;
 
-            scoreFullWidthMoves(engineChessBoard, 0);
+            scoreFullWidthMoves(engineBoard, 0);
 
             for (byte depth = 1; depth <= this.m_finalDepthToSearch && !this.m_abortingSearch; depth++) {
                 this.iterativeDeepeningCurrentDepth = depth;
@@ -1195,18 +1197,18 @@ public final class Search implements Runnable {
                 if (depth > 1) setOkToSendInfo(true);
 
                 if (FeatureFlag.USE_ASPIRATION_WINDOW.isActive()) {
-                    path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
+                    path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh);
 
                     if (!this.m_abortingSearch && Objects.requireNonNull(path).score <= aspirationLow) {
                         aspirationLow = -Integer.MAX_VALUE;
-                        path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
+                        path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh);
                     } else if (!this.m_abortingSearch && path.score >= aspirationHigh) {
                         aspirationHigh = Integer.MAX_VALUE;
-                        path = searchZero(engineChessBoard, depth, 0, aspirationLow, aspirationHigh);
+                        path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh);
                     }
 
                     if (!this.m_abortingSearch && (Objects.requireNonNull(path).score <= aspirationLow || path.score >= aspirationHigh)) {
-                        path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
+                        path = searchZero(engineBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                     }
 
                     if (!this.m_abortingSearch) {
@@ -1216,7 +1218,7 @@ public final class Search implements Runnable {
                         aspirationHigh = path.score + SearchConfig.ASPIRATION_RADIUS.getValue();
                     }
                 } else {
-                    path = searchZero(engineChessBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
+                    path = searchZero(engineBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                 }
 
                 if (!this.m_abortingSearch) {
@@ -1254,7 +1256,7 @@ public final class Search implements Runnable {
         searchState = SearchState.SEARCHING;
         m_abortingSearch = false;
 
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+        final BoardHash boardHash = engineBoard.getBoardHashObject();
         boardHash.incVersion();
 
         searchStartTime = System.currentTimeMillis();
@@ -1363,9 +1365,9 @@ public final class Search implements Runnable {
         }
     }
 
-    private boolean isDrawnAtRoot(EngineChessBoard board, int ply) {
+    private boolean isDrawnAtRoot(EngineBoard board, int ply) {
         int i;
-        final BoardHash boardHash = engineChessBoard.getBoardHashObject();
+        final BoardHash boardHash = engineBoard.getBoardHashObject();
         for (i = 0; i < drawnPositionsAtRootCount.get(ply); i++) {
             if (drawnPositionsAtRoot.get(ply).get(i).equals(boardHash.getTrackedHashValue())) {
                 return true;
@@ -1461,12 +1463,12 @@ public final class Search implements Runnable {
         this.millisSetByEngineMonitor = millisSetByEngineMonitor;
     }
 
-    public void setEngineChessBoard(EngineChessBoard engineChessBoard) {
-        this.engineChessBoard = engineChessBoard;
+    public void setEngineBoard(EngineBoard engineBoard) {
+        this.engineBoard = engineBoard;
     }
 
     public String getFen() {
-        return engineChessBoard.getFen();
+        return engineBoard.getFen();
     }
 
     public int getCurrentDepthZeroMoveNumber() {

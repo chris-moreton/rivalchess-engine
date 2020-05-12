@@ -1,11 +1,12 @@
 package com.netsensia.rivalchess.config;
 
-import com.netsensia.rivalchess.engine.core.eval.PieceValue;
 import com.netsensia.rivalchess.model.Piece;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
 
 public enum SearchConfig {
 
@@ -15,10 +16,10 @@ public enum SearchConfig {
     MAXIMUM_HASH_AGE (3),
     NULLMOVE_REDUCE_DEPTH (2),
     NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE (6),
-    NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES (PieceValue.getValue(Piece.KNIGHT)),
+    NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES (pieceValue(Piece.KNIGHT)),
     GENERATE_CHECKS_UNTIL_QUIESCE_PLY (0),
     DELTA_PRUNING_MARGIN (200),
-    FUTILITY_MARGIN_BASE (PieceValue.getValue(Piece.PAWN) * 2),
+    FUTILITY_MARGIN_BASE (pieceValue(Piece.PAWN) * 2),
     PV_MINIMUM_DISTANCE_FROM_LEAF (2),
     ;
 

@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.epd;
 
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.enums.SearchState;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -14,7 +14,6 @@ import com.netsensia.rivalchess.util.EpdReader;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -68,15 +67,15 @@ public class EpdTest {
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException, InvalidMoveException {
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
+        EngineBoard engineBoard = new EngineBoard();
+        engineBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
 
         search.quit();
 
         search = new Search();
         new Thread(search).start();
 
-        search.setBoard(engineChessBoard);
+        search.setBoard(engineBoard);
         search.setSearchDepth(Limit.MAX_SEARCH_DEPTH.getValue() - 2);
         search.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
 
@@ -104,7 +103,7 @@ public class EpdTest {
         }
 
         final String move = ChessBoardConversion.getPgnMoveFromCompactMove(
-                search.getCurrentMove(), engineChessBoard.getFen());
+                search.getCurrentMove(), engineBoard.getFen());
 
         System.out.println("Looking for " + move + " in " + epdItem.getBestMoves());
 
@@ -113,7 +112,7 @@ public class EpdTest {
         } else {
             Assert.assertFalse(epdItem.getBestMoves().contains(
                     ChessBoardConversion.getPgnMoveFromCompactMove(
-                        search.getCurrentMove(), engineChessBoard.getFen())));
+                        search.getCurrentMove(), engineBoard.getFen())));
         }
     }
 

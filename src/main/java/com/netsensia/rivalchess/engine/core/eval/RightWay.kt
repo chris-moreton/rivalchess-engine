@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.Bitboards
-import com.netsensia.rivalchess.engine.core.EngineChessBoard
+import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.SquareOccupant
 
@@ -19,7 +19,7 @@ data class RightWaySquares(
 )
 
 fun scoreRightWayPositions(
-        board: EngineChessBoard,
+        board: EngineBoard,
         rightWaySquares: RightWaySquares,
         isWhite: Boolean,
         cornerColour: Colour
@@ -116,17 +116,17 @@ fun checkForPositionD(
     return safety
 }
 
-fun getWhiteKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
-    return if (engineChessBoard.whiteKingSquare == 1 || engineChessBoard.whiteKingSquare == 8) {
-        scoreRightWayPositions(engineChessBoard,
+fun getWhiteKingRightWayScore(engineBoard: EngineBoard): Int {
+    return if (engineBoard.whiteKingSquare == 1 || engineBoard.whiteKingSquare == 8) {
+        scoreRightWayPositions(engineBoard,
                 RightWaySquares(0, 8, 16, 9, 17, 2, 10, 18, 26), true,
                 Colour.WHITE)
     } else 0
 }
 
-fun getBlackKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
-    return if (engineChessBoard.blackKingSquare == 57 || engineChessBoard.blackKingSquare == 48) {
-        scoreRightWayPositions(engineChessBoard,
+fun getBlackKingRightWayScore(engineBoard: EngineBoard): Int {
+    return if (engineBoard.blackKingSquare == 57 || engineBoard.blackKingSquare == 48) {
+        scoreRightWayPositions(engineBoard,
                 RightWaySquares(56, 48, 40, 49, 41, 58, 50, 42, 34), false,
                 Colour.BLACK)
     } else 0

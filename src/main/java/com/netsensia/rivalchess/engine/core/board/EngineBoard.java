@@ -1,12 +1,12 @@
-package com.netsensia.rivalchess.engine.core;
+package com.netsensia.rivalchess.engine.core.board;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.config.Hash;
 import com.netsensia.rivalchess.config.Limit;
-import com.netsensia.rivalchess.engine.core.eval.PieceValue;
 import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.bitboards.EngineBitboards;
+import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.engine.core.type.MoveDetail;
@@ -25,12 +25,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getSetBits;
+import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyOneBitSet;
+import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
 
 /**
  * R
  * epresents the state of a chessboard including bitboard states and the Zorbrish hash value.
  */
-public final class EngineChessBoard {
+public final class EngineBoard {
 
     private final EngineBitboards engineBitboards = new EngineBitboards();
     private final BoardHash boardHash = new BoardHash();
@@ -52,11 +54,11 @@ public final class EngineChessBoard {
 
     private int halfMoveCount = 0;
 
-    public EngineChessBoard() {
+    public EngineBoard() {
         this(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     }
 
-    public EngineChessBoard(Board board) {
+    public EngineBoard(Board board) {
         initArrays();
         setBoard(board);
     }
@@ -952,29 +954,29 @@ public final class EngineChessBoard {
 
     public int getWhitePieceValues() {
         return
-                Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WN)) * PieceValue.getValue(Piece.KNIGHT) +
-                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WR)) * PieceValue.getValue(Piece.ROOK) +
-                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WB)) * PieceValue.getValue(Piece.BISHOP) +
-                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WQ)) * PieceValue.getValue(Piece.QUEEN);
+                Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WN)) * pieceValue(Piece.KNIGHT) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WR)) * pieceValue(Piece.ROOK) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WB)) * pieceValue(Piece.BISHOP) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WQ)) * pieceValue(Piece.QUEEN);
 
     }
 
     public int getBlackPieceValues() {
         return
-                Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BN)) * PieceValue.getValue(Piece.KNIGHT) +
-                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BR)) * PieceValue.getValue(Piece.ROOK) +
-                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BB)) * PieceValue.getValue(Piece.BISHOP) +
-                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BQ)) * PieceValue.getValue(Piece.QUEEN);
+                Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BN)) * pieceValue(Piece.KNIGHT) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BR)) * pieceValue(Piece.ROOK) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BB)) * pieceValue(Piece.BISHOP) +
+                        Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BQ)) * pieceValue(Piece.QUEEN);
 
     }
 
     public int getWhitePawnValues() {
-        return Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WP)) * PieceValue.getValue(Piece.PAWN);
+        return Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.WP)) * pieceValue(Piece.PAWN);
 
     }
 
     public int getBlackPawnValues() {
-        return Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BP)) * PieceValue.getValue(Piece.PAWN);
+        return Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BP)) * pieceValue(Piece.PAWN);
     }
 
     private void replaceCapturedPiece(int toSquare, long toMask) {

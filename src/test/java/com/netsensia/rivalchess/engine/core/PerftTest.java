@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.text.NumberFormat;
 
 import com.netsensia.rivalchess.config.Limit;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
@@ -18,7 +19,7 @@ public class PerftTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PerftTest.class);
 
-    public static long getPerft(EngineChessBoard board, int depth) throws InvalidMoveException {
+    public static long getPerft(EngineBoard board, int depth) throws InvalidMoveException {
         if (depth == 0) {
             return 1;
         }
@@ -41,7 +42,7 @@ public class PerftTest {
 
     private void assertPerftScore(String fen, int depth, int expectedScore) throws IllegalFenException, InvalidMoveException {
 
-        EngineChessBoard engineBoard = new EngineChessBoard();
+        EngineBoard engineBoard = new EngineBoard();
         engineBoard.setBoard(FenUtils.getBoardModel(fen));
 
         long start = System.currentTimeMillis();

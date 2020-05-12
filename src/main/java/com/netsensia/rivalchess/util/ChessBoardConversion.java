@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.config.Limit;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.enums.PromotionPieceMask;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -11,8 +11,6 @@ import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.model.util.FenUtils;
-
-import static com.netsensia.rivalchess.enums.PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP;
 
 public class ChessBoardConversion
 {
@@ -87,7 +85,7 @@ public class ChessBoardConversion
 	public static String getPgnMoveFromCompactMove(int move, String fen)
 			throws IllegalFenException, InvalidMoveException {
 
-		EngineChessBoard board = new EngineChessBoard();
+		EngineBoard board = new EngineBoard();
 		board.setBoard(FenUtils.getBoardModel(fen));
 
 		String pgnMove = "";

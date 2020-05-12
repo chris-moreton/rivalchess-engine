@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.config.Limit;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.eval.EvaluateKt;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.util.FenUtils;
@@ -16,9 +17,9 @@ public class SearchTest {
 
     private void assertEvaluationScore(String fen, int expectedScore, boolean flip) throws IllegalFenException {
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
-        int actualScore = EvaluateKt.evaluate(engineChessBoard);
+        EngineBoard engineBoard = new EngineBoard();
+        engineBoard.setBoard(FenUtils.getBoardModel(fen));
+        int actualScore = EvaluateKt.evaluate(engineBoard);
 
         assertEquals(expectedScore, actualScore);
 
@@ -48,12 +49,12 @@ public class SearchTest {
 
         Search search = new Search();
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
+        EngineBoard engineBoard = new EngineBoard();
+        engineBoard.setBoard(FenUtils.getBoardModel(fen));
 
         new Thread(search).start();
 
-        search.setBoard(engineChessBoard);
+        search.setBoard(engineBoard);
         search.setSearchDepth(4);
         search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
         search.startSearch();
@@ -69,14 +70,14 @@ public class SearchTest {
 
     private void assertNodeCount(String fen, long expectedNodes) throws IllegalFenException, InterruptedException {
 
-        EngineChessBoard engineChessBoard = new EngineChessBoard();
-        engineChessBoard.setBoard(FenUtils.getBoardModel(fen));
+        EngineBoard engineBoard = new EngineBoard();
+        engineBoard.setBoard(FenUtils.getBoardModel(fen));
 
         Search search = new Search();
 
         new Thread(search).start();
 
-        search.setBoard(engineChessBoard);
+        search.setBoard(engineBoard);
         search.setSearchDepth(6);
         search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
         search.startSearch();

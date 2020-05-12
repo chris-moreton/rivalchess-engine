@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.model.Colour;
-import com.netsensia.rivalchess.engine.core.EngineChessBoard;
+import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.model.SquareOccupant;
 
 public class ZorbristHashCalculator {
@@ -31,29 +31,29 @@ public class ZorbristHashCalculator {
         //
     }
 
-    public static long calculateHash(EngineChessBoard engineChessBoard) {
+    public static long calculateHash(EngineBoard engineBoard) {
         long hashValue = START_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
             for (int piece = SquareOccupant.WP.getIndex(); piece <= SquareOccupant.BR.getIndex(); piece++) {
-                if ((engineChessBoard.getBitboardByIndex(piece) & (1L << bitNum)) != 0) {
+                if ((engineBoard.getBitboardByIndex(piece) & (1L << bitNum)) != 0) {
                     hashValue ^= pieceHashValues[piece][bitNum];
                 }
             }
         }
 
-        hashValue ^= moverHashValues[engineChessBoard.getMover() == Colour.WHITE ? 0 : 1];
+        hashValue ^= moverHashValues[engineBoard.getMover() == Colour.WHITE ? 0 : 1];
 
         return hashValue;
     }
 
-    public static long calculatePawnHash(EngineChessBoard engineChessBoard) {
+    public static long calculatePawnHash(EngineBoard engineBoard) {
         long pawnHashValue = START_PAWN_HASH_VALUE;
 
         for (int bitNum = 0; bitNum < 64; bitNum++) {
             for (int piece = SquareOccupant.WP.getIndex(); piece <= SquareOccupant.BR.getIndex(); piece++) {
                 final boolean isPawn = piece == SquareOccupant.WP.getIndex() || piece == SquareOccupant.BP.getIndex();
-                if (isPawn && (engineChessBoard.getBitboardByIndex(piece) & (1L << bitNum)) != 0) {
+                if (isPawn && (engineBoard.getBitboardByIndex(piece) & (1L << bitNum)) != 0) {
                     pawnHashValue ^= pieceHashValues[piece][bitNum];
                 }
             }
