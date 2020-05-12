@@ -12,15 +12,6 @@ import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.PawnHashIndex;
 import com.netsensia.rivalchess.model.SquareOccupant;
 
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPassedPawns;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.blackPawnAttacks;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getPawnFiles;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePassedPawns;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.whitePawnAttacks;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.northFill;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
-
 public class BoardHash {
 
     private final ZorbristHashTracker hashTracker = new ZorbristHashTracker();
@@ -30,7 +21,6 @@ public class BoardHash {
     private int[] hashTableIgnoreHeight;
     private long[] pawnHashTable;
     private int maxHashEntries;
-    private int maxPawnHashEntries;
     private int lastHashSizeCreated;
 
     public int getHashTableUseHeight(int index) {
@@ -146,12 +136,9 @@ public class BoardHash {
     public synchronized void setHashSizeMB(int hashSizeMB) {
         if (hashSizeMB < 1) {
             setMaxHashEntries(1);
-            setMaxPawnHashEntries(1);
         } else {
             int mainHashTableSize = ((hashSizeMB * 1024 * 1024) / 14) * 6; // two of these
-            int pawnHashTableSize = ((hashSizeMB * 1024 * 1024) / 14) * 2; // one of these
             setMaxHashEntries(mainHashTableSize / HashIndex.getHashPositionSizeBytes());
-            setMaxPawnHashEntries(pawnHashTableSize / PawnHashIndex.getHashPositionSizeBytes());
         }
 
         setHashTable();
@@ -199,10 +186,6 @@ public class BoardHash {
 
     public void setMaxHashEntries(int maxHashEntries) {
         this.maxHashEntries = maxHashEntries;
-    }
-
-    public void setMaxPawnHashEntries(int maxPawnHashEntries) {
-        this.maxPawnHashEntries = maxPawnHashEntries;
     }
 
     public void incVersion() {
