@@ -74,25 +74,6 @@ fun blackRookOpenFilesEval(bitboards: BitboardData, file: Int) =
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
         (enemyPawnValues / PieceValue.getValue(Piece.PAWN)).coerceAtMost(6)
 
-fun knightAttackList(squares: List<Int>) : List<Long> =
-        squares.asSequence().map { Bitboards.knightMoves[it] }.toList()
-
-fun rookAttacks(bitboards: BitboardData, sq: Int) : Long =
-        Bitboards.magicBitboards.magicMovesRook[sq][
-                ((bitboards.all and MagicBitboards.occupancyMaskRook[sq])
-                        * MagicBitboards.magicNumberRook[sq] ushr MagicBitboards.magicNumberShiftsRook[sq]).toInt()]
-
-
-fun bishopAttacks(bitboards: BitboardData, sq: Int) =
-        Bitboards.magicBitboards.magicMovesBishop[sq][
-                ((bitboards.all and MagicBitboards.occupancyMaskBishop[sq])
-                        * MagicBitboards.magicNumberBishop[sq]
-                        ushr MagicBitboards.magicNumberShiftsBishop[sq]).toInt()]
-
-
-fun queenAttacks(bitboards: BitboardData, sq: Int) = rookAttacks(bitboards, sq) or bishopAttacks(bitboards, sq)
-
-
 fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 
 fun doubledRooksEval(squares: List<Int>) =
@@ -122,17 +103,17 @@ fun tradePieceBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference:
             0)
 }
 
-fun tradePawnBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int): Int {
-    return linearScale(
+fun tradePawnBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int) =
+    linearScale(
             if (materialDifference > 0) whitePawnValues(bitboards) else blackPawnValues(bitboards),
             0,
             Evaluation.TRADE_BONUS_UPPER_PAWNS.value,
             -30 * materialDifference / 100,
             0)
-}
 
-fun bishopScore(bitboards: BitboardData, materialDifference: Int) =
-        bishopPairEval(bitboards) + oppositeColourBishopsEval(bitboards, materialDifference) + trappedBishopEval(bitboards)
+fun bishopScore(bitboards: BitboardData, materialDifference: Int, materialValues: MaterialValues) =
+        bishopPairEval(bitboards, materialValues) +
+                oppositeColourBishopsEval(bitboards, materialDifference) + trappedBishopEval(bitboards)
 
 fun whiteLightBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and Bitboards.LIGHT_SQUARES != 0L
 
@@ -167,14 +148,14 @@ fun oppositeColourBishopsEval(bitboards: BitboardData, materialDifference: Int):
     return 0
 }
 
-fun bishopPairEval(bitboards: BitboardData) = (if (whiteBishopColourCount(bitboards) == 2)
+fun bishopPairEval(bitboards: BitboardData, materialValues: MaterialValues) = (if (whiteBishopColourCount(bitboards) == 2)
     Evaluation.VALUE_BISHOP_PAIR.value +
-            (8 - whitePawnValues(bitboards) / PieceValue.getValue(Piece.PAWN)) *
+            (8 - materialValues.whitePawns / PieceValue.getValue(Piece.PAWN)) *
             Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value
 else 0) -
         if (blackBishopColourCount(bitboards) == 2)
             Evaluation.VALUE_BISHOP_PAIR.value +
-                    (8 - blackPawnValues(bitboards) / PieceValue.getValue(Piece.PAWN)) *
+                    (8 - materialValues.blackPawns / PieceValue.getValue(Piece.PAWN)) *
                     Evaluation.VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS.value
         else 0
 
@@ -235,12 +216,12 @@ fun kingSafetyEval(bitboards: BitboardData, attacks: Attacks, board: EngineChess
     val blackKingDangerZone = blackKingDangerZone(kingSquares)
 
     val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attacks.whiteRookPair.first) +
-            kingAttackCount(blackKingDangerZone, attacks.whiteQueens.first) * 2 +
+            kingAttackCount(blackKingDangerZone, attacks.whiteQueenPair.first) * 2 +
             kingAttackCount(blackKingDangerZone, attacks.whiteBishopPair.first)
 
     val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attacks.blackRookPair.first) +
-            kingAttackCount(whiteKingDangerZone, attacks.blackQueens.first) * 2 +
-            kingAttackCount(whiteKingDangerZone, attacks.blackBishops.first)
+            kingAttackCount(whiteKingDangerZone, attacks.blackQueenPair.first) * 2 +
+            kingAttackCount(whiteKingDangerZone, attacks.blackBishopPair.first)
 
     val averagePiecesPerSide = (whitePieceValues(bitboards) + blackPieceValues(bitboards)) / 2
 
@@ -590,10 +571,15 @@ fun blackPawnsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData):
     }.fold(0) { acc, i -> acc + i }
 }
 
-fun blackKnightsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, attacks: Attacks): Int {
+fun blackKnightsEval(
+        pieceSquareLists: PieceSquareLists,
+        bitboards: BitboardData,
+        attacks: Attacks,
+        materialValues: MaterialValues)
+        : Int {
     return pieceSquareLists.blackKnights.asSequence().map {
         linearScale(
-                whitePieceValues(bitboards) + whitePawnValues(bitboards),
+                materialValues.whitePieces + materialValues.whitePawns,
                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
                 Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
                 PieceSquareTables.knightEndGame[Bitboards.bitFlippedHorizontalAxis[it]],
@@ -603,9 +589,15 @@ fun blackKnightsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData
     }.fold(0) { acc, i -> acc + i }
 }
 
-fun whiteKnightsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, attacks: Attacks): Int {
+fun whiteKnightsEval(
+        pieceSquareLists: PieceSquareLists,
+        bitboards: BitboardData,
+        attacks: Attacks,
+        materialValues: MaterialValues)
+        : Int {
+
     return pieceSquareLists.whiteKnights.asSequence().map {
-        linearScale(blackPieceValues(bitboards) + blackPawnValues(bitboards),
+        linearScale(materialValues.blackPieces + materialValues.blackPawns,
                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
                 Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
                 PieceSquareTables.knightEndGame[it],
@@ -820,16 +812,18 @@ fun evaluate(board: EngineChessBoard) : Int {
                             board.whiteKingSquare,
                             board.blackKingSquare,
                             board.mover) +
-                    (whiteBishopEval(pieceSquareLists, bitboards, whitePieces) - blackBishopsEval(pieceSquareLists, bitboards, blackPieces)) +
-                    (whiteKnightsEval(pieceSquareLists, bitboards, attacks) - blackKnightsEval(pieceSquareLists, bitboards, attacks)) +
+                    (whiteBishopEval(pieceSquareLists, bitboards, whitePieces) -
+                            blackBishopsEval(pieceSquareLists, bitboards, blackPieces)) +
+                    (whiteKnightsEval(pieceSquareLists, bitboards, attacks, materialValues) -
+                            blackKnightsEval(pieceSquareLists, bitboards, attacks, materialValues)) +
                     tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
                     tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
-                    (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares) ) +
+                    (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares)) +
                     (whitePawnsEval(pieceSquareLists, bitboards) - blackPawnsEval(pieceSquareLists, bitboards)) +
                     (whiteRooksEval(pieceSquareLists, bitboards, whitePieces) - blackRooksEval(pieceSquareLists, bitboards, blackPieces)) +
                     (whiteQueensEval(pieceSquareLists, bitboards, whitePieces) - blackQueensEval(pieceSquareLists, bitboards, blackPieces)) +
                     castlingEval(bitboards, board.castlePrivileges) +
-                    bishopScore(bitboards, materialDifference) +
+                    bishopScore(bitboards, materialDifference, materialValues) +
                     threatEval(bitboards, attacks, board.squareOccupants) +
                     kingSafetyEval(bitboards, attacks, board, kingSquares)
 
