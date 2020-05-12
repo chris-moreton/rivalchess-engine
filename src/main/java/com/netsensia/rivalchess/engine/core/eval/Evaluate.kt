@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import com.netsensia.rivalchess.bitboards.BitboardType.*
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.bitboards.util.*
@@ -12,7 +11,6 @@ import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import java.lang.Long.bitCount
-import java.lang.Long.numberOfTrailingZeros
 import kotlin.math.abs
 
 fun materialDifferenceEval(materialValues: MaterialValues) =
@@ -225,59 +223,6 @@ fun blackPieceBitboard(bitboards: BitboardData) =
 fun whitePieceBitboard(bitboards: BitboardData) =
         (bitboards.whiteKnights or bitboards.whiteRooks or bitboards.whiteQueens or bitboards.whiteBishops)
 
-fun whitePieceAttackList(attacks: Attacks): List<Long> {
-    val result = ArrayList<Long>()
-
-    result.addAll(attacks.whiteRooks)
-    result.addAll(attacks.whiteQueens)
-    result.addAll(attacks.whiteBishops)
-    result.addAll(attacks.whiteKnights)
-
-    return result
-}
-
-fun blackPieceAttackList(attacks: Attacks): List<Long> {
-
-    val result = ArrayList<Long>()
-    result.addAll(attacks.blackRooks)
-    result.addAll(attacks.blackQueens)
-    result.addAll(attacks.blackBishops)
-    result.addAll(attacks.blackKnights)
-
-    return result
-}
-
-fun whiteAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
-        (orList(whitePieceAttackList(attacks)) or attacks.whitePawns) and
-                blackPieceBitboard(bitboards)
-
-fun blackAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
-        (orList(blackPieceAttackList(attacks)) or attacks.blackPawns) and
-                whitePieceBitboard(bitboards)
-
-fun threatEval(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
-    return (adjustedAttackScore(whiteAttackScore(bitboards, attacks, squareOccupants)) -
-            adjustedAttackScore(blackAttackScore(bitboards, attacks, squareOccupants))) /
-            Evaluation.THREAT_SCORE_DIVISOR.value
-}
-
-fun adjustedAttackScore(attackScore: Int) =
-        attackScore + attackScore * (attackScore / PieceValue.getValue(Piece.QUEEN))
-
-fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
-    return squareList(whiteAttacksBitboard(bitboards, attacks))
-            .asSequence()
-            .map { PieceValue.getValue(squareOccupants[it].piece) }
-            .fold(0) { acc, i -> acc + i }
-}
-
-fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
-    return squareList(blackAttacksBitboard(bitboards, attacks))
-            .asSequence()
-            .map { PieceValue.getValue(squareOccupants[it].piece) }
-            .fold(0) { acc, i -> acc + i }
-}
-
 fun isEndGame(bitboards: BitboardData) =
         (whitePieceValues(bitboards) +
                 whitePawnValues(bitboards) +
@@ -319,7 +264,6 @@ fun kingSafetyEval(bitboards: BitboardData, attacks: Attacks, board: EngineChess
                     blackKingSafety +
                     (blackKingAttackedCount - whiteKingAttackedCount) *
                     Evaluation.KINGSAFETY_ATTACK_MULTIPLIER.value)
-
 }
 
 private fun blackKingDangerZone(kingSquares: KingSquares) =
@@ -851,114 +795,6 @@ private fun pawnDistanceFromPromotion(colour: Colour, square: Int) =
         if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
 
 private fun yCoordOfSquare(kingSquare: Int) = kingSquare / 8
-
-fun scoreRightWayPositions(
-        board: EngineChessBoard,
-        rightWaySquares: RightWaySquares,
-        isWhite: Boolean,
-        cornerColour: Int
-): Int {
-    val offset = if (isWhite) 0 else 6
-    val friendlyPawns = board.getBitboard(fromIndex(SquareOccupant.WP.index + offset))
-    val friendlyRooks = board.getBitboard(fromIndex(SquareOccupant.WR.index + offset))
-    val friendlyKnights = board.getBitboard(fromIndex(SquareOccupant.WN.index + offset))
-    val friendlyBishops = board.getBitboard(fromIndex(SquareOccupant.WB.index + offset))
-
-    if (board.allPiecesBitboard and (1L shl rightWaySquares.h1) != 0L ||
-            friendlyRooks and (1L shl rightWaySquares.f1) == 0L) {
-        return 0
-    }
-    return  if (friendlyPawns and (1L shl rightWaySquares.f2) != 0L) {
-        if (friendlyPawns and (1L shl rightWaySquares.g2) != 0L) {
-            checkForPositionsAOrD(friendlyPawns, friendlyKnights, friendlyBishops, rightWaySquares, cornerColour)
-        } else {
-            checkForPositionsBOrC(friendlyPawns, friendlyBishops, rightWaySquares)
-        }
-    } else {
-        if (friendlyPawns and (1L shl rightWaySquares.f4) != 0L) {
-            checkForPositionE(friendlyPawns, friendlyKnights, rightWaySquares)
-        } else {
-            checkForPositionFOrH(friendlyPawns, rightWaySquares)
-        }
-    } / 4
-}
-
-fun checkForPositionFOrH(friendlyPawns: Long, rightWaySquares: RightWaySquares) =
-        if (friendlyPawns and (1L shl rightWaySquares.f3) != 0L && friendlyPawns and (1L shl rightWaySquares.g2) != 0L)
-            (if (friendlyPawns and (1L shl rightWaySquares.h2) != 0L) -10 // (F)
-            else (if (friendlyPawns and (1L shl rightWaySquares.h3) != 0L) -30 else 0)) // (H)
-        else 0
-
-fun checkForPositionE(friendlyPawns: Long, friendlyKnights: Long, rightWaySquares: RightWaySquares): Int {
-    var safety = 0
-    if (friendlyPawns and (1L shl rightWaySquares.g2) != 0L
-            && friendlyPawns and (1L shl rightWaySquares.h2) != 0L) {
-        // (E)
-        safety += 80
-        if (friendlyPawns and (1L shl rightWaySquares.h2) != 0L
-                && friendlyKnights and (1L shl rightWaySquares.f3) != 0L) {
-            safety += 40
-        }
-    }
-    return safety
-}
-
-fun checkForPositionsBOrC(friendlyPawns: Long, friendlyBishops: Long, rightWaySquares: RightWaySquares) =
-    if (friendlyPawns and (1L shl rightWaySquares.g3) != 0L) {
-        (if (friendlyPawns and (1L shl rightWaySquares.h2) != 0L) {
-            (if (friendlyBishops and (1L shl rightWaySquares.g2) != 0L) {
-                100 // (B)
-            } else 0)
-        } else {
-            (if (friendlyPawns and (1L shl rightWaySquares.h3) != 0L
-                    && friendlyBishops and (1L shl rightWaySquares.g2) != 0L) {
-                70 // (C)
-            } else 0)
-        })
-    } else 0
-
-fun checkForPositionsAOrD(
-        friendlyPawns: Long,
-        friendlyKnights: Long,
-        friendlyBishops: Long,
-        rightWaySquares: RightWaySquares,
-        cornerColour: Int
-) = if (friendlyPawns and (1L shl rightWaySquares.h2) != 0L) {
-        120 // (A)
-    } else {
-        checkForPositionD(friendlyPawns, friendlyKnights, friendlyBishops, rightWaySquares, cornerColour)
-    }
-
-fun checkForPositionD(friendlyPawns: Long, friendlyKnights: Long, friendlyBishops: Long, rightWaySquares: RightWaySquares, cornerColour: Int): Int {
-    var safety = 0
-    if (friendlyPawns and (1L shl rightWaySquares.h3) != 0L
-            && friendlyKnights and (1L shl rightWaySquares.f3) != 0L) {
-        // (D)
-        safety += 70
-        // check for bishop of same colour as h3
-        val bits = if (cornerColour == Colour.WHITE.value.toInt()) Bitboards.LIGHT_SQUARES else Bitboards.DARK_SQUARES
-        if (bits and friendlyBishops != 0L) {
-            safety -= 30
-        }
-    }
-    return safety
-}
-
-fun getWhiteKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
-    return if (engineChessBoard.whiteKingSquare == 1 || engineChessBoard.whiteKingSquare == 8) {
-        scoreRightWayPositions(engineChessBoard,
-                RightWaySquares(0, 8, 16, 9, 17, 2, 10, 18, 26), true,
-                Colour.WHITE.value.toInt())
-    } else 0
-}
-
-fun getBlackKingRightWayScore(engineChessBoard: EngineChessBoard): Int {
-    return if (engineChessBoard.blackKingSquare == 57 || engineChessBoard.blackKingSquare == 48) {
-        scoreRightWayPositions(engineChessBoard,
-                RightWaySquares(56, 48, 40, 49, 41, 58, 50, 42, 34), false,
-                Colour.BLACK.value.toInt())
-    } else 0
-}
 
 fun evaluate(board: EngineChessBoard) : Int {
 

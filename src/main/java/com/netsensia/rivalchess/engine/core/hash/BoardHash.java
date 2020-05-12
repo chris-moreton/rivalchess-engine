@@ -1,25 +1,13 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
 import com.netsensia.rivalchess.bitboards.Bitboards;
-import com.netsensia.rivalchess.config.Evaluation;
 import com.netsensia.rivalchess.config.FeatureFlag;
 import com.netsensia.rivalchess.config.Hash;
-import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.engine.core.EngineChessBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
-import com.netsensia.rivalchess.enums.PawnHashIndex;
 import com.netsensia.rivalchess.model.SquareOccupant;
-
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getBlackPassedPawns;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.blackPawnAttacks;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getPawnFiles;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getWhitePassedPawns;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.whitePawnAttacks;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.northFill;
-import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.southFill;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
 
 public class BoardHash {
 
@@ -28,9 +16,7 @@ public class BoardHash {
     private int hashTableVersion;
     private int[] hashTableUseHeight;
     private int[] hashTableIgnoreHeight;
-    private long[] pawnHashTable;
     private int maxHashEntries;
-    private int maxPawnHashEntries;
     private int lastHashSizeCreated;
 
     public int getHashTableUseHeight(int index) {
@@ -45,19 +31,12 @@ public class BoardHash {
         hashTableUseHeight[index] = value;
     }
 
-    public void setPawnHashTable(int index, long value) {
-        pawnHashTable[index] = value;
-    }
-
     public synchronized void clearHash() {
         for (int i = 0; i < maxHashEntries; i++) {
             this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
             this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.getValue();
             this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
             this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.getValue();
-            if (FeatureFlag.USE_PAWN_HASH.isActive()) {
-                this.pawnHashTable[i * PawnHashIndex.getNumHashFields() + PawnHashIndex.PAWNHASHENTRY_MAIN_SCORE.getIndex()] = -Integer.MAX_VALUE;
-            }
         }
     }
 
@@ -65,9 +44,6 @@ public class BoardHash {
         if (maxHashEntries != lastHashSizeCreated) {
             this.hashTableUseHeight = new int[maxHashEntries * HashIndex.getNumHashFields()];
             this.hashTableIgnoreHeight = new int[maxHashEntries * HashIndex.getNumHashFields()];
-            if (FeatureFlag.USE_PAWN_HASH.isActive()) {
-                this.pawnHashTable = new long[maxHashEntries * PawnHashIndex.getNumHashFields()];
-            }
             lastHashSizeCreated = maxHashEntries;
             for (int i = 0; i < maxHashEntries; i++) {
                 this.hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
@@ -76,9 +52,6 @@ public class BoardHash {
                 this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_FLAG.getIndex()] = HashValueType.EMPTY.getIndex();
                 this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.getIndex()] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.getValue();
                 this.hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_VERSION.getIndex()] = 1;
-                if (FeatureFlag.USE_PAWN_HASH.isActive()) {
-                    this.pawnHashTable[i * PawnHashIndex.getNumHashFields() + PawnHashIndex.PAWNHASHENTRY_MAIN_SCORE.getIndex()] = -Integer.MAX_VALUE;
-                }
             }
         }
     }
@@ -146,12 +119,10 @@ public class BoardHash {
     public synchronized void setHashSizeMB(int hashSizeMB) {
         if (hashSizeMB < 1) {
             setMaxHashEntries(1);
-            setMaxPawnHashEntries(1);
         } else {
             int mainHashTableSize = ((hashSizeMB * 1024 * 1024) / 14) * 6; // two of these
             int pawnHashTableSize = ((hashSizeMB * 1024 * 1024) / 14) * 2; // one of these
             setMaxHashEntries(mainHashTableSize / HashIndex.getHashPositionSizeBytes());
-            setMaxPawnHashEntries(pawnHashTableSize / PawnHashIndex.getHashPositionSizeBytes());
         }
 
         setHashTable();
@@ -199,10 +170,6 @@ public class BoardHash {
 
     public void setMaxHashEntries(int maxHashEntries) {
         this.maxHashEntries = maxHashEntries;
-    }
-
-    public void setMaxPawnHashEntries(int maxPawnHashEntries) {
-        this.maxPawnHashEntries = maxPawnHashEntries;
     }
 
     public void incVersion() {
