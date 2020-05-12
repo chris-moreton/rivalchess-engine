@@ -48,7 +48,8 @@ fun knightAttackList(squares: List<Int>): Pair<List<Long>, Long> {
         orred = orred or attacks
     }
 
-    return Pair(list, orred)}
+    return Pair(list, orred)
+}
 
 fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
     return squareList(whiteAttacksBitboard(bitboards, attacks))
@@ -66,15 +67,15 @@ fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants:
 
 fun whitePieceAttacks(attacks: Attacks) =
         attacks.whiteRookPair.second or
-                attacks.whiteQueenPair.second or
-                attacks.whiteBishopPair.second or
-                attacks.whiteKnightPair.second
+        attacks.whiteQueenPair.second or
+        attacks.whiteBishopPair.second or
+        attacks.whiteKnightPair.second
 
 fun blackPieceAttacks(attacks: Attacks) =
         attacks.blackRookPair.second or
-                attacks.blackQueenPair.second or
-                attacks.blackBishopPair.second or
-                attacks.blackKnightPair.second
+        attacks.blackQueenPair.second or
+        attacks.blackBishopPair.second or
+        attacks.blackKnightPair.second
 
 fun whiteAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
         (whitePieceAttacks(attacks) or attacks.whitePawns) and
