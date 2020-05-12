@@ -12,7 +12,6 @@ import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.config.Uci;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
-import com.netsensia.rivalchess.engine.core.eval.PieceValue;
 import com.netsensia.rivalchess.enums.HashIndex;
 import com.netsensia.rivalchess.enums.HashValueType;
 import com.netsensia.rivalchess.enums.MoveOrder;
@@ -43,6 +42,7 @@ import java.util.Timer;
 
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.evaluate;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
+import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isAlwaysReplaceHashTableEntryValid;
 import static com.netsensia.rivalchess.engine.core.hash.SearchHashHelper.isHeightHashTableEntryValid;
 
@@ -220,7 +220,7 @@ public final class Search implements Runnable {
         if (isCapture) {
             final int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
             if (see > 0) {
-                score = 100 + (int) (((double) see / PieceValue.getValue(Piece.QUEEN)) * 10);
+                score = 100 + (int) (((double) see / pieceValue(Piece.QUEEN)) * 10);
             }
             if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
                 score += 9;
@@ -350,7 +350,7 @@ public final class Search implements Runnable {
     private boolean shouldDeltaPrune(EngineChessBoard board, int low, int evalScore, int move, boolean isCheck) {
         if (FeatureFlag.USE_DELTA_PRUNING.isActive() && !isCheck) {
             final int materialIncrease = (board.lastCapturePiece() != SquareOccupant.NONE
-                    ? PieceValue.getValue(board.lastCapturePiece().getPiece())
+                    ? pieceValue(board.lastCapturePiece().getPiece())
                     : 0) + getMaterialIncreaseForPromotion(move);
 
             return materialIncrease + evalScore + SearchConfig.DELTA_PRUNING_MARGIN.getValue() < low;
@@ -366,13 +366,13 @@ public final class Search implements Runnable {
         }
         switch (PromotionPieceMask.fromValue(promotionMaskValue)) {
             case PROMOTION_PIECE_TOSQUARE_MASK_QUEEN:
-                return PieceValue.getValue(Piece.QUEEN) - PieceValue.getValue(Piece.PAWN);
+                return pieceValue(Piece.QUEEN) - pieceValue(Piece.PAWN);
             case PROMOTION_PIECE_TOSQUARE_MASK_BISHOP:
-                return PieceValue.getValue(Piece.BISHOP) - PieceValue.getValue(Piece.PAWN);
+                return pieceValue(Piece.BISHOP) - pieceValue(Piece.PAWN);
             case PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT:
-                return PieceValue.getValue(Piece.KNIGHT) - PieceValue.getValue(Piece.PAWN);
+                return pieceValue(Piece.KNIGHT) - pieceValue(Piece.PAWN);
             case PROMOTION_PIECE_TOSQUARE_MASK_ROOK:
-                return PieceValue.getValue(Piece.ROOK) - PieceValue.getValue(Piece.PAWN);
+                return pieceValue(Piece.ROOK) - pieceValue(Piece.PAWN);
             default:
                 return 0;
         }
@@ -404,7 +404,7 @@ public final class Search implements Runnable {
                 } else if (capturePiece != Piece.NONE) {
                     int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(movesForSorting[i]));
                     if (see > -Integer.MAX_VALUE) {
-                        see = (int) (((double) see / PieceValue.getValue(Piece.QUEEN)) * 10);
+                        see = (int) (((double) see / pieceValue(Piece.QUEEN)) * 10);
                     }
 
                     if (see > 0) {
@@ -522,7 +522,7 @@ public final class Search implements Runnable {
                 return
                         linearScale(
                                 (board.getMover() == Colour.WHITE ? board.getBlackPieceValues() : board.getWhitePieceValues()),
-                                PieceValue.getValue(Piece.ROOK),
+                                pieceValue(Piece.ROOK),
                                 Evaluation.OPENING_PHASE_MATERIAL.getValue(),
                                 PieceSquareTables.kingEndGame.get(toSquare) - PieceSquareTables.kingEndGame.get(fromSquare),
                                 PieceSquareTables.king.get(toSquare) - PieceSquareTables.king.get(fromSquare));

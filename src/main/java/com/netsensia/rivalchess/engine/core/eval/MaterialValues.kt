@@ -11,19 +11,19 @@ data class MaterialValues(val bitboardData: BitboardData) {
 }
 
 fun whitePieceValues(bitboards: BitboardData) =
-        Long.bitCount(bitboards.whiteKnights) * PieceValue.getValue(Piece.KNIGHT) +
-        Long.bitCount(bitboards.whiteRooks) * PieceValue.getValue(Piece.ROOK) +
-        Long.bitCount(bitboards.whiteBishops) * PieceValue.getValue(Piece.BISHOP) +
-        Long.bitCount(bitboards.whiteQueens) * PieceValue.getValue(Piece.QUEEN)
+        Long.bitCount(bitboards.whiteKnights) * pieceValue(Piece.KNIGHT) +
+        Long.bitCount(bitboards.whiteRooks) * pieceValue(Piece.ROOK) +
+        Long.bitCount(bitboards.whiteBishops) * pieceValue(Piece.BISHOP) +
+        Long.bitCount(bitboards.whiteQueens) * pieceValue(Piece.QUEEN)
 
 fun blackPieceValues(bitboards: BitboardData) =
-        Long.bitCount(bitboards.blackKnights) * PieceValue.getValue(Piece.KNIGHT) +
-        Long.bitCount(bitboards.blackRooks) * PieceValue.getValue(Piece.ROOK) +
-        Long.bitCount(bitboards.blackBishops) * PieceValue.getValue(Piece.BISHOP) +
-        Long.bitCount(bitboards.blackQueens) * PieceValue.getValue(Piece.QUEEN)
+        Long.bitCount(bitboards.blackKnights) * pieceValue(Piece.KNIGHT) +
+        Long.bitCount(bitboards.blackRooks) * pieceValue(Piece.ROOK) +
+        Long.bitCount(bitboards.blackBishops) * pieceValue(Piece.BISHOP) +
+        Long.bitCount(bitboards.blackQueens) * pieceValue(Piece.QUEEN)
 
 fun whitePawnValues(bitboards: BitboardData) =
-        Long.bitCount(bitboards.whitePawns) * PieceValue.getValue(Piece.PAWN)
+        Long.bitCount(bitboards.whitePawns) * pieceValue(Piece.PAWN)
 
 fun blackPawnValues(bitboards: BitboardData) =
-        Long.bitCount(bitboards.blackPawns) * PieceValue.getValue(Piece.PAWN)
+        Long.bitCount(bitboards.blackPawns) * pieceValue(Piece.PAWN)

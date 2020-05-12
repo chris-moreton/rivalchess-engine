@@ -54,14 +54,14 @@ fun knightAttackList(squares: List<Int>): Pair<List<Long>, Long> {
 fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
     return squareList(whiteAttacksBitboard(bitboards, attacks))
             .asSequence()
-            .map { PieceValue.getValue(squareOccupants[it].piece) }
+            .map { pieceValue(squareOccupants[it].piece) }
             .fold(0) { acc, i -> acc + i }
 }
 
 fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
     return squareList(blackAttacksBitboard(bitboards, attacks))
             .asSequence()
-            .map { PieceValue.getValue(squareOccupants[it].piece) }
+            .map { pieceValue(squareOccupants[it].piece) }
             .fold(0) { acc, i -> acc + i }
 }
 
@@ -92,7 +92,7 @@ fun threatEval(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<
 }
 
 fun adjustedAttackScore(attackScore: Int) =
-        attackScore + attackScore * (attackScore / PieceValue.getValue(Piece.QUEEN))
+        attackScore + attackScore * (attackScore / pieceValue(Piece.QUEEN))
 
 fun rookAttacks(bitboards: BitboardData, sq: Int) : Long =
         Bitboards.magicBitboards.magicMovesRook[sq][
