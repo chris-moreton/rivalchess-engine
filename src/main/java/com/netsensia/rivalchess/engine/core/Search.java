@@ -1329,7 +1329,7 @@ public final class Search implements Runnable {
     }
 
     public String getCurrentScoreHuman() {
-        int score = this.m_currentPath.getScore();
+        int score = this.m_currentPath.score;
         int abs = Math.abs(score);
         if (abs > Evaluation.MATE_SCORE_START.getValue()) {
             int mateIn = ((Evaluation.VALUE_MATE.getValue() - abs) + 1) / 2;
@@ -1339,7 +1339,7 @@ public final class Search implements Runnable {
     }
 
     public int getCurrentScore() {
-        return this.m_currentPath.getScore();
+        return this.m_currentPath.score;
     }
 
     public long getSearchDuration() {
