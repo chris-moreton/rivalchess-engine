@@ -36,3 +36,9 @@ val FILES = Collections.unmodifiableList(Arrays.asList(FILE_H, FILE_G, FILE_F, F
 
 const val LIGHT_SQUARES = -0x55aa55aa55aa55abL
 const val DARK_SQUARES = 0x55AA55AA55AA55AAL
+
+const val A1A2B1B2 = 1L shl 7 or (1L shl 6) or (1L shl 15) or (1L shl 14)
+const val A8A7B8B7 = 1L shl 63 or (1L shl 62) or (1L shl 55) or (1L shl 54)
+const val H8H7G8G7 = 1L shl 57 or (1L shl 56) or (1L shl 49) or (1L shl 48)
+const val H1H2G1G2 = 1L or (1L shl 1) or (1L shl 8) or (1L shl 9)
+const val A2A7H2H7 = 1L shl 15 or (1L shl 55) or (1L shl 8) or (1L shl 48)

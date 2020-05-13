@@ -159,7 +159,7 @@ else 0) -
         else 0
 
 fun trappedBishopEval(bitboards: BitboardData) =
-        if (bitboards.whiteBishops or bitboards.blackBishops and Bitboards.A2A7H2H7 != 0L)
+        if (bitboards.whiteBishops or bitboards.blackBishops and A2A7H2H7 != 0L)
             blackA2TrappedBishopEval(bitboards) +
                     blackH2TrappedBishopEval(bitboards) -
                     whiteA7TrappedBishopEval(bitboards) -
@@ -504,25 +504,25 @@ fun noWhiteRooksQueensOrKnights(bitboards: BitboardData) =
 fun blackBishopDrawOnFileH(bitboards: BitboardData): Boolean {
     return bitboards.blackPawns and FILE_H.inv() == 0L &&
             bitboards.blackBishops and LIGHT_SQUARES == 0L &&
-            bitboards.whiteKing and Bitboards.H1H2G1G2 != 0L
+            bitboards.whiteKing and H1H2G1G2 != 0L
 }
 
 fun blackBishopDrawOnFileA(bitboards: BitboardData): Boolean {
     return bitboards.blackPawns and FILE_A.inv() == 0L &&
             bitboards.blackBishops and DARK_SQUARES == 0L &&
-            bitboards.whiteKing and Bitboards.A1A2B1B2 != 0L
+            bitboards.whiteKing and A1A2B1B2 != 0L
 }
 
 fun whiteBishopDrawOnFileA(bitboards: BitboardData): Boolean {
     return bitboards.whitePawns and FILE_A.inv() == 0L &&
             bitboards.whiteBishops and LIGHT_SQUARES == 0L &&
-            bitboards.blackKing and Bitboards.A8A7B8B7 != 0L
+            bitboards.blackKing and A8A7B8B7 != 0L
 }
 
 fun whiteBishopDrawOnFileH(bitboards: BitboardData): Boolean {
     return bitboards.whitePawns and FILE_H.inv() == 0L &&
             bitboards.whiteBishops and DARK_SQUARES == 0L &&
-            bitboards.blackKing and Bitboards.H8H7G8G7 != 0L
+            bitboards.blackKing and H8H7G8G7 != 0L
 }
 
 fun probableDrawWhenBlackIsWinning(bitboards: BitboardData) =

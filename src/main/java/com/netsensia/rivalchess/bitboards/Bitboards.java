@@ -7,12 +7,6 @@ import java.util.List;
 public final class Bitboards {
     public static final MagicBitboards magicBitboards = new MagicBitboards();
 
-    public static final long A1A2B1B2 = (1L << 7) | (1L << 6) | (1L << 15) | (1L << 14);
-    public static final long A8A7B8B7 = (1L << 63) | (1L << 62) | (1L << 55) | (1L << 54);
-    public static final long H8H7G8G7 = (1L << 57) | (1L << 56) | (1L << 49) | (1L << 48);
-    public static final long H1H2G1G2 = 1L | (1L << 1) | (1L << 8) | (1L << 9);
-    public static final long A2A7H2H7 = (1L << 15) | (1L << 55) | (1L << 8) | (1L << 48);
-
     public static final long LOW32 = 0x00000000FFFFFFFFL;
 
     public static final long WHITEKINGSIDECASTLESQUARES = 1L << 1 | 1L << 2;
