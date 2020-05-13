@@ -5,21 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 public final class Bitboards {
-    public static final MagicBitboards magicBitboards = new MagicBitboards();
-
-
-
-
-
-    public static final long WHITEKINGSIDECASTLEROOKMOVE = 1L | 1L << 2;
-    public static final long WHITEQUEENSIDECASTLEROOKMOVE = 1L << 4 | 1L << 7;
-    public static final long BLACKKINGSIDECASTLEROOKMOVE = 1L << 56 | 1L << 58;
-    public static final long BLACKQUEENSIDECASTLEROOKMOVE = 1L << 60 | 1L << 63;
-
-    public static final long WHITEKINGSIDEROOKMASK = 1L;
-    public static final long WHITEQUEENSIDEROOKMASK = 1L << 7;
-    public static final long BLACKKINGSIDEROOKMASK = 1L << 56;
-    public static final long BLACKQUEENSIDEROOKMASK = 1L << 63;
 
     public static final List<Integer> distanceToH1OrA8 =
             Collections.unmodifiableList(Arrays.asList(

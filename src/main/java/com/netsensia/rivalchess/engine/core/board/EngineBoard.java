@@ -25,9 +25,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKKINGSIDECASTLEMOVEMASK;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKKINGSIDECASTLEROOKMOVE;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKKINGSIDECASTLESQUARES;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKKINGSIDEROOKMASK;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKQUEENSIDECASTLEMOVEMASK;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKQUEENSIDECASTLEROOKMOVE;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKQUEENSIDECASTLESQUARES;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKQUEENSIDEROOKMASK;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_1;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_2;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_3;
@@ -37,9 +41,13 @@ import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_6;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_7;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_8;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEKINGSIDECASTLEMOVEMASK;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEKINGSIDECASTLEROOKMOVE;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEKINGSIDECASTLESQUARES;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEKINGSIDEROOKMASK;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEQUEENSIDECASTLEMOVEMASK;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEQUEENSIDECASTLEROOKMOVE;
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEQUEENSIDECASTLESQUARES;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEQUEENSIDEROOKMASK;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getSetBits;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyOneBitSet;
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
@@ -220,9 +228,9 @@ public final class EngineBoard {
                 this.isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
                 this.isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture);
 
-        generateSliderMoves(SquareOccupant.WR.getIndex(), SquareOccupant.BR.getIndex(), Bitboards.magicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook);
+        generateSliderMoves(SquareOccupant.WR.getIndex(), SquareOccupant.BR.getIndex(), MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook);
 
-        generateSliderMoves(SquareOccupant.WB.getIndex(), SquareOccupant.BB.getIndex(), Bitboards.magicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop);
+        generateSliderMoves(SquareOccupant.WB.getIndex(), SquareOccupant.BB.getIndex(), MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop);
 
         this.legalMoves[this.numLegalMoves] = 0;
 
@@ -388,7 +396,7 @@ public final class EngineBoard {
 
     private void generateQuiesceSliderMoves(boolean includeChecks, int enemyKingSquare, Piece piece, final int whiteSliderConstant, final int blackSliderConstant) {
 
-        final long[][] magicMovesRook = piece == Piece.ROOK ? Bitboards.magicBitboards.magicMovesRook : Bitboards.magicBitboards.magicMovesBishop;
+        final long[][] magicMovesRook = piece == Piece.ROOK ? MagicBitboards.magicMovesRook : MagicBitboards.magicMovesBishop;
         final long[] occupancyMaskRook = piece == Piece.ROOK ? MagicBitboards.occupancyMaskRook : MagicBitboards.occupancyMaskBishop;
         final long[] magicNumberRook = piece == Piece.ROOK ? MagicBitboards.magicNumberRook : MagicBitboards.magicNumberBishop;
         final int[] magicNumberShiftsRook = piece == Piece.ROOK ? MagicBitboards.magicNumberShiftsRook : MagicBitboards.magicNumberShiftsBishop;
@@ -663,10 +671,10 @@ public final class EngineBoard {
         this.halfMoveCount = 0;
         this.engineBitboards.xorPieceBitboard(capturePiece.getIndex(), toMask);
         if (capturePiece == SquareOccupant.WR) {
-            if (toMask == Bitboards.WHITEKINGSIDEROOKMASK) {
+            if (toMask == WHITEKINGSIDEROOKMASK) {
                 this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_WK.getValue();
             }
-            else if (toMask == Bitboards.WHITEQUEENSIDEROOKMASK) {
+            else if (toMask == WHITEQUEENSIDEROOKMASK) {
                 this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_WQ.getValue();
             }
         }
@@ -683,11 +691,11 @@ public final class EngineBoard {
         this.castlePrivileges &= CastleBitMask.CASTLEPRIV_BNONE.getValue();
         this.blackKingSquare = moveTo;
         if ((toMask | fromMask) == BLACKKINGSIDECASTLEMOVEMASK) {
-            this.engineBitboards.xorPieceBitboard(BitboardType.BR, Bitboards.BLACKKINGSIDECASTLEROOKMOVE);
+            this.engineBitboards.xorPieceBitboard(BitboardType.BR, BLACKKINGSIDECASTLEROOKMOVE);
             this.squareContents[Square.H8.getBitRef()] = SquareOccupant.NONE;
             this.squareContents[Square.F8.getBitRef()] = SquareOccupant.BR;
         } else if ((toMask | fromMask) == BLACKQUEENSIDECASTLEMOVEMASK) {
-            this.engineBitboards.xorPieceBitboard(BitboardType.BR, Bitboards.BLACKQUEENSIDECASTLEROOKMOVE);
+            this.engineBitboards.xorPieceBitboard(BitboardType.BR, BLACKQUEENSIDECASTLEROOKMOVE);
             this.squareContents[Square.A8.getBitRef()] = SquareOccupant.NONE;
             this.squareContents[Square.D8.getBitRef()] = SquareOccupant.BR;
         }
@@ -745,10 +753,10 @@ public final class EngineBoard {
         this.engineBitboards.xorPieceBitboard(capturePiece.getIndex(), toMask);
 
         if (capturePiece == SquareOccupant.BR) {
-            if (toMask == Bitboards.BLACKKINGSIDEROOKMASK) {
+            if (toMask == BLACKKINGSIDEROOKMASK) {
                 this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_BK.getValue();
             }
-            else if (toMask == Bitboards.BLACKQUEENSIDEROOKMASK) {
+            else if (toMask == BLACKQUEENSIDEROOKMASK) {
                 this.castlePrivileges &= ~CastleBitMask.CASTLEPRIV_BQ.getValue();
             }
         }
@@ -764,12 +772,12 @@ public final class EngineBoard {
         this.whiteKingSquare = moveTo;
         this.castlePrivileges &= CastleBitMask.CASTLEPRIV_WNONE.getValue();
         if ((toMask | fromMask) == WHITEKINGSIDECASTLEMOVEMASK) {
-            this.engineBitboards.xorPieceBitboard(BitboardType.WR, Bitboards.WHITEKINGSIDECASTLEROOKMOVE);
+            this.engineBitboards.xorPieceBitboard(BitboardType.WR, WHITEKINGSIDECASTLEROOKMOVE);
             this.squareContents[Square.H1.getBitRef()] = SquareOccupant.NONE;
             this.squareContents[Square.F1.getBitRef()] = SquareOccupant.WR;
 
         } else if ((toMask | fromMask) == WHITEQUEENSIDECASTLEMOVEMASK) {
-            this.engineBitboards.xorPieceBitboard(BitboardType.WR, Bitboards.WHITEQUEENSIDECASTLEROOKMOVE);
+            this.engineBitboards.xorPieceBitboard(BitboardType.WR, WHITEQUEENSIDECASTLEROOKMOVE);
             this.squareContents[Square.A1.getBitRef()] = SquareOccupant.NONE;
             this.squareContents[Square.D1.getBitRef()] = SquareOccupant.WR;
         }
@@ -889,23 +897,23 @@ public final class EngineBoard {
     private void replaceCastledRook(long fromMask, long toMask, SquareOccupant movePiece) {
         if (movePiece == SquareOccupant.WK) {
             if ((toMask | fromMask) == WHITEKINGSIDECASTLEMOVEMASK) {
-                this.engineBitboards.xorPieceBitboard(BitboardType.WR, Bitboards.WHITEKINGSIDECASTLEROOKMOVE);
+                this.engineBitboards.xorPieceBitboard(BitboardType.WR, WHITEKINGSIDECASTLEROOKMOVE);
                 this.squareContents[Square.H1.getBitRef()] = SquareOccupant.WR;
                 this.squareContents[Square.F1.getBitRef()] = SquareOccupant.NONE;
             } else if ((toMask | fromMask) == WHITEQUEENSIDECASTLEMOVEMASK) {
-                this.engineBitboards.xorPieceBitboard(BitboardType.WR, Bitboards.WHITEQUEENSIDECASTLEROOKMOVE);
+                this.engineBitboards.xorPieceBitboard(BitboardType.WR, WHITEQUEENSIDECASTLEROOKMOVE);
                 this.squareContents[Square.A1.getBitRef()] = SquareOccupant.WR;
                 this.squareContents[Square.D1.getBitRef()] = SquareOccupant.NONE;
 
             }
         } else if (movePiece == SquareOccupant.BK) {
             if ((toMask | fromMask) == BLACKKINGSIDECASTLEMOVEMASK) {
-                this.engineBitboards.xorPieceBitboard(BitboardType.BR, Bitboards.BLACKKINGSIDECASTLEROOKMOVE);
+                this.engineBitboards.xorPieceBitboard(BitboardType.BR, BLACKKINGSIDECASTLEROOKMOVE);
                 this.squareContents[Square.H8.getBitRef()] = SquareOccupant.BR;
                 this.squareContents[Square.F8.getBitRef()] = SquareOccupant.NONE;
 
             } else if ((toMask | fromMask) == BLACKQUEENSIDECASTLEMOVEMASK) {
-                this.engineBitboards.xorPieceBitboard(BitboardType.BR, Bitboards.BLACKQUEENSIDECASTLEROOKMOVE);
+                this.engineBitboards.xorPieceBitboard(BitboardType.BR, BLACKQUEENSIDECASTLEROOKMOVE);
                 this.squareContents[Square.A8.getBitRef()] = SquareOccupant.BR;
                 this.squareContents[Square.D8.getBitRef()] = SquareOccupant.NONE;
 

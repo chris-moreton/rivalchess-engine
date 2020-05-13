@@ -55,7 +55,7 @@ fun getFirstOccupiedSquare(bitboard: Long): Int {
 }
 
 fun isBishopAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long): Boolean {
-    return (Bitboards.magicBitboards.magicMovesBishop[pieceSquare][getMagicIndexForBishop(pieceSquare, allPieceBitboard)]
+    return (MagicBitboards.magicMovesBishop[pieceSquare][getMagicIndexForBishop(pieceSquare, allPieceBitboard)]
             and (1L shl attackedSquare)) != 0L
 }
 
@@ -65,7 +65,7 @@ fun getMagicIndexForBishop(pieceSquare: Int, allPieceBitboard: Long): Int {
 }
 
 fun isRookAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long): Boolean {
-    return (Bitboards.magicBitboards.magicMovesRook[pieceSquare][getMagicIndexForRook(pieceSquare, allPieceBitboard)]
+    return (MagicBitboards.magicMovesRook[pieceSquare][getMagicIndexForRook(pieceSquare, allPieceBitboard)]
             and (1L shl attackedSquare)) != 0L
 }
 

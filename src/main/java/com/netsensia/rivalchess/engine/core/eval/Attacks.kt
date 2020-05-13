@@ -97,12 +97,12 @@ fun adjustedAttackScore(attackScore: Int) =
         attackScore + attackScore * (attackScore / pieceValue(Piece.QUEEN))
 
 fun rookAttacks(bitboards: BitboardData, sq: Int) : Long =
-        Bitboards.magicBitboards.magicMovesRook[sq][
+        MagicBitboards.magicMovesRook[sq][
                 ((bitboards.all and MagicBitboards.occupancyMaskRook[sq])
                         * MagicBitboards.magicNumberRook[sq] ushr MagicBitboards.magicNumberShiftsRook[sq]).toInt()]
 
 fun bishopAttacks(bitboards: BitboardData, sq: Int) =
-        Bitboards.magicBitboards.magicMovesBishop[sq][
+        MagicBitboards.magicMovesBishop[sq][
                 ((bitboards.all and MagicBitboards.occupancyMaskBishop[sq])
                         * MagicBitboards.magicNumberBishop[sq]
                         ushr MagicBitboards.magicNumberShiftsBishop[sq]).toInt()]
