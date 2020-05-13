@@ -7,6 +7,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
+
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.3.71'
@@ -14,6 +15,9 @@ plugins {
     id 'maven-publish'
     id 'signing'
 }
+
+group = "com.netsensia.rivalchess"
+version = '10.0.2'
 
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin'
@@ -90,9 +94,6 @@ compileTestKotlin {
         jvmTarget = "1.8"
     }
 }
-
-group = "com.netsensia.rivalchess"
-version = '10.0.0'
 
 jar.baseName("rivalchess-engine")
 

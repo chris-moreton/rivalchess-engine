@@ -107,7 +107,7 @@ public final class Search implements Runnable {
     private SearchPath m_currentPath;
     private String currentPathString;
 
-    private boolean m_isUCIMode = false;
+    private boolean uciMode = false;
 
     public Search() throws IllegalFenException {
         this(System.out, FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
@@ -151,8 +151,12 @@ public final class Search implements Runnable {
         depthZeroMoveScores = new int[Limit.MAX_LEGAL_MOVES.getValue()];
     }
 
-    public boolean isUCIMode() {
-        return this.m_isUCIMode;
+    public boolean isUciMode() {
+        return uciMode;
+    }
+
+    public void setUCIMode(final boolean uciMode) {
+        this.uciMode = uciMode;
     }
 
     public synchronized void setHashSizeMB(int hashSizeMB) {
@@ -1422,7 +1426,7 @@ public final class Search implements Runnable {
 
                 setOkToSendInfo(false);
 
-                if (m_isUCIMode) {
+                if (uciMode) {
                     String s1 =
                             "info" +
                                     " currmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(currentDepthZeroMove) +
