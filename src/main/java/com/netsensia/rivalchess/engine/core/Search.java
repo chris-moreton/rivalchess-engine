@@ -31,14 +31,12 @@ import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.openings.OpeningLibrary;
-import com.netsensia.rivalchess.uci.EngineMonitor;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Timer;
 
 import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.*;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.evaluate;
@@ -151,12 +149,6 @@ public final class Search implements Runnable {
 
         depthZeroLegalMoves = orderedMoves[0];
         depthZeroMoveScores = new int[Limit.MAX_LEGAL_MOVES.getValue()];
-    }
-
-    public void startEngineTimer(boolean isUCIMode) {
-        this.m_isUCIMode = isUCIMode;
-        EngineMonitor m_monitor = new EngineMonitor(this);
-        new Timer().schedule(m_monitor, Uci.UCI_TIMER_INTERVAL_MILLIS.getValue(), Uci.UCI_TIMER_INTERVAL_MILLIS.getValue());
     }
 
     public boolean isUCIMode() {
