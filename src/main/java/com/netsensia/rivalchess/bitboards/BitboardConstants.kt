@@ -33,3 +33,6 @@ const val A8B8 = 1L shl 63 or (1L shl 62)
 const val B8C8 = 1L shl 62 or (1L shl 61)
 
 val FILES = Collections.unmodifiableList(Arrays.asList(FILE_H, FILE_G, FILE_F, FILE_E, FILE_D, FILE_C, FILE_B, FILE_A))
+
+const val LIGHT_SQUARES = -0x55aa55aa55aa55abL
+const val DARK_SQUARES = 0x55AA55AA55AA55AAL

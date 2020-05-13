@@ -2,6 +2,8 @@ package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.Bitboards
+import com.netsensia.rivalchess.bitboards.DARK_SQUARES
+import com.netsensia.rivalchess.bitboards.LIGHT_SQUARES
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.SquareOccupant
@@ -108,7 +110,7 @@ fun checkForPositionD(
         // (D)
         safety += 70
         // check for bishop of same colour as h3
-        val bits = if (cornerColour == Colour.WHITE) Bitboards.LIGHT_SQUARES else Bitboards.DARK_SQUARES
+        val bits = if (cornerColour == Colour.WHITE) LIGHT_SQUARES else DARK_SQUARES
         if (bits and friendlyBishops != 0L) {
             safety -= 30
         }

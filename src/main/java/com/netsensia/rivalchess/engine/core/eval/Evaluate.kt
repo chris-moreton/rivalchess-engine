@@ -114,13 +114,13 @@ fun bishopScore(bitboards: BitboardData, materialDifference: Int, materialValues
         bishopPairEval(bitboards, materialValues) +
                 oppositeColourBishopsEval(bitboards, materialDifference) + trappedBishopEval(bitboards)
 
-fun whiteLightBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and Bitboards.LIGHT_SQUARES != 0L
+fun whiteLightBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and LIGHT_SQUARES != 0L
 
-fun whiteDarkBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and Bitboards.DARK_SQUARES != 0L
+fun whiteDarkBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and DARK_SQUARES != 0L
 
-fun blackLightBishopExists(bitboards: BitboardData) = bitboards.blackBishops and Bitboards.LIGHT_SQUARES != 0L
+fun blackLightBishopExists(bitboards: BitboardData) = bitboards.blackBishops and LIGHT_SQUARES != 0L
 
-fun blackDarkBishopExists(bitboards: BitboardData) = bitboards.blackBishops and Bitboards.DARK_SQUARES != 0L
+fun blackDarkBishopExists(bitboards: BitboardData) = bitboards.blackBishops and DARK_SQUARES != 0L
 
 fun whiteBishopColourCount(bitboards: BitboardData) =
         (if (whiteLightBishopExists(bitboards)) 1 else 0) + if (whiteDarkBishopExists(bitboards)) 1 else 0
@@ -503,25 +503,25 @@ fun noWhiteRooksQueensOrKnights(bitboards: BitboardData) =
 
 fun blackBishopDrawOnFileH(bitboards: BitboardData): Boolean {
     return bitboards.blackPawns and FILE_H.inv() == 0L &&
-            bitboards.blackBishops and Bitboards.LIGHT_SQUARES == 0L &&
+            bitboards.blackBishops and LIGHT_SQUARES == 0L &&
             bitboards.whiteKing and Bitboards.H1H2G1G2 != 0L
 }
 
 fun blackBishopDrawOnFileA(bitboards: BitboardData): Boolean {
     return bitboards.blackPawns and FILE_A.inv() == 0L &&
-            bitboards.blackBishops and Bitboards.DARK_SQUARES == 0L &&
+            bitboards.blackBishops and DARK_SQUARES == 0L &&
             bitboards.whiteKing and Bitboards.A1A2B1B2 != 0L
 }
 
 fun whiteBishopDrawOnFileA(bitboards: BitboardData): Boolean {
     return bitboards.whitePawns and FILE_A.inv() == 0L &&
-            bitboards.whiteBishops and Bitboards.LIGHT_SQUARES == 0L &&
+            bitboards.whiteBishops and LIGHT_SQUARES == 0L &&
             bitboards.blackKing and Bitboards.A8A7B8B7 != 0L
 }
 
 fun whiteBishopDrawOnFileH(bitboards: BitboardData): Boolean {
     return bitboards.whitePawns and FILE_H.inv() == 0L &&
-            bitboards.whiteBishops and Bitboards.DARK_SQUARES == 0L &&
+            bitboards.whiteBishops and DARK_SQUARES == 0L &&
             bitboards.blackKing and Bitboards.H8H7G8G7 != 0L
 }
 

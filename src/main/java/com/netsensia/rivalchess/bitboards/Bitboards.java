@@ -7,11 +7,6 @@ import java.util.List;
 public final class Bitboards {
     public static final MagicBitboards magicBitboards = new MagicBitboards();
 
-
-
-    public static final long LIGHT_SQUARES = 0xAA55AA55AA55AA55L;
-    public static final long DARK_SQUARES = 0x55AA55AA55AA55AAL;
-
     public static final long A1A2B1B2 = (1L << 7) | (1L << 6) | (1L << 15) | (1L << 14);
     public static final long A8A7B8B7 = (1L << 63) | (1L << 62) | (1L << 55) | (1L << 54);
     public static final long H8H7G8G7 = (1L << 57) | (1L << 56) | (1L << 49) | (1L << 48);
@@ -145,10 +140,6 @@ public final class Bitboards {
 
     public static final List<Integer> bitFlippedHorizontalAxis = Collections.unmodifiableList(Arrays.asList(
             56, 57, 58, 59, 60, 61, 62, 63, 48, 49, 50, 51, 52, 53, 54, 55, 40, 41, 42, 43, 44, 45, 46, 47, 32, 33, 34, 35, 36, 37, 38, 39, 24, 25, 26, 27, 28, 29, 30, 31, 16, 17, 18, 19, 20, 21, 22, 23, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7
-    ));
-
-    public static final List<Integer> bitFlippedVerticalAxis = Collections.unmodifiableList(Arrays.asList(
-            7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 23, 22, 21, 20, 19, 18, 17, 16, 31, 30, 29, 28, 27, 26, 25, 24, 39, 38, 37, 36, 35, 34, 33, 32, 47, 46, 45, 44, 43, 42, 41, 40, 55, 54, 53, 52, 51, 50, 49, 48, 63, 62, 61, 60, 59, 58, 57, 56
     ));
 
     private Bitboards() {
