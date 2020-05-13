@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.BitboardType
-import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.DARK_SQUARES
 import com.netsensia.rivalchess.bitboards.LIGHT_SQUARES
 import com.netsensia.rivalchess.engine.core.board.EngineBoard

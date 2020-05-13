@@ -235,6 +235,6 @@ public class BitboardsTest {
     @Test
     public void getPawnMovesOfCaptureColour() {
         assertEquals(BitboardConstantsKt.getWhitePawnMovesCapture(), BitboardUtilsKt.getPawnMovesCaptureOfColour(Colour.WHITE));
-        assertEquals(Bitboards.blackPawnMovesCapture, BitboardUtilsKt.getPawnMovesCaptureOfColour(Colour.BLACK));
+        assertEquals(BitboardConstantsKt.getBlackPawnMovesCapture(), BitboardUtilsKt.getPawnMovesCaptureOfColour(Colour.BLACK));
     }
 }

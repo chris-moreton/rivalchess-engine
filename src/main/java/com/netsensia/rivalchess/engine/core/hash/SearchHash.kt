@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.hash
 
-import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.LOW32
 import com.netsensia.rivalchess.config.FeatureFlag
 import com.netsensia.rivalchess.config.SearchConfig

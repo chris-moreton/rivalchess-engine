@@ -33,8 +33,8 @@ fun blackKingSquareEval(bitboards: BitboardData, kingSquares: KingSquares) =
                 whitePieceValues(bitboards),
                 pieceValue(Piece.ROOK),
                 Evaluation.OPENING_PHASE_MATERIAL.value,
-                PieceSquareTables.kingEndGame[Bitboards.bitFlippedHorizontalAxis[kingSquares.black]],
-                PieceSquareTables.king[Bitboards.bitFlippedHorizontalAxis[kingSquares.black]]
+                PieceSquareTables.kingEndGame[bitFlippedHorizontalAxis[kingSquares.black]],
+                PieceSquareTables.king[bitFlippedHorizontalAxis[kingSquares.black]]
         )
 
 fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) =
@@ -81,7 +81,7 @@ fun doubledRooksEval(squares: List<Int>) =
             if (squares.size > 2 && (sameFile(squares[0], squares[2]) || sameFile(squares[1], squares[2])))
                 Evaluation.VALUE_ROOKS_ON_SAME_FILE.value else 0
 
-fun flippedSquareTableScore(table: List<Int>, bit: Int) = table[Bitboards.bitFlippedHorizontalAxis[bit]]
+fun flippedSquareTableScore(table: List<Int>, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
 
 fun kingAttackCount(dangerZone: Long, attacks: List<Long>): Int {
     return attacks.asSequence()
@@ -325,10 +325,10 @@ fun blackKingOnFirstTwoRanks(kingSquares: KingSquares) =
         yCoordOfSquare(kingSquares.black) >= 6
 
 fun blackKingShield(kingSquares: KingSquares) =
-        Bitboards.whiteKingShieldMask[kingSquares.black % 8] shl 40
+        whiteKingShieldMask[kingSquares.black % 8] shl 40
 
 fun whiteKingShield(kingSquares: KingSquares): Long =
-        Bitboards.whiteKingShieldMask[kingSquares.white % 8]
+        whiteKingShieldMask[kingSquares.white % 8]
 
 fun whiteCastlingEval(bitboards: BitboardData, castlePrivileges: Int) : Int {
 
@@ -458,7 +458,7 @@ fun whiteKnightAndBishopVKingEval(currentScore: Int, bitboards: BitboardData, ki
 }
 
 fun enemyKingCloseToDarkCornerMateSquareValue(kingSquare: Int) =
-        enemyKingCloseToLightCornerMateSquareValue(Bitboards.bitFlippedHorizontalAxis[kingSquare])
+        enemyKingCloseToLightCornerMateSquareValue(bitFlippedHorizontalAxis[kingSquare])
 
 fun enemyKingCloseToLightCornerMateSquareValue(kingSquare: Int) =
         (7 - distanceToH1OrA8[kingSquare]) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.value
@@ -564,8 +564,8 @@ fun blackPawnsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData):
                 whitePieceValues(bitboards),
                 Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
                 Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
-                PieceSquareTables.pawnEndGame[Bitboards.bitFlippedHorizontalAxis[it]],
-                PieceSquareTables.pawn[Bitboards.bitFlippedHorizontalAxis[it]]
+                PieceSquareTables.pawnEndGame[bitFlippedHorizontalAxis[it]],
+                PieceSquareTables.pawn[bitFlippedHorizontalAxis[it]]
         )
     }.fold(0) { acc, i -> acc + i }
 }
@@ -581,8 +581,8 @@ fun blackKnightsEval(
                 materialValues.whitePieces + materialValues.whitePawns,
                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
                 Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
-                PieceSquareTables.knightEndGame[Bitboards.bitFlippedHorizontalAxis[it]],
-                PieceSquareTables.knight[Bitboards.bitFlippedHorizontalAxis[it]]
+                PieceSquareTables.knightEndGame[bitFlippedHorizontalAxis[it]],
+                PieceSquareTables.knight[bitFlippedHorizontalAxis[it]]
         ) -
         blockedKnightPenaltyEval(it, attacks.whitePawns, bitboards.blackPawns)
     }.fold(0) { acc, i -> acc + i }

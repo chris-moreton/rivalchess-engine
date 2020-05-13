@@ -2,7 +2,6 @@ package com.netsensia.rivalchess.engine.core;
 
 import com.ea.async.Async;
 import com.netsensia.rivalchess.bitboards.BitboardType;
-import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.config.Evaluation;
 import com.netsensia.rivalchess.config.Extensions;
 import com.netsensia.rivalchess.config.FeatureFlag;
@@ -41,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.*;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.evaluate;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.linearScale;
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
@@ -497,8 +497,8 @@ public final class Search implements Runnable {
     private int scorePieceSquareValues(EngineBoard board, int fromSquare, int toSquare) {
         if (board.getMover() == Colour.BLACK) {
             // piece square tables are set up from white's PoV
-            fromSquare = Bitboards.bitFlippedHorizontalAxis.get(fromSquare);
-            toSquare = Bitboards.bitFlippedHorizontalAxis.get(toSquare);
+            fromSquare = getBitFlippedHorizontalAxis().get(fromSquare);
+            toSquare = getBitFlippedHorizontalAxis().get(toSquare);
         }
         switch (board.getSquareOccupant(fromSquare).getPiece()) {
             case PAWN:

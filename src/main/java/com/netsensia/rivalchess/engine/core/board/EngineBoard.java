@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.board;
 
-import com.netsensia.rivalchess.bitboards.Bitboards;
 import com.netsensia.rivalchess.bitboards.MagicBitboards;
 import com.netsensia.rivalchess.config.Hash;
 import com.netsensia.rivalchess.config.Limit;
@@ -202,8 +201,8 @@ public final class EngineBoard {
         generateKingMoves(this.isWhiteToMove ? this.whiteKingSquare : this.blackKingSquare);
 
         generatePawnMoves(this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WP) : engineBitboards.getPieceBitboard(BitboardType.BP),
-                this.isWhiteToMove ? getWhitePawnMovesForward() : Bitboards.blackPawnMovesForward,
-                this.isWhiteToMove ? getWhitePawnMovesCapture() : Bitboards.blackPawnMovesCapture);
+                this.isWhiteToMove ? getWhitePawnMovesForward() : getBlackPawnMovesForward(),
+                this.isWhiteToMove ? getWhitePawnMovesCapture() : getBlackPawnMovesCapture());
 
         generateSliderMoves(SquareOccupant.WR.getIndex(), SquareOccupant.BR.getIndex(), MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook);
 
@@ -359,8 +358,8 @@ public final class EngineBoard {
         addMoves(kingSquare << 16,  getKingMoves().get(kingSquare) & possibleDestinations);
 
         generateQuiescePawnMoves(includeChecks,
-                this.isWhiteToMove ? getWhitePawnMovesForward() : Bitboards.blackPawnMovesForward,
-                this.isWhiteToMove ? getWhitePawnMovesCapture() : Bitboards.blackPawnMovesCapture,
+                this.isWhiteToMove ? getWhitePawnMovesForward() : getBlackPawnMovesForward(),
+                this.isWhiteToMove ? getWhitePawnMovesCapture() : getBlackPawnMovesCapture(),
                 enemyKingSquare,
                 this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WP) : engineBitboards.getPieceBitboard(BitboardType.BP));
 
@@ -412,7 +411,7 @@ public final class EngineBoard {
                         bitboardMaskForwardPawnMoves.get(bitRef) & ~engineBitboards.getPieceBitboard(BitboardType.ALL));
 
                 if (this.isWhiteToMove) {
-                    bitboardPawnMoves &= Bitboards.blackPawnMovesCapture.get(enemyKingSquare);
+                    bitboardPawnMoves &= getBlackPawnMovesCapture().get(enemyKingSquare);
                 } else {
                     bitboardPawnMoves &= getWhitePawnMovesCapture().get(enemyKingSquare);
                 }
@@ -1033,11 +1032,11 @@ public final class EngineBoard {
         if (!isWhiteToMove) // white made the last move
         {
             if (toSquare >= 40)
-                return Long.bitCount(Bitboards.whitePassedPawnMask.get(toSquare) &
+                return Long.bitCount(getWhitePassedPawnMask().get(toSquare) &
                                 engineBitboards.getPieceBitboard(BitboardType.BP)) == 0;
         } else {
             if (toSquare <= 23)
-                return (Long.bitCount(Bitboards.blackPassedPawnMask.get(toSquare) &
+                return (Long.bitCount(getBlackPassedPawnMask().get(toSquare) &
                         engineBitboards.getPieceBitboard(BitboardType.WP)) == 0);
         }
 
