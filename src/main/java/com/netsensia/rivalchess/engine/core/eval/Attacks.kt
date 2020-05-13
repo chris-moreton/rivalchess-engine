@@ -1,6 +1,8 @@
 package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.Bitboards
+import com.netsensia.rivalchess.bitboards.FILE_A
+import com.netsensia.rivalchess.bitboards.FILE_H
 import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.model.Piece
@@ -20,10 +22,10 @@ class Attacks(bitboardData: BitboardData, pieceSquareLists: PieceSquareLists) {
 }
 
 fun whitePawnAttacks(whitePawns: Long) =
-        whitePawns and Bitboards.FILE_A.inv() shl 9 or (whitePawns and Bitboards.FILE_H.inv() shl 7)
+        whitePawns and FILE_A.inv() shl 9 or (whitePawns and FILE_H.inv() shl 7)
 
 fun blackPawnAttacks(blackPawns: Long) =
-        blackPawns and Bitboards.FILE_A.inv() ushr 7 or (blackPawns and Bitboards.FILE_H.inv() ushr 9)
+        blackPawns and FILE_A.inv() ushr 7 or (blackPawns and FILE_H.inv() ushr 9)
 
 fun attackList(bitboards: BitboardData, squares: List<Int>, fn: (BitboardData, Int) -> Long): Pair<List<Long>, Long> {
     var list = mutableListOf<Long>()

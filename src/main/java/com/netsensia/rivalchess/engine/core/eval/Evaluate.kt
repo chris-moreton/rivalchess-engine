@@ -55,16 +55,16 @@ fun twoBlackRooksTrappingKingEval(bitboards: BitboardData) =
             Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.value else 0
 
 fun whiteRookOpenFilesEval(bitboards: BitboardData, file: Int) =
-        if (Bitboards.FILES[file] and bitboards.whitePawns == 0L)
-            if (Bitboards.FILES[file] and bitboards.blackPawns == 0L)
+        if (FILES[file] and bitboards.whitePawns == 0L)
+            if (FILES[file] and bitboards.blackPawns == 0L)
                 Evaluation.VALUE_ROOK_ON_OPEN_FILE.value
             else
                 Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.value
         else 0
 
 fun blackRookOpenFilesEval(bitboards: BitboardData, file: Int) =
-        if ((Bitboards.FILES[file] and bitboards.blackPawns) == 0L)
-            if ((Bitboards.FILES[file] and bitboards.whitePawns) == 0L)
+        if ((FILES[file] and bitboards.blackPawns) == 0L)
+            if ((FILES[file] and bitboards.whitePawns) == 0L)
                 Evaluation.VALUE_ROOK_ON_OPEN_FILE.value
             else
                 Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.value
@@ -254,15 +254,15 @@ private fun whiteKingDangerZone(kingSquares: KingSquares) =
                 (Bitboards.kingMoves[kingSquares.white] shl 8)
 
 fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
-        if (bitboards.whiteKing and Bitboards.F1G1 != 0L &&
-                bitboards.whiteRooks and Bitboards.G1H1 != 0L &&
-                bitboards.whitePawns and Bitboards.FILE_G != 0L &&
-                bitboards.whitePawns and Bitboards.FILE_H != 0L)
+        if (bitboards.whiteKing and F1G1 != 0L &&
+                bitboards.whiteRooks and G1H1 != 0L &&
+                bitboards.whitePawns and FILE_G != 0L &&
+                bitboards.whitePawns and FILE_H != 0L)
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
-        else (if (bitboards.whiteKing and Bitboards.B1C1 != 0L &&
-                bitboards.whiteRooks and Bitboards.A1B1 != 0L &&
-                bitboards.whitePawns and Bitboards.FILE_A != 0L &&
-                bitboards.whitePawns and Bitboards.FILE_B != 0L)
+        else (if (bitboards.whiteKing and B1C1 != 0L &&
+                bitboards.whiteRooks and A1B1 != 0L &&
+                bitboards.whitePawns and FILE_A != 0L &&
+                bitboards.whitePawns and FILE_B != 0L)
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
         else 0)
 
@@ -273,15 +273,15 @@ fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShield: Lo
                 - Evaluation.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT.value * bitCount(enemyPawns and shifter(friendlyPawnShield,16)))
 
 fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
-        if (bitboards.blackKing and Bitboards.F8G8 != 0L &&
-                bitboards.blackRooks and Bitboards.G8H8 != 0L &&
-                bitboards.blackPawns and Bitboards.FILE_G != 0L &&
-                bitboards.blackPawns and Bitboards.FILE_H != 0L)
+        if (bitboards.blackKing and F8G8 != 0L &&
+                bitboards.blackRooks and G8H8 != 0L &&
+                bitboards.blackPawns and FILE_G != 0L &&
+                bitboards.blackPawns and FILE_H != 0L)
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
-        else (if (bitboards.blackKing and Bitboards.B8C8 != 0L &&
-                bitboards.blackRooks and Bitboards.A8B8 != 0L &&
-                bitboards.blackPawns and Bitboards.FILE_A != 0L &&
-                bitboards.blackPawns and Bitboards.FILE_B != 0L)
+        else (if (bitboards.blackKing and B8C8 != 0L &&
+                bitboards.blackRooks and A8B8 != 0L &&
+                bitboards.blackPawns and FILE_A != 0L &&
+                bitboards.blackPawns and FILE_B != 0L)
             Evaluation.KINGSAFETY_UNCASTLED_TRAPPED_ROOK.value
         else 0)
 
@@ -302,8 +302,8 @@ fun combineWhiteKingShieldEval(bitboards: BitboardData, kingShield: Long) =
 
 fun openFilesKingShieldEval(openFiles: Long) =
         if (openFiles != 0L) {
-            Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(openFiles and Bitboards.MIDDLE_FILES_8_BIT) +
-                    Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(openFiles and Bitboards.NONMID_FILES_8_BIT)
+            Evaluation.KINGSAFTEY_HALFOPEN_MIDFILE.value * bitCount(openFiles and MIDDLE_FILES_8_BIT) +
+                    Evaluation.KINGSAFTEY_HALFOPEN_NONMIDFILE.value * bitCount(openFiles and NONMID_FILES_8_BIT)
         } else 0
 
 fun blackKingShieldEval(bitboards: BitboardData, kingSquares: KingSquares) =
@@ -502,25 +502,25 @@ fun noWhiteRooksQueensOrKnights(bitboards: BitboardData) =
         bitboards.whiteRooks or bitboards.whiteKnights or bitboards.whiteQueens == 0L
 
 fun blackBishopDrawOnFileH(bitboards: BitboardData): Boolean {
-    return bitboards.blackPawns and Bitboards.FILE_H.inv() == 0L &&
+    return bitboards.blackPawns and FILE_H.inv() == 0L &&
             bitboards.blackBishops and Bitboards.LIGHT_SQUARES == 0L &&
             bitboards.whiteKing and Bitboards.H1H2G1G2 != 0L
 }
 
 fun blackBishopDrawOnFileA(bitboards: BitboardData): Boolean {
-    return bitboards.blackPawns and Bitboards.FILE_A.inv() == 0L &&
+    return bitboards.blackPawns and FILE_A.inv() == 0L &&
             bitboards.blackBishops and Bitboards.DARK_SQUARES == 0L &&
             bitboards.whiteKing and Bitboards.A1A2B1B2 != 0L
 }
 
 fun whiteBishopDrawOnFileA(bitboards: BitboardData): Boolean {
-    return bitboards.whitePawns and Bitboards.FILE_A.inv() == 0L &&
+    return bitboards.whitePawns and FILE_A.inv() == 0L &&
             bitboards.whiteBishops and Bitboards.LIGHT_SQUARES == 0L &&
             bitboards.blackKing and Bitboards.A8A7B8B7 != 0L
 }
 
 fun whiteBishopDrawOnFileH(bitboards: BitboardData): Boolean {
-    return bitboards.whitePawns and Bitboards.FILE_H.inv() == 0L &&
+    return bitboards.whitePawns and FILE_H.inv() == 0L &&
             bitboards.whiteBishops and Bitboards.DARK_SQUARES == 0L &&
             bitboards.blackKing and Bitboards.H8H7G8G7 != 0L
 }
@@ -685,8 +685,8 @@ fun pawnScore(whitePawnBitboard: Long,
 
     return bitCount(blackIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.value -
             bitCount(whiteIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.value -
-            (if (whiteIsolatedPawns and Bitboards.FILE_D != 0L) Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.value else 0) +
-            (if (blackIsolatedPawns and Bitboards.FILE_D != 0L) Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.value else 0) -
+            (if (whiteIsolatedPawns and FILE_D != 0L) Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.value else 0) +
+            (if (blackIsolatedPawns and FILE_D != 0L) Evaluation.VALUE_ISOLATED_DPAWN_PENALTY.value else 0) -
             (bitCount(
                     whitePawnBitboard and
                             (whitePawnBitboard or blackPawnBitboard ushr 8).inv() and
@@ -703,9 +703,9 @@ fun pawnScore(whitePawnBitboard: Long,
                             whitePawnAttacks(blackPawnBitboard) and
                             northFill(whitePawnFiles, 8).inv()
             ) * Evaluation.VALUE_BACKWARD_PAWN_PENALTY.value) -
-            ((bitCount(whitePawnBitboard and Bitboards.FILE_A) + bitCount(whitePawnBitboard and Bitboards.FILE_H))
+            ((bitCount(whitePawnBitboard and FILE_A) + bitCount(whitePawnBitboard and FILE_H))
                     * Evaluation.VALUE_SIDE_PAWN_PENALTY.value) +
-            ((bitCount(blackPawnBitboard and Bitboards.FILE_A) + bitCount(blackPawnBitboard and Bitboards.FILE_H))
+            ((bitCount(blackPawnBitboard and FILE_A) + bitCount(blackPawnBitboard and FILE_H))
                     * Evaluation.VALUE_SIDE_PAWN_PENALTY.value) -
             Evaluation.VALUE_DOUBLED_PAWN_PENALTY.value * (materialValues.whitePawns / 100 - bitCount(whiteOccupiedFileMask)) -
             bitCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.value +
