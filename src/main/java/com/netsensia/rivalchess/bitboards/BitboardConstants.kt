@@ -1,0 +1,10 @@
+package com.netsensia.rivalchess.bitboards
+
+const val RANK_8 = -0x100000000000000L
+const val RANK_7 = 0x00FF000000000000L
+const val RANK_6 = 0x0000FF0000000000L
+const val RANK_5 = 0x000000FF00000000L
+const val RANK_4 = 0x00000000FF000000L
+const val RANK_3 = 0x0000000000FF0000L
+const val RANK_2 = 0x000000000000FF00L
+const val RANK_1 = 0x00000000000000FFL

@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.bitboards.util
 
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
+import com.netsensia.rivalchess.bitboards.RANK_1
 import com.netsensia.rivalchess.engine.core.eval.blackPawnAttacks
 import com.netsensia.rivalchess.engine.core.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
@@ -24,7 +25,7 @@ fun getBlackPassedPawns(whitePawns: Long, blackPawns: Long): Long {
 }
 
 fun getPawnFiles(pawns: Long): Long {
-    return southFill(pawns) and Bitboards.RANK_1
+    return southFill(pawns) and RANK_1
 }
 
 fun getWhitePassedPawns(whitePawns: Long, blackPawns: Long): Long {

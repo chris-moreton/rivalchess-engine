@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import com.netsensia.rivalchess.bitboards.Bitboards
+import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
@@ -45,13 +45,13 @@ fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) 
         }
 
 fun twoWhiteRooksTrappingKingEval(bitboards: BitboardData) =
-        if (bitCount(bitboards.whiteRooks and Bitboards.RANK_7) > 1
-                && bitboards.blackKing and Bitboards.RANK_8 != 0L)
+        if (bitCount(bitboards.whiteRooks and RANK_7) > 1
+                && bitboards.blackKing and RANK_8 != 0L)
             Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.value else 0
 
 fun twoBlackRooksTrappingKingEval(bitboards: BitboardData) =
-        if (bitCount(bitboards.blackRooks and Bitboards.RANK_2) > 1
-                && bitboards.whiteKing and Bitboards.RANK_1 != 0L)
+        if (bitCount(bitboards.blackRooks and RANK_2) > 1
+                && bitboards.whiteKing and RANK_1 != 0L)
             Evaluation.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING.value else 0
 
 fun whiteRookOpenFilesEval(bitboards: BitboardData, file: Int) =
@@ -286,7 +286,7 @@ fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
         else 0)
 
 fun openFiles(kingShield: Long, pawnBitboard: Long) =
-        southFill(kingShield, 8) and southFill(pawnBitboard, 8).inv() and Bitboards.RANK_1
+        southFill(kingShield, 8) and southFill(pawnBitboard, 8).inv() and RANK_1
 
 fun whiteKingShieldEval(bitboards: BitboardData, kingSquares: KingSquares) =
         if (whiteKingOnFirstTwoRanks(kingSquares)) {
@@ -672,8 +672,8 @@ fun pawnScore(whitePawnBitboard: Long,
 
     val whiteIsolatedPawns = whitePawnFiles and (whitePawnFiles shl 1).inv() and (whitePawnFiles ushr 1).inv()
     val blackIsolatedPawns = blackPawnFiles and (blackPawnFiles shl 1).inv() and (blackPawnFiles ushr 1).inv()
-    val whiteOccupiedFileMask = southFill(whitePawnBitboard, 8) and Bitboards.RANK_1
-    val blackOccupiedFileMask = southFill(blackPawnBitboard, 8) and Bitboards.RANK_1
+    val whiteOccupiedFileMask = southFill(whitePawnBitboard, 8) and RANK_1
+    val blackOccupiedFileMask = southFill(blackPawnBitboard, 8) and RANK_1
 
     val whitePassedPawnScore = bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value +
             squareList(whitePassedPawnsBitboard).asSequence()

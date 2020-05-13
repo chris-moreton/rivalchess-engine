@@ -24,6 +24,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_1;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_2;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_3;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_4;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_5;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_6;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_7;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_8;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getSetBits;
 import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyOneBitSet;
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
@@ -315,11 +323,11 @@ public final class EngineBoard {
         bitboardPawnMoves |= bitboardMaskCapturePawnMoves.get(bitRef) & engineBitboards.getPieceBitboard(BitboardType.ENEMY);
 
         if (this.isWhiteToMove) {
-            if ((engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) & Bitboards.RANK_6) != 0) {
+            if ((engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) & RANK_6) != 0) {
                 bitboardPawnMoves |= bitboardMaskCapturePawnMoves.get(bitRef) & engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE);
             }
         } else {
-            if ((engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) & Bitboards.RANK_3) != 0) {
+            if ((engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) & RANK_3) != 0) {
                 bitboardPawnMoves |= bitboardMaskCapturePawnMoves.get(bitRef) & engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE);
             }
         }
@@ -331,10 +339,10 @@ public final class EngineBoard {
 
         if (this.isWhiteToMove) {
             bitboardJumpMoves = bitboardPawnMoves << 8L; // if we can move one, maybe we can move two
-            bitboardJumpMoves &= Bitboards.RANK_4; // only counts if move is to fourth rank
+            bitboardJumpMoves &= RANK_4; // only counts if move is to fourth rank
         } else {
             bitboardJumpMoves = bitboardPawnMoves >> 8L;
-            bitboardJumpMoves &= Bitboards.RANK_5;
+            bitboardJumpMoves &= RANK_5;
         }
         bitboardJumpMoves &= ~engineBitboards.getPieceBitboard(BitboardType.ALL); // only if square empty
         bitboardPawnMoves |= bitboardJumpMoves;
@@ -418,7 +426,7 @@ public final class EngineBoard {
             }
 
             // promotions
-            bitboardPawnMoves |= (bitboardMaskForwardPawnMoves.get(bitRef) & ~engineBitboards.getPieceBitboard(BitboardType.ALL)) & (Bitboards.RANK_1 | Bitboards.RANK_8);
+            bitboardPawnMoves |= (bitboardMaskForwardPawnMoves.get(bitRef) & ~engineBitboards.getPieceBitboard(BitboardType.ALL)) & (RANK_1 | RANK_8);
 
             bitboardPawnMoves = getBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves);
 
@@ -691,7 +699,7 @@ public final class EngineBoard {
 
         this.halfMoveCount = 0;
 
-        if ((toMask & Bitboards.RANK_5) != 0 && (fromMask & Bitboards.RANK_7) != 0) {
+        if ((toMask & RANK_5) != 0 && (fromMask & RANK_7) != 0) {
             this.engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, toMask << 8L);
         } else if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
             this.engineBitboards.xorPieceBitboard(BitboardType.WP, toMask << 8);
@@ -777,7 +785,7 @@ public final class EngineBoard {
 
         this.halfMoveCount = 0;
 
-        if ((toMask & Bitboards.RANK_4) != 0 && (fromMask & Bitboards.RANK_2) != 0) {
+        if ((toMask & RANK_4) != 0 && (fromMask & RANK_2) != 0) {
             this.engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, fromMask << 8L);
         } else if (toMask == this.moveList[this.numMovesMade].enPassantBitboard) {
             this.engineBitboards.xorPieceBitboard(SquareOccupant.BP.getIndex(), toMask >>> 8);
@@ -1042,55 +1050,7 @@ public final class EngineBoard {
 
         return false;
     }
-
-    public long getWhitePawnBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.WP);
-    }
-
-    public long getBlackPawnBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.BP);
-    }
-
-    public long getWhiteKingBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.WK);
-    }
-
-    public long getBlackKingBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.BK);
-    }
-
-    public long getWhiteQueenBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.WQ);
-    }
-
-    public long getBlackQueenBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.BQ);
-    }
-
-    public long getWhiteRookBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.WR);
-    }
-
-    public long getBlackRookBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.BR);
-    }
-
-    public long getWhiteKnightBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.WN);
-    }
-
-    public long getBlackKnightBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.BN);
-    }
-
-    public long getWhiteBishopBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.WB);
-    }
-
-    public long getBlackBishopBitboard() {
-        return engineBitboards.getPieceBitboard(BitboardType.BB);
-    }
-
+    
     public long getAllPiecesBitboard() {
         return engineBitboards.getPieceBitboard(BitboardType.ALL);
     }

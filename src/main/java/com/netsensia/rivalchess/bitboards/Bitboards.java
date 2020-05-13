@@ -7,15 +7,6 @@ import java.util.List;
 public final class Bitboards {
     public static final MagicBitboards magicBitboards = new MagicBitboards();
 
-    public static final long RANK_8 = 0xFF00000000000000L;
-    public static final long RANK_7 = 0x00FF000000000000L;
-    public static final long RANK_6 = 0x0000FF0000000000L;
-    public static final long RANK_5 = 0x000000FF00000000L;
-    public static final long RANK_4 = 0x00000000FF000000L;
-    public static final long RANK_3 = 0x0000000000FF0000L;
-    public static final long RANK_2 = 0x000000000000FF00L;
-    public static final long RANK_1 = 0x00000000000000FFL;
-
     public static final long FILE_A = 1L << 7 | 1L << 15 | 1L << 23 | 1L << 31 | 1L << 39 | 1L << 47 | 1L << 55 | 1L << 63;
     public static final long FILE_B = 1L << 6 | 1L << 14 | 1L << 22 | 1L << 30 | 1L << 38 | 1L << 46 | 1L << 54 | 1L << 62;
     public static final long FILE_C = 1L << 5 | 1L << 13 | 1L << 21 | 1L << 29 | 1L << 37 | 1L << 45 | 1L << 53 | 1L << 61;
