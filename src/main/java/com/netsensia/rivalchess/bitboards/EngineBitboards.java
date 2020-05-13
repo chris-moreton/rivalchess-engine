@@ -9,6 +9,7 @@ import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getFirstOc
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.isBishopAttackingSquare;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.isRookAttackingSquare;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getPawnMovesCaptureOfColour;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.*;
 
 public class EngineBitboards {
 
@@ -72,8 +73,8 @@ public class EngineBitboards {
 
     public boolean isSquareAttackedBy(final int attackedSquare, final Colour attacker) {
 
-        if ((pieceBitboards[SquareOccupant.WN.ofColour(attacker).getIndex()] & Bitboards.knightMoves.get(attackedSquare)) != 0 ||
-                (pieceBitboards[SquareOccupant.WK.ofColour(attacker).getIndex()] & Bitboards.kingMoves.get(attackedSquare)) != 0 ||
+        if ((pieceBitboards[SquareOccupant.WN.ofColour(attacker).getIndex()] & getKnightMoves().get(attackedSquare)) != 0 ||
+                (pieceBitboards[SquareOccupant.WK.ofColour(attacker).getIndex()] & getKingMoves().get(attackedSquare)) != 0 ||
                 (pieceBitboards[SquareOccupant.WP.ofColour(attacker).getIndex()]
                         & getPawnMovesCaptureOfColour(attacker.opponent()).get(attackedSquare)) != 0)
             return true;

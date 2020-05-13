@@ -1,9 +1,6 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import com.netsensia.rivalchess.bitboards.Bitboards
-import com.netsensia.rivalchess.bitboards.FILE_A
-import com.netsensia.rivalchess.bitboards.FILE_H
-import com.netsensia.rivalchess.bitboards.MagicBitboards
+import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
@@ -45,7 +42,7 @@ fun knightAttackList(squares: List<Int>): Pair<List<Long>, Long> {
     var orred = 0L
 
     for (square in squares) {
-        val attacks = Bitboards.knightMoves[square]
+        val attacks = knightMoves[square]
         list.add(attacks)
         orred = orred or attacks
     }

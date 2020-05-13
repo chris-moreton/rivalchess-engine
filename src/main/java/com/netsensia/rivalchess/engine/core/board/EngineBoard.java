@@ -24,32 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKKINGSIDECASTLEMOVEMASK;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKKINGSIDECASTLEROOKMOVE;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKKINGSIDECASTLESQUARES;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKKINGSIDEROOKMASK;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKQUEENSIDECASTLEMOVEMASK;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKQUEENSIDECASTLEROOKMOVE;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKQUEENSIDECASTLESQUARES;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.BLACKQUEENSIDEROOKMASK;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_1;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_2;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_3;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_4;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_5;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_6;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_7;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.RANK_8;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEKINGSIDECASTLEMOVEMASK;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEKINGSIDECASTLEROOKMOVE;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEKINGSIDECASTLESQUARES;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEKINGSIDEROOKMASK;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEQUEENSIDECASTLEMOVEMASK;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEQUEENSIDECASTLEROOKMOVE;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEQUEENSIDECASTLESQUARES;
-import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.WHITEQUEENSIDEROOKMASK;
+import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.*;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getSetBits;
-import static com.netsensia.rivalchess.engine.core.eval.EvaluateKt.onlyOneBitSet;
+
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
 
 /**
@@ -225,8 +202,8 @@ public final class EngineBoard {
         generateKingMoves(this.isWhiteToMove ? this.whiteKingSquare : this.blackKingSquare);
 
         generatePawnMoves(this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WP) : engineBitboards.getPieceBitboard(BitboardType.BP),
-                this.isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
-                this.isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture);
+                this.isWhiteToMove ? getWhitePawnMovesForward() : Bitboards.blackPawnMovesForward,
+                this.isWhiteToMove ? getWhitePawnMovesCapture() : Bitboards.blackPawnMovesCapture);
 
         generateSliderMoves(SquareOccupant.WR.getIndex(), SquareOccupant.BR.getIndex(), MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook);
 
@@ -282,7 +259,7 @@ public final class EngineBoard {
             generateBlackKingMoves();
         }
 
-        addMoves(kingSquare << 16, Bitboards.kingMoves.get(kingSquare) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
+        addMoves(kingSquare << 16,  getKingMoves().get(kingSquare) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
     }
 
     private void generateWhiteKingMoves() {
@@ -331,7 +308,7 @@ public final class EngineBoard {
         while (knightBitboard != 0) {
             final int bitRef = Long.numberOfTrailingZeros(knightBitboard);
             knightBitboard ^= (1L << (bitRef));
-            addMoves(bitRef << 16, Bitboards.knightMoves.get(bitRef) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
+            addMoves(bitRef << 16, getKnightMoves().get(bitRef) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
         }
     }
 
@@ -379,11 +356,11 @@ public final class EngineBoard {
                 enemyKingSquare,
                 this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WN) : engineBitboards.getPieceBitboard(BitboardType.BN));
 
-        addMoves(kingSquare << 16, Bitboards.kingMoves.get(kingSquare) & possibleDestinations);
+        addMoves(kingSquare << 16,  getKingMoves().get(kingSquare) & possibleDestinations);
 
         generateQuiescePawnMoves(includeChecks,
-                this.isWhiteToMove ? Bitboards.whitePawnMovesForward : Bitboards.blackPawnMovesForward,
-                this.isWhiteToMove ? Bitboards.whitePawnMovesCapture : Bitboards.blackPawnMovesCapture,
+                this.isWhiteToMove ? getWhitePawnMovesForward() : Bitboards.blackPawnMovesForward,
+                this.isWhiteToMove ? getWhitePawnMovesCapture() : Bitboards.blackPawnMovesCapture,
                 enemyKingSquare,
                 this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WP) : engineBitboards.getPieceBitboard(BitboardType.BP));
 
@@ -437,7 +414,7 @@ public final class EngineBoard {
                 if (this.isWhiteToMove) {
                     bitboardPawnMoves &= Bitboards.blackPawnMovesCapture.get(enemyKingSquare);
                 } else {
-                    bitboardPawnMoves &= Bitboards.whitePawnMovesCapture.get(enemyKingSquare);
+                    bitboardPawnMoves &= getWhitePawnMovesCapture().get(enemyKingSquare);
                 }
             }
 
@@ -456,11 +433,11 @@ public final class EngineBoard {
             final int bitRef = Long.numberOfTrailingZeros(knightBitboard);
             knightBitboard ^= (1L << (bitRef));
             if (includeChecks) {
-                possibleDestinations = engineBitboards.getPieceBitboard(BitboardType.ENEMY) | (Bitboards.knightMoves.get(enemyKingSquare) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
+                possibleDestinations = engineBitboards.getPieceBitboard(BitboardType.ENEMY) | (getKnightMoves().get(enemyKingSquare) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
             } else {
                 possibleDestinations = engineBitboards.getPieceBitboard(BitboardType.ENEMY);
             }
-            addMoves(bitRef << 16, Bitboards.knightMoves.get(bitRef) & possibleDestinations);
+            addMoves(bitRef << 16, getKnightMoves().get(bitRef) & possibleDestinations);
         }
     }
 

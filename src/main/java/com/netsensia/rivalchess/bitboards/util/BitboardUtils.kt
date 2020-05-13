@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.bitboards.util
 import com.netsensia.rivalchess.bitboards.Bitboards
 import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.bitboards.RANK_1
+import com.netsensia.rivalchess.bitboards.whitePawnMovesCapture
 import com.netsensia.rivalchess.engine.core.eval.blackPawnAttacks
 import com.netsensia.rivalchess.engine.core.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
@@ -47,7 +48,7 @@ tailrec fun getSetBits(bitboard: Long, setBits: MutableList<Int> = ArrayList()):
 }
 
 fun getPawnMovesCaptureOfColour(colour: Colour): List<Long> {
-    return if (colour == Colour.WHITE) Bitboards.whitePawnMovesCapture else Bitboards.blackPawnMovesCapture
+    return if (colour == Colour.WHITE) whitePawnMovesCapture else Bitboards.blackPawnMovesCapture
 }
 
 fun getFirstOccupiedSquare(bitboard: Long): Int {

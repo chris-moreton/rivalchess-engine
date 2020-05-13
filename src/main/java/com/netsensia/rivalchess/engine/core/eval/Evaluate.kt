@@ -246,12 +246,12 @@ fun kingSafetyEval(bitboards: BitboardData, attacks: Attacks, board: EngineBoard
 }
 
 private fun blackKingDangerZone(kingSquares: KingSquares) =
-        Bitboards.kingMoves[kingSquares.black] or
-                (Bitboards.kingMoves[kingSquares.black] ushr 8)
+        kingMoves[kingSquares.black] or
+                (kingMoves[kingSquares.black] ushr 8)
 
 private fun whiteKingDangerZone(kingSquares: KingSquares) =
-        Bitboards.kingMoves[kingSquares.white] or
-                (Bitboards.kingMoves[kingSquares.white] shl 8)
+        kingMoves[kingSquares.white] or
+                (kingMoves[kingSquares.white] shl 8)
 
 fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
         if (bitboards.whiteKing and F1G1 != 0L &&
@@ -461,7 +461,7 @@ fun enemyKingCloseToDarkCornerMateSquareValue(kingSquare: Int) =
         enemyKingCloseToLightCornerMateSquareValue(Bitboards.bitFlippedHorizontalAxis[kingSquare])
 
 fun enemyKingCloseToLightCornerMateSquareValue(kingSquare: Int) =
-        (7 - Bitboards.distanceToH1OrA8[kingSquare]) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.value
+        (7 - distanceToH1OrA8[kingSquare]) * Evaluation.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE.value
 
 fun blackShouldWinWithKnightAndBishopValue(eval: Int) =
         -(pieceValue(Piece.KNIGHT) + pieceValue(Piece.BISHOP) + Evaluation.VALUE_SHOULD_WIN.value) +
@@ -544,7 +544,7 @@ fun blockedKnightPenaltyEval(square: Int, enemyPawnAttacks: Long, friendlyPawns:
         bitCount(blockedKnightLandingSquares(square, enemyPawnAttacks, friendlyPawns)) * Evaluation.KNIGHT_LANDING_SQ_PAWN_ATK_PENALTY.value
 
 fun blockedKnightLandingSquares(square: Int, enemyPawnAttacks: Long, friendlyPawns: Long) =
-        Bitboards.knightMoves[square] and (enemyPawnAttacks or friendlyPawns)
+        knightMoves[square] and (enemyPawnAttacks or friendlyPawns)
 
 fun whitePawnsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData): Int {
     return pieceSquareLists.whitePawns.asSequence().map {
