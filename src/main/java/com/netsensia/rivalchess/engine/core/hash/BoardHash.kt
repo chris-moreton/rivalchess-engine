@@ -33,31 +33,31 @@ class BoardHash {
 
     fun clearHash() {
         for (i in 0 until maxHashEntries) {
-            hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.FLAG.index] = HashValueType.EMPTY.index
-            hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
-            hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.FLAG.index] = HashValueType.EMPTY.index
-            hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
+            hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.FLAG.index] = HashValueType.EMPTY.index
+            hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
+            hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.FLAG.index] = HashValueType.EMPTY.index
+            hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
         }
     }
 
     fun setHashTable() {
         if (maxHashEntries != lastHashSizeCreated) {
-            hashTableUseHeight = IntArray(maxHashEntries * HashIndex.getNumHashFields())
-            hashTableIgnoreHeight = IntArray(maxHashEntries * HashIndex.getNumHashFields())
+            hashTableUseHeight = IntArray(maxHashEntries * HashIndex.numHashFields)
+            hashTableIgnoreHeight = IntArray(maxHashEntries * HashIndex.numHashFields)
             lastHashSizeCreated = maxHashEntries
             for (i in 0 until maxHashEntries) {
-                hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.FLAG.index] = HashValueType.EMPTY.index
-                hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
-                hashTableUseHeight[i * HashIndex.getNumHashFields() + HashIndex.VERSION.index] = 1
-                hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.FLAG.index] = HashValueType.EMPTY.index
-                hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
-                hashTableIgnoreHeight[i * HashIndex.getNumHashFields() + HashIndex.VERSION.index] = 1
+                hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.FLAG.index] = HashValueType.EMPTY.index
+                hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
+                hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.VERSION.index] = 1
+                hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.FLAG.index] = HashValueType.EMPTY.index
+                hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
+                hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.VERSION.index] = 1
             }
         }
     }
 
     fun storeHashMove(move: Int, board: EngineBoard, score: Int, flag: Byte, height: Int) {
-        val hashIndex = (board.trackedBoardHashCode() % maxHashEntries).toInt() * HashIndex.getNumHashFields()
+        val hashIndex = (board.trackedBoardHashCode() % maxHashEntries).toInt() * HashIndex.numHashFields
         if (height >= hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_HEIGHT.index] || hashTableVersion > hashTableUseHeight[hashIndex + HashIndex.VERSION.index]) {
             if (hashTableVersion == hashTableUseHeight[hashIndex + HashIndex.VERSION.index]) {
                 copyEntryFromUseHeightToIgnoreHeightTable(hashIndex)
@@ -118,7 +118,7 @@ class BoardHash {
         } else {
             val mainHashTableSize = hashSizeMB * 1024 * 1024 / 14 * 6 // two of these
             val pawnHashTableSize = hashSizeMB * 1024 * 1024 / 14 * 2 // one of these
-            setMaxHashEntries(mainHashTableSize / HashIndex.getHashPositionSizeBytes())
+            setMaxHashEntries(mainHashTableSize / HashIndex.hashPositionSizeBytes)
         }
         setHashTable()
     }
@@ -132,7 +132,7 @@ class BoardHash {
     }
 
     fun getHashIndex(hashValue: Long): Int {
-        return (hashValue % maxHashEntries).toInt() * HashIndex.getNumHashFields()
+        return (hashValue % maxHashEntries).toInt() * HashIndex.numHashFields
     }
 
     fun move(engineBoard: EngineBoard, move: EngineMove) {
