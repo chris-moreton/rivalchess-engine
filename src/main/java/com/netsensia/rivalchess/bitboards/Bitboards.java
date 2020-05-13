@@ -7,17 +7,9 @@ import java.util.List;
 public final class Bitboards {
     public static final MagicBitboards magicBitboards = new MagicBitboards();
 
-    public static final long LOW32 = 0x00000000FFFFFFFFL;
 
-    public static final long WHITEKINGSIDECASTLESQUARES = 1L << 1 | 1L << 2;
-    public static final long WHITEQUEENSIDECASTLESQUARES = 1L << 4 | 1L << 5 | 1L << 6;
-    public static final long BLACKKINGSIDECASTLESQUARES = 1L << 57 | 1L << 58;
-    public static final long BLACKQUEENSIDECASTLESQUARES = 1L << 62 | 1L << 61 | 1L << 60;
 
-    public static final long WHITEKINGSIDECASTLEMOVEMASK = 1L << 1 | 1L << 3;
-    public static final long WHITEQUEENSIDECASTLEMOVEMASK = 1L << 3 | 1L << 5;
-    public static final long BLACKKINGSIDECASTLEMOVEMASK = 1L << 57 | 1L << 59;
-    public static final long BLACKQUEENSIDECASTLEMOVEMASK = 1L << 59 | 1L << 61;
+
 
     public static final long WHITEKINGSIDECASTLEROOKMOVE = 1L | 1L << 2;
     public static final long WHITEQUEENSIDECASTLEROOKMOVE = 1L << 4 | 1L << 7;

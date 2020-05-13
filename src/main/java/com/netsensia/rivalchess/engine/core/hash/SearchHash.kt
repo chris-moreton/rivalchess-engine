@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash
 
 import com.netsensia.rivalchess.bitboards.Bitboards
+import com.netsensia.rivalchess.bitboards.LOW32
 import com.netsensia.rivalchess.config.FeatureFlag
 import com.netsensia.rivalchess.config.SearchConfig
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
@@ -13,7 +14,7 @@ fun isHeightHashTableEntryValid(depthRemaining: Int, board: EngineBoard): Boolea
     val boardHash = board.boardHashObject
     val hashValue = boardHash.trackedHashValue
     val hashIndex = boardHash.getHashIndex(board)
-    if (boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_HEIGHT.index) >= depthRemaining && boardHash.useHeight(hashIndex + HashIndex.FLAG.index) != HashValueType.EMPTY.index && boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_64BIT1.index) == (hashValue ushr 32).toInt() && boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_64BIT2.index) == (hashValue and Bitboards.LOW32).toInt()) {
+    if (boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_HEIGHT.index) >= depthRemaining && boardHash.useHeight(hashIndex + HashIndex.FLAG.index) != HashValueType.EMPTY.index && boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_64BIT1.index) == (hashValue ushr 32).toInt() && boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_64BIT2.index) == (hashValue and LOW32).toInt()) {
         val isLocked = (boardHash.hashTableVersion
                 - boardHash.useHeight(hashIndex + HashIndex.VERSION.index)
                 <= SearchConfig.MAXIMUM_HASH_AGE.value)
@@ -29,7 +30,7 @@ fun isAlwaysReplaceHashTableEntryValid(depthRemaining: Int, board: EngineBoard):
     val boardHash = board.boardHashObject
     val hashValue = boardHash.trackedHashValue
     val hashIndex = boardHash.getHashIndex(board)
-    if (boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_HEIGHT.index) >= depthRemaining && boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) != HashValueType.EMPTY.index && boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_64BIT1.index) == (hashValue ushr 32).toInt() && boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_64BIT2.index) == (hashValue and Bitboards.LOW32).toInt()) {
+    if (boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_HEIGHT.index) >= depthRemaining && boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) != HashValueType.EMPTY.index && boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_64BIT1.index) == (hashValue ushr 32).toInt() && boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_64BIT2.index) == (hashValue and LOW32).toInt()) {
         val isLocked = boardHash.hashTableVersion - boardHash.useHeight(hashIndex + HashIndex.VERSION.index) <= SearchConfig.MAXIMUM_HASH_AGE.value
         if (isLocked) {
             superVerifyAlwaysReplaceHash(board)
@@ -45,7 +46,7 @@ private fun superVerifyUseHeightHash(board: EngineBoard) {
     if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive) {
         for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
             if (boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i) != (board.getBitboardByIndex(i) ushr 32).toInt() ||
-                    boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12) != (board.getBitboardByIndex(i) and Bitboards.LOW32).toInt()) {
+                    boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12) != (board.getBitboardByIndex(i) and LOW32).toInt()) {
                 throw HashVerificationException("Height bad clash " + ZorbristHashCalculator.calculateHash(board))
             }
         }
@@ -58,7 +59,7 @@ private fun superVerifyAlwaysReplaceHash(board: EngineBoard) {
     if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive) {
         for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
             if (boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i) != (board.getBitboardByIndex(i) ushr 32).toInt() ||
-                    boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12) != (board.getBitboardByIndex(i) and Bitboards.LOW32).toInt()) {
+                    boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12) != (board.getBitboardByIndex(i) and LOW32).toInt()) {
                 System.exit(0)
             }
         }

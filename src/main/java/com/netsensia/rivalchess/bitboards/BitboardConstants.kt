@@ -42,3 +42,15 @@ const val A8A7B8B7 = 1L shl 63 or (1L shl 62) or (1L shl 55) or (1L shl 54)
 const val H8H7G8G7 = 1L shl 57 or (1L shl 56) or (1L shl 49) or (1L shl 48)
 const val H1H2G1G2 = 1L or (1L shl 1) or (1L shl 8) or (1L shl 9)
 const val A2A7H2H7 = 1L shl 15 or (1L shl 55) or (1L shl 8) or (1L shl 48)
+
+const val LOW32 = 0x00000000FFFFFFFFL
+
+const val WHITEKINGSIDECASTLESQUARES = 1L shl 1 or (1L shl 2)
+const val WHITEQUEENSIDECASTLESQUARES = 1L shl 4 or (1L shl 5) or (1L shl 6)
+const val BLACKKINGSIDECASTLESQUARES = 1L shl 57 or (1L shl 58)
+const val BLACKQUEENSIDECASTLESQUARES = 1L shl 62 or (1L shl 61) or (1L shl 60)
+
+const val WHITEKINGSIDECASTLEMOVEMASK = 1L shl 1 or (1L shl 3)
+const val WHITEQUEENSIDECASTLEMOVEMASK = 1L shl 3 or (1L shl 5)
+const val BLACKKINGSIDECASTLEMOVEMASK = 1L shl 57 or (1L shl 59)
+const val BLACKQUEENSIDECASTLEMOVEMASK = 1L shl 59 or (1L shl 61)

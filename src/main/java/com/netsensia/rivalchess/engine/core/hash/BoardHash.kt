@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash
 
 import com.netsensia.rivalchess.bitboards.Bitboards
+import com.netsensia.rivalchess.bitboards.LOW32
 import com.netsensia.rivalchess.config.FeatureFlag
 import com.netsensia.rivalchess.config.Hash
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
@@ -85,7 +86,7 @@ class BoardHash {
         hashTableUseHeight[hashIndex + HashIndex.SCORE.index] = score
         hashTableUseHeight[hashIndex + HashIndex.FLAG.index] = flag.toInt()
         hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_64BIT1.index] = (board.trackedBoardHashCode() ushr 32).toInt()
-        hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_64BIT2.index] = (board.trackedBoardHashCode() and Bitboards.LOW32).toInt()
+        hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_64BIT2.index] = (board.trackedBoardHashCode() and LOW32).toInt()
         hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_HEIGHT.index] = height
         hashTableUseHeight[hashIndex + HashIndex.VERSION.index] = hashTableVersion
     }
@@ -94,7 +95,7 @@ class BoardHash {
         if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive) {
             for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
                 hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = (board.getBitboardByIndex(i) ushr 32).toInt()
-                hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboardByIndex(i) and Bitboards.LOW32).toInt()
+                hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboardByIndex(i) and LOW32).toInt()
             }
         }
     }
@@ -107,7 +108,7 @@ class BoardHash {
                     hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12]
                 }
                 hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = (board.getBitboardByIndex(i) ushr 32).toInt()
-                hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboardByIndex(i) and Bitboards.LOW32).toInt()
+                hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboardByIndex(i) and LOW32).toInt()
             }
         }
     }
