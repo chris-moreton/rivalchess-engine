@@ -22,7 +22,6 @@ import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator;
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluatorPremium;
 import com.netsensia.rivalchess.engine.core.hash.BoardHash;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
-import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.IllegalSearchStateException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
@@ -90,41 +89,41 @@ public final class Search implements Runnable {
     private int millisToThink;
     private int nodesToSearch = Integer.MAX_VALUE;
 
-    private boolean m_abortingSearch = true;
+    private boolean abortingSearch = true;
 
     private long searchStartTime = -1;
     private long searchTargetEndTime;
     private long searchEndTime = 0;
 
-    private int m_finalDepthToSearch = 1;
+    private int finalDepthToSearch = 1;
     private int iterativeDeepeningCurrentDepth = 0; // current search depth for iterative deepening
 
     private boolean useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive();
-    private boolean m_inBook = useOpeningBook;
+    private boolean inBook = useOpeningBook;
 
     private int currentDepthZeroMove;
     private int currentDepthZeroMoveNumber;
 
-    private SearchPath m_currentPath;
+    private SearchPath currentPath;
     private String currentPathString;
 
     private boolean uciMode = false;
 
-    public Search() throws IllegalFenException {
+    public Search() {
         this(System.out, FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     }
 
-    public Search(PrintStream printStream) throws IllegalFenException {
+    public Search(PrintStream printStream) {
         this(printStream, FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
     }
 
-    public Search(Board board) throws IllegalFenException {
+    public Search(Board board) {
         this(System.out, board);
     }
 
-    public Search(PrintStream printStream, Board board) throws IllegalFenException {
+    public Search(PrintStream printStream, Board board) {
 
-        this.engineBoard.setBoard(board);
+        engineBoard.setBoard(board);
 
         drawnPositionsAtRoot = new ArrayList<>();
         drawnPositionsAtRoot.add(new ArrayList<>());
@@ -134,7 +133,7 @@ public final class Search implements Runnable {
 
         this.setMillisSetByEngineMonitor(System.currentTimeMillis());
 
-        this.m_currentPath = new SearchPath();
+        this.currentPath = new SearchPath();
         this.currentPathString = "";
 
         searchState = SearchState.READY;
@@ -181,7 +180,7 @@ public final class Search implements Runnable {
     }
 
     public void newGame() {
-        m_inBook = this.useOpeningBook;
+        inBook = this.useOpeningBook;
         engineBoard.getBoardHashObject().clearHash();
     }
 
@@ -189,7 +188,7 @@ public final class Search implements Runnable {
         Async.init();
     }
 
-    private int[] scoreQuiesceMoves(EngineBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
+    private void scoreQuiesceMoves(EngineBoard board, int ply, boolean includeChecks) throws InvalidMoveException {
 
         int moveCount = 0;
 
@@ -213,7 +212,6 @@ public final class Search implements Runnable {
 
         movesForSorting[moveCount] = 0;
 
-        return movesForSorting;
     }
 
     private int getHighScoreMove(EngineBoard board, int ply, int hashMove) throws InvalidMoveException {
@@ -524,7 +522,7 @@ public final class Search implements Runnable {
         nodes++;
 
         if (this.getMillisSetByEngineMonitor() > this.searchTargetEndTime || nodes >= this.nodesToSearch) {
-            this.m_abortingSearch = true;
+            this.abortingSearch = true;
             this.setOkToSendInfo(false);
             return null;
         }
@@ -641,7 +639,7 @@ public final class Search implements Runnable {
                 newPath = search(board, (byte) (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, -1, false);
                 if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
                 else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
-                if (!this.m_abortingSearch) {
+                if (!this.abortingSearch) {
                     if (-Objects.requireNonNull(newPath).score >= high) {
                         bestPath.score = -newPath.score;
                         board.unMakeNullMove();
@@ -687,7 +685,7 @@ public final class Search implements Runnable {
             int reductions = 0;
 
             int move;
-            while ((move = getHighScoreMove(board, ply, hashMove)) != 0 && !this.m_abortingSearch) {
+            while ((move = getHighScoreMove(board, ply, hashMove)) != 0 && !this.abortingSearch) {
                 final int targetPiece = board.getSquareOccupant(move & 63).getIndex();
                 final int movePiece = board.getSquareOccupant((move >>> 16) & 63).getIndex();
                 int recaptureExtend = 0;
@@ -786,7 +784,7 @@ public final class Search implements Runnable {
                                 if (newPath != null)
                                     if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
                                     else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
-                                if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
+                                if (!this.abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                                     // research with normal window
                                     newPath = search(engineBoard, (byte) (depth - 1) - reductions, ply + 1, -high, -low, newExtensions, newRecaptureSquare, isCheck);
                                     if (newPath != null)
@@ -799,7 +797,7 @@ public final class Search implements Runnable {
                                     if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) newPath.score--;
                                     else if (newPath.score < -Evaluation.MATE_SCORE_START.getValue()) newPath.score++;
                             }
-                            if (!this.m_abortingSearch && lateMoveReduction > 0 && -Objects.requireNonNull(newPath).score >= low) {
+                            if (!this.abortingSearch && lateMoveReduction > 0 && -Objects.requireNonNull(newPath).score >= low) {
                                 lmrResearch = FeatureFlag.LMR_RESEARCH_ON_FAIL_HIGH.isActive();
                                 lateMoveReduction = 0;
                             }
@@ -808,7 +806,7 @@ public final class Search implements Runnable {
                         while (lmrResearch);
                     }
 
-                    if (!this.m_abortingSearch) {
+                    if (!this.abortingSearch) {
                         Objects.requireNonNull(newPath).score = -newPath.score;
 
                         if (newPath.score >= high) {
@@ -887,7 +885,7 @@ public final class Search implements Runnable {
                 }
             }
 
-            if (!this.m_abortingSearch) {
+            if (!this.abortingSearch) {
                 if (legalMoveCount == 0) {
                     bestPath.score = board.isCheck() ? -Evaluation.VALUE_MATE.getValue() : 0;
                     boardHash.storeHashMove(0, board, bestPath.score, (byte)HashValueType.EXACT.getIndex(), Limit.MAX_SEARCH_DEPTH.getValue());
@@ -927,7 +925,7 @@ public final class Search implements Runnable {
         int checkExtend;
         int pawnExtend;
 
-        while (move != 0 && !this.m_abortingSearch) {
+        while (move != 0 && !this.abortingSearch) {
             if (engineBoard.makeMove(new EngineMove(move))) {
                 final boolean isCheck = board.isCheck();
 
@@ -969,7 +967,7 @@ public final class Search implements Runnable {
                                 newPath.score++;
                             }
                         }
-                        if (!this.m_abortingSearch && -Objects.requireNonNull(newPath).score > low) {
+                        if (!this.abortingSearch && -Objects.requireNonNull(newPath).score > low) {
                             newPath = search(engineBoard, (byte) (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck);
                             if (newPath != null) {
                                 if (newPath.score > Evaluation.MATE_SCORE_START.getValue()) {
@@ -991,7 +989,7 @@ public final class Search implements Runnable {
                         }
                     }
                 }
-                if (!this.m_abortingSearch) {
+                if (!this.abortingSearch) {
                     Objects.requireNonNull(newPath).score = -Objects.requireNonNull(newPath).score;
 
                     if (newPath.score >= high) {
@@ -1013,8 +1011,8 @@ public final class Search implements Runnable {
 
                         scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive() && depth + (newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.getValue())
                                 >= SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.getValue();
-                        m_currentPath.setPath(bestPath);
-                        currentPathString = "" + m_currentPath;
+                        currentPath.setPath(bestPath);
+                        currentPathString = "" + currentPath;
                     }
 
                     depthZeroMoveScores[numMoves] = newPath.score;
@@ -1027,11 +1025,11 @@ public final class Search implements Runnable {
             move = orderedMoves[0][numMoves] & 0x00FFFFFF;
         }
 
-        if (!this.m_abortingSearch) {
+        if (!this.abortingSearch) {
             if (numLegalMovesAtDepthZero == 1 && this.millisToThink < Limit.MAX_SEARCH_MILLIS.getValue()) {
-                this.m_abortingSearch = true;
-                m_currentPath.setPath(bestPath); // otherwise we will crash!
-                currentPathString = "" + m_currentPath;
+                this.abortingSearch = true;
+                currentPath.setPath(bestPath); // otherwise we will crash!
+                currentPathString = "" + currentPath;
             } else {
                 final BoardHash boardHash = engineBoard.getBoardHashObject();
                 boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, (byte)flag, depth);
@@ -1088,17 +1086,17 @@ public final class Search implements Runnable {
                         sp.score = -sp.score;
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score;
-                            m_currentPath.reset();
-                            m_currentPath.setPath(move);
-                            m_currentPath.score = sp.score;
-                            currentPathString = m_currentPath.toString();
+                            currentPath.reset();
+                            currentPath.setPath(move);
+                            currentPath.score = sp.score;
+                            currentPathString = currentPath.toString();
                         }
                     } else if (legal == 1) {
                         // use this opportunity to set a move in the odd event that there is no time to search
-                        m_currentPath.reset();
-                        m_currentPath.setPath(move);
-                        m_currentPath.score = 0;
-                        currentPathString = m_currentPath.toString();
+                        currentPath.reset();
+                        currentPath.setPath(move);
+                        currentPath.score = 0;
+                        currentPathString = currentPath.toString();
                     }
                     if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
                         plyDraw.set(0, true);
@@ -1135,21 +1133,21 @@ public final class Search implements Runnable {
             }
 
             if (this.useOpeningBook && getFen().trim().equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")) {
-                this.m_inBook = true;
+                this.inBook = true;
             }
 
-            if (this.m_inBook) {
+            if (this.inBook) {
                 Move libraryMove = OpeningLibrary.getMove(getFen());
                 // Todo - check for legality
                 if (libraryMove != null) {
                     path = new SearchPath();
                     path.setPath(new EngineMove(libraryMove).compact);
-                    m_currentPath = path;
-                    currentPathString = "" + m_currentPath;
+                    currentPath = path;
+                    currentPathString = "" + currentPath;
                     setSearchComplete();
                     return;
                 } else {
-                    this.m_inBook = false;
+                    this.inBook = false;
                 }
             }
 
@@ -1157,7 +1155,7 @@ public final class Search implements Runnable {
 
             scoreFullWidthMoves(engineBoard, 0);
 
-            for (byte depth = 1; depth <= this.m_finalDepthToSearch && !this.m_abortingSearch; depth++) {
+            for (byte depth = 1; depth <= this.finalDepthToSearch && !this.abortingSearch; depth++) {
                 this.iterativeDeepeningCurrentDepth = depth;
 
                 if (depth > 1) setOkToSendInfo(true);
@@ -1165,21 +1163,21 @@ public final class Search implements Runnable {
                 if (FeatureFlag.USE_ASPIRATION_WINDOW.isActive()) {
                     path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh);
 
-                    if (!this.m_abortingSearch && Objects.requireNonNull(path).score <= aspirationLow) {
+                    if (!this.abortingSearch && Objects.requireNonNull(path).score <= aspirationLow) {
                         aspirationLow = -Integer.MAX_VALUE;
                         path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh);
-                    } else if (!this.m_abortingSearch && path.score >= aspirationHigh) {
+                    } else if (!this.abortingSearch && path.score >= aspirationHigh) {
                         aspirationHigh = Integer.MAX_VALUE;
                         path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh);
                     }
 
-                    if (!this.m_abortingSearch && (Objects.requireNonNull(path).score <= aspirationLow || path.score >= aspirationHigh)) {
+                    if (!this.abortingSearch && (Objects.requireNonNull(path).score <= aspirationLow || path.score >= aspirationHigh)) {
                         path = searchZero(engineBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                     }
 
-                    if (!this.m_abortingSearch) {
-                        m_currentPath.setPath(Objects.requireNonNull(path));
-                        currentPathString = "" + m_currentPath;
+                    if (!this.abortingSearch) {
+                        currentPath.setPath(Objects.requireNonNull(path));
+                        currentPathString = "" + currentPath;
                         aspirationLow = path.score - SearchConfig.ASPIRATION_RADIUS.getValue();
                         aspirationHigh = path.score + SearchConfig.ASPIRATION_RADIUS.getValue();
                     }
@@ -1187,9 +1185,9 @@ public final class Search implements Runnable {
                     path = searchZero(engineBoard, depth, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
                 }
 
-                if (!this.m_abortingSearch) {
-                    m_currentPath.setPath(Objects.requireNonNull(path));
-                    currentPathString = "" + m_currentPath;
+                if (!this.abortingSearch) {
+                    currentPath.setPath(Objects.requireNonNull(path));
+                    currentPathString = "" + currentPath;
                     if (path.score > Evaluation.MATE_SCORE_START.getValue()) {
                         setSearchComplete();
                         return;
@@ -1220,7 +1218,7 @@ public final class Search implements Runnable {
 
     private void initSearchVariables() {
         searchState = SearchState.SEARCHING;
-        m_abortingSearch = false;
+        abortingSearch = false;
 
         final BoardHash boardHash = engineBoard.getBoardHashObject();
         boardHash.incVersion();
@@ -1276,7 +1274,7 @@ public final class Search implements Runnable {
             searchDepth = 1;
         }
 
-        this.m_finalDepthToSearch = searchDepth;
+        this.finalDepthToSearch = searchDepth;
     }
 
     public int getNodes() {
@@ -1288,7 +1286,7 @@ public final class Search implements Runnable {
     }
 
     public String getCurrentScoreHuman() {
-        int score = this.m_currentPath.score;
+        int score = this.currentPath.score;
         int abs = Math.abs(score);
         if (abs > Evaluation.MATE_SCORE_START.getValue()) {
             int mateIn = ((Evaluation.VALUE_MATE.getValue() - abs) + 1) / 2;
@@ -1298,7 +1296,7 @@ public final class Search implements Runnable {
     }
 
     public int getCurrentScore() {
-        return this.m_currentPath.score;
+        return this.currentPath.score;
     }
 
     public long getSearchDuration() {
@@ -1347,7 +1345,7 @@ public final class Search implements Runnable {
     }
 
     public int getCurrentMove() {
-        return this.m_currentPath.move[0];
+        return this.currentPath.move[0];
     }
 
     public String getCurrentPathString() {
@@ -1360,7 +1358,7 @@ public final class Search implements Runnable {
     }
 
     public synchronized void stopSearch() {
-        this.m_abortingSearch = true;
+        this.abortingSearch = true;
     }
 
     public synchronized void setSearchComplete() {
@@ -1370,11 +1368,11 @@ public final class Search implements Runnable {
 
     public void setUseOpeningBook(boolean useBook) {
         this.useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive() && useBook;
-        this.m_inBook = this.useOpeningBook;
+        this.inBook = this.useOpeningBook;
     }
 
     public boolean isAbortingSearch() {
-        return this.m_abortingSearch;
+        return this.abortingSearch;
     }
 
     public void quit() {
