@@ -13,29 +13,14 @@ plugins {
 }
 
 group = "com.netsensia.rivalchess"
-version = '10.0.4'
+version = '10.0.5'
 
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin'
 
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
-jar.baseName("rivalchess")
-
-jar {
-    from {
-        configurations.compile.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
-    manifest {
-        attributes(
-                'Main-Class': 'com.netsensia.rivalchess.uci.RivalUCI',
-                'Implementation-Title': 'Gradle Quickstart',
-                'Implementation-Version': version
-        )
-    }
-}
+jar.baseName("rivalchess-engine")
 
 repositories {
     mavenLocal()
