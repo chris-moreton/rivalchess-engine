@@ -1,4 +1,4 @@
-package com.netsensia.rivalchess.engine.core;
+package com.netsensia.rivalchess.engine.core.search;
 
 import com.ea.async.Async;
 import com.netsensia.rivalchess.bitboards.BitboardType;
@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.config.LateMoveReductions;
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.config.Uci;
+import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.eval.PieceSquareTables;
@@ -159,27 +160,27 @@ public final class Search implements Runnable {
         this.uciMode = uciMode;
     }
 
-    public synchronized void setHashSizeMB(int hashSizeMB) {
+    public void setHashSizeMB(int hashSizeMB) {
         engineBoard.getBoardHashObject().setHashSizeMB(hashSizeMB);
     }
 
-    public synchronized void setBoard(Board board) {
+    public void setBoard(Board board) {
         engineBoard = new EngineBoard();
         engineBoard.setBoard(board);
         setBoard(engineBoard);
     }
 
-    public synchronized void setBoard(EngineBoard engineBoard) {
+    public void setBoard(EngineBoard engineBoard) {
         this.setEngineBoard(engineBoard);
         this.engineBoard.getBoardHashObject().incVersion();
         this.engineBoard.getBoardHashObject().setHashTable();
     }
 
-    public synchronized void clearHash() {
+    public void clearHash() {
         engineBoard.getBoardHashObject().clearHash();
     }
 
-    public synchronized void newGame() {
+    public void newGame() {
         m_inBook = this.useOpeningBook;
         engineBoard.getBoardHashObject().clearHash();
     }
@@ -202,7 +203,8 @@ public final class Search implements Runnable {
             // clear out additional info stored with the move
             move &= 0x00FFFFFF;
 
-            final int score = getScore(board, move, includeChecks, isCapture);
+            final int score = com.netsensia.rivalchess.engine.core.search.BoardExtensionsKt
+                    .getScore(board, move, includeChecks, isCapture, staticExchangeEvaluator);
 
             if (score > 0) {
                 movesForSorting[moveCount++] = move | ((127 - score) << 24);
@@ -212,26 +214,6 @@ public final class Search implements Runnable {
         movesForSorting[moveCount] = 0;
 
         return movesForSorting;
-    }
-
-    private int getScore(EngineBoard board, int move, boolean includeChecks, boolean isCapture) throws InvalidMoveException {
-        int score = 0;
-
-        final int promotionMask = (move & PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.getValue());
-        if (isCapture) {
-            final int see = staticExchangeEvaluator.staticExchangeEvaluation(board, new EngineMove(move));
-            if (see > 0) {
-                score = 100 + (int) (((double) see / pieceValue(Piece.QUEEN)) * 10);
-            }
-            if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
-                score += 9;
-            }
-        } else if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()) {
-            score = 116;
-        } else if (includeChecks) {
-            score = 100;
-        }
-        return score;
     }
 
     private int getHighScoreMove(EngineBoard board, int ply, int hashMove) throws InvalidMoveException {
@@ -253,35 +235,16 @@ public final class Search implements Runnable {
             }
         }
 
-        int move = getHighScoreMove(orderedMoves[ply]);
+        int move = SearchFunctionsKt.getHighScoreMove(orderedMoves[ply]);
 
         if (move == 0 && moveOrderStatus[ply] == MoveOrder.CAPTURES) {
             // we move into here if we had some captures but they are now used up
             scoreFullWidthMoves(board, ply);
             moveOrderStatus[ply] = MoveOrder.ALL;
-            move = getHighScoreMove(orderedMoves[ply]);
+            move = SearchFunctionsKt.getHighScoreMove(orderedMoves[ply]);
         }
 
         return move;
-    }
-
-    public int getHighScoreMove(int[] theseMoves) {
-        int bestMove = 0;
-        int bestIndex = -1;
-        int bestScore = Integer.MAX_VALUE;
-
-        for (int c = 0; theseMoves[c] != 0; c++) {
-            if (theseMoves[c] != -1 && theseMoves[c] < bestScore && (theseMoves[c] >> 24) != 127) {
-                // update best move found so far, but don't consider moves with no score
-                bestScore = theseMoves[c];
-                bestMove = theseMoves[c];
-                bestIndex = c;
-            }
-        }
-
-        if (bestIndex != -1) theseMoves[bestIndex] = -1;
-
-        return bestMove & 0x00FFFFFF;
     }
 
     public SearchPath quiesce(EngineBoard board, final int depth, int ply, int quiescePly, int low, int high, boolean isCheck) throws InvalidMoveException {
@@ -313,7 +276,7 @@ public final class Search implements Runnable {
             scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.getValue());
         }
 
-        int move = getHighScoreMove(theseMoves);
+        int move = SearchFunctionsKt.getHighScoreMove(theseMoves);
 
         int legalMoveCount = 0;
 
@@ -338,7 +301,7 @@ public final class Search implements Runnable {
                 }
             }
 
-            move = getHighScoreMove(theseMoves);
+            move = SearchFunctionsKt.getHighScoreMove(theseMoves);
         }
 
         if (isCheck && legalMoveCount == 0) {

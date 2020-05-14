@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core;
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.eval.EvaluateKt;
+import com.netsensia.rivalchess.engine.core.search.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;

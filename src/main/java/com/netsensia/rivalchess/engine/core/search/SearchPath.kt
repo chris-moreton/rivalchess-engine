@@ -1,4 +1,4 @@
-package com.netsensia.rivalchess.engine.core
+package com.netsensia.rivalchess.engine.core.search
 
 import com.netsensia.rivalchess.config.Limit
 import com.netsensia.rivalchess.util.ChessBoardConversion

@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.epd;
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
-import com.netsensia.rivalchess.engine.core.Search;
+import com.netsensia.rivalchess.engine.core.search.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;

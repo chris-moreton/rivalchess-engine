@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.eve;
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
-import com.netsensia.rivalchess.engine.core.Search;
+import com.netsensia.rivalchess.engine.core.search.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import org.junit.Test;
