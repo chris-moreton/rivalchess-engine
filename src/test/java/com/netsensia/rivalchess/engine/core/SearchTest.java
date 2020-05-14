@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.eval.EvaluateKt;
 import com.netsensia.rivalchess.engine.core.search.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
+import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 
@@ -18,8 +19,10 @@ public class SearchTest {
 
     private void assertEvaluationScore(String fen, int expectedScore, boolean flip) throws IllegalFenException {
 
+        Board board = Board.fromFen(fen);
         EngineBoard engineBoard = new EngineBoard();
-        engineBoard.setBoard(FenUtils.getBoardModel(fen));
+        engineBoard.setBoard(board);
+
         int actualScore = EvaluateKt.evaluate(engineBoard);
 
         assertEquals(expectedScore, actualScore);
@@ -50,12 +53,11 @@ public class SearchTest {
 
         Search search = new Search();
 
-        EngineBoard engineBoard = new EngineBoard();
-        engineBoard.setBoard(FenUtils.getBoardModel(fen));
+        Board board = Board.fromFen(fen);
 
         new Thread(search).start();
 
-        search.setBoard(engineBoard);
+        search.setBoard(board);
         search.setSearchDepth(4);
         search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
         search.startSearch();
@@ -71,14 +73,13 @@ public class SearchTest {
 
     private void assertNodeCount(String fen, long expectedNodes) throws IllegalFenException, InterruptedException {
 
-        EngineBoard engineBoard = new EngineBoard();
-        engineBoard.setBoard(FenUtils.getBoardModel(fen));
+        Board board = Board.fromFen(fen);
 
         Search search = new Search();
 
         new Thread(search).start();
 
-        search.setBoard(engineBoard);
+        search.setBoard(board);
         search.setSearchDepth(6);
         search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
         search.startSearch();

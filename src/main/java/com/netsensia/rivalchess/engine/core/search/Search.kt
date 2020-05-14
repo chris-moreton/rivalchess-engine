@@ -31,7 +31,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private val moveOrderStatus = arrayOfNulls<MoveOrder>(Limit.MAX_TREE_DEPTH.value)
     private val drawnPositionsAtRoot: MutableList<MutableList<Long>>
     private val drawnPositionsAtRootCount: MutableList<Int> = ArrayList()
-    private var engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
+    private val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
     private val mateKiller: MutableList<Int> = ArrayList()
     private val killerMoves: Array<IntArray>
     private val historyMovesSuccess = Array(2) { Array(64) { IntArray(64) } }
@@ -75,7 +75,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     var isUciMode = false
         private set
 
-    constructor(board: Board?) : this(System.out, board) {}
+    constructor(board: Board) : this(System.out, board) {}
 
     fun setUCIMode(uciMode: Boolean) {
         isUciMode = uciMode
@@ -85,16 +85,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         engineBoard.boardHashObject.setHashSizeMB(hashSizeMB)
     }
 
-    fun setBoard(board: Board?) {
-        engineBoard = EngineBoard()
+    fun setBoard(board: Board) {
         engineBoard.setBoard(board)
-        setBoard(engineBoard)
-    }
-
-    fun setBoard(engineBoard: EngineBoard) {
-        setEngineBoard(engineBoard)
-        this.engineBoard.boardHashObject.incVersion()
-        this.engineBoard.boardHashObject.setHashTable()
+        engineBoard.boardHashObject.incVersion()
+        engineBoard.boardHashObject.setHashTable()
     }
 
     fun clearHash() {
@@ -1093,10 +1087,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 }
             }
         }
-    }
-
-    fun setEngineBoard(engineBoard: EngineBoard) {
-        this.engineBoard = engineBoard
     }
 
     val fen: String

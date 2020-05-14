@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.engine.core.search.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
+import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.EpdItem;
@@ -67,15 +68,14 @@ public class EpdTest {
 
     private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException, InvalidMoveException {
 
-        EngineBoard engineBoard = new EngineBoard();
-        engineBoard.setBoard(FenUtils.getBoardModel(epdItem.getFen()));
+        Board board = Board.fromFen(epdItem.getFen());
 
         search.quit();
 
         search = new Search();
         new Thread(search).start();
 
-        search.setBoard(engineBoard);
+        search.setBoard(board);
         search.setSearchDepth(Limit.MAX_SEARCH_DEPTH.getValue() - 2);
         search.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
 
@@ -103,7 +103,7 @@ public class EpdTest {
         }
 
         final String move = ChessBoardConversion.getPgnMoveFromCompactMove(
-                search.getCurrentMove(), engineBoard.getFen());
+                search.getCurrentMove(), epdItem.getFen());
 
         System.out.println("Looking for " + move + " in " + epdItem.getBestMoves());
 
@@ -112,7 +112,7 @@ public class EpdTest {
         } else {
             Assert.assertFalse(epdItem.getBestMoves().contains(
                     ChessBoardConversion.getPgnMoveFromCompactMove(
-                        search.getCurrentMove(), engineBoard.getFen())));
+                        search.getCurrentMove(), epdItem.getFen())));
         }
     }
 
