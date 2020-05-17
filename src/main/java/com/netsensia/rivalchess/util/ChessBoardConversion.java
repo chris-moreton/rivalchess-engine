@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.util;
 
 import com.netsensia.rivalchess.config.Limit;
+import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.enums.PromotionPieceMask;
@@ -169,7 +170,7 @@ public class ChessBoardConversion
 		
 		if (board.makeMove(new EngineMove(move)))
 		{
-			if (board.isCheck()) pgnMove += "+";
+			if (BoardExtensionsKt.isCheck(board)) pgnMove += "+";
 			board.unMakeMove();
 		}
 		

@@ -1,5 +1,8 @@
 package com.netsensia.rivalchess.engine.core.search
 
+import com.netsensia.rivalchess.bitboards.EngineBitboards
+import com.netsensia.rivalchess.model.Colour
+
 fun getHighScoreMove(theseMoves: IntArray): Int {
     var bestMove = 0
     var bestIndex = -1
@@ -17,3 +20,8 @@ fun getHighScoreMove(theseMoves: IntArray): Int {
     if (bestIndex != -1) theseMoves[bestIndex] = -1
     return bestMove and 0x00FFFFFF
 }
+
+fun inCheck(whiteKingSquare: Int, blackKingSquare: Int, mover: Colour) =
+        if (mover == Colour.BLACK)
+            EngineBitboards.getInstance().isSquareAttackedBy(blackKingSquare, Colour.WHITE)
+        else EngineBitboards.getInstance().isSquareAttackedBy(whiteKingSquare, Colour.BLACK)

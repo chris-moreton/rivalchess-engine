@@ -27,14 +27,12 @@ import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.*;
 import static com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt.getSetBits;
 
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
+import static com.netsensia.rivalchess.engine.core.search.SearchFunctionsKt.inCheck;
 
-/**
- * R
- * epresents the state of a chessboard including bitboard states and the Zorbrish hash value.
- */
 public final class EngineBoard {
 
     private final EngineBitboards engineBitboards = EngineBitboards.getInstance();
+
     private final BoardHash boardHash = new BoardHash();
 
     private int castlePrivileges;
@@ -111,16 +109,6 @@ public final class EngineBoard {
 
     public boolean isWhiteToMove() {
         return isWhiteToMove;
-    }
-
-    public boolean isCheck() {
-        return isWhiteToMove ?
-                engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK) :
-                engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE);
-    }
-
-    public EngineBitboards getEngineBitboards() {
-        return engineBitboards;
     }
 
     private void addPossiblePromotionMoves(final int fromSquareMoveMask, long bitboard, boolean queenCapturesOnly) {
@@ -561,7 +549,7 @@ public final class EngineBoard {
 
         calculateSupplementaryBitboards();
 
-        if (BoardExtensionsKt.inCheck(whiteKingSquare, blackKingSquare, getMover().opponent())) {
+        if (inCheck(whiteKingSquare, blackKingSquare, getMover().opponent())) {
             unMakeMove();
             return false;
         }

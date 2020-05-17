@@ -153,19 +153,19 @@ public class EngineBoardTest {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         engineBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
-        assertFalse(engineBoard.isCheck());
+        assertFalse(BoardExtensionsKt.isCheck(engineBoard));
 
         engineBoard.setBoard(FenUtils.getBoardModel(SILLY_CHECK));
         engineBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
-        assertTrue(engineBoard.isCheck());
+        assertTrue(BoardExtensionsKt.isCheck(engineBoard));
 
         engineBoard.setBoard(FenUtils.getBoardModel(SCHOLARS_MATE));
         engineBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
-        assertTrue(engineBoard.isCheck());
+        assertTrue(BoardExtensionsKt.isCheck(engineBoard));
 
         engineBoard.setBoard(FenUtils.getBoardModel(STALEMATE));
         engineBoard.setLegalMoves(new int[Limit.MAX_LEGAL_MOVES.getValue()]);
-        assertFalse(engineBoard.isCheck());
+        assertFalse(BoardExtensionsKt.isCheck(engineBoard));
     }
 
     @Test

@@ -5,9 +5,7 @@ import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.bitFlippedHorizontalAxis
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.engine.core.FEN_START_POS
-import com.netsensia.rivalchess.engine.core.board.EngineBoard
-import com.netsensia.rivalchess.engine.core.board.isCapture
-import com.netsensia.rivalchess.engine.core.board.onlyKingsRemain
+import com.netsensia.rivalchess.engine.core.board.*
 import com.netsensia.rivalchess.engine.core.eval.*
 import com.netsensia.rivalchess.engine.core.hash.isAlwaysReplaceHashTableEntryValid
 import com.netsensia.rivalchess.engine.core.hash.isHeightHashTableEntryValid
@@ -182,21 +180,19 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var move = getHighScoreMove(theseMoves)
         var legalMoveCount = 0
         while (move != 0) {
-            if (!shouldDeltaPrune(board, low, evalScore, move, isCheck)) {
-                if (board.makeMove(EngineMove(move))) {
-                    legalMoveCount++
-                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value && board.isCheck)
-                    newPath!!.score = -newPath.score
-                    if (newPath.score > bestPath.score) {
-                        bestPath.setPath(move, newPath)
-                    }
-                    if (newPath.score >= high) {
-                        board.unMakeMove()
-                        return bestPath
-                    }
-                    low = Math.max(low, newPath.score)
-                    board.unMakeMove()
+            if (!shouldDeltaPrune(board, low, evalScore, move, isCheck) && board.makeMove(EngineMove(move))) {
+                legalMoveCount++
+                newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value && board.isCheck())
+                newPath!!.score = -newPath.score
+                if (newPath.score > bestPath.score) {
+                    bestPath.setPath(move, newPath)
                 }
+                if (newPath.score >= high) {
+                    board.unMakeMove()
+                    return bestPath
+                }
+                low = Math.max(low, newPath.score)
+                board.unMakeMove()
             }
             move = getHighScoreMove(theseMoves)
         }
@@ -496,7 +492,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             research = false
             var legalMoveCount = 0
             var futilityPruningEvaluation: Int
-            val wasCheckBeforeMove = board.isCheck
+            val wasCheckBeforeMove = board.isCheck()
 
             // Check to see if we can futility prune this whole node
             var canFutilityPrune = false
@@ -533,7 +529,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 }
                 if (board.makeMove(EngineMove(move))) {
                     legalMoveCount++
-                    isCheck = board.isCheck
+                    isCheck = board.isCheck()
                     if (FeatureFlag.USE_FUTILITY_PRUNING.isActive && canFutilityPrune && !isCheck && board.wasCapture() && !board.wasPawnPush()) {
                         newPath = searchPath[ply + 1]
                         newPath!!.reset()
@@ -658,7 +654,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             if (!isAbortingSearch) {
                 if (legalMoveCount == 0) {
-                    bestPath.score = if (board.isCheck) -Evaluation.VALUE_MATE.value else 0
+                    bestPath.score = if (board.isCheck()) -Evaluation.VALUE_MATE.value else 0
                     boardHash.storeHashMove(0, board, bestPath.score, HashValueType.EXACT.index.toByte(), Limit.MAX_SEARCH_DEPTH.value)
                     return bestPath
                 }
@@ -689,7 +685,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var pawnExtend: Int
         while (move != 0 && !isAbortingSearch) {
             if (engineBoard.makeMove(EngineMove(move))) {
-                val isCheck = board.isCheck
+                val isCheck = board.isCheck()
                 checkExtend = 0
                 pawnExtend = 0
                 if (Extensions.FRACTIONAL_EXTENSION_CHECK.value > 0 && isCheck) {
@@ -817,7 +813,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     legal++
                     if (iterativeDeepeningDepth < 1) // super beginner mode
                     {
-                        val sp = quiesce(engineBoard, 40, 1, 0, -Int.MAX_VALUE, Int.MAX_VALUE, engineBoard.isCheck)
+                        val sp = quiesce(engineBoard, 40, 1, 0, -Int.MAX_VALUE, Int.MAX_VALUE, engineBoard.isCheck())
                         sp!!.score = -sp.score
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score
