@@ -93,31 +93,6 @@ public final class EngineBoard {
         return Arrays.asList(squareContents);
     }
 
-    public Piece getPiece(int bitRef) {
-        switch (squareContents[bitRef]) {
-            case WP:
-            case BP:
-                return Piece.PAWN;
-            case WB:
-            case BB:
-                return Piece.BISHOP;
-            case WN:
-            case BN:
-                return Piece.KNIGHT;
-            case WR:
-            case BR:
-                return Piece.ROOK;
-            case WQ:
-            case BQ:
-                return Piece.QUEEN;
-            case WK:
-            case BK:
-                return Piece.KING;
-            default:
-                return Piece.NONE;
-        }
-    }
-
     public SquareOccupant[] getSquareContents() {
         return squareContents;
     }
@@ -586,7 +561,7 @@ public final class EngineBoard {
 
         calculateSupplementaryBitboards();
 
-        if (BoardExtensionsKt.isNonMoverInCheck(this, whiteKingSquare, blackKingSquare, getMover())) {
+        if (BoardExtensionsKt.inCheck(whiteKingSquare, blackKingSquare, getMover().opponent())) {
             unMakeMove();
             return false;
         }
@@ -1027,7 +1002,7 @@ public final class EngineBoard {
 
         return false;
     }
-    
+
     public long getAllPiecesBitboard() {
         return engineBitboards.getPieceBitboard(BitboardType.ALL);
     }

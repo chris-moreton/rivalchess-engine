@@ -126,12 +126,12 @@ public class EngineBoardTest {
     public void getPiece() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
-        assertEquals(Piece.KING, engineBoard.getPiece(3));
-        assertEquals(Piece.QUEEN, engineBoard.getPiece(4));
-        assertEquals(Piece.KING, engineBoard.getPiece(59));
-        assertEquals(Piece.QUEEN, engineBoard.getPiece(60));
+        assertEquals(Piece.KING, BoardExtensionsKt.getPiece(engineBoard, 3));
+        assertEquals(Piece.QUEEN, BoardExtensionsKt.getPiece(engineBoard, 4));
+        assertEquals(Piece.KING, BoardExtensionsKt.getPiece(engineBoard, 59));
+        assertEquals(Piece.QUEEN, BoardExtensionsKt.getPiece(engineBoard, 60));
 
-        assertEquals(Piece.NONE, engineBoard.getPiece(32));
+        assertEquals(Piece.NONE, BoardExtensionsKt.getPiece(engineBoard, 32));
     }
 
     @Test
