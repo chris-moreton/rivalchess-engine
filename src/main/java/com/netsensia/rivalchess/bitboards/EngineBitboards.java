@@ -13,9 +13,19 @@ import static com.netsensia.rivalchess.bitboards.BitboardConstantsKt.*;
 
 public class EngineBitboards {
 
+    private static EngineBitboards INSTANCE;
+
     private long[] pieceBitboards;
 
-    public EngineBitboards() {
+    public static EngineBitboards getInstance() {
+        if(INSTANCE == null) {
+            INSTANCE = new EngineBitboards();
+        }
+
+        return INSTANCE;
+    }
+
+    private EngineBitboards () {
         reset();
     }
 

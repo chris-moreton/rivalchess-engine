@@ -20,14 +20,14 @@ public class EngineBitboardsTest {
 
     @Test
     public void testGetAndSetPieceBitboardsByIndex() {
-        EngineBitboards engineBitboards = new EngineBitboards();
+        EngineBitboards engineBitboards = EngineBitboards.getInstance();
         engineBitboards.setPieceBitboard(BitboardType.WQ, 829282L);
         assertEquals(829282L, engineBitboards.getPieceBitboard(BitboardType.WQ));
     }
 
     @Test
     public void testXorPieceBitboard() {
-        EngineBitboards engineBitboards = new EngineBitboards();
+        EngineBitboards engineBitboards = EngineBitboards.getInstance();
         engineBitboards.setPieceBitboard(BitboardType.WQ, 829282L);
         engineBitboards.xorPieceBitboard(BitboardType.WQ, 817222323L);
         assertEquals(829282L ^ 817222323L, engineBitboards.getPieceBitboard(BitboardType.WQ));
@@ -60,7 +60,7 @@ public class EngineBitboardsTest {
 
         final EngineMove engineMove = ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h4d8");
 
-        EngineBitboards engineBitboards = new EngineBitboards();
+        EngineBitboards engineBitboards = EngineBitboards.getInstance();
         engineBitboards.setPieceBitboard(BitboardType.WB, bitboard);
         engineBitboards.movePiece(SquareOccupant.WB, engineMove.compact);
 

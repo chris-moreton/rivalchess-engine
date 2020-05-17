@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
 import com.netsensia.rivalchess.config.Limit;
+import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.model.SquareOccupant;
@@ -136,11 +137,11 @@ public class EngineBoardTest {
     @Test
     public void isCapture() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(OpeningLibrary.E2E4_D7D5));
-        assertTrue(engineBoard.isCapture(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e4d5").compact));
-        assertFalse(engineBoard.isCapture(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e4e5").compact));
+        assertTrue(BoardExtensionsKt.isCapture(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e4d5").compact));
+        assertFalse(BoardExtensionsKt.isCapture(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e4e5").compact));
         engineBoard.setBoard(FenUtils.getBoardModel("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6"));
-        assertTrue(engineBoard.isCapture(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e5d6").compact));
-        assertFalse(engineBoard.isCapture(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e5e6").compact));
+        assertTrue(BoardExtensionsKt.isCapture(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e5d6").compact));
+        assertFalse(BoardExtensionsKt.isCapture(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e5e6").compact));
     }
 
     @Test

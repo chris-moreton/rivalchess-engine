@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.bitboards.bitFlippedHorizontalAxis
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.engine.core.FEN_START_POS
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
+import com.netsensia.rivalchess.engine.core.board.isCapture
 import com.netsensia.rivalchess.engine.core.board.onlyKingsRemain
 import com.netsensia.rivalchess.engine.core.eval.*
 import com.netsensia.rivalchess.engine.core.hash.isAlwaysReplaceHashTableEntryValid

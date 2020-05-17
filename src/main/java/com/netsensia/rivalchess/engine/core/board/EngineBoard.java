@@ -34,7 +34,7 @@ import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
  */
 public final class EngineBoard {
 
-    private final EngineBitboards engineBitboards = new EngineBitboards();
+    private final EngineBitboards engineBitboards = EngineBitboards.getInstance();
     private final BoardHash boardHash = new BoardHash();
 
     private int castlePrivileges;
@@ -118,21 +118,8 @@ public final class EngineBoard {
         }
     }
 
-    public boolean isSquareEmpty(int bitRef) {
-        return squareContents[bitRef] == SquareOccupant.NONE;
-    }
-
-    public boolean isCapture(int move) {
-        int toSquare = move & 63;
-
-        boolean isCapture = !isSquareEmpty(toSquare);
-
-        if (!isCapture &&
-                ((1L << toSquare) & engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE)) != 0 &&
-                squareContents[(move >>> 16) & 63].getPiece() == Piece.PAWN) {
-            isCapture = true;
-        }
-        return isCapture;
+    public SquareOccupant[] getSquareContents() {
+        return squareContents;
     }
 
     public boolean isGameOver() throws InvalidMoveException {
@@ -147,10 +134,8 @@ public final class EngineBoard {
         return true;
     }
 
-    public boolean isNonMoverInCheck() {
-        return isWhiteToMove ?
-                engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE) :
-                engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK);
+    public boolean isWhiteToMove() {
+        return isWhiteToMove;
     }
 
     public boolean isCheck() {
@@ -601,7 +586,7 @@ public final class EngineBoard {
 
         calculateSupplementaryBitboards();
 
-        if (isNonMoverInCheck()) {
+        if (BoardExtensionsKt.isNonMoverInCheck(this, whiteKingSquare, blackKingSquare, getMover())) {
             unMakeMove();
             return false;
         }
