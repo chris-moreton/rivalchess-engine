@@ -98,11 +98,13 @@ public final class EngineBoard {
 
     public int[] getMoveArray() {
         final List<Integer> legalMoves = generateLegalMoves();
+        legalMoves.add(0);
         return legalMoves.stream().mapToInt(Integer::intValue).toArray();
     }
 
     public int[] getQuiesceMoveArray(final boolean includeChecks) {
         final List<Integer> legalMoves = generateLegalQuiesceMoves(includeChecks);
+        legalMoves.add(0);
         return legalMoves.stream().mapToInt(Integer::intValue).toArray();
     }
 

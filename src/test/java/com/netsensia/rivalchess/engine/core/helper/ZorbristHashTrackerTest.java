@@ -237,7 +237,7 @@ public class ZorbristHashTrackerTest {
                 final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
                 assertEquals(calculatedHashCode, trackedCode);
 
-                ecb.generateLegalMoves();
+                legalMoves = ecb.getMoveArray();
 
             }
         }
