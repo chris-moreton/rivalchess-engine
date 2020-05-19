@@ -31,7 +31,7 @@ import static com.netsensia.rivalchess.engine.core.search.SearchFunctionsKt.inCh
 
 public final class EngineBoard {
 
-    private final EngineBitboards engineBitboards = EngineBitboards.getInstance();
+    public final EngineBitboards engineBitboards = EngineBitboards.getInstance();
 
     private final BoardHash boardHash = new BoardHash();
 
@@ -44,9 +44,6 @@ public final class EngineBoard {
     private final SquareOccupant[] squareContents = new SquareOccupant[64];
 
     private boolean isOnNullMove = false;
-
-    private int[] legalMoves;
-    private int numLegalMoves;
 
     private MoveDetail[] moveList;
 
@@ -95,78 +92,92 @@ public final class EngineBoard {
         return squareContents;
     }
 
-    public boolean isGameOver() throws InvalidMoveException {
-        generateLegalMoves();
+    public int getNumLegalMoves() {
+        return generateLegalMoves().size();
+    }
 
-        for (int i = 0; i< numLegalMoves; i++) {
-            if (isMoveLegal(legalMoves[i])) {
-                return false;
-            }
-        }
+    public int[] getMoveArray() {
+        final List<Integer> legalMoves = generateLegalMoves();
+        return legalMoves.stream().mapToInt(Integer::intValue).toArray();
+    }
 
-        return true;
+    public int[] getQuiesceMoveArray(final boolean includeChecks) {
+        final List<Integer> legalMoves = generateLegalQuiesceMoves(includeChecks);
+        return legalMoves.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    public boolean isGameOver() {
+        final List<Integer> legalMoves = generateLegalMoves();
+
+        return legalMoves.stream()
+                .filter(m -> isMoveLegal(m))
+                .count() == 0;
     }
 
     public boolean isWhiteToMove() {
         return isWhiteToMove;
     }
 
-    private void addPossiblePromotionMoves(final int fromSquareMoveMask, long bitboard, boolean queenCapturesOnly) {
+    private List<Integer> addPossiblePromotionMoves(final int fromSquareMoveMask, long bitboard, boolean queenCapturesOnly) {
 
+        final List<Integer> moves = new ArrayList<>();
+        
         while (bitboard != 0) {
             final int toSquare = Long.numberOfTrailingZeros(bitboard);
             bitboard ^= (1L << (toSquare));
 
             if (toSquare >= 56 || toSquare <= 7) {
-                this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare | (PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue());
+                moves.add(fromSquareMoveMask | toSquare | (PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.getValue()));
                 if (!queenCapturesOnly) {
-                    this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare | (PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.getValue());
-                    this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare | (PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.getValue());
-                    this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare | (PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.getValue());
+                    moves.add(fromSquareMoveMask | toSquare | (PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.getValue()));
+                    moves.add(fromSquareMoveMask | toSquare | (PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.getValue()));
+                    moves.add(fromSquareMoveMask | toSquare | (PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.getValue()));
                 }
             } else {
-                this.legalMoves[this.numLegalMoves++] = fromSquareMoveMask | toSquare;
+                moves.add(fromSquareMoveMask | toSquare);
             }
         }
+
+        return moves;
     }
 
-    private void addMoves(int fromSquareMask, long bitboard) {
+    private List<Integer> addMoves(int fromSquareMask, long bitboard) {
+        List<Integer> moves = new ArrayList<>();
+
         while (bitboard != 0) {
             final int toSquare = Long.numberOfTrailingZeros(bitboard);
             bitboard ^= (1L << (toSquare));
-            this.legalMoves[this.numLegalMoves++] = fromSquareMask | toSquare;
+            moves.add(fromSquareMask | toSquare);
         }
+
+        return moves;
     }
 
-    public void generateLegalMoves() {
+    public List<Integer> generateLegalMoves() {
 
-        clearLegalMovesArray();
+        final List<Integer> moves = new ArrayList<>();
 
-        generateKnightMoves(this.isWhiteToMove
+        moves.addAll(generateKnightMoves(this.isWhiteToMove
                 ? engineBitboards.getPieceBitboard(BitboardType.WN)
-                : engineBitboards.getPieceBitboard(BitboardType.BN));
+                : engineBitboards.getPieceBitboard(BitboardType.BN)));
 
-        generateKingMoves(this.isWhiteToMove ? this.whiteKingSquare : this.blackKingSquare);
+        moves.addAll(generateKingMoves(this.isWhiteToMove ? this.whiteKingSquare : this.blackKingSquare));
 
-        generatePawnMoves(this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WP) : engineBitboards.getPieceBitboard(BitboardType.BP),
+        moves.addAll(generatePawnMoves(this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WP) : engineBitboards.getPieceBitboard(BitboardType.BP),
                 this.isWhiteToMove ? getWhitePawnMovesForward() : getBlackPawnMovesForward(),
-                this.isWhiteToMove ? getWhitePawnMovesCapture() : getBlackPawnMovesCapture());
+                this.isWhiteToMove ? getWhitePawnMovesCapture() : getBlackPawnMovesCapture()));
 
-        generateSliderMoves(SquareOccupant.WR.getIndex(), SquareOccupant.BR.getIndex(), MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook);
+        moves.addAll(generateSliderMoves(SquareOccupant.WR.getIndex(), SquareOccupant.BR.getIndex(), MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook));
 
-        generateSliderMoves(SquareOccupant.WB.getIndex(), SquareOccupant.BB.getIndex(), MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop);
+        moves.addAll(generateSliderMoves(SquareOccupant.WB.getIndex(), SquareOccupant.BB.getIndex(), MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop));
 
-        this.legalMoves[this.numLegalMoves] = 0;
-
+        return moves;
     }
 
-    private void clearLegalMovesArray() {
-        this.numLegalMoves = 0;
-        this.legalMoves[this.numLegalMoves] = 0;
-    }
-
-    private void generateSliderMoves(final int whitePieceConstant, final int blackPieceConstant, long[][] magicMovesRook, long[] occupancyMaskRook, long[] magicNumberRook, int[] magicNumberShiftsRook) {
+    private List<Integer> generateSliderMoves(final int whitePieceConstant, final int blackPieceConstant, long[][] magicMovesRook, long[] occupancyMaskRook, long[] magicNumberRook, int[] magicNumberShiftsRook) {
         long rookBitboard;
+        final List<Integer> moves = new ArrayList<>();
+
         rookBitboard =
                 this.isWhiteToMove
                         ? engineBitboards.getPieceBitboard(BitboardType.fromIndex(whitePieceConstant))
@@ -177,14 +188,17 @@ public final class EngineBoard {
         while (rookBitboard != 0) {
             final int bitRef = Long.numberOfTrailingZeros(rookBitboard);
             rookBitboard ^= (1L << bitRef);
-            addMoves(
+            moves.addAll(addMoves(
                     bitRef << 16,
-                    magicMovesRook[bitRef][(int) (((engineBitboards.getPieceBitboard(BitboardType.ALL) & occupancyMaskRook[bitRef]) * magicNumberRook[bitRef]) >>> magicNumberShiftsRook[bitRef])] & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
+                    magicMovesRook[bitRef][(int) (((engineBitboards.getPieceBitboard(BitboardType.ALL) & occupancyMaskRook[bitRef]) * magicNumberRook[bitRef]) >>> magicNumberShiftsRook[bitRef])] & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY)));
         }
+
+        return moves;
     }
 
-    private void generatePawnMoves(long pawnBitboard, List<Long> bitboardMaskForwardPawnMoves, List<Long> bitboardMaskCapturePawnMoves) {
+    private List<Integer> generatePawnMoves(long pawnBitboard, List<Long> bitboardMaskForwardPawnMoves, List<Long> bitboardMaskCapturePawnMoves) {
         long bitboardPawnMoves;
+        final List<Integer> moves = new ArrayList<>();
         while (pawnBitboard != 0) {
             final int bitRef = Long.numberOfTrailingZeros(pawnBitboard);
             pawnBitboard ^= (1L << (bitRef));
@@ -194,23 +208,30 @@ public final class EngineBoard {
 
             bitboardPawnMoves = getBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves);
 
-            addPossiblePromotionMoves(bitRef << 16, bitboardPawnMoves, false);
+            moves.addAll(addPossiblePromotionMoves(bitRef << 16, bitboardPawnMoves, false));
         }
+
+        return moves;
     }
 
-    private void generateKingMoves(int kingSquare) {
+    private List<Integer> generateKingMoves(final int kingSquare) {
+
+        final List<Integer> moves = new ArrayList<>();
 
         if (this.isWhiteToMove) {
-            generateWhiteKingMoves();
+            moves.addAll(generateWhiteKingMoves());
         } else {
-            generateBlackKingMoves();
+            moves.addAll(generateBlackKingMoves());
         }
 
-        addMoves(kingSquare << 16,  getKingMoves().get(kingSquare) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
+        moves.addAll(addMoves(kingSquare << 16,  getKingMoves().get(kingSquare) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY)));
+
+        return moves;
     }
 
-    private void generateWhiteKingMoves() {
+    private List<Integer> generateWhiteKingMoves() {
 
+        final List<Integer> moves = new ArrayList<>();
         final int whiteKingStartSquare = 3;
         final int whiteQueenStartSquare = 4;
         final Colour opponent = Colour.BLACK;
@@ -219,18 +240,21 @@ public final class EngineBoard {
             (engineBitboards.getPieceBitboard(BitboardType.ALL) & WHITEKINGSIDECASTLESQUARES) == 0L &&
             !engineBitboards.isSquareAttackedBy(whiteKingStartSquare, opponent) &&
             !engineBitboards.isSquareAttackedBy(whiteKingStartSquare-1, opponent)) {
-                this.legalMoves[this.numLegalMoves++] = (whiteKingStartSquare << 16) | whiteKingStartSquare-2;
+                moves.add((whiteKingStartSquare << 16) | whiteKingStartSquare-2);
         }
 
         if ((castlePrivileges & CastleBitMask.CASTLEPRIV_WQ.getValue()) != 0L &&
             (engineBitboards.getPieceBitboard(BitboardType.ALL) & WHITEQUEENSIDECASTLESQUARES) == 0L &&
             !engineBitboards.isSquareAttackedBy(whiteKingStartSquare, opponent) &&
             !engineBitboards.isSquareAttackedBy(whiteQueenStartSquare, opponent)) {
-                this.legalMoves[this.numLegalMoves++] = (whiteKingStartSquare << 16) | whiteQueenStartSquare+1;
+                moves.add((whiteKingStartSquare << 16) | whiteQueenStartSquare+1);
         }
+        return moves;
     }
 
-    private void generateBlackKingMoves() {
+    private List<Integer> generateBlackKingMoves() {
+
+        final List<Integer> moves = new ArrayList<>();
 
         final int blackKingStartSquare = 59;
         final Colour opponent = Colour.WHITE;
@@ -240,23 +264,27 @@ public final class EngineBoard {
                 (engineBitboards.getPieceBitboard(BitboardType.ALL) & BLACKKINGSIDECASTLESQUARES) == 0L &&
                 !engineBitboards.isSquareAttackedBy(blackKingStartSquare, opponent) &&
                 !engineBitboards.isSquareAttackedBy(blackKingStartSquare-1, opponent)) {
-            this.legalMoves[this.numLegalMoves++] = (blackKingStartSquare << 16) | blackKingStartSquare-2;
+            moves.add((blackKingStartSquare << 16) | blackKingStartSquare-2);
         }
 
         if ((castlePrivileges & CastleBitMask.CASTLEPRIV_BQ.getValue()) != 0L &&
                 (engineBitboards.getPieceBitboard(BitboardType.ALL) & BLACKQUEENSIDECASTLESQUARES) == 0L &&
                 !engineBitboards.isSquareAttackedBy(blackKingStartSquare, opponent) &&
                 !engineBitboards.isSquareAttackedBy(blackQueenStartSquare, opponent)) {
-            this.legalMoves[this.numLegalMoves++] = (blackKingStartSquare << 16) | blackQueenStartSquare+1;
+            moves.add((blackKingStartSquare << 16) | blackQueenStartSquare+1);
         }
+
+        return moves;
     }
 
-    private void generateKnightMoves(long knightBitboard) {
+    private List<Integer> generateKnightMoves(long knightBitboard) {
+        final List<Integer> moves = new ArrayList<>();
         while (knightBitboard != 0) {
             final int bitRef = Long.numberOfTrailingZeros(knightBitboard);
             knightBitboard ^= (1L << (bitRef));
-            addMoves(bitRef << 16, getKnightMoves().get(bitRef) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY));
+            moves.addAll(addMoves(bitRef << 16, getKnightMoves().get(bitRef) & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY)));
         }
+        return moves;
     }
 
     private long getBitboardPawnCaptureMoves(int bitRef, List<Long> bitboardMaskCapturePawnMoves, long bitboardPawnMoves) {
@@ -290,36 +318,36 @@ public final class EngineBoard {
         return bitboardPawnMoves;
     }
 
-    public void generateLegalQuiesceMoves(boolean includeChecks) {
+    public List<Integer> generateLegalQuiesceMoves(boolean includeChecks) {
 
+        final List<Integer> moves = new ArrayList<>();
         final long possibleDestinations = engineBitboards.getPieceBitboard(BitboardType.ENEMY);
-
-        clearLegalMovesArray();
 
         final int kingSquare = this.isWhiteToMove ? this.whiteKingSquare : this.blackKingSquare;
         final int enemyKingSquare = this.isWhiteToMove ? this.blackKingSquare : this.whiteKingSquare;
 
-        generateQuiesceKnightMoves(includeChecks,
+        moves.addAll(generateQuiesceKnightMoves(includeChecks,
                 enemyKingSquare,
-                this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WN) : engineBitboards.getPieceBitboard(BitboardType.BN));
+                this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WN) : engineBitboards.getPieceBitboard(BitboardType.BN)));
 
-        addMoves(kingSquare << 16,  getKingMoves().get(kingSquare) & possibleDestinations);
+        moves.addAll(addMoves(kingSquare << 16,  getKingMoves().get(kingSquare) & possibleDestinations));
 
-        generateQuiescePawnMoves(includeChecks,
+        moves.addAll(generateQuiescePawnMoves(includeChecks,
                 this.isWhiteToMove ? getWhitePawnMovesForward() : getBlackPawnMovesForward(),
                 this.isWhiteToMove ? getWhitePawnMovesCapture() : getBlackPawnMovesCapture(),
                 enemyKingSquare,
-                this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WP) : engineBitboards.getPieceBitboard(BitboardType.BP));
+                this.isWhiteToMove ? engineBitboards.getPieceBitboard(BitboardType.WP) : engineBitboards.getPieceBitboard(BitboardType.BP)));
 
-        generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Piece.ROOK, SquareOccupant.WR.getIndex(), SquareOccupant.BR.getIndex());
+        moves.addAll(generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Piece.ROOK, SquareOccupant.WR.getIndex(), SquareOccupant.BR.getIndex()));
 
-        generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Piece.BISHOP, SquareOccupant.WB.getIndex(), SquareOccupant.BB.getIndex());
+        moves.addAll(generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Piece.BISHOP, SquareOccupant.WB.getIndex(), SquareOccupant.BB.getIndex()));
 
-        this.legalMoves[this.numLegalMoves] = 0;
+        return moves;
     }
 
-    private void generateQuiesceSliderMoves(boolean includeChecks, int enemyKingSquare, Piece piece, final int whiteSliderConstant, final int blackSliderConstant) {
+    private List<Integer> generateQuiesceSliderMoves(boolean includeChecks, int enemyKingSquare, Piece piece, final int whiteSliderConstant, final int blackSliderConstant) {
 
+        final List<Integer> moves = new ArrayList<>();
         final long[][] magicMovesRook = piece == Piece.ROOK ? MagicBitboards.magicMovesRook : MagicBitboards.magicMovesBishop;
         final long[] occupancyMaskRook = piece == Piece.ROOK ? MagicBitboards.occupancyMaskRook : MagicBitboards.occupancyMaskBishop;
         final long[] magicNumberRook = piece == Piece.ROOK ? MagicBitboards.magicNumberRook : MagicBitboards.magicNumberBishop;
@@ -338,15 +366,19 @@ public final class EngineBoard {
             pieceBitboard ^= (1L << (bitRef));
             long pieceMoves = magicMovesRook[bitRef][(int) (((engineBitboards.getPieceBitboard(BitboardType.ALL) & occupancyMaskRook[bitRef]) * magicNumberRook[bitRef]) >>> magicNumberShiftsRook[bitRef])] & ~engineBitboards.getPieceBitboard(BitboardType.FRIENDLY);
             if (includeChecks) {
-                addMoves(bitRef << 16, pieceMoves & (rookCheckSquares | engineBitboards.getPieceBitboard(BitboardType.ENEMY)));
+                moves.addAll(addMoves(bitRef << 16, pieceMoves & (rookCheckSquares | engineBitboards.getPieceBitboard(BitboardType.ENEMY))));
             } else {
-                addMoves(bitRef << 16, pieceMoves & engineBitboards.getPieceBitboard(BitboardType.ENEMY));
+                moves.addAll(addMoves(bitRef << 16, pieceMoves & engineBitboards.getPieceBitboard(BitboardType.ENEMY)));
             }
         }
+
+        return moves;
     }
 
-    private void generateQuiescePawnMoves(boolean includeChecks, List<Long> bitboardMaskForwardPawnMoves, List<Long> bitboardMaskCapturePawnMoves, int enemyKingSquare, long pawnBitboard) {
+    private List<Integer> generateQuiescePawnMoves(boolean includeChecks, List<Long> bitboardMaskForwardPawnMoves, List<Long> bitboardMaskCapturePawnMoves, int enemyKingSquare, long pawnBitboard) {
         long bitboardPawnMoves;
+        final List<Integer> moves = new ArrayList<>();
+
         while (pawnBitboard != 0) {
             final int bitRef = Long.numberOfTrailingZeros(pawnBitboard);
             pawnBitboard ^= (1L << (bitRef));
@@ -370,11 +402,15 @@ public final class EngineBoard {
 
             bitboardPawnMoves = getBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves);
 
-            addPossiblePromotionMoves(bitRef << 16, bitboardPawnMoves, true);
+            moves.addAll(addPossiblePromotionMoves(bitRef << 16, bitboardPawnMoves, true));
         }
+
+        return moves;
     }
 
-    private void generateQuiesceKnightMoves(boolean includeChecks, int enemyKingSquare, long knightBitboard) {
+    private List<Integer> generateQuiesceKnightMoves(boolean includeChecks, int enemyKingSquare, long knightBitboard) {
+        final List<Integer> moves = new ArrayList<>();
+
         long possibleDestinations;
         while (knightBitboard != 0) {
             final int bitRef = Long.numberOfTrailingZeros(knightBitboard);
@@ -384,18 +420,10 @@ public final class EngineBoard {
             } else {
                 possibleDestinations = engineBitboards.getPieceBitboard(BitboardType.ENEMY);
             }
-            addMoves(bitRef << 16, getKnightMoves().get(bitRef) & possibleDestinations);
+            moves.addAll(addMoves(bitRef << 16, getKnightMoves().get(bitRef) & possibleDestinations));
         }
-    }
 
-    public void setLegalQuiesceMoves(int[] moveArray, boolean includeChecks) {
-        this.legalMoves = moveArray;
-        generateLegalQuiesceMoves(includeChecks);
-    }
-
-    public void setLegalMoves(int[] moveArray) {
-        this.legalMoves = moveArray;
-        generateLegalMoves();
+        return moves;
     }
 
     public void setEngineBoardVars(Board board) {
@@ -1024,14 +1052,6 @@ public final class EngineBoard {
         return isWhiteToMove ? Colour.WHITE : Colour.BLACK;
     }
 
-    public int getNumLegalMoves() {
-        return numLegalMoves;
-    }
-
-    public int getLegalMoveByIndex(int index) {
-        return legalMoves[index];
-    }
-
     public int previousOccurrencesOfThisPosition() {
         final long boardHashCode = boardHash.getTrackedHashValue();
 
@@ -1139,21 +1159,24 @@ public final class EngineBoard {
         return board;
     }
 
-    public boolean isMoveLegal(int moveToVerify) throws InvalidMoveException {
+    public boolean isMoveLegal(int moveToVerify) {
         moveToVerify &= 0x00FFFFFF;
-        int[] moves = new int[Limit.MAX_GAME_MOVES.getValue()];
-        this.setLegalMoves(moves);
-        int i = 0;
-        while (moves[i] != 0) {
-            EngineMove engineMove = new EngineMove(moves[i] & 0x00FFFFFF);
-            if (this.makeMove(engineMove)) {
-                if (engineMove.compact == moveToVerify) {
+        List<Integer> moves = generateLegalMoves();
+
+        try {
+            for (int i=0; i<moves.size(); i++) {
+                final EngineMove engineMove = new EngineMove(moves.get(i) & 0x00FFFFFF);
+                if (this.makeMove(engineMove)) {
+                    if (engineMove.compact == moveToVerify) {
+                        this.unMakeMove();
+                        return true;
+                    }
                     this.unMakeMove();
-                    return true;
                 }
-                this.unMakeMove();
+                i++;
             }
-            i++;
+        } catch (InvalidMoveException e) {
+            return false;
         }
         return false;
     }

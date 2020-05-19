@@ -26,9 +26,8 @@ public class PerftTest {
         long nodes = 0;
         int moveNum = 0;
 
-        int[] legalMoves = new int[Limit.MAX_LEGAL_MOVES.getValue()];
+        int[] legalMoves = board.getMoveArray();
 
-        board.setLegalMoves(legalMoves);
         while (legalMoves[moveNum] != 0) {
             if (board.makeMove(new EngineMove(legalMoves[moveNum]))) {
                 nodes += getPerft(board, depth - 1);

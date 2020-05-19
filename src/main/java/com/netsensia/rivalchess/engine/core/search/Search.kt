@@ -38,8 +38,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private val historyPruneMoves = Array(2) { Array(64) { IntArray(64) } }
     private val orderedMoves: Array<IntArray>
     private val searchPath: Array<SearchPath?>
-    private val depthZeroLegalMoves: IntArray
-    private val depthZeroMoveScores: IntArray
+    private var depthZeroLegalMoves: IntArray
+    private var depthZeroMoveScores: IntArray
     var okToSendInfo = false
 
     @get:Synchronized
@@ -169,15 +169,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             return bestPath
         }
         low = Math.max(bestPath.score, low)
-        val theseMoves = orderedMoves[ply]
         if (isCheck) {
-            board.setLegalMoves(theseMoves)
+            orderedMoves[ply] = board.moveArray
             scoreFullWidthMoves(board, ply)
         } else {
-            board.setLegalQuiesceMoves(theseMoves, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
+            orderedMoves[ply] = board.getQuiesceMoveArray(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
             scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
         }
-        var move = getHighScoreMove(theseMoves)
+        var move = getHighScoreMove(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
             if (!shouldDeltaPrune(board, low, evalScore, move, isCheck) && board.makeMove(EngineMove(move))) {
@@ -194,7 +193,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 low = Math.max(low, newPath.score)
                 board.unMakeMove()
             }
-            move = getHighScoreMove(theseMoves)
+            move = getHighScoreMove(orderedMoves[ply])
         }
         if (isCheck && legalMoveCount == 0) {
             bestPath.score = -Evaluation.VALUE_MATE.value
@@ -484,8 +483,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 board.unMakeNullMove()
             }
         }
-        val theseMoves = orderedMoves[ply]
-        board.setLegalMoves(theseMoves)
+        orderedMoves[ply] = board.moveArray
         moveOrderStatus[ply] = MoveOrder.NONE
         var research: Boolean
         do {
@@ -796,10 +794,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setupHistoryMoveTable()
         var path: SearchPath?
         try {
-            engineBoard.setLegalMoves(depthZeroLegalMoves)
+            depthZeroLegalMoves = engineBoard.moveArray
             var depthZeroMoveCount = 0
             var c = 0
-            val depth1MovesTemp = IntArray(Limit.MAX_LEGAL_MOVES.value)
+            var depth1MovesTemp: IntArray
             var move = depthZeroLegalMoves[c] and 0x00FFFFFF
             drawnPositionsAtRootCount.add(0)
             drawnPositionsAtRootCount.add(0)
@@ -832,7 +830,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
                         plyDraw[0] = true
                     }
-                    engineBoard.setLegalMoves(depth1MovesTemp)
+                    depth1MovesTemp = engineBoard.moveArray
                     var c1 = -1
                     while (depth1MovesTemp[++c1] and 0x00FFFFFF != 0) {
                         if (engineBoard.makeMove(EngineMove(depth1MovesTemp[c1] and 0x00FFFFFF))) {

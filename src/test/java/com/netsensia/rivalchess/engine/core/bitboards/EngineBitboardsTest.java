@@ -94,7 +94,7 @@ public class EngineBitboardsTest {
                 {true,true,true,true,true,true,true,true}
         };
 
-        EngineBitboards engineBitboards = engineBoard.getEngineBitboards();
+        EngineBitboards engineBitboards = engineBoard.engineBitboards;
 
         for (int y=0; y<8; y++) {
             for (int x=0; x<8; x++) {

@@ -108,9 +108,8 @@ public class ChessBoardConversion
 		
 		char qualifier = ' ';
 		
-		int[] legalMoves = new int[Limit.MAX_LEGAL_MOVES.getValue()];
-		board.setLegalMoves(legalMoves);
-		
+		int[] legalMoves = board.getMoveArray();
+
 		int moveCount = 0;
 		int legalMove = legalMoves[moveCount] & 0x00FFFFFF;
 		while (legalMove != 0)
