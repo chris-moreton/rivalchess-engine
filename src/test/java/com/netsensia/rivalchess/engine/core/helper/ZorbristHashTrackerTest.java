@@ -227,19 +227,17 @@ public class ZorbristHashTrackerTest {
             Random r = new Random();
             r.setSeed(i);
 
-            int legalMoves[] = new int[Limit.MAX_LEGAL_MOVES.getValue()];
-            ecb.setLegalMoves(legalMoves);
-            ecb.generateLegalMoves();
+            int legalMoves[] = ecb.getMoveArray();
 
             while (!ecb.isGameOver() && ecb.getHalfMoveCount() < 100) {
-                int move = ecb.getLegalMoveByIndex(r.nextInt(ecb.getNumLegalMoves()));
+                int move = legalMoves[r.nextInt(ecb.getNumLegalMoves())];
                 ecb.makeMove(new EngineMove(move));
 
                 final long trackedCode = ecb.trackedBoardHashCode();
                 final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
                 assertEquals(calculatedHashCode, trackedCode);
 
-                ecb.generateLegalMoves();
+                legalMoves = ecb.getMoveArray();
 
             }
         }

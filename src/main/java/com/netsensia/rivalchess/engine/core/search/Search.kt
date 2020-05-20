@@ -38,8 +38,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private val historyPruneMoves = Array(2) { Array(64) { IntArray(64) } }
     private val orderedMoves: Array<IntArray>
     private val searchPath: Array<SearchPath?>
-    private val depthZeroLegalMoves: IntArray
-    private val depthZeroMoveScores: IntArray
+    private var depthZeroMoveScores: IntArray
     var okToSendInfo = false
 
     @get:Synchronized
@@ -108,21 +107,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     @Throws(InvalidMoveException::class)
     private fun scoreQuiesceMoves(board: EngineBoard, ply: Int, includeChecks: Boolean) {
         var moveCount = 0
-        val movesForSorting = orderedMoves[ply]
         var i = 0
-        while (movesForSorting[i] != 0) {
-            var move = movesForSorting[i]
+        while (orderedMoves[ply][i] != 0) {
+            var move = orderedMoves[ply][i]
             val isCapture = board.isCapture(move)
 
             // clear out additional info stored with the move
             move = move and 0x00FFFFFF
             val score = board.getScore(move, includeChecks, isCapture, staticExchangeEvaluator)
             if (score > 0) {
-                movesForSorting[moveCount++] = move or (127 - score shl 24)
+                orderedMoves[ply][moveCount++] = move or (127 - score shl 24)
             }
             i++
         }
-        movesForSorting[moveCount] = 0
+        orderedMoves[ply][moveCount] = 0
     }
 
     @Throws(InvalidMoveException::class)
@@ -169,15 +167,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             return bestPath
         }
         low = Math.max(bestPath.score, low)
-        val theseMoves = orderedMoves[ply]
         if (isCheck) {
-            board.setLegalMoves(theseMoves)
+            orderedMoves[ply] = board.moveArray
             scoreFullWidthMoves(board, ply)
         } else {
-            board.setLegalQuiesceMoves(theseMoves, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
+            orderedMoves[ply] = board.getQuiesceMoveArray(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
             scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
         }
-        var move = getHighScoreMove(theseMoves)
+        var move = getHighScoreMove(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
             if (!shouldDeltaPrune(board, low, evalScore, move, isCheck) && board.makeMove(EngineMove(move))) {
@@ -194,7 +191,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 low = Math.max(low, newPath.score)
                 board.unMakeMove()
             }
-            move = getHighScoreMove(theseMoves)
+            move = getHighScoreMove(orderedMoves[ply])
         }
         if (isCheck && legalMoveCount == 0) {
             bestPath.score = -Evaluation.VALUE_MATE.value
@@ -228,42 +225,41 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var i: Int
         var score: Int
         var count = 0
-        val movesForSorting = orderedMoves[ply]
         i = 0
-        while (movesForSorting[i] != 0) {
-            if (movesForSorting[i] != -1) {
+        while (orderedMoves[ply][i] != 0) {
+            if (orderedMoves[ply][i] != -1) {
                 score = 0
-                val toSquare = movesForSorting[i] and 63
+                val toSquare = orderedMoves[ply][i] and 63
                 var capturePiece = Piece.fromSquareOccupant(board.getSquareOccupant(toSquare))
-                if (capturePiece == Piece.NONE && 1L shl toSquare and board.getBitboardByIndex(BitboardType.ENPASSANTSQUARE.index) != 0L && board.getSquareOccupant(movesForSorting[i] ushr 16 and 63).piece == Piece.PAWN) {
+                if (capturePiece == Piece.NONE && 1L shl toSquare and board.getBitboardByIndex(BitboardType.ENPASSANTSQUARE.index) != 0L && board.getSquareOccupant(orderedMoves[ply][i] ushr 16 and 63).piece == Piece.PAWN) {
                     capturePiece = Piece.PAWN
                 }
-                movesForSorting[i] = movesForSorting[i] and 0x00FFFFFF
-                if (movesForSorting[i] == mateKiller[ply]) {
+                orderedMoves[ply][i] = orderedMoves[ply][i] and 0x00FFFFFF
+                if (orderedMoves[ply][i] == mateKiller[ply]) {
                     score = 126
                 } else if (capturePiece != Piece.NONE) {
-                    var see = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(movesForSorting[i]))
+                    var see = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(orderedMoves[ply][i]))
                     if (see > -Int.MAX_VALUE) {
                         see = (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt()
                     }
                     score = if (see > 0) {
                         110 + see
-                    } else if (movesForSorting[i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
+                    } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
                             == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
                         109
                     } else if (see == 0) {
                         107
                     } else {
-                        scoreLosingCapturesWithWinningHistory(board, ply, i, score, movesForSorting, toSquare)
+                        scoreLosingCapturesWithWinningHistory(board, ply, i, score, orderedMoves[ply], toSquare)
                     }
-                } else if (movesForSorting[i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
+                } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
                         == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
                     score = 108
                 }
                 if (score > 0) {
                     count++
                 }
-                movesForSorting[i] = movesForSorting[i] or (127 - score shl 24)
+                orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)
             }
             i++
         }
@@ -295,14 +291,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun scoreFullWidthMoves(board: EngineBoard, ply: Int) {
-        val movesForSorting = orderedMoves[ply]
         var i = 0
-        while (movesForSorting[i] != 0) {
-            if (movesForSorting[i] != -1) {
-                val fromSquare = movesForSorting[i] ushr 16 and 63
-                val toSquare = movesForSorting[i] and 63
-                movesForSorting[i] = movesForSorting[i] and 0x00FFFFFF
-                var score = scoreKillerMoves(ply, i, movesForSorting)
+        while (orderedMoves[ply][i] != 0) {
+            if (orderedMoves[ply][i] != -1) {
+                val fromSquare = orderedMoves[ply][i] ushr 16 and 63
+                val toSquare = orderedMoves[ply][i] and 63
+                orderedMoves[ply][i] = orderedMoves[ply][i] and 0x00FFFFFF
+                var score = scoreKillerMoves(ply, i, orderedMoves[ply])
                 score = scoreHistoryHeuristic(board, score, fromSquare, toSquare)
 
                 // must be a losing capture otherwise would have been scored in previous phase
@@ -313,7 +308,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (score == 0 && FeatureFlag.USE_PIECE_SQUARES_IN_MOVE_ORDERING.isActive) {
                     score = 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2
                 }
-                movesForSorting[i] = movesForSorting[i] or (127 - score shl 24)
+                orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)
             }
             i++
         }
@@ -484,8 +479,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 board.unMakeNullMove()
             }
         }
-        val theseMoves = orderedMoves[ply]
-        board.setLegalMoves(theseMoves)
+        orderedMoves[ply] = board.moveArray
         moveOrderStatus[ply] = MoveOrder.NONE
         var research: Boolean
         do {
@@ -796,11 +790,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setupHistoryMoveTable()
         var path: SearchPath?
         try {
-            engineBoard.setLegalMoves(depthZeroLegalMoves)
+            orderedMoves[0] = engineBoard.moveArray
             var depthZeroMoveCount = 0
             var c = 0
-            val depth1MovesTemp = IntArray(Limit.MAX_LEGAL_MOVES.value)
-            var move = depthZeroLegalMoves[c] and 0x00FFFFFF
+            var depth1MovesTemp: IntArray
+            var move = orderedMoves[0][c] and 0x00FFFFFF
             drawnPositionsAtRootCount.add(0)
             drawnPositionsAtRootCount.add(0)
             var legal = 0
@@ -832,7 +826,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
                         plyDraw[0] = true
                     }
-                    engineBoard.setLegalMoves(depth1MovesTemp)
+                    depth1MovesTemp = engineBoard.moveArray
                     var c1 = -1
                     while (depth1MovesTemp[++c1] and 0x00FFFFFF != 0) {
                         if (engineBoard.makeMove(EngineMove(depth1MovesTemp[c1] and 0x00FFFFFF))) {
@@ -851,7 +845,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     engineBoard.unMakeMove()
                 }
                 depthZeroMoveCount++
-                move = depthZeroLegalMoves[++c] and 0x00FFFFFF
+                move = orderedMoves[0][++c] and 0x00FFFFFF
             }
             if (useOpeningBook && fen.trim { it <= ' ' } == "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -") {
                 inBook = true
@@ -870,7 +864,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     inBook = false
                 }
             }
-            while (depthZeroLegalMoves[depthZeroMoveCount] != 0) depthZeroMoveCount++
+            while (orderedMoves[0][depthZeroMoveCount] != 0) depthZeroMoveCount++
             scoreFullWidthMoves(engineBoard, 0)
             var depth: Byte = 1
             while (depth <= finalDepthToSearch && !isAbortingSearch) {
@@ -1106,7 +1100,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             killerMoves[i] = IntArray(SearchConfig.NUM_KILLER_MOVES.value)
         }
         orderedMoves = Array(Limit.MAX_TREE_DEPTH.value) { IntArray(Limit.MAX_LEGAL_MOVES.value) }
-        depthZeroLegalMoves = orderedMoves[0]
         depthZeroMoveScores = IntArray(Limit.MAX_LEGAL_MOVES.value)
     }
 }
