@@ -808,8 +808,8 @@ fun evaluate(board: EngineBoard) : Int {
                     pawnScore(bitboards.whitePawns,
                             bitboards.blackPawns,
                             attacks, materialValues,
-                            board.whiteKingSquare,
-                            board.blackKingSquare,
+                            board.getWhiteKingSquare(),
+                            board.getBlackKingSquare(),
                             board.mover) +
                     (whiteBishopEval(pieceSquareLists, bitboards, whitePieces) -
                             blackBishopsEval(pieceSquareLists, bitboards, blackPieces)) +

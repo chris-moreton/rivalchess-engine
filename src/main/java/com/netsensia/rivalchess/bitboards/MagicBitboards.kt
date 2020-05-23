@@ -45,14 +45,14 @@ object MagicBitboards {
     }
 
     private fun setMagicMovesForBishop(bitRef: Int, i: Int, validMoves: Long) {
-        var validMoves = validMoves
+        var validMovesShadow = validMoves
         val magicIndex: Int
         magicIndex = (occupancyVariation!![i] * magicNumberBishop[bitRef] ushr magicNumberShiftsBishop[bitRef]).toInt()
-        validMoves = setMagicMovesForNorthWestDiagonal(bitRef, i, validMoves)
-        validMoves = setMagicMovesForSouthEastDiagonal(bitRef, i, validMoves)
-        validMoves = setMagicMovesForNorthEastDiagonal(bitRef, i, validMoves)
-        validMoves = setMagicMovesForSouthWestDiagonal(bitRef, i, validMoves)
-        magicMovesBishop[bitRef][magicIndex] = validMoves
+        validMovesShadow = setMagicMovesForNorthWestDiagonal(bitRef, i, validMovesShadow)
+        validMovesShadow = setMagicMovesForSouthEastDiagonal(bitRef, i, validMovesShadow)
+        validMovesShadow = setMagicMovesForNorthEastDiagonal(bitRef, i, validMovesShadow)
+        validMovesShadow = setMagicMovesForSouthWestDiagonal(bitRef, i, validMovesShadow)
+        magicMovesBishop[bitRef][magicIndex] = validMovesShadow
     }
 
     private fun setMagicMovesForSouthWestDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {

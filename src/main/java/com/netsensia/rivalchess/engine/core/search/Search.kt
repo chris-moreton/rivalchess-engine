@@ -24,7 +24,7 @@ import com.netsensia.rivalchess.util.ChessBoardConversion
 import java.io.PrintStream
 import java.util.*
 
-class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board? = getBoardModel(FEN_START_POS)) : Runnable {
+class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
     private val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluatorPremium()
     private val moveOrderStatus = arrayOfNulls<MoveOrder>(Limit.MAX_TREE_DEPTH.value)
@@ -179,7 +179,15 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         while (move != 0) {
             if (!shouldDeltaPrune(board, low, evalScore, move, isCheck) && board.makeMove(EngineMove(move))) {
                 legalMoveCount++
-                newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -low, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value && board.isCheck())
+                newPath = quiesce(
+                        board,
+                        depth - 1,
+                        ply + 1,
+                        quiescePly + 1,
+                        -high,
+                        -low,
+                        quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value &&
+                                board.isCheck())
                 newPath!!.score = -newPath.score
                 if (newPath.score > bestPath.score) {
                     bestPath.setPath(move, newPath)
@@ -780,7 +788,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         get() = engineBoard.mover
 
     @Throws(InvalidMoveException::class)
-    fun makeMove(engineMove: EngineMove?) {
+    fun makeMove(engineMove: EngineMove) {
         engineBoard.makeMove(engineMove)
     }
 

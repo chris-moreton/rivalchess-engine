@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core;
 
-import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.model.Piece;
