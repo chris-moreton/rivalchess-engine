@@ -72,8 +72,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return legalMoves.stream().mapToInt(Int::toInt).toArray()
     }
 
-    val isGameOver: Boolean
-        get() {
+    fun isGameOver(): Boolean {
             val legalMoves: List<Int> = generateLegalMoves()
             return legalMoves.stream()
                     .filter { m: Int -> isMoveLegal(m) }
@@ -916,17 +915,13 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     fun isMoveLegal(moveToVerify: Int): Boolean {
         val moves: List<Int> = generateLegalMoves()
         try {
-            var i = 0
-            while (i < moves.size) {
-                val engineMove = EngineMove(moves[i] and 0x00FFFFFF)
+            for (move in moves) {
+                val engineMove = EngineMove(move and 0x00FFFFFF)
                 if (makeMove(engineMove)) {
-                    if (engineMove.compact == moveToVerify  and 0x00FFFFFF) {
-                        unMakeMove()
-                        return true
-                    }
                     unMakeMove()
+                    if (engineMove.compact == moveToVerify and 0x00FFFFFF)
+                        return true
                 }
-                i++
             }
         } catch (e: InvalidMoveException) {
             return false
