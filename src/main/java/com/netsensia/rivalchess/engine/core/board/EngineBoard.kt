@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core.board
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.getSetBits
 import com.netsensia.rivalchess.bitboards.util.squareList
+import com.netsensia.rivalchess.bitboards.util.squareListSequence
 import com.netsensia.rivalchess.config.Hash
 import com.netsensia.rivalchess.engine.core.FEN_START_POS
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
@@ -82,7 +83,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     private fun addPossiblePromotionMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean): List<Int> {
         val moves: MutableList<Int> = ArrayList()
 
-        val squares = squareList(bitboard)
+        val squares = squareListSequence(bitboard)
 
         for (toSquare in squares) {
             if (toSquare >= 56 || toSquare <= 7) {
@@ -101,7 +102,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     private fun addMoves(fromSquareMask: Int, bitboard: Long): List<Int> {
         val moves: MutableList<Int> = ArrayList()
-        val squares = squareList(bitboard)
+        val squares = squareListSequence(bitboard)
         for (toSquare in squares) {
             moves.add(fromSquareMask or toSquare)
         }
@@ -124,7 +125,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                 engineBitboards.getPieceBitboard(BitboardType.WQ) else engineBitboards.getPieceBitboard(BitboardType.fromIndex(blackPieceConstant)) or
                 engineBitboards.getPieceBitboard(BitboardType.BQ)
 
-        val squares = squareList(rookBitboard)
+        val squares = squareListSequence(rookBitboard)
         for (bitRef in squares) {
             moves.addAll(addMoves(
                     bitRef shl 16,
@@ -137,7 +138,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         var bitboardPawnMoves: Long
         val moves: MutableList<Int> = ArrayList()
 
-        val squares = squareList(pawnBitboard)
+        val squares = squareListSequence(pawnBitboard)
         for (bitRef in squares) {
             bitboardPawnMoves = bitboardMaskForwardPawnMoves[bitRef] and emptySquaresBitboard()
             bitboardPawnMoves = getBitboardPawnJumpMoves(bitboardPawnMoves)
@@ -197,8 +198,9 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     private fun generateKnightMoves(knightBitboard: Long): List<Int> {
         val moves: MutableList<Int> = ArrayList()
 
-        for (bitRef in squareList(knightBitboard)) {
-            moves.addAll(addMoves(bitRef shl 16, knightMoves[bitRef] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()))
+        for (bitRef in squareListSequence(knightBitboard)) {
+            moves.addAll(addMoves(bitRef shl 16, knightMoves[bitRef] and
+                            engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()))
         }
         return moves
     }
@@ -267,7 +269,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     private fun generateQuiescePawnMoves(includeChecks: Boolean, bitboardMaskForwardPawnMoves: List<Long>, bitboardMaskCapturePawnMoves: List<Long>, enemyKingSquare: Int, pawnBitboard: Long): List<Int> {
         var bitboardPawnMoves: Long
         val moves: MutableList<Int> = ArrayList()
-        val squares = squareList(pawnBitboard)
+        val squares = squareListSequence(pawnBitboard)
         for (bitRef in squares) {
             bitboardPawnMoves = 0
             if (includeChecks) {
@@ -293,7 +295,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     private fun generateQuiesceKnightMoves(includeChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long): List<Int> {
         val moves: MutableList<Int> = ArrayList()
         var possibleDestinations: Long
-        val squares = squareList(knightBitboard)
+        val squares = squareListSequence(knightBitboard)
         for (bitRef in squares) {
             possibleDestinations = if (includeChecks) {
                 engineBitboards.getPieceBitboard(BitboardType.ENEMY) or (knightMoves[enemyKingSquare] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())

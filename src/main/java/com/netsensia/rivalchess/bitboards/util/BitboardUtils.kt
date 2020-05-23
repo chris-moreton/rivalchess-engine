@@ -4,6 +4,7 @@ import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.engine.core.eval.blackPawnAttacks
 import com.netsensia.rivalchess.engine.core.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
+import kotlinx.coroutines.yield
 import java.lang.Long.numberOfTrailingZeros
 import java.util.*
 
@@ -85,3 +86,12 @@ tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : Li
                 squareList(unsetBit(bitboard, square), squareList + square)
             }
         }
+
+fun squareListSequence(bitboard: Long) = sequence {
+    var bitboardCopy = bitboard
+    while (bitboardCopy != 0L) {
+        val square = numberOfTrailingZeros(bitboardCopy)
+        yield (square)
+        bitboardCopy = unsetBit(bitboardCopy, square)
+    }
+}
