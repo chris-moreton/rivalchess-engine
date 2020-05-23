@@ -517,7 +517,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (Extensions.FRACTIONAL_EXTENSION_RECAPTURE.value > 0 && extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value
                         < Limit.MAX_EXTENSION_DEPTH.value) {
                     recaptureExtend = 0
-                    if (targetPiece != -1 && Evaluation.getPieceValues()[movePiece] == Evaluation.getPieceValues()[targetPiece]) {
+                    if (targetPiece != -1 && Evaluation.pieceValues[movePiece] == Evaluation.pieceValues[targetPiece]) {
                         currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
                         if (Math.abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.value) newRecaptureSquare = move and 63
                     }
@@ -547,7 +547,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             }
                         }
                         val partOfTree = ply / iterativeDeepeningDepth
-                        val maxNewExtensionsInThisPart = Extensions.getMaxNewExtensionsTreePart()[Math.min(partOfTree, Extensions.LAST_EXTENSION_LAYER.value)]
+                        val maxNewExtensionsInThisPart = Extensions.maxNewExtensionsTreePart[Math.min(partOfTree, Extensions.LAST_EXTENSION_LAYER.value)]
                         newExtensions = extensions +
                                 Math.min(
                                         checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.value +

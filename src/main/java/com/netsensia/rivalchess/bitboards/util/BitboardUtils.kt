@@ -76,3 +76,12 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long): Int {
 fun unsetBit(bitboard: Long, bit: Int) = bitboard xor (1L shl bit)
 
 fun orList(list: List<Long>) : Long = list.asSequence().fold(0L) { acc, i -> acc or i }
+
+tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : List<Int> =
+        when (bitboard) {
+            0L -> squareList
+            else -> {
+                val square = java.lang.Long.numberOfTrailingZeros(bitboard)
+                squareList(unsetBit(bitboard, square), squareList + square)
+            }
+        }

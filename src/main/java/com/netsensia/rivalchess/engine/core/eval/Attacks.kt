@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.*
+import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant

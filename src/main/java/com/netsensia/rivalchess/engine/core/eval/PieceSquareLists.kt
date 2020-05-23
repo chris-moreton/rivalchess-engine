@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import com.netsensia.rivalchess.bitboards.util.unsetBit
+import com.netsensia.rivalchess.bitboards.util.squareList
 
 class PieceSquareLists(private val bitboardData: BitboardData) {
     val whitePawns = squareList(bitboardData.whitePawns)
@@ -15,11 +15,3 @@ class PieceSquareLists(private val bitboardData: BitboardData) {
     val blackQueens = squareList(bitboardData.blackQueens)
 }
 
-tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : List<Int> =
-        when (bitboard) {
-            0L -> squareList
-            else -> {
-                val square = java.lang.Long.numberOfTrailingZeros(bitboard)
-                squareList(unsetBit(bitboard, square), squareList + square)
-            }
-        }

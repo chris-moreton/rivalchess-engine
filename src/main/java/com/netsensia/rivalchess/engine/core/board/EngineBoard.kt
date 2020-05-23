@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.getSetBits
+import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.Hash
 import com.netsensia.rivalchess.engine.core.FEN_START_POS
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
@@ -39,7 +40,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     fun setBoard(board: Board) {
         numMovesMade = 0
-        moveList.clear();
+        moveList.clear()
         halfMoveCount = board.halfMoveCount
         setEngineBoardVars(board)
         boardHashObject.hashTableVersion = 0
@@ -60,8 +61,9 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val moveArray: IntArray
         get() {
             val legalMoves = generateLegalMoves()
-            legalMoves.add(0)
-            return legalMoves.stream().mapToInt(Int::toInt).toArray()
+            var intArray = legalMoves.stream().mapToInt(Int::toInt).toArray()
+            intArray += 0
+            return intArray
         }
 
     fun getQuiesceMoveArray(includeChecks: Boolean): IntArray {
@@ -79,11 +81,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         }
 
     private fun addPossiblePromotionMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean): List<Int> {
-        var bitboard = bitboard
         val moves: MutableList<Int> = ArrayList()
-        while (bitboard != 0L) {
-            val toSquare = java.lang.Long.numberOfTrailingZeros(bitboard)
-            bitboard = bitboard xor (1L shl toSquare)
+
+        val squares = squareList(bitboard)
+
+        for (toSquare in squares) {
             if (toSquare >= 56 || toSquare <= 7) {
                 moves.add(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
                 if (!queenCapturesOnly) {
@@ -99,37 +101,32 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun addMoves(fromSquareMask: Int, bitboard: Long): List<Int> {
-        var bitboard = bitboard
         val moves: MutableList<Int> = ArrayList()
-        while (bitboard != 0L) {
-            val toSquare = java.lang.Long.numberOfTrailingZeros(bitboard)
-            bitboard = bitboard xor (1L shl toSquare)
+        val squares = squareList(bitboard)
+        for (toSquare in squares) {
             moves.add(fromSquareMask or toSquare)
         }
         return moves
     }
 
-    fun generateLegalMoves(): MutableList<Int> {
-        val moves: MutableList<Int> = ArrayList()
-        moves.addAll(generateKnightMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN)))
-        moves.addAll(generateKingMoves(if (isWhiteToMove) whiteKingSquare.toInt() else blackKingSquare.toInt()))
-        moves.addAll(generatePawnMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WP) else engineBitboards.getPieceBitboard(BitboardType.BP),
+    fun generateLegalMoves() : List<Int> =
+        generateKnightMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN)) +
+        generateKingMoves(if (isWhiteToMove) whiteKingSquare.toInt() else blackKingSquare.toInt()) +
+        generatePawnMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WP) else engineBitboards.getPieceBitboard(BitboardType.BP),
                 if (isWhiteToMove) whitePawnMovesForward else blackPawnMovesForward,
-                if (isWhiteToMove) whitePawnMovesCapture else blackPawnMovesCapture))
-        moves.addAll(generateSliderMoves(SquareOccupant.WR.index, SquareOccupant.BR.index, MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook))
-        moves.addAll(generateSliderMoves(SquareOccupant.WB.index, SquareOccupant.BB.index, MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop))
-        return moves
-    }
+                if (isWhiteToMove) whitePawnMovesCapture else blackPawnMovesCapture) +
+        generateSliderMoves(SquareOccupant.WR.index, SquareOccupant.BR.index, MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook) +
+        generateSliderMoves(SquareOccupant.WB.index, SquareOccupant.BB.index, MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop)
 
     private fun generateSliderMoves(whitePieceConstant: Int, blackPieceConstant: Int, magicMovesRook: Array<LongArray>, occupancyMaskRook: LongArray, magicNumberRook: LongArray, magicNumberShiftsRook: IntArray): List<Int> {
-        var rookBitboard: Long
+        val rookBitboard: Long
         val moves: MutableList<Int> = ArrayList()
         rookBitboard = if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.fromIndex(whitePieceConstant)) or
                 engineBitboards.getPieceBitboard(BitboardType.WQ) else engineBitboards.getPieceBitboard(BitboardType.fromIndex(blackPieceConstant)) or
                 engineBitboards.getPieceBitboard(BitboardType.BQ)
-        while (rookBitboard != 0L) {
-            val bitRef = java.lang.Long.numberOfTrailingZeros(rookBitboard)
-            rookBitboard = rookBitboard xor (1L shl bitRef)
+
+        val squares = squareList(rookBitboard)
+        for (bitRef in squares) {
             moves.addAll(addMoves(
                     bitRef shl 16,
                     magicMovesRook[bitRef][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[bitRef]) * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()))
@@ -138,15 +135,14 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun generatePawnMoves(pawnBitboard: Long, bitboardMaskForwardPawnMoves: List<Long>, bitboardMaskCapturePawnMoves: List<Long>): List<Int> {
-        var pawnBitboard = pawnBitboard
         var bitboardPawnMoves: Long
         val moves: MutableList<Int> = ArrayList()
-        while (pawnBitboard != 0L) {
-            val bitRef = java.lang.Long.numberOfTrailingZeros(pawnBitboard)
-            pawnBitboard = pawnBitboard xor (1L shl bitRef)
-            bitboardPawnMoves = bitboardMaskForwardPawnMoves[bitRef] and engineBitboards.getPieceBitboard(BitboardType.ALL).inv()
+
+        val squares = squareList(pawnBitboard)
+        for (bitRef in squares) {
+            bitboardPawnMoves = bitboardMaskForwardPawnMoves[bitRef] and emptySquaresBitboard()
             bitboardPawnMoves = getBitboardPawnJumpMoves(bitboardPawnMoves)
-            bitboardPawnMoves = getBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
+            bitboardPawnMoves = addBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
             moves.addAll(addPossiblePromotionMoves(bitRef shl 16, bitboardPawnMoves, false))
         }
         return moves
@@ -200,45 +196,32 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun generateKnightMoves(knightBitboard: Long): List<Int> {
-        var knightBitboard = knightBitboard
         val moves: MutableList<Int> = ArrayList()
-        while (knightBitboard != 0L) {
-            val bitRef = java.lang.Long.numberOfTrailingZeros(knightBitboard)
-            knightBitboard = knightBitboard xor (1L shl bitRef)
+
+        for (bitRef in squareList(knightBitboard)) {
             moves.addAll(addMoves(bitRef shl 16, knightMoves[bitRef] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()))
         }
         return moves
     }
 
-    private fun getBitboardPawnCaptureMoves(bitRef: Int, bitboardMaskCapturePawnMoves: List<Long>, bitboardPawnMoves: Long): Long {
-        var bitboardPawnMoves = bitboardPawnMoves
-        bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskCapturePawnMoves[bitRef] and engineBitboards.getPieceBitboard(BitboardType.ENEMY))
-        if (isWhiteToMove) {
-            if (engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) and RANK_6 != 0L) {
-                bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskCapturePawnMoves[bitRef] and engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE))
-            }
-        } else {
-            if (engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) and RANK_3 != 0L) {
-                bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskCapturePawnMoves[bitRef] and engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE))
-            }
-        }
-        return bitboardPawnMoves
-    }
+    private fun enPassantCaptureRank() = if (isWhiteToMove) RANK_6 else RANK_3
 
-    private fun getBitboardPawnJumpMoves(bitboardPawnMoves: Long): Long {
-        var bitboardPawnMoves = bitboardPawnMoves
-        var bitboardJumpMoves: Long
-        if (isWhiteToMove) {
-            bitboardJumpMoves = bitboardPawnMoves shl 8 // if we can move one, maybe we can move two
-            bitboardJumpMoves = bitboardJumpMoves and RANK_4 // only counts if move is to fourth rank
-        } else {
-            bitboardJumpMoves = bitboardPawnMoves shr 8
-            bitboardJumpMoves = bitboardJumpMoves and RANK_5
-        }
-        bitboardJumpMoves = bitboardJumpMoves and engineBitboards.getPieceBitboard(BitboardType.ALL).inv() // only if square empty
-        bitboardPawnMoves = bitboardPawnMoves or bitboardJumpMoves
-        return bitboardPawnMoves
-    }
+    private fun addBitboardPawnCaptureMoves(bitRef: Int, bitboardMaskCapturePawnMoves: List<Long>, bitboardPawnMoves: Long) =
+        if (engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) and enPassantCaptureRank() != 0L)
+            bitboardPawnMoves or
+                    pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENEMY) or
+                    pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENPASSANTSQUARE)
+        else bitboardPawnMoves or
+                pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENEMY)
+
+    private fun pawnCaptures(bitboardMaskCapturePawnMoves: List<Long>, bitRef: Int, bitboardType: BitboardType) =
+            (bitboardMaskCapturePawnMoves[bitRef] and engineBitboards.getPieceBitboard(bitboardType))
+
+    private fun getBitboardPawnJumpMoves(bitboardPawnMoves: Long) =
+        bitboardPawnMoves or (potentialPawnJumpMoves(bitboardPawnMoves) and emptySquaresBitboard())
+
+    private fun potentialPawnJumpMoves(bitboardPawnMoves: Long) =
+        if (isWhiteToMove) (bitboardPawnMoves shl 8) and RANK_4 else (bitboardPawnMoves shr 8) and RANK_5
 
     fun generateLegalQuiesceMoves(includeChecks: Boolean): MutableList<Int> {
         val moves: MutableList<Int> = ArrayList()
@@ -246,7 +229,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         val kingSquare: Int = (if (isWhiteToMove) whiteKingSquare else blackKingSquare).toInt()
         val enemyKingSquare:Int = (if (isWhiteToMove) blackKingSquare else whiteKingSquare).toInt()
         moves.addAll(generateQuiesceKnightMoves(includeChecks,
-                enemyKingSquare.toInt(),
+                enemyKingSquare,
                 if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN)))
         moves.addAll(addMoves(kingSquare shl 16, kingMoves[kingSquare] and possibleDestinations))
         moves.addAll(generateQuiescePawnMoves(includeChecks,
@@ -283,16 +266,14 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun generateQuiescePawnMoves(includeChecks: Boolean, bitboardMaskForwardPawnMoves: List<Long>, bitboardMaskCapturePawnMoves: List<Long>, enemyKingSquare: Int, pawnBitboard: Long): List<Int> {
-        var pawnBitboard = pawnBitboard
         var bitboardPawnMoves: Long
         val moves: MutableList<Int> = ArrayList()
-        while (pawnBitboard != 0L) {
-            val bitRef = java.lang.Long.numberOfTrailingZeros(pawnBitboard)
-            pawnBitboard = pawnBitboard xor (1L shl bitRef)
+        val squares = squareList(pawnBitboard)
+        for (bitRef in squares) {
             bitboardPawnMoves = 0
             if (includeChecks) {
                 bitboardPawnMoves = getBitboardPawnJumpMoves(
-                        bitboardMaskForwardPawnMoves[bitRef] and engineBitboards.getPieceBitboard(BitboardType.ALL).inv())
+                        bitboardMaskForwardPawnMoves[bitRef] and emptySquaresBitboard())
                 bitboardPawnMoves = if (isWhiteToMove) {
                     bitboardPawnMoves and blackPawnMovesCapture[enemyKingSquare]
                 } else {
@@ -301,20 +282,20 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
             }
 
             // promotions
-            bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskForwardPawnMoves[bitRef] and engineBitboards.getPieceBitboard(BitboardType.ALL).inv() and (RANK_1 or RANK_8))
-            bitboardPawnMoves = getBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
+            bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskForwardPawnMoves[bitRef] and emptySquaresBitboard() and (RANK_1 or RANK_8))
+            bitboardPawnMoves = addBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
             moves.addAll(addPossiblePromotionMoves(bitRef shl 16, bitboardPawnMoves, true))
         }
         return moves
     }
 
+    private fun emptySquaresBitboard() = engineBitboards.getPieceBitboard(BitboardType.ALL).inv()
+
     private fun generateQuiesceKnightMoves(includeChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long): List<Int> {
-        var knightBitboard = knightBitboard
         val moves: MutableList<Int> = ArrayList()
         var possibleDestinations: Long
-        while (knightBitboard != 0L) {
-            val bitRef = java.lang.Long.numberOfTrailingZeros(knightBitboard)
-            knightBitboard = knightBitboard xor (1L shl bitRef)
+        val squares = squareList(knightBitboard)
+        for (bitRef in squares) {
             possibleDestinations = if (includeChecks) {
                 engineBitboards.getPieceBitboard(BitboardType.ENEMY) or (knightMoves[enemyKingSquare] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
             } else {
@@ -428,7 +409,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         val capturePiece = squareContents[moveTo.toInt()]
         val movePiece = squareContents[moveFrom.toInt()]
 
-        var moveDetail = MoveDetail()
+        val moveDetail = MoveDetail()
         moveDetail.capturePiece = SquareOccupant.NONE
         moveDetail.move = compactMove
         moveDetail.hashValue = boardHashObject.trackedHashValue
@@ -453,7 +434,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         squareContents[moveFrom.toInt()] = SquareOccupant.NONE
         squareContents[moveTo.toInt()] = movePiece
         makeNonTrivialMoveTypeAdjustments(compactMove, capturePiece, movePiece)
-        isWhiteToMove = !isWhiteToMove
+        switchMover()
 
         numMovesMade++
 
@@ -570,7 +551,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece: SquareOccupant?, toMask: Long) {
-        moveList[numMovesMade]!!.capturePiece = capturePiece!!
+        moveList[numMovesMade].capturePiece = capturePiece!!
         halfMoveCount = 0
         engineBitboards.xorPieceBitboard(capturePiece.index, toMask)
         if (capturePiece == SquareOccupant.BR) {
@@ -617,9 +598,9 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         halfMoveCount = 0
         if (toMask and RANK_4 != 0L && fromMask and RANK_2 != 0L) {
             engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, fromMask shl 8)
-        } else if (toMask == moveList[numMovesMade]!!.enPassantBitboard) {
+        } else if (toMask == moveList[numMovesMade].enPassantBitboard) {
             engineBitboards.xorPieceBitboard(SquareOccupant.BP.index, toMask ushr 8)
-            moveList[numMovesMade]!!.capturePiece = SquareOccupant.BP
+            moveList[numMovesMade].capturePiece = SquareOccupant.BP
             squareContents[moveTo - 8] = SquareOccupant.NONE
         } else if (compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value != 0) {
             val promotionPieceMask = fromValue(compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value)
@@ -686,7 +667,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun replaceMovedPiece(fromSquare: Int, fromMask: Long, toMask: Long): SquareOccupant {
-        val movePiece = moveList[numMovesMade]!!.movePiece
+        val movePiece = moveList[numMovesMade].movePiece
         engineBitboards.xorPieceBitboard(movePiece.index, toMask or fromMask)
         if (movePiece == SquareOccupant.WK) {
             whiteKingSquare = fromSquare.toByte()
@@ -722,7 +703,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     @Throws(InvalidMoveException::class)
     private fun removePromotionPiece(fromMask: Long, toMask: Long): Boolean {
-        val promotionPiece = moveList[numMovesMade]!!.move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
+        val promotionPiece = moveList[numMovesMade].move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
         if (promotionPiece != 0) {
             if (isWhiteToMove) {
                 engineBitboards.xorPieceBitboard(BitboardType.WP, fromMask)
@@ -761,7 +742,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         get() = java.lang.Long.bitCount(engineBitboards.getPieceBitboard(BitboardType.BP)) * pieceValue(Piece.PAWN)
 
     private fun replaceCapturedPiece(toSquare: Int, toMask: Long) {
-        val capturePiece = moveList[numMovesMade]!!.capturePiece
+        val capturePiece = moveList[numMovesMade].capturePiece
         if (capturePiece != SquareOccupant.NONE) {
             squareContents[toSquare] = capturePiece
             engineBitboards.xorPieceBitboard(capturePiece.index, toMask)
@@ -769,13 +750,13 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun unMakeEnPassants(toSquare: Int, fromMask: Long, toMask: Long): Boolean {
-        if (toMask == moveList[numMovesMade]!!.enPassantBitboard) {
-            if (moveList[numMovesMade]!!.movePiece == SquareOccupant.WP) {
+        if (toMask == moveList[numMovesMade].enPassantBitboard) {
+            if (moveList[numMovesMade].movePiece == SquareOccupant.WP) {
                 engineBitboards.xorPieceBitboard(BitboardType.WP, toMask or fromMask)
                 engineBitboards.xorPieceBitboard(BitboardType.BP, toMask ushr 8)
                 squareContents[toSquare - 8] = SquareOccupant.BP
                 return true
-            } else if (moveList[numMovesMade]!!.movePiece == SquareOccupant.BP) {
+            } else if (moveList[numMovesMade].movePiece == SquareOccupant.BP) {
                 engineBitboards.xorPieceBitboard(BitboardType.BP, toMask or fromMask)
                 engineBitboards.xorPieceBitboard(BitboardType.WP, toMask shl 8)
                 squareContents[toSquare + 8] = SquareOccupant.WP
@@ -786,16 +767,16 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     fun lastCapturePiece(): SquareOccupant {
-        return moveList[numMovesMade - 1]!!.capturePiece
+        return moveList[numMovesMade - 1].capturePiece
     }
 
     fun wasCapture(): Boolean {
-        return moveList[numMovesMade - 1]!!.capturePiece == SquareOccupant.NONE
+        return moveList[numMovesMade - 1].capturePiece == SquareOccupant.NONE
     }
 
     fun wasPawnPush(): Boolean {
-        val toSquare = moveList[numMovesMade - 1]!!.move and 63
-        val movePiece = moveList[numMovesMade - 1]!!.movePiece
+        val toSquare = moveList[numMovesMade - 1].move and 63
+        val movePiece = moveList[numMovesMade - 1].movePiece
         if (movePiece.piece != Piece.PAWN) {
             return false
         }
@@ -813,23 +794,23 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return false
     }
 
+    private fun switchMover() {
+        isWhiteToMove = !isWhiteToMove
+    }
+
     val allPiecesBitboard: Long
         get() = engineBitboards.getPieceBitboard(BitboardType.ALL)
 
-    fun getWhiteKingSquare(): Int {
-        return whiteKingSquare.toInt()
-    }
+    fun getWhiteKingSquare() = whiteKingSquare.toInt()
 
-    fun getBlackKingSquare(): Int {
-        return blackKingSquare.toInt()
-    }
+    fun getBlackKingSquare() = blackKingSquare.toInt()
 
     @Deprecated("")
     fun getBitboardByIndex(index: Int): Long {
         return engineBitboards.getPieceBitboard(BitboardType.fromIndex(index))
     }
 
-    fun getBitboard(bitboardType: BitboardType?): Long {
+    fun getBitboard(bitboardType: BitboardType): Long {
         return engineBitboards.getPieceBitboard(bitboardType)
     }
 
@@ -841,7 +822,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         var occurrences = 0
         var i = numMovesMade - 2
         while (i >= 0 && i >= numMovesMade - halfMoveCount) {
-            if (moveList[i]!!.hashValue == boardHashCode) {
+            if (moveList[i].hashValue == boardHashCode) {
                 occurrences++
             }
             i -= 2
@@ -892,7 +873,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         }
 
     private val fenBoard: StringBuilder
-        private get() {
+        get() {
             val board = charBoard
             val fen = StringBuilder()
             var spaces = '0'
@@ -920,7 +901,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         }
 
     private val charBoard: CharArray
-        private get() {
+        get() {
             val board = CharArray(64){'0'}
             val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
             for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
@@ -933,15 +914,13 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         }
 
     fun isMoveLegal(moveToVerify: Int): Boolean {
-        var moveToVerify = moveToVerify
-        moveToVerify = moveToVerify and 0x00FFFFFF
         val moves: List<Int> = generateLegalMoves()
         try {
             var i = 0
             while (i < moves.size) {
                 val engineMove = EngineMove(moves[i] and 0x00FFFFFF)
                 if (makeMove(engineMove)) {
-                    if (engineMove.compact == moveToVerify) {
+                    if (engineMove.compact == moveToVerify  and 0x00FFFFFF) {
                         unMakeMove()
                         return true
                     }
