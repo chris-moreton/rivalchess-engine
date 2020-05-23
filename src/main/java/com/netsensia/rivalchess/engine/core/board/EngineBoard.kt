@@ -16,6 +16,9 @@ import com.netsensia.rivalchess.enums.PromotionPieceMask.Companion.fromValue
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -104,6 +107,35 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         for (toSquare in squares) {
             yield(fromSquareMask or toSquare)
         }
+    }
+
+    fun generateLegalMovesCoroutines(): MutableList<Int> {
+        val moves: MutableList<Int> = ArrayList()
+        runBlocking {
+            val knightMoves = async(start = CoroutineStart.LAZY) {
+                generateKnightMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN))
+            }
+            val kingMoves = async(start = CoroutineStart.LAZY) {
+                generateKingMoves(if (isWhiteToMove) whiteKingSquare.toInt() else blackKingSquare.toInt())
+            }
+            val pawnMoves = async(start = CoroutineStart.LAZY) {
+                generatePawnMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WP) else engineBitboards.getPieceBitboard(BitboardType.BP),
+                        if (isWhiteToMove) whitePawnMovesForward else blackPawnMovesForward,
+                        if (isWhiteToMove) whitePawnMovesCapture else blackPawnMovesCapture)
+            }
+            val rookTypeMoves = async(start = CoroutineStart.LAZY) {
+                generateSliderMoves(SquareOccupant.WR.index, SquareOccupant.BR.index, MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook)
+            }
+            val bishopTypeMoves = async(start = CoroutineStart.LAZY) {
+                generateSliderMoves(SquareOccupant.WB.index, SquareOccupant.BB.index, MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop)
+            }
+            moves.addAll(knightMoves.await())
+            moves.addAll(kingMoves.await())
+            moves.addAll(pawnMoves.await())
+            moves.addAll(rookTypeMoves.await())
+            moves.addAll(bishopTypeMoves.await())
+        }
+        return moves
     }
 
     fun generateLegalMoves() : List<Int> =
