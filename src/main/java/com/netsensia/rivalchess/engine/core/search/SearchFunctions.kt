@@ -23,5 +23,5 @@ fun getHighScoreMove(theseMoves: IntArray): Int {
 
 fun inCheck(whiteKingSquare: Int, blackKingSquare: Int, mover: Colour) =
         if (mover == Colour.BLACK)
-            EngineBitboards.getInstance().isSquareAttackedBy(blackKingSquare, Colour.WHITE)
-        else EngineBitboards.getInstance().isSquareAttackedBy(whiteKingSquare, Colour.BLACK)
+            EngineBitboards.instance.isSquareAttackedBy(blackKingSquare, Colour.WHITE)
+        else EngineBitboards.instance.isSquareAttackedBy(whiteKingSquare, Colour.BLACK)

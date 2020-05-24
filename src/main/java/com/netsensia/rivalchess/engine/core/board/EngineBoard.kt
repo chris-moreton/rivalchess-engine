@@ -24,7 +24,7 @@ import kotlin.collections.ArrayList
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     @JvmField
-    val engineBitboards = EngineBitboards.getInstance()
+    val engineBitboards = EngineBitboards.instance
     val boardHashObject = BoardHash()
     var castlePrivileges = 0
         private set
@@ -64,15 +64,12 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val moveArray: IntArray
         get() {
             val legalMoves = generateLegalMoves()
-            var intArray = legalMoves.stream().mapToInt(Int::toInt).toArray()
-            intArray += 0
-            return intArray
+            return legalMoves.stream().mapToInt(Int::toInt).toArray() + 0
         }
 
     fun getQuiesceMoveArray(includeChecks: Boolean): IntArray {
         val legalMoves = generateLegalQuiesceMoves(includeChecks)
-        legalMoves.add(0)
-        return legalMoves.stream().mapToInt(Int::toInt).toArray()
+        return legalMoves.stream().mapToInt(Int::toInt).toArray() + 0
     }
 
     fun isGameOver(): Boolean {
@@ -82,58 +79,41 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                     .count() == 0L
         }
 
-    private fun addPossiblePromotionMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean): List<Int> {
-        val moves: MutableList<Int> = ArrayList()
-
-        val squares = squareListSequence(bitboard)
-
-        for (toSquare in squares) {
+    private fun addPossiblePromotionMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean) = sequence {
+        
+        for (toSquare in squareListSequence(bitboard)) {
             if (toSquare >= 56 || toSquare <= 7) {
-                moves.add(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
+                yield(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
                 if (!queenCapturesOnly) {
-                    moves.add(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.value)
-                    moves.add(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.value)
-                    moves.add(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.value)
+                    yield(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.value)
+                    yield(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.value)
+                    yield(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.value)
                 }
             } else {
-                moves.add(fromSquareMoveMask or toSquare)
+                yield(fromSquareMoveMask or toSquare)
             }
         }
-        return moves
     }
 
     private fun addMoves(fromSquareMask: Int, bitboard: Long) = sequence {
-        val squares = squareListSequence(bitboard)
-        for (toSquare in squares) {
-            yield(fromSquareMask or toSquare)
-        }
+        for (toSquare in squareListSequence(bitboard)) yield(fromSquareMask or toSquare)
     }
 
-    fun generateLegalMovesCoroutines(): MutableList<Int> {
+    fun generateLegalMovesCoro(): MutableList<Int> {
         val moves: MutableList<Int> = ArrayList()
         runBlocking {
-            val knightMoves = async(start = CoroutineStart.LAZY) {
-                generateKnightMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN))
-            }
-            val kingMoves = async(start = CoroutineStart.LAZY) {
-                generateKingMoves(if (isWhiteToMove) whiteKingSquare.toInt() else blackKingSquare.toInt())
-            }
-            val pawnMoves = async(start = CoroutineStart.LAZY) {
+            val kpMoves = async(start = CoroutineStart.LAZY) {
+                generateKnightMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN)) +
+                generateKingMoves(if (isWhiteToMove) whiteKingSquare.toInt() else blackKingSquare.toInt()) +
                 generatePawnMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WP) else engineBitboards.getPieceBitboard(BitboardType.BP),
                         if (isWhiteToMove) whitePawnMovesForward else blackPawnMovesForward,
                         if (isWhiteToMove) whitePawnMovesCapture else blackPawnMovesCapture)
             }
-            val rookTypeMoves = async(start = CoroutineStart.LAZY) {
-                generateSliderMoves(SquareOccupant.WR.index, SquareOccupant.BR.index, MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook)
-            }
-            val bishopTypeMoves = async(start = CoroutineStart.LAZY) {
+            val sliderMoves = async(start = CoroutineStart.LAZY) {
+                generateSliderMoves(SquareOccupant.WR.index, SquareOccupant.BR.index, MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook) +
                 generateSliderMoves(SquareOccupant.WB.index, SquareOccupant.BB.index, MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop)
             }
-            moves.addAll(knightMoves.await())
-            moves.addAll(kingMoves.await())
-            moves.addAll(pawnMoves.await())
-            moves.addAll(rookTypeMoves.await())
-            moves.addAll(bishopTypeMoves.await())
+            moves.addAll(kpMoves.await() + sliderMoves.await())
         }
         return moves
     }
@@ -184,44 +164,38 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun generateKingMoves(kingSquare: Int) = sequence {
-        if (isWhiteToMove) {
-            yieldAll(generateWhiteKingMoves())
-        } else {
-            yieldAll(generateBlackKingMoves())
-        }
+        yieldAll(if (isWhiteToMove)
+            generateCastleMoves(
+                    3, 4, Colour.BLACK,
+                    Pair(CastleBitMask.CASTLEPRIV_WK.value, CastleBitMask.CASTLEPRIV_WQ.value),
+                    Pair(WHITEKINGSIDECASTLESQUARES, WHITEQUEENSIDECASTLESQUARES)
+            ) else
+            generateCastleMoves(
+                    59, 60, Colour.WHITE,
+                    Pair(CastleBitMask.CASTLEPRIV_BK.value, CastleBitMask.CASTLEPRIV_BQ.value),
+                    Pair(BLACKKINGSIDECASTLESQUARES, BLACKQUEENSIDECASTLESQUARES)
+            )
+        )
+
         yieldAll(addMoves(kingSquare shl 16, kingMoves[kingSquare] and
                 engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()))
     }
 
-    private fun generateWhiteKingMoves() = sequence {
-        val whiteKingStartSquare = 3
-        val whiteQueenStartSquare = 4
-        val opponent = Colour.BLACK
-        if ((castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and WHITEKINGSIDECASTLESQUARES == 0L &&
-                !engineBitboards.isSquareAttackedBy(whiteKingStartSquare, opponent) &&
-                !engineBitboards.isSquareAttackedBy(whiteKingStartSquare - 1, opponent)) {
-            yield(whiteKingStartSquare shl 16 or whiteKingStartSquare - 2)
+    private fun generateCastleMoves(
+            kingStartSquare: Int = 3,
+            queenStartSquare: Int = 4,
+            opponent: Colour = Colour.BLACK,
+            privs: Pair<Int,Int>,
+            castleSquares: Pair<Long,Long>) = sequence {
+        if ((castlePrivileges and privs.first).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and castleSquares.first == 0L &&
+                !engineBitboards.isSquareAttackedBy(kingStartSquare, opponent) &&
+                !engineBitboards.isSquareAttackedBy(kingStartSquare - 1, opponent)) {
+            yield(kingStartSquare shl 16 or kingStartSquare - 2)
         }
-        if ((castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and WHITEQUEENSIDECASTLESQUARES == 0L &&
-                !engineBitboards.isSquareAttackedBy(whiteKingStartSquare, opponent) &&
-                !engineBitboards.isSquareAttackedBy(whiteQueenStartSquare, opponent)) {
-            yield(whiteKingStartSquare shl 16 or whiteQueenStartSquare + 1)
-        }
-    }
-
-    private fun generateBlackKingMoves() = sequence {
-        val blackKingStartSquare = 59
-        val opponent = Colour.WHITE
-        val blackQueenStartSquare = 60
-        if ((castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and BLACKKINGSIDECASTLESQUARES == 0L &&
-                !engineBitboards.isSquareAttackedBy(blackKingStartSquare, opponent) &&
-                !engineBitboards.isSquareAttackedBy(blackKingStartSquare - 1, opponent)) {
-            yield(blackKingStartSquare shl 16 or blackKingStartSquare - 2)
-        }
-        if ((castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and BLACKQUEENSIDECASTLESQUARES == 0L &&
-                !engineBitboards.isSquareAttackedBy(blackKingStartSquare, opponent) &&
-                !engineBitboards.isSquareAttackedBy(blackQueenStartSquare, opponent)) {
-            yield(blackKingStartSquare shl 16 or blackQueenStartSquare + 1)
+        if ((castlePrivileges and privs.second).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and castleSquares.second == 0L &&
+                !engineBitboards.isSquareAttackedBy(kingStartSquare, opponent) &&
+                !engineBitboards.isSquareAttackedBy(queenStartSquare, opponent)) {
+            yield(kingStartSquare shl 16 or queenStartSquare + 1)
         }
     }
 

@@ -21,7 +21,7 @@ fun EngineBoard.isSquareEmpty(bitRef: Int) = squareContents.get(bitRef) == Squar
 fun EngineBoard.isCapture(move: Int): Boolean {
     val toSquare = move and 63
     var isCapture: Boolean = !isSquareEmpty(toSquare)
-    if (!isCapture && 1L shl toSquare and EngineBitboards.getInstance().getPieceBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
+    if (!isCapture && 1L shl toSquare and EngineBitboards.instance.getPieceBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
             squareContents.get(move ushr 16 and 63).piece == Piece.PAWN) {
         isCapture = true
     }
