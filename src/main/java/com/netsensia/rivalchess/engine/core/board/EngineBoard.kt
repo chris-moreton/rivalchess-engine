@@ -102,18 +102,20 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     fun generateLegalMovesCoro(): MutableList<Int> {
         val moves: MutableList<Int> = ArrayList()
         runBlocking {
-            val kpMoves = async(start = CoroutineStart.LAZY) {
+            val kMoves = async(start = CoroutineStart.DEFAULT) {
                 generateKnightMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN)) +
-                generateKingMoves(if (isWhiteToMove) whiteKingSquare.toInt() else blackKingSquare.toInt()) +
+                generateKingMoves(if (isWhiteToMove) whiteKingSquare.toInt() else blackKingSquare.toInt())
+            }
+            var pawnMoves = async(start = CoroutineStart.DEFAULT) {
                 generatePawnMoves(if (isWhiteToMove) engineBitboards.getPieceBitboard(BitboardType.WP) else engineBitboards.getPieceBitboard(BitboardType.BP),
                         if (isWhiteToMove) whitePawnMovesForward else blackPawnMovesForward,
                         if (isWhiteToMove) whitePawnMovesCapture else blackPawnMovesCapture)
             }
-            val sliderMoves = async(start = CoroutineStart.LAZY) {
+            val sliderMoves = async(start = CoroutineStart.DEFAULT) {
                 generateSliderMoves(SquareOccupant.WR.index, SquareOccupant.BR.index, MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook) +
                 generateSliderMoves(SquareOccupant.WB.index, SquareOccupant.BB.index, MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop)
             }
-            moves.addAll(kpMoves.await() + sliderMoves.await())
+            moves.addAll(kMoves.await() + pawnMoves.await() + sliderMoves.await())
         }
         return moves
     }
