@@ -200,10 +200,9 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun generateKnightMoves(knightBitboard: Long) = sequence {
-        for (bitRef in squareListSequence(knightBitboard)) {
-            yieldAll(addMoves(bitRef shl 16, knightMoves[bitRef] and
-                            engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()))
-        }
+        squareListSequence(knightBitboard).forEach {
+            yieldAll(addMoves(it shl 16, knightMoves[it] and
+                engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())) }
     }
 
     private fun enPassantCaptureRank() = if (isWhiteToMove) RANK_6 else RANK_3
