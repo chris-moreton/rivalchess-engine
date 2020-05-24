@@ -80,23 +80,23 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         }
 
     private fun addPossiblePromotionMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean) = sequence {
-        
-        for (toSquare in squareListSequence(bitboard)) {
-            if (toSquare >= 56 || toSquare <= 7) {
-                yield(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
+
+        squareListSequence(bitboard).forEach {
+            if (it >= 56 || it <= 7) {
+                yield(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
                 if (!queenCapturesOnly) {
-                    yield(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.value)
-                    yield(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.value)
-                    yield(fromSquareMoveMask or toSquare or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.value)
+                    yield(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.value)
+                    yield(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.value)
+                    yield(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.value)
                 }
             } else {
-                yield(fromSquareMoveMask or toSquare)
+                yield(fromSquareMoveMask or it)
             }
         }
     }
 
     private fun addMoves(fromSquareMask: Int, bitboard: Long) = sequence {
-        for (toSquare in squareListSequence(bitboard)) yield(fromSquareMask or toSquare)
+        squareListSequence(bitboard).forEach { yield(fromSquareMask or it) }
     }
 
     fun generateLegalMovesCoro(): MutableList<Int> {
@@ -139,11 +139,12 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                 engineBitboards.getPieceBitboard(BitboardType.WQ) else engineBitboards.getPieceBitboard(BitboardType.fromIndex(blackPieceConstant)) or
                 engineBitboards.getPieceBitboard(BitboardType.BQ)
 
-        val squares = squareListSequence(rookBitboard)
-        for (bitRef in squares) {
+        squareListSequence(rookBitboard).forEach {
             yieldAll(addMoves(
-                    bitRef shl 16,
-                    magicMovesRook[bitRef][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[bitRef]) * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()))
+                    it shl 16,
+                    magicMovesRook[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[it]) *
+                            magicNumberRook[it] ushr magicNumberShiftsRook[it]).toInt()] and
+                            engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()))
         }
     }
 
@@ -154,12 +155,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
         var bitboardPawnMoves: Long
 
-        val squares = squareListSequence(pawnBitboard)
-        for (bitRef in squares) {
-            bitboardPawnMoves = bitboardMaskForwardPawnMoves[bitRef] and emptySquaresBitboard()
+        squareListSequence(pawnBitboard).forEach {
+            bitboardPawnMoves = bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard()
             bitboardPawnMoves = getBitboardPawnJumpMoves(bitboardPawnMoves)
-            bitboardPawnMoves = addBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
-            yieldAll(addPossiblePromotionMoves(bitRef shl 16, bitboardPawnMoves, false))
+            bitboardPawnMoves = addBitboardPawnCaptureMoves(it, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
+            yieldAll(addPossiblePromotionMoves(it shl 16, bitboardPawnMoves, false))
         }
     }
 
@@ -269,12 +269,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     private fun generateQuiescePawnMoves(includeChecks: Boolean, bitboardMaskForwardPawnMoves: List<Long>, bitboardMaskCapturePawnMoves: List<Long>, enemyKingSquare: Int, pawnBitboard: Long): List<Int> {
         var bitboardPawnMoves: Long
         val moves: MutableList<Int> = ArrayList()
-        val squares = squareListSequence(pawnBitboard)
-        for (bitRef in squares) {
+        squareListSequence(pawnBitboard).forEach {
             bitboardPawnMoves = 0
             if (includeChecks) {
                 bitboardPawnMoves = getBitboardPawnJumpMoves(
-                        bitboardMaskForwardPawnMoves[bitRef] and emptySquaresBitboard())
+                        bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard())
                 bitboardPawnMoves = if (isWhiteToMove) {
                     bitboardPawnMoves and blackPawnMovesCapture[enemyKingSquare]
                 } else {
@@ -283,9 +282,9 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
             }
 
             // promotions
-            bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskForwardPawnMoves[bitRef] and emptySquaresBitboard() and (RANK_1 or RANK_8))
-            bitboardPawnMoves = addBitboardPawnCaptureMoves(bitRef, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
-            moves.addAll(addPossiblePromotionMoves(bitRef shl 16, bitboardPawnMoves, true))
+            bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard() and (RANK_1 or RANK_8))
+            bitboardPawnMoves = addBitboardPawnCaptureMoves(it, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
+            moves.addAll(addPossiblePromotionMoves(it shl 16, bitboardPawnMoves, true))
         }
         return moves
     }
@@ -295,14 +294,13 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     private fun generateQuiesceKnightMoves(includeChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long): List<Int> {
         val moves: MutableList<Int> = ArrayList()
         var possibleDestinations: Long
-        val squares = squareListSequence(knightBitboard)
-        for (bitRef in squares) {
+        squareListSequence(knightBitboard).forEach {
             possibleDestinations = if (includeChecks) {
                 engineBitboards.getPieceBitboard(BitboardType.ENEMY) or (knightMoves[enemyKingSquare] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
             } else {
                 engineBitboards.getPieceBitboard(BitboardType.ENEMY)
             }
-            moves.addAll(addMoves(bitRef shl 16, knightMoves[bitRef] and possibleDestinations))
+            moves.addAll(addMoves(it shl 16, knightMoves[it] and possibleDestinations))
         }
         return moves
     }
