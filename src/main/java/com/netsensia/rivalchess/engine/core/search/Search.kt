@@ -1078,7 +1078,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     val fen: String
-        get() = engineBoard.fen
+        get() = engineBoard.getFen()
 
     init {
         engineBoard.setBoard(board)

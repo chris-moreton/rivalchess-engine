@@ -2,10 +2,12 @@ package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.EngineBitboards
+import com.netsensia.rivalchess.bitboards.util.getSetBits
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.core.eval.onlyOneBitSet
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
 import com.netsensia.rivalchess.engine.core.type.EngineMove
+import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.enums.PromotionPieceMask
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
@@ -62,4 +64,107 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
         score = 100
     }
     return score
+}
+
+fun EngineBoard.isMoveLegal(moveToVerify: Int): Boolean {
+    val moves: List<Int> = generateLegalMoves().toList()
+    try {
+        for (move in moves) {
+            val engineMove = EngineMove(move and 0x00FFFFFF)
+            if (makeMove(engineMove)) {
+                unMakeMove()
+                if (engineMove.compact == moveToVerify and 0x00FFFFFF)
+                    return true
+            }
+        }
+    } catch (e: InvalidMoveException) {
+        return false
+    }
+    return false
+}
+
+fun EngineBoard.getCharBoard(): CharArray {
+        val board = CharArray(64){'0'}
+        val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
+        for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
+            val bitsSet = getSetBits(engineBitboards.getPieceBitboard(BitboardType.fromIndex(i)), ArrayList())
+            for (bitSet in bitsSet) {
+                board[bitSet] = pieces[i]
+            }
+        }
+        return board
+    }
+
+fun EngineBoard.getFenBoard(): StringBuilder {
+        val board = getCharBoard()
+        val fen = StringBuilder()
+        var spaces = '0'
+        for (i in 63 downTo 0) {
+            if (board[i] == '0') {
+                spaces++
+            } else {
+                if (spaces > '0') {
+                    fen.append(spaces)
+                    spaces = '0'
+                }
+                fen.append(board[i])
+            }
+            if (i % 8 == 0) {
+                if (spaces > '0') {
+                    fen.append(spaces)
+                    spaces = '0'
+                }
+                if (i > 0) {
+                    fen.append('/')
+                }
+            }
+        }
+        return fen
+    }
+
+fun EngineBoard.getFen(): String {
+        val fen = getFenBoard()
+        fen.append(' ')
+        fen.append(if (isWhiteToMove) 'w' else 'b')
+        fen.append(' ')
+        var noPrivs = true
+        if (castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value != 0) {
+            fen.append('K')
+            noPrivs = false
+        }
+        if (castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value != 0) {
+            fen.append('Q')
+            noPrivs = false
+        }
+        if (castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value != 0) {
+            fen.append('k')
+            noPrivs = false
+        }
+        if (castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value != 0) {
+            fen.append('q')
+            noPrivs = false
+        }
+        if (noPrivs) fen.append('-')
+        fen.append(' ')
+        val bitboard = engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
+        if (java.lang.Long.bitCount(bitboard) > 0) {
+            val epSquare = java.lang.Long.numberOfTrailingZeros(bitboard)
+            val file = (7 - epSquare % 8).toChar()
+            val rank = (if (epSquare <= 23) 2 else 5).toChar()
+            fen.append((file + 'a'.toInt()))
+            fen.append((rank + '1'.toInt()))
+        } else {
+            fen.append('-')
+        }
+        fen.append(' ')
+        fen.append(halfMoveCount)
+        fen.append(' ')
+        fen.append(numMovesMade / 2 + 1)
+        return fen.toString()
+    }
+
+fun EngineBoard.isGameOver(): Boolean {
+    return generateLegalMoves().toList().stream()
+            .filter { m: Int -> isMoveLegal(m) }
+            .count() == 0L
 }

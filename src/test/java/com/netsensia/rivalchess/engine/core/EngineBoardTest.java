@@ -14,6 +14,7 @@ import com.netsensia.rivalchess.openings.OpeningLibrary;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.makeMove;
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,7 +34,7 @@ public class EngineBoardTest {
         board.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         for (String move : moves) {
-            board.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
+            makeMove(board, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
         }
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
@@ -52,7 +53,7 @@ public class EngineBoardTest {
         moves.add("b8a6");
 
         for (String move : moves) {
-            board.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
+            makeMove(board, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
         }
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
@@ -63,7 +64,7 @@ public class EngineBoardTest {
         moves.add("a6b8");
 
         for (String move : moves) {
-            board.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
+            makeMove(board, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
         }
 
         assertEquals(3, board.previousOccurrencesOfThisPosition());
@@ -79,7 +80,7 @@ public class EngineBoardTest {
         board.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         for (String move : moves) {
-            board.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
+            makeMove(board, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move));
         }
     }
 
@@ -92,16 +93,16 @@ public class EngineBoardTest {
 
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
         
-        assertFalse(engineBoard.isGameOver());
+        assertFalse(BoardExtensionsKt.isGameOver(engineBoard));
 
         engineBoard.setBoard(FenUtils.getBoardModel(SCHOLARS_MATE));
-        assertTrue(engineBoard.isGameOver());
+        assertTrue(BoardExtensionsKt.isGameOver(engineBoard));
 
         engineBoard.setBoard(FenUtils.getBoardModel(STALEMATE));
-        assertTrue(engineBoard.isGameOver());
+        assertTrue(BoardExtensionsKt.isGameOver(engineBoard));
 
         engineBoard.setBoard(FenUtils.getBoardModel(NOT_STALEMATE));
-        assertFalse(engineBoard.isGameOver());
+        assertFalse(BoardExtensionsKt.isGameOver(engineBoard));
     }
 
     @Test
@@ -170,12 +171,12 @@ public class EngineBoardTest {
                 + pieceValue(Piece.ROOK) * 2,
                 engineBoard.getWhitePieceValues());
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d7d6"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("f3e5"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d6e5"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d7d6"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("f3e5"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d6e5"));
 
         assertEquals(
                 pieceValue(Piece.QUEEN)
@@ -197,12 +198,12 @@ public class EngineBoardTest {
                         + pieceValue(Piece.ROOK) * 2,
                 engineBoard.getBlackPieceValues());
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d7d6"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("f3e5"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d6e5"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d7d6"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("f3e5"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d6e5"));
 
         assertEquals(
                 pieceValue(Piece.QUEEN)
@@ -217,40 +218,40 @@ public class EngineBoardTest {
     public void getFen() throws IllegalFenException, InvalidMoveException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
-        assertEquals(ConstantsKt.FEN_START_POS, engineBoard.getFen());
+        assertEquals(ConstantsKt.FEN_START_POS, BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
-        assertEquals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
+        assertEquals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d7d6"));
-        assertEquals("rnbqkbnr/ppp1pppp/3p4/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d7d6"));
+        assertEquals("rnbqkbnr/ppp1pppp/3p4/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
-        assertEquals("rnbqkbnr/ppp1pppp/3p4/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
+        assertEquals("rnbqkbnr/ppp1pppp/3p4/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
-        assertEquals("rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq e6 0 3", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
+        assertEquals("rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq e6 0 3", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("f3e5"));
-        assertEquals("rnbqkbnr/ppp2ppp/3p4/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("f3e5"));
+        assertEquals("rnbqkbnr/ppp2ppp/3p4/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d6e5"));
-        assertEquals("rnbqkbnr/ppp2ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 0 4", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d6e5"));
+        assertEquals("rnbqkbnr/ppp2ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 0 4", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("c2c4"));
-        assertEquals("rnbqkbnr/ppp2ppp/8/4p3/2P1P3/8/PP1P1PPP/RNBQKB1R b KQkq c3 0 4", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("c2c4"));
+        assertEquals("rnbqkbnr/ppp2ppp/8/4p3/2P1P3/8/PP1P1PPP/RNBQKB1R b KQkq c3 0 4", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b5"));
-        assertEquals("rnbqkbnr/p1p2ppp/8/1p2p3/2P1P3/8/PP1P1PPP/RNBQKB1R w KQkq b6 0 5", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b5"));
+        assertEquals("rnbqkbnr/p1p2ppp/8/1p2p3/2P1P3/8/PP1P1PPP/RNBQKB1R w KQkq b6 0 5", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("f1e2"));
-        assertEquals("rnbqkbnr/p1p2ppp/8/1p2p3/2P1P3/8/PP1PBPPP/RNBQK2R b KQkq - 1 5", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("f1e2"));
+        assertEquals("rnbqkbnr/p1p2ppp/8/1p2p3/2P1P3/8/PP1PBPPP/RNBQK2R b KQkq - 1 5", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b5b4"));
-        assertEquals("rnbqkbnr/p1p2ppp/8/4p3/1pP1P3/8/PP1PBPPP/RNBQK2R w KQkq - 0 6", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b5b4"));
+        assertEquals("rnbqkbnr/p1p2ppp/8/4p3/1pP1P3/8/PP1PBPPP/RNBQK2R w KQkq - 0 6", BoardExtensionsKt.getFen(engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e1f1"));
-        assertEquals("rnbqkbnr/p1p2ppp/8/4p3/1pP1P3/8/PP1PBPPP/RNBQ1K1R b kq - 1 6", engineBoard.getFen());
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e1f1"));
+        assertEquals("rnbqkbnr/p1p2ppp/8/4p3/1pP1P3/8/PP1PBPPP/RNBQ1K1R b kq - 1 6", BoardExtensionsKt.getFen(engineBoard));
     }
 
 }

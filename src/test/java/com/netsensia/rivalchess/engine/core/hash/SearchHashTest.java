@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import junit.framework.TestCase;
 
+import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.makeMove;
 import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.unMakeMove;
 
 public class SearchHashTest extends TestCase {
@@ -18,12 +19,12 @@ public class SearchHashTest extends TestCase {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
         final BoardHash boardHash = engineBoard.getBoardHashObject();
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g8f6"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b1c3"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b8c6"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e7e5"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g8f6"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b1c3"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b8c6"));
 
         boardHash.storeHashMove(
                 ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
@@ -34,13 +35,13 @@ public class SearchHashTest extends TestCase {
         unMakeMove(engineBoard);
         unMakeMove(engineBoard);
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b1c3"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b8c6"));
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b1c3"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b8c6"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3"));
 
         assertFalse(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
 
-        engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g8f6"));
+        makeMove(engineBoard, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g8f6"));
 
         assertTrue(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
 

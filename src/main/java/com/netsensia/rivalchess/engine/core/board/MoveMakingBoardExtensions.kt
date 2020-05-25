@@ -1,6 +1,10 @@
 package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.*
+import com.netsensia.rivalchess.engine.core.search.inCheck
+import com.netsensia.rivalchess.engine.core.type.EngineMove
+import com.netsensia.rivalchess.engine.core.type.MoveDetail
+import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.enums.PromotionPieceMask
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Square
@@ -141,4 +145,231 @@ private fun EngineBoard.replaceMovedPiece(fromSquare: Int, fromMask: Long, toMas
         blackKingSquare = fromSquare.toByte()
     }
     return movePiece
+}
+
+@Throws(InvalidMoveException::class)
+private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(compactMove: Int, capturePiece: SquareOccupant, movePiece: SquareOccupant?) {
+    val moveFrom = (compactMove ushr 16).toByte()
+    val moveTo = (compactMove and 63).toByte()
+    val toMask = 1L shl moveTo.toInt()
+    if (isWhiteToMove) {
+        if (movePiece == SquareOccupant.WP) {
+            makeSpecialWhitePawnMoveAdjustments(compactMove)
+        } else if (movePiece == SquareOccupant.WR) {
+            adjustCastlePrivilegesForWhiteRookMove(moveFrom)
+        } else if (movePiece == SquareOccupant.WK) {
+            adjustKingVariablesForWhiteKingMove(compactMove)
+        }
+        if (capturePiece != SquareOccupant.NONE) {
+            makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece, toMask)
+        }
+    } else {
+        if (movePiece == SquareOccupant.BP) {
+            makeSpecialBlackPawnMoveAdjustments(compactMove)
+        } else if (movePiece == SquareOccupant.BR) {
+            adjustCastlePrivilegesForBlackRookMove(moveFrom)
+        } else if (movePiece == SquareOccupant.BK) {
+            adjustKingVariablesForBlackKingMove(compactMove)
+        }
+        if (capturePiece != SquareOccupant.NONE) {
+            makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece, toMask)
+        }
+    }
+}
+
+@Throws(InvalidMoveException::class)
+fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
+    val compactMove = engineMove.compact
+    val moveFrom = (compactMove ushr 16).toByte()
+    val moveTo = (compactMove and 63).toByte()
+    val capturePiece = squareContents[moveTo.toInt()]
+    val movePiece = squareContents[moveFrom.toInt()]
+
+    val moveDetail = MoveDetail()
+    moveDetail.capturePiece = SquareOccupant.NONE
+    moveDetail.move = compactMove
+    moveDetail.hashValue = boardHashObject.trackedHashValue
+    moveDetail.isOnNullMove = isOnNullMove
+    moveDetail.pawnHashValue = boardHashObject.trackedPawnHashValue
+    moveDetail.halfMoveCount = halfMoveCount.toByte()
+    moveDetail.enPassantBitboard = engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
+    moveDetail.castlePrivileges = castlePrivileges.toByte()
+    moveDetail.movePiece = movePiece
+
+    if (moveHistory.size <= numMovesMade) {
+        moveHistory.add(moveDetail)
+    } else {
+        moveHistory[numMovesMade] = moveDetail
+    }
+
+    boardHashObject.move(this, engineMove)
+    isOnNullMove = false
+    halfMoveCount++
+    engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 0)
+    engineBitboards.movePiece(movePiece, compactMove)
+    squareContents[moveFrom.toInt()] = SquareOccupant.NONE
+    squareContents[moveTo.toInt()] = movePiece
+    makeNonTrivialMoveTypeAdjustments(compactMove, capturePiece, movePiece)
+    switchMover()
+
+    numMovesMade++
+
+    calculateSupplementaryBitboards()
+    if (inCheck(whiteKingSquare.toInt(), blackKingSquare.toInt(), mover.opponent())) {
+        unMakeMove()
+        return false
+    }
+    return true
+}
+
+private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece: SquareOccupant, toMask: Long) {
+    moveHistory[numMovesMade].capturePiece = capturePiece
+    halfMoveCount = 0
+    engineBitboards.xorPieceBitboard(capturePiece.index, toMask)
+    if (capturePiece == SquareOccupant.WR) {
+        if (toMask == WHITEKINGSIDEROOKMASK) {
+            castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value.inv()
+        } else if (toMask == WHITEQUEENSIDEROOKMASK) {
+            castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value.inv()
+        }
+    }
+}
+
+private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
+    val moveFrom = (compactMove ushr 16).toByte()
+    val moveTo = (compactMove and 63).toByte()
+    val fromMask = 1L shl moveFrom.toInt()
+    val toMask = 1L shl moveTo.toInt()
+    castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BNONE.value
+    blackKingSquare = moveTo
+    if (toMask or fromMask == BLACKKINGSIDECASTLEMOVEMASK) {
+        engineBitboards.xorPieceBitboard(BitboardType.BR, BLACKKINGSIDECASTLEROOKMOVE)
+        squareContents[Square.H8.bitRef] = SquareOccupant.NONE
+        squareContents[Square.F8.bitRef] = SquareOccupant.BR
+    } else if (toMask or fromMask == BLACKQUEENSIDECASTLEMOVEMASK) {
+        engineBitboards.xorPieceBitboard(BitboardType.BR, BLACKQUEENSIDECASTLEROOKMOVE)
+        squareContents[Square.A8.bitRef] = SquareOccupant.NONE
+        squareContents[Square.D8.bitRef] = SquareOccupant.BR
+    }
+}
+
+private fun EngineBoard.adjustCastlePrivilegesForBlackRookMove(moveFrom: Byte) {
+    if (moveFrom.toInt() == Square.A8.bitRef) castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value.inv() else if (moveFrom.toInt() == Square.H8.bitRef) castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value.inv()
+}
+
+@Throws(InvalidMoveException::class)
+private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
+    val moveFrom = (compactMove ushr 16).toByte()
+    val moveTo = (compactMove and 63).toByte()
+    val fromMask = 1L shl moveFrom.toInt()
+    val toMask = 1L shl moveTo.toInt()
+    halfMoveCount = 0
+    if (toMask and RANK_5 != 0L && fromMask and RANK_7 != 0L) {
+        engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, toMask shl 8)
+    } else if (toMask == moveHistory[numMovesMade].enPassantBitboard) {
+        engineBitboards.xorPieceBitboard(BitboardType.WP, toMask shl 8)
+        moveHistory[numMovesMade].capturePiece = SquareOccupant.WP
+        squareContents[moveTo + 8] = SquareOccupant.NONE
+    } else if (compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value != 0) {
+        val promotionPieceMask = compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
+        when (PromotionPieceMask.fromValue(promotionPieceMask)) {
+            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
+                engineBitboards.orPieceBitboard(BitboardType.BQ, toMask)
+                squareContents[moveTo.toInt()] = SquareOccupant.BQ
+            }
+            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
+                engineBitboards.orPieceBitboard(BitboardType.BR, toMask)
+                squareContents[moveTo.toInt()] = SquareOccupant.BR
+            }
+            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
+                engineBitboards.orPieceBitboard(BitboardType.BN, toMask)
+                squareContents[moveTo.toInt()] = SquareOccupant.BN
+            }
+            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
+                engineBitboards.orPieceBitboard(BitboardType.BB, toMask)
+                squareContents[moveTo.toInt()] = SquareOccupant.BB
+            }
+            else -> throw InvalidMoveException(
+                    "compactMove $compactMove produced invalid promotion piece")
+        }
+        engineBitboards.xorPieceBitboard(BitboardType.BP, toMask)
+    }
+}
+
+private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece: SquareOccupant?, toMask: Long) {
+    moveHistory[numMovesMade].capturePiece = capturePiece!!
+    halfMoveCount = 0
+    engineBitboards.xorPieceBitboard(capturePiece.index, toMask)
+    if (capturePiece == SquareOccupant.BR) {
+        if (toMask == BLACKKINGSIDEROOKMASK) {
+            castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value.inv()
+        } else if (toMask == BLACKQUEENSIDEROOKMASK) {
+            castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value.inv()
+        }
+    }
+}
+
+private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
+    val moveFrom = (compactMove ushr 16).toByte()
+    val moveTo = (compactMove and 63).toByte()
+    val fromMask = 1L shl moveFrom.toInt()
+    val toMask = 1L shl moveTo.toInt()
+    whiteKingSquare = moveTo
+    castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_WNONE.value
+    if (toMask or fromMask == WHITEKINGSIDECASTLEMOVEMASK) {
+        engineBitboards.xorPieceBitboard(BitboardType.WR, WHITEKINGSIDECASTLEROOKMOVE)
+        squareContents[Square.H1.bitRef] = SquareOccupant.NONE
+        squareContents[Square.F1.bitRef] = SquareOccupant.WR
+    } else if (toMask or fromMask == WHITEQUEENSIDECASTLEMOVEMASK) {
+        engineBitboards.xorPieceBitboard(BitboardType.WR, WHITEQUEENSIDECASTLEROOKMOVE)
+        squareContents[Square.A1.bitRef] = SquareOccupant.NONE
+        squareContents[Square.D1.bitRef] = SquareOccupant.WR
+    }
+}
+
+private fun EngineBoard.adjustCastlePrivilegesForWhiteRookMove(moveFrom: Byte) {
+    if (moveFrom.toInt() == Square.A1.bitRef) {
+        castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value.inv()
+    } else if (moveFrom.toInt() == Square.H1.bitRef) {
+        castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value.inv()
+    }
+}
+
+@Throws(InvalidMoveException::class)
+private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
+    val moveFrom = (compactMove ushr 16).toByte()
+    val moveTo = (compactMove and 63).toByte()
+    val fromMask = 1L shl moveFrom.toInt()
+    val toMask = 1L shl moveTo.toInt()
+    halfMoveCount = 0
+    if (toMask and RANK_4 != 0L && fromMask and RANK_2 != 0L) {
+        engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, fromMask shl 8)
+    } else if (toMask == moveHistory[numMovesMade].enPassantBitboard) {
+        engineBitboards.xorPieceBitboard(SquareOccupant.BP.index, toMask ushr 8)
+        moveHistory[numMovesMade].capturePiece = SquareOccupant.BP
+        squareContents[moveTo - 8] = SquareOccupant.NONE
+    } else if (compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value != 0) {
+        val promotionPieceMask = PromotionPieceMask.fromValue(compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value)
+        when (promotionPieceMask) {
+            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
+                engineBitboards.orPieceBitboard(BitboardType.WQ, toMask)
+                squareContents[moveTo.toInt()] = SquareOccupant.WQ
+            }
+            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
+                engineBitboards.orPieceBitboard(BitboardType.WR, toMask)
+                squareContents[moveTo.toInt()] = SquareOccupant.WR
+            }
+            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
+                engineBitboards.orPieceBitboard(BitboardType.WN, toMask)
+                squareContents[moveTo.toInt()] = SquareOccupant.WN
+            }
+            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
+                engineBitboards.orPieceBitboard(BitboardType.WB, toMask)
+                squareContents[moveTo.toInt()] = SquareOccupant.WB
+            }
+            else -> throw InvalidMoveException(
+                    "compactMove $compactMove produced invalid promotion piece")
+        }
+        engineBitboards.xorPieceBitboard(BitboardType.WP, toMask)
+    }
 }
