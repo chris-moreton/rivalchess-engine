@@ -12,7 +12,6 @@ import com.netsensia.rivalchess.engine.core.hash.isHeightHashTableEntryValid
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.enums.*
 import com.netsensia.rivalchess.enums.PromotionPieceMask.Companion.fromValue
-import com.netsensia.rivalchess.exception.IllegalSearchStateException
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
@@ -168,7 +167,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         low = Math.max(bestPath.score, low)
         if (isCheck) {
-            orderedMoves[ply] = board.moveArray
+            orderedMoves[ply] = board.getMovesAsArray()
             scoreFullWidthMoves(board, ply)
         } else {
             orderedMoves[ply] = board.getQuiesceMoveArray(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
@@ -486,7 +485,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 board.unMakeNullMove()
             }
         }
-        orderedMoves[ply] = board.moveArray
+        orderedMoves[ply] = board.getMovesAsArray()
         moveOrderStatus[ply] = MoveOrder.NONE
         var research: Boolean
         do {
@@ -797,20 +796,18 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setupHistoryMoveTable()
         var path: SearchPath?
         try {
-            orderedMoves[0] = engineBoard.moveArray
+            orderedMoves[0] = engineBoard.getMovesAsArray()
             var depthZeroMoveCount = 0
             var c = 0
             var depth1MovesTemp: IntArray
             var move = orderedMoves[0][c] and 0x00FFFFFF
-            drawnPositionsAtRootCount.add(0)
-            drawnPositionsAtRootCount.add(0)
+            drawnPositionsAtRootCount.addAll(listOf(0,0))
             var legal = 0
             var bestNewbieScore = -Int.MAX_VALUE
             while (move != 0) {
                 if (engineBoard.makeMove(EngineMove(move))) {
                     val plyDraw: MutableList<Boolean> = ArrayList()
-                    plyDraw.add(false)
-                    plyDraw.add(false)
+                    plyDraw.addAll(listOf(false,false))
                     legal++
                     if (iterativeDeepeningDepth < 1) // super beginner mode
                     {
@@ -833,7 +830,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
                         plyDraw[0] = true
                     }
-                    depth1MovesTemp = engineBoard.moveArray
+                    depth1MovesTemp = engineBoard.getMovesAsArray()
                     var c1 = -1
                     while (depth1MovesTemp[++c1] and 0x00FFFFFF != 0) {
                         if (engineBoard.makeMove(EngineMove(depth1MovesTemp[c1] and 0x00FFFFFF))) {

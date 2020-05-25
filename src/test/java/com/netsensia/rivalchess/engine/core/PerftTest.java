@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.core;
 
+import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.getMovesAsArray;
 import static org.junit.Assert.assertEquals;
 
 import java.text.NumberFormat;
@@ -26,7 +27,7 @@ public class PerftTest {
         long nodes = 0;
         int moveNum = 0;
 
-        int[] legalMoves = board.getMoveArray();
+        int[] legalMoves = getMovesAsArray(board);
 
         while (legalMoves[moveNum] != 0) {
             if (board.makeMove(new EngineMove(legalMoves[moveNum]))) {

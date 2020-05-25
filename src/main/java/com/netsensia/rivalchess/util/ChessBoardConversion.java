@@ -13,6 +13,8 @@ import com.netsensia.rivalchess.model.Move;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.model.util.FenUtils;
 
+import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.getMovesAsArray;
+
 public class ChessBoardConversion
 {
 
@@ -108,7 +110,7 @@ public class ChessBoardConversion
 		
 		char qualifier = ' ';
 		
-		int[] legalMoves = board.getMoveArray();
+		int[] legalMoves = getMovesAsArray(board);
 
 		int moveCount = 0;
 		int legalMove = legalMoves[moveCount] & 0x00FFFFFF;

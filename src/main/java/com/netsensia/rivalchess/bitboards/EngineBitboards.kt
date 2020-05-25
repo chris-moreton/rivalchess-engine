@@ -39,6 +39,10 @@ class EngineBitboards private constructor() {
         return pieceBitboards[type.index]
     }
 
+    fun getPieceBitboard(type: SquareOccupant): Long {
+        return getPieceBitboard(BitboardType.fromIndex(type.index))
+    }
+
     fun movePiece(piece: SquareOccupant, compactMove: Int) {
         val moveFrom = (compactMove ushr 16).toByte()
         val moveTo = (compactMove and 63).toByte()

@@ -14,6 +14,8 @@ import org.junit.Test;
 
 import java.util.Random;
 
+import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.getMovesAsArray;
+import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.numLegalMoves;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -227,17 +229,17 @@ public class ZorbristHashTrackerTest {
             Random r = new Random();
             r.setSeed(i);
 
-            int legalMoves[] = ecb.getMoveArray();
+            int legalMoves[] = getMovesAsArray(ecb);
 
             while (!ecb.isGameOver() && ecb.getHalfMoveCount() < 100) {
-                int move = legalMoves[r.nextInt(ecb.getNumLegalMoves())];
+                int move = legalMoves[r.nextInt(numLegalMoves(ecb))];
                 ecb.makeMove(new EngineMove(move));
 
                 final long trackedCode = ecb.trackedBoardHashCode();
                 final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
                 assertEquals(calculatedHashCode, trackedCode);
 
-                legalMoves = ecb.getMoveArray();
+                legalMoves = getMovesAsArray(ecb);
 
             }
         }
