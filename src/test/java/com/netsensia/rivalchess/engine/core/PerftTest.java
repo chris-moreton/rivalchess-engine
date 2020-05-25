@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core;
 
 import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.getMovesAsArray;
+import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.unMakeMove;
 import static org.junit.Assert.assertEquals;
 
 import java.text.NumberFormat;
@@ -32,7 +33,7 @@ public class PerftTest {
         while (legalMoves[moveNum] != 0) {
             if (board.makeMove(new EngineMove(legalMoves[moveNum]))) {
                 nodes += getPerft(board, depth - 1);
-                board.unMakeMove();
+                unMakeMove(board);
             }
             moveNum++;
         }

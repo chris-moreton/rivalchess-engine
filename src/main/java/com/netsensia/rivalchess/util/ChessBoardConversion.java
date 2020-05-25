@@ -14,6 +14,7 @@ import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.model.util.FenUtils;
 
 import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.getMovesAsArray;
+import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.unMakeMove;
 
 public class ChessBoardConversion
 {
@@ -172,7 +173,7 @@ public class ChessBoardConversion
 		if (board.makeMove(new EngineMove(move)))
 		{
 			if (BoardExtensionsKt.isCheck(board)) pgnMove += "+";
-			board.unMakeMove();
+			unMakeMove(board);
 		}
 		
 		return pgnMove;

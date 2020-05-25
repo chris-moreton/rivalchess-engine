@@ -228,6 +228,10 @@ private fun EngineBoard.generateQuiesceSliderMoves(includeChecks: Boolean, enemy
     return moves
 }
 
-fun EngineBoard.getMovesAsArray() = generateLegalMoves().toList().stream().mapToInt(Int::toInt).toArray() + 0
-
 fun EngineBoard.numLegalMoves() = generateLegalMoves().toList().size
+
+fun EngineBoard.getQuiesceMoveArray(includeChecks: Boolean) =
+    generateLegalQuiesceMoves(includeChecks).stream().mapToInt(Int::toInt).toArray() + 0
+
+
+fun EngineBoard.getMovesAsArray() = generateLegalMoves().toList().stream().mapToInt(Int::toInt).toArray() + 0

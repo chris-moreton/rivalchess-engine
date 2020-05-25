@@ -10,6 +10,8 @@ import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import junit.framework.TestCase;
 
+import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.unMakeMove;
+
 public class SearchHashTest extends TestCase {
 
     public void testIsHeightHashTableEntryValid() throws InvalidMoveException {
@@ -27,10 +29,10 @@ public class SearchHashTest extends TestCase {
                 ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
                 engineBoard, 2, (byte)HashValueType.EXACT.getIndex(), 4);
 
-        engineBoard.unMakeMove();
-        engineBoard.unMakeMove();
-        engineBoard.unMakeMove();
-        engineBoard.unMakeMove();
+        unMakeMove(engineBoard);
+        unMakeMove(engineBoard);
+        unMakeMove(engineBoard);
+        unMakeMove(engineBoard);
 
         engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b1c3"));
         engineBoard.makeMove(ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b8c6"));

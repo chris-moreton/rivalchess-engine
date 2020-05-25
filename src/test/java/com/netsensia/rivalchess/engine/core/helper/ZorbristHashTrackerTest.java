@@ -16,6 +16,8 @@ import java.util.Random;
 
 import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.getMovesAsArray;
 import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.numLegalMoves;
+import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.makeNullMove;
+import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.unMakeMove;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -105,7 +107,7 @@ public class ZorbristHashTrackerTest {
         final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
-        ecb.unMakeMove();
+        unMakeMove(ecb);
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
         final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
@@ -118,17 +120,17 @@ public class ZorbristHashTrackerTest {
 
     private void compareCalculatedHashWithTrackedHashOnNullMove(EngineBoard ecb) throws InvalidMoveException {
 
-        ecb.makeNullMove();
+        makeNullMove(ecb);
         final long originalTrackedHashCode = ecb.trackedBoardHashCode();
         final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
-        ecb.unMakeNullMove();
+        makeNullMove(ecb);
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
         final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
-        ecb.makeNullMove();
+        makeNullMove(ecb);
         assertEquals(ecb.trackedBoardHashCode(), originalTrackedHashCode);
         assertEquals(ZorbristHashCalculator.calculateHash(ecb), originalCalculatedHashCode);
 
