@@ -15,8 +15,8 @@ import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
 
 fun EngineBoard.onlyKingsRemain() =
-    onlyOneBitSet(engineBitboards.getPieceBitboard(BitboardType.ENEMY)) &&
-            onlyOneBitSet(engineBitboards.getPieceBitboard(BitboardType.FRIENDLY))
+    onlyOneBitSet(EngineBitboards.instance.getPieceBitboard(BitboardType.ENEMY)) &&
+            onlyOneBitSet(EngineBitboards.instance.getPieceBitboard(BitboardType.FRIENDLY))
 
 fun EngineBoard.isSquareEmpty(bitRef: Int) = squareContents.get(bitRef) == SquareOccupant.NONE
 
@@ -41,10 +41,10 @@ fun EngineBoard.getPiece(bitRef: Int) = when (squareContents.get(bitRef)) {
     }
 
 fun EngineBoard.isCheck() =
-    if (isWhiteToMove)
-        engineBitboards.isSquareAttackedBy(getWhiteKingSquare(), Colour.BLACK)
+    if (mover == Colour.WHITE)
+        EngineBitboards.instance.isSquareAttackedBy(getWhiteKingSquare(), Colour.BLACK)
     else
-        engineBitboards.isSquareAttackedBy(getBlackKingSquare(), Colour.WHITE)
+        EngineBitboards.instance.isSquareAttackedBy(getBlackKingSquare(), Colour.WHITE)
 
 @Throws(InvalidMoveException::class)
 fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {
@@ -87,7 +87,7 @@ fun EngineBoard.getCharBoard(): CharArray {
         val board = CharArray(64){'0'}
         val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
         for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
-            val bitsSet = getSetBits(engineBitboards.getPieceBitboard(BitboardType.fromIndex(i)), ArrayList())
+            val bitsSet = getSetBits(EngineBitboards.instance.getPieceBitboard(BitboardType.fromIndex(i)), ArrayList())
             for (bitSet in bitsSet) {
                 board[bitSet] = pieces[i]
             }
@@ -125,7 +125,7 @@ fun EngineBoard.getFenBoard(): StringBuilder {
 fun EngineBoard.getFen(): String {
         val fen = getFenBoard()
         fen.append(' ')
-        fen.append(if (isWhiteToMove) 'w' else 'b')
+        fen.append(if (mover == Colour.WHITE) 'w' else 'b')
         fen.append(' ')
         var noPrivs = true
         if (castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value != 0) {
@@ -146,7 +146,7 @@ fun EngineBoard.getFen(): String {
         }
         if (noPrivs) fen.append('-')
         fen.append(' ')
-        val bitboard = engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
+        val bitboard = EngineBitboards.instance.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
         if (java.lang.Long.bitCount(bitboard) > 0) {
             val epSquare = java.lang.Long.numberOfTrailingZeros(bitboard)
             val file = (7 - epSquare % 8).toChar()

@@ -20,17 +20,15 @@ public class EngineBitboardsTest {
 
     @Test
     public void testGetAndSetPieceBitboardsByIndex() {
-        EngineBitboards engineBitboards = EngineBitboards.getInstance();
-        engineBitboards.setPieceBitboard(BitboardType.WQ, 829282L);
-        assertEquals(829282L, engineBitboards.getPieceBitboard(BitboardType.WQ));
+        EngineBitboards.getInstance().setPieceBitboard(BitboardType.WQ, 829282L);
+        assertEquals(829282L, EngineBitboards.getInstance().getPieceBitboard(BitboardType.WQ));
     }
 
     @Test
     public void testXorPieceBitboard() {
-        EngineBitboards engineBitboards = EngineBitboards.getInstance();
-        engineBitboards.setPieceBitboard(BitboardType.WQ, 829282L);
-        engineBitboards.xorPieceBitboard(BitboardType.WQ, 817222323L);
-        assertEquals(829282L ^ 817222323L, engineBitboards.getPieceBitboard(BitboardType.WQ));
+        EngineBitboards.getInstance().setPieceBitboard(BitboardType.WQ, 829282L);
+        EngineBitboards.getInstance().xorPieceBitboard(BitboardType.WQ, 817222323L);
+        assertEquals(829282L ^ 817222323L, EngineBitboards.getInstance().getPieceBitboard(BitboardType.WQ));
     }
 
     @Test
@@ -60,11 +58,10 @@ public class EngineBitboardsTest {
 
         final EngineMove engineMove = ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h4d8");
 
-        EngineBitboards engineBitboards = EngineBitboards.getInstance();
-        engineBitboards.setPieceBitboard(BitboardType.WB, bitboard);
-        engineBitboards.movePiece(SquareOccupant.WB, engineMove.compact);
+        EngineBitboards.getInstance().setPieceBitboard(BitboardType.WB, bitboard);
+        EngineBitboards.getInstance().movePiece(SquareOccupant.WB, engineMove.compact);
 
-        assertEquals(bitboardExpected, engineBitboards.getPieceBitboard(BitboardType.WB));
+        assertEquals(bitboardExpected, EngineBitboards.getInstance().getPieceBitboard(BitboardType.WB));
     }
 
     @Test
@@ -93,17 +90,15 @@ public class EngineBitboardsTest {
                 {false,false,false,true,false,true,true,true},
                 {true,true,true,true,true,true,true,true}
         };
-
-        EngineBitboards engineBitboards = engineBoard.engineBitboards;
-
+        
         for (int y=0; y<8; y++) {
             for (int x=0; x<8; x++) {
 
-                assertEquals(expectedWhiteAttacks[y][x], engineBitboards.isSquareAttackedBy(
+                assertEquals(expectedWhiteAttacks[y][x], EngineBitboards.getInstance().isSquareAttackedBy(
                         ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(x, y)),
                         Colour.WHITE));
 
-                assertEquals(expectedBlackAttacks[y][x], engineBitboards.isSquareAttackedBy(
+                assertEquals(expectedBlackAttacks[y][x], EngineBitboards.getInstance().isSquareAttackedBy(
                         ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(x, y)),
                         Colour.BLACK));
             }

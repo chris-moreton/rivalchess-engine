@@ -446,7 +446,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             return bestPath
         }
         if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive
-                && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && hashMove == 0 && board.isNotOnNullMove) {
+                && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && hashMove == 0 && !board.isOnNullMove) {
             val doIt = true
             if (doIt) {
                 if (depth - IterativeDeepening.IID_REDUCE_DEPTH.value > 0) {
@@ -465,7 +465,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var threatExtend = 0
         var pawnExtend = 0
         val nullMoveReduceDepth = if (depthRemaining > SearchConfig.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE.value) SearchConfig.NULLMOVE_REDUCE_DEPTH.value + 1 else SearchConfig.NULLMOVE_REDUCE_DEPTH.value
-        if (FeatureFlag.USE_NULL_MOVE_PRUNING.isActive && !isCheck && board.isNotOnNullMove && depthRemaining > 1) {
+        if (FeatureFlag.USE_NULL_MOVE_PRUNING.isActive && !isCheck && !board.isOnNullMove && depthRemaining > 1) {
             if ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.value &&
                     (if (board.mover == Colour.WHITE) board.whitePawnValues else board.blackPawnValues) > 0) {
                 board.makeNullMove()
