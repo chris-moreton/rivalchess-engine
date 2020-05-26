@@ -20,8 +20,7 @@ fun EngineBoard.generateLegalMoves() = sequence {
     )
 }
 
-private fun EngineBoard.kingSquareForMover() =
-        if (mover == Colour.WHITE) getWhiteKingSquare().toInt() else getBlackKingSquare().toInt()
+private fun EngineBoard.kingSquareForMover() = if (mover == Colour.WHITE) getWhiteKingSquare() else getBlackKingSquare()
 
 private fun EngineBoard.knightBitboardForMover() =
         if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN)
@@ -58,14 +57,15 @@ private fun EngineBoard.generateCastleMoves(
         kingStartSquare: Int = 3,
         queenStartSquare: Int = 4,
         opponent: Colour = Colour.BLACK,
-        privs: Pair<Int,Int>,
-        castleSquares: Pair<Long,Long>) = sequence {
-    if ((castlePrivileges and privs.first).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and castleSquares.first == 0L &&
+        privileges: Pair<Int,Int>,
+        castleSquares: Pair<Long,Long>
+    ) = sequence {
+    if ((castlePrivileges and privileges.first).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and castleSquares.first == 0L &&
             !engineBitboards.isSquareAttackedBy(kingStartSquare, opponent) &&
             !engineBitboards.isSquareAttackedBy(kingStartSquare - 1, opponent)) {
         yield(kingStartSquare shl 16 or kingStartSquare - 2)
     }
-    if ((castlePrivileges and privs.second).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and castleSquares.second == 0L &&
+    if ((castlePrivileges and privileges.second).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and castleSquares.second == 0L &&
             !engineBitboards.isSquareAttackedBy(kingStartSquare, opponent) &&
             !engineBitboards.isSquareAttackedBy(queenStartSquare, opponent)) {
         yield(kingStartSquare shl 16 or queenStartSquare + 1)
@@ -75,7 +75,8 @@ private fun EngineBoard.generateCastleMoves(
 private fun EngineBoard.generatePawnMoves(
         pawnBitboard: Long,
         bitboardMaskForwardPawnMoves: List<Long>,
-        bitboardMaskCapturePawnMoves: List<Long>) = sequence {
+        bitboardMaskCapturePawnMoves: List<Long>
+    ) = sequence {
 
     var bitboardPawnMoves: Long
 
@@ -133,7 +134,8 @@ private fun EngineBoard.generateSliderMoves(
         magicMovesRook: Array<LongArray>,
         occupancyMaskRook: LongArray,
         magicNumberRook: LongArray,
-        magicNumberShiftsRook: IntArray) = sequence {
+        magicNumberShiftsRook: IntArray
+    ) = sequence {
 
     val rookBitboard: Long = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(whitePiece) or
             engineBitboards.getPieceBitboard(BitboardType.WQ)

@@ -26,7 +26,7 @@ fun blackPawnAttacks(blackPawns: Long) =
         blackPawns and FILE_A.inv() ushr 7 or (blackPawns and FILE_H.inv() ushr 9)
 
 fun attackList(bitboards: BitboardData, squares: List<Int>, fn: (BitboardData, Int) -> Long): Pair<List<Long>, Long> {
-    var list = mutableListOf<Long>()
+    val list = mutableListOf<Long>()
     var orred = 0L
 
     for (square in squares) {
@@ -39,7 +39,7 @@ fun attackList(bitboards: BitboardData, squares: List<Int>, fn: (BitboardData, I
 }
 
 fun knightAttackList(squares: List<Int>): Pair<List<Long>, Long> {
-    var list = mutableListOf<Long>()
+    val list = mutableListOf<Long>()
     var orred = 0L
 
     for (square in squares) {

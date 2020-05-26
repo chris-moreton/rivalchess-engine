@@ -44,8 +44,8 @@ private fun superVerifyUseHeightHash(board: EngineBoard) {
     val hashIndex = boardHash.getHashIndex(board)
     if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive) {
         for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
-            if (boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i) != (board.getBitboardByIndex(i) ushr 32).toInt() ||
-                    boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12) != (board.getBitboardByIndex(i) and LOW32).toInt()) {
+            if (boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i) != (board.getBitboardType(i) ushr 32).toInt() ||
+                    boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12) != (board.getBitboardType(i) and LOW32).toInt()) {
                 throw HashVerificationException("Height bad clash " + ZorbristHashCalculator.calculateHash(board))
             }
         }
@@ -57,8 +57,8 @@ private fun superVerifyAlwaysReplaceHash(board: EngineBoard) {
     val hashIndex = boardHash.getHashIndex(board)
     if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive) {
         for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
-            if (boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i) != (board.getBitboardByIndex(i) ushr 32).toInt() ||
-                    boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12) != (board.getBitboardByIndex(i) and LOW32).toInt()) {
+            if (boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i) != (board.getBitboardType(i) ushr 32).toInt() ||
+                    boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12) != (board.getBitboardType(i) and LOW32).toInt()) {
                 System.exit(0)
             }
         }
