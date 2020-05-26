@@ -124,17 +124,17 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     @Throws(InvalidMoveException::class)
     private fun getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
-        if (moveOrderStatus[ply] === MoveOrder.NONE && hashMove != 0) {
-            var c = 0
-            while (orderedMoves[ply][c] != 0) {
-                if (orderedMoves[ply][c] == hashMove) {
-                    orderedMoves[ply][c] = -1
-                    return hashMove
-                }
-                c++
-            }
-        }
         if (moveOrderStatus[ply] === MoveOrder.NONE) {
+            if (hashMove != 0) {
+                var c = 0
+                while (orderedMoves[ply][c] != 0) {
+                    if (orderedMoves[ply][c] == hashMove) {
+                        orderedMoves[ply][c] = -1
+                        return hashMove
+                    }
+                    c++
+                }
+            }
             moveOrderStatus[ply] = MoveOrder.CAPTURES
             if (scoreFullWidthCaptures(board, ply) == 0) {
                 // no captures, so move to next stage
@@ -154,29 +154,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     @Throws(InvalidMoveException::class)
     fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
-        var low = low
-        nodes = nodes + 1
+        nodes += 1
         var newPath: SearchPath
-        val bestPath: SearchPath
-        bestPath = searchPath[ply]
-        bestPath.reset()
         val evalScore = evaluate(board)
-        bestPath.score = if (isCheck) -Evaluation.VALUE_MATE.value else evalScore
-        if (depth == 0 || bestPath.score >= high) {
-            return bestPath
-        }
-        low = Math.max(bestPath.score, low)
-        if (isCheck) {
-            orderedMoves[ply] = board.getMovesAsArray()
-            scoreFullWidthMoves(board, ply)
-        } else {
-            orderedMoves[ply] = board.getQuiesceMoveArray(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
-            scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
-        }
+
+        searchPath[ply].height = 0
+        searchPath[ply].score = if (isCheck) -Evaluation.VALUE_MATE.value else evalScore
+
+        if (depth == 0 || searchPath[ply].score >= high) return searchPath[ply]
+        var newLow = searchPath[ply].score.coerceAtLeast(low)
+        setOrderedMovesArrayForQuiesce(isCheck, ply, board, quiescePly)
         var move = getHighScoreMove(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
-            if (!shouldDeltaPrune(board, low, evalScore, move, isCheck) && board.makeMove(EngineMove(move))) {
+            if (!shouldDeltaPrune(board, newLow, evalScore, move, isCheck) && board.makeMove(EngineMove(move))) {
                 legalMoveCount++
                 newPath = quiesce(
                         board,
@@ -184,31 +175,42 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         ply + 1,
                         quiescePly + 1,
                         -high,
-                        -low,
-                        quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value &&
-                                board.isCheck(mover))
+                        -newLow,
+                        quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value && board.isCheck(mover))
+                board.unMakeMove()
                 newPath.score = -newPath.score
-                if (newPath.score > bestPath.score) {
-                    bestPath.setPath(move, newPath)
+                if (newPath.score > searchPath[ply].score) {
+                    searchPath[ply].setPath(move, newPath)
                 }
                 if (newPath.score >= high) {
-                    board.unMakeMove()
-                    return bestPath
+                    return searchPath[ply]
                 }
-                low = Math.max(low, newPath.score)
-                board.unMakeMove()
+                newLow = newLow.coerceAtLeast(newPath.score)
             }
             move = getHighScoreMove(orderedMoves[ply])
         }
         if (isCheck && legalMoveCount == 0) {
-            bestPath.score = -Evaluation.VALUE_MATE.value
+            // all moves have been found to be illegal - delta pruning doesn't occur when in check
+            searchPath[ply].score = -Evaluation.VALUE_MATE.value
         }
-        return bestPath
+        return searchPath[ply]
+    }
+
+    private fun setOrderedMovesArrayForQuiesce(isCheck: Boolean, ply: Int, board: EngineBoard, quiescePly: Int) {
+        if (isCheck) {
+            orderedMoves[ply] = board.getMovesAsArray()
+            scoreFullWidthMoves(board, ply)
+        } else {
+            orderedMoves[ply] = board.getQuiesceMoveArray(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
+            scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
+        }
     }
 
     private fun shouldDeltaPrune(board: EngineBoard, low: Int, evalScore: Int, move: Int, isCheck: Boolean): Boolean {
         if (FeatureFlag.USE_DELTA_PRUNING.isActive && !isCheck) {
-            val materialIncrease = (if (board.lastCapturePiece() != SquareOccupant.NONE) pieceValue(board.lastCapturePiece().piece) else 0) + getMaterialIncreaseForPromotion(move)
+            val materialIncrease =
+                    (if (board.lastCapturePiece() != SquareOccupant.NONE) pieceValue(board.lastCapturePiece().piece) else 0) +
+                    getMaterialIncreaseForPromotion(move)
             return materialIncrease + evalScore + SearchConfig.DELTA_PRUNING_MARGIN.value < low
         }
         return false
@@ -532,7 +534,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     isCheck = board.isCheck(mover)
                     if (FeatureFlag.USE_FUTILITY_PRUNING.isActive && canFutilityPrune && !isCheck && board.wasCapture() && !board.wasPawnPush()) {
                         newPath = searchPath[ply + 1]
-                        newPath.reset()
+                        newPath.height = 0
                         newPath.score = -futilityScore // newPath.score gets reversed later
                     } else {
                         if (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value
@@ -815,14 +817,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         sp.score = -sp.score
                         if (sp.score > bestNewbieScore) {
                             bestNewbieScore = sp.score
-                            currentPath.reset()
+                            currentPath.height = 0
                             currentPath.setPath(move)
                             currentPath.score = sp.score
                             currentPathString = currentPath.toString()
                         }
                     } else if (legal == 1) {
                         // use this opportunity to set a move in the odd event that there is no time to search
-                        currentPath.reset()
+                        currentPath.height = 0
                         currentPath.setPath(move)
                         currentPath.score = 0
                         currentPathString = currentPath.toString()
