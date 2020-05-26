@@ -173,7 +173,7 @@ public class ChessBoardConversion
 		
 		if (makeMove(board, new EngineMove(move)))
 		{
-			if (BoardExtensionsKt.isCheck(board)) pgnMove += "+";
+			if (BoardExtensionsKt.isCheck(board, board.mover)) pgnMove += "+";
 			unMakeMove(board);
 		}
 		

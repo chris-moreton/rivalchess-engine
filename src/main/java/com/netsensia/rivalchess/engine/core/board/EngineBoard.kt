@@ -14,6 +14,8 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
+    val engineBitboards = EngineBitboards()
+    
     val squareContents = Array(64){SquareOccupant.NONE}
     val squareOccupants: List<SquareOccupant> get() = squareContents.toList()
     val boardHashObject = BoardHash()
@@ -34,22 +36,22 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         get() = moveHistory[numMovesMade]
 
     val whitePieceValues: Int
-        get() = bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.WN)) * pieceValue(Piece.KNIGHT) +
-                bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.WR)) * pieceValue(Piece.ROOK) +
-                bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.WB)) * pieceValue(Piece.BISHOP) +
-                bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.WQ)) * pieceValue(Piece.QUEEN)
+        get() = bitCount(engineBitboards.getPieceBitboard(BitboardType.WN)) * pieceValue(Piece.KNIGHT) +
+                bitCount(engineBitboards.getPieceBitboard(BitboardType.WR)) * pieceValue(Piece.ROOK) +
+                bitCount(engineBitboards.getPieceBitboard(BitboardType.WB)) * pieceValue(Piece.BISHOP) +
+                bitCount(engineBitboards.getPieceBitboard(BitboardType.WQ)) * pieceValue(Piece.QUEEN)
 
     val blackPieceValues: Int
-        get() = bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.BN)) * pieceValue(Piece.KNIGHT) +
-                bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.BR)) * pieceValue(Piece.ROOK) +
-                bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.BB)) * pieceValue(Piece.BISHOP) +
-                bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.BQ)) * pieceValue(Piece.QUEEN)
+        get() = bitCount(engineBitboards.getPieceBitboard(BitboardType.BN)) * pieceValue(Piece.KNIGHT) +
+                bitCount(engineBitboards.getPieceBitboard(BitboardType.BR)) * pieceValue(Piece.ROOK) +
+                bitCount(engineBitboards.getPieceBitboard(BitboardType.BB)) * pieceValue(Piece.BISHOP) +
+                bitCount(engineBitboards.getPieceBitboard(BitboardType.BQ)) * pieceValue(Piece.QUEEN)
 
     val whitePawnValues: Int
-        get() = bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.WP)) * pieceValue(Piece.PAWN)
+        get() = bitCount(engineBitboards.getPieceBitboard(BitboardType.WP)) * pieceValue(Piece.PAWN)
 
     val blackPawnValues: Int
-        get() = bitCount(EngineBitboards.instance.getPieceBitboard(BitboardType.BP)) * pieceValue(Piece.PAWN)
+        get() = bitCount(engineBitboards.getPieceBitboard(BitboardType.BP)) * pieceValue(Piece.PAWN)
 
     init {
         setBoard(board)
@@ -71,7 +73,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     fun setEngineBoardVars(board: Board) {
         mover = board.sideToMove
-        EngineBitboards.instance.reset()
+        engineBitboards.reset()
         setSquareContents(board)
         setEnPassantBitboard(board)
         setCastlePrivileges(board)
@@ -86,7 +88,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                 val squareOccupant = board.getSquareOccupant(Square.fromCoords(x, y))
                 squareContents[bitNum.toInt()] = squareOccupant
                 if (squareOccupant != SquareOccupant.NONE) {
-                    EngineBitboards.instance.orPieceBitboard(
+                    engineBitboards.orPieceBitboard(
                             BitboardType.fromIndex(squareOccupant.index), 1L shl bitNum.toInt())
                     if (squareOccupant == SquareOccupant.WK) {
                         whiteKingSquare = bitNum
@@ -102,12 +104,12 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     private fun setEnPassantBitboard(board: Board) {
         val ep = board.enPassantFile
         if (ep == -1) {
-            EngineBitboards.instance.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 0)
+            engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 0)
         } else {
             if (board.sideToMove == Colour.WHITE) {
-                EngineBitboards.instance.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 1L shl 40 + (7 - ep))
+                engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 1L shl 40 + (7 - ep))
             } else {
-                EngineBitboards.instance.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 1L shl 16 + (7 - ep))
+                engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 1L shl 16 + (7 - ep))
             }
         }
     }
@@ -122,25 +124,25 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     fun calculateSupplementaryBitboards() {
         if (mover == Colour.WHITE) {
-            EngineBitboards.instance.setPieceBitboard(BitboardType.FRIENDLY,
-                    EngineBitboards.instance.getPieceBitboard(BitboardType.WP) or EngineBitboards.instance.getPieceBitboard(BitboardType.WN) or
-                            EngineBitboards.instance.getPieceBitboard(BitboardType.WB) or EngineBitboards.instance.getPieceBitboard(BitboardType.WQ) or
-                            EngineBitboards.instance.getPieceBitboard(BitboardType.WK) or EngineBitboards.instance.getPieceBitboard(BitboardType.WR))
-            EngineBitboards.instance.setPieceBitboard(BitboardType.ENEMY,
-                    EngineBitboards.instance.getPieceBitboard(BitboardType.BP) or EngineBitboards.instance.getPieceBitboard(BitboardType.BN) or
-                            EngineBitboards.instance.getPieceBitboard(BitboardType.BB) or EngineBitboards.instance.getPieceBitboard(BitboardType.BQ) or
-                            EngineBitboards.instance.getPieceBitboard(BitboardType.BK) or EngineBitboards.instance.getPieceBitboard(BitboardType.BR))
+            engineBitboards.setPieceBitboard(BitboardType.FRIENDLY,
+                    engineBitboards.getPieceBitboard(BitboardType.WP) or engineBitboards.getPieceBitboard(BitboardType.WN) or
+                            engineBitboards.getPieceBitboard(BitboardType.WB) or engineBitboards.getPieceBitboard(BitboardType.WQ) or
+                            engineBitboards.getPieceBitboard(BitboardType.WK) or engineBitboards.getPieceBitboard(BitboardType.WR))
+            engineBitboards.setPieceBitboard(BitboardType.ENEMY,
+                    engineBitboards.getPieceBitboard(BitboardType.BP) or engineBitboards.getPieceBitboard(BitboardType.BN) or
+                            engineBitboards.getPieceBitboard(BitboardType.BB) or engineBitboards.getPieceBitboard(BitboardType.BQ) or
+                            engineBitboards.getPieceBitboard(BitboardType.BK) or engineBitboards.getPieceBitboard(BitboardType.BR))
         } else {
-            EngineBitboards.instance.setPieceBitboard(BitboardType.ENEMY,
-                    EngineBitboards.instance.getPieceBitboard(BitboardType.WP) or EngineBitboards.instance.getPieceBitboard(BitboardType.WN) or
-                            EngineBitboards.instance.getPieceBitboard(BitboardType.WB) or EngineBitboards.instance.getPieceBitboard(BitboardType.WQ) or
-                            EngineBitboards.instance.getPieceBitboard(BitboardType.WK) or EngineBitboards.instance.getPieceBitboard(BitboardType.WR))
-            EngineBitboards.instance.setPieceBitboard(BitboardType.FRIENDLY,
-                    EngineBitboards.instance.getPieceBitboard(BitboardType.BP) or EngineBitboards.instance.getPieceBitboard(BitboardType.BN) or
-                            EngineBitboards.instance.getPieceBitboard(BitboardType.BB) or EngineBitboards.instance.getPieceBitboard(BitboardType.BQ) or
-                            EngineBitboards.instance.getPieceBitboard(BitboardType.BK) or EngineBitboards.instance.getPieceBitboard(BitboardType.BR))
+            engineBitboards.setPieceBitboard(BitboardType.ENEMY,
+                    engineBitboards.getPieceBitboard(BitboardType.WP) or engineBitboards.getPieceBitboard(BitboardType.WN) or
+                            engineBitboards.getPieceBitboard(BitboardType.WB) or engineBitboards.getPieceBitboard(BitboardType.WQ) or
+                            engineBitboards.getPieceBitboard(BitboardType.WK) or engineBitboards.getPieceBitboard(BitboardType.WR))
+            engineBitboards.setPieceBitboard(BitboardType.FRIENDLY,
+                    engineBitboards.getPieceBitboard(BitboardType.BP) or engineBitboards.getPieceBitboard(BitboardType.BN) or
+                            engineBitboards.getPieceBitboard(BitboardType.BB) or engineBitboards.getPieceBitboard(BitboardType.BQ) or
+                            engineBitboards.getPieceBitboard(BitboardType.BK) or engineBitboards.getPieceBitboard(BitboardType.BR))
         }
-        EngineBitboards.instance.setPieceBitboard(BitboardType.ALL, EngineBitboards.instance.getPieceBitboard(BitboardType.FRIENDLY) or EngineBitboards.instance.getPieceBitboard(BitboardType.ENEMY))
+        engineBitboards.setPieceBitboard(BitboardType.ALL, engineBitboards.getPieceBitboard(BitboardType.FRIENDLY) or engineBitboards.getPieceBitboard(BitboardType.ENEMY))
     }
 
     fun lastCapturePiece(): SquareOccupant {
@@ -163,10 +165,10 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         if (mover == Colour.BLACK) // white made the last move
         {
             if (toSquare >= 40) return bitCount(whitePassedPawnMask[toSquare] and
-                    EngineBitboards.instance.getPieceBitboard(BitboardType.BP)) == 0
+                    engineBitboards.getPieceBitboard(BitboardType.BP)) == 0
         } else {
             if (toSquare <= 23) return bitCount(blackPassedPawnMask[toSquare] and
-                    EngineBitboards.instance.getPieceBitboard(BitboardType.WP)) == 0
+                    engineBitboards.getPieceBitboard(BitboardType.WP)) == 0
         }
         return false
     }
@@ -176,7 +178,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     val allPiecesBitboard: Long
-        get() = EngineBitboards.instance.getPieceBitboard(BitboardType.ALL)
+        get() = engineBitboards.getPieceBitboard(BitboardType.ALL)
 
     fun getWhiteKingSquare() = whiteKingSquare.toInt()
 
@@ -184,11 +186,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     @Deprecated("")
     fun getBitboardByIndex(index: Int): Long {
-        return EngineBitboards.instance.getPieceBitboard(BitboardType.fromIndex(index))
+        return engineBitboards.getPieceBitboard(BitboardType.fromIndex(index))
     }
 
     fun getBitboard(bitboardType: BitboardType): Long {
-        return EngineBitboards.instance.getPieceBitboard(bitboardType)
+        return engineBitboards.getPieceBitboard(bitboardType)
     }
 
     fun previousOccurrencesOfThisPosition(): Int {

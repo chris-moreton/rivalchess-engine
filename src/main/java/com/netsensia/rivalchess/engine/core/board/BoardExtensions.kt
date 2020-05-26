@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.BitboardType
-import com.netsensia.rivalchess.bitboards.EngineBitboards
 import com.netsensia.rivalchess.bitboards.util.getSetBits
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.core.eval.onlyOneBitSet
@@ -15,15 +14,15 @@ import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
 
 fun EngineBoard.onlyKingsRemain() =
-    onlyOneBitSet(EngineBitboards.instance.getPieceBitboard(BitboardType.ENEMY)) &&
-            onlyOneBitSet(EngineBitboards.instance.getPieceBitboard(BitboardType.FRIENDLY))
+    onlyOneBitSet(this.engineBitboards.getPieceBitboard(BitboardType.ENEMY)) &&
+            onlyOneBitSet(this.engineBitboards.getPieceBitboard(BitboardType.FRIENDLY))
 
 fun EngineBoard.isSquareEmpty(bitRef: Int) = squareContents.get(bitRef) == SquareOccupant.NONE
 
 fun EngineBoard.isCapture(move: Int): Boolean {
     val toSquare = move and 63
     var isCapture: Boolean = !isSquareEmpty(toSquare)
-    if (!isCapture && 1L shl toSquare and EngineBitboards.instance.getPieceBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
+    if (!isCapture && 1L shl toSquare and this.engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
             squareContents.get(move ushr 16 and 63).piece == Piece.PAWN) {
         isCapture = true
     }
@@ -40,11 +39,11 @@ fun EngineBoard.getPiece(bitRef: Int) = when (squareContents.get(bitRef)) {
         else -> Piece.NONE
     }
 
-fun EngineBoard.isCheck() =
-    if (mover == Colour.WHITE)
-        EngineBitboards.instance.isSquareAttackedBy(getWhiteKingSquare(), Colour.BLACK)
+fun EngineBoard.isCheck(colour: Colour) =
+    if (colour == Colour.WHITE)
+        this.engineBitboards.isSquareAttackedBy(getWhiteKingSquare(), Colour.BLACK)
     else
-        EngineBitboards.instance.isSquareAttackedBy(getBlackKingSquare(), Colour.WHITE)
+        this.engineBitboards.isSquareAttackedBy(getBlackKingSquare(), Colour.WHITE)
 
 @Throws(InvalidMoveException::class)
 fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {
@@ -87,7 +86,7 @@ fun EngineBoard.getCharBoard(): CharArray {
         val board = CharArray(64){'0'}
         val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
         for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
-            val bitsSet = getSetBits(EngineBitboards.instance.getPieceBitboard(BitboardType.fromIndex(i)), ArrayList())
+            val bitsSet = getSetBits(this.engineBitboards.getPieceBitboard(BitboardType.fromIndex(i)), ArrayList())
             for (bitSet in bitsSet) {
                 board[bitSet] = pieces[i]
             }
@@ -146,7 +145,7 @@ fun EngineBoard.getFen(): String {
         }
         if (noPrivs) fen.append('-')
         fen.append(' ')
-        val bitboard = EngineBitboards.instance.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
+        val bitboard = this.engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
         if (java.lang.Long.bitCount(bitboard) > 0) {
             val epSquare = java.lang.Long.numberOfTrailingZeros(bitboard)
             val file = (7 - epSquare % 8).toChar()

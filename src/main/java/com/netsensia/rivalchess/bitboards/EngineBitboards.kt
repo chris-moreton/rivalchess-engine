@@ -8,7 +8,7 @@ import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.SquareOccupant
 import java.util.*
 
-class EngineBitboards private constructor() {
+class EngineBitboards {
     private lateinit var pieceBitboards: LongArray
 
     val allPieceBitboard: Long
@@ -79,18 +79,6 @@ class EngineBitboards private constructor() {
             }
         }
         return false
-    }
-
-    companion object {
-        private var INSTANCE: EngineBitboards? = null
-        @JvmStatic
-        val instance: EngineBitboards
-            get() {
-                if (INSTANCE == null) {
-                    INSTANCE = EngineBitboards()
-                }
-                return INSTANCE!!
-            }
     }
 
     init {

@@ -148,16 +148,16 @@ public class EngineBoardTest {
 
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
-        assertFalse(BoardExtensionsKt.isCheck(engineBoard));
+        assertFalse(BoardExtensionsKt.isCheck(engineBoard, engineBoard.mover));
 
         engineBoard.setBoard(FenUtils.getBoardModel(SILLY_CHECK));
-        assertTrue(BoardExtensionsKt.isCheck(engineBoard));
+        assertTrue(BoardExtensionsKt.isCheck(engineBoard, engineBoard.mover));
 
         engineBoard.setBoard(FenUtils.getBoardModel(SCHOLARS_MATE));
-        assertTrue(BoardExtensionsKt.isCheck(engineBoard));
+        assertTrue(BoardExtensionsKt.isCheck(engineBoard, engineBoard.mover));
 
         engineBoard.setBoard(FenUtils.getBoardModel(STALEMATE));
-        assertFalse(BoardExtensionsKt.isCheck(engineBoard));
+        assertFalse(BoardExtensionsKt.isCheck(engineBoard, engineBoard.mover));
     }
 
     @Test
