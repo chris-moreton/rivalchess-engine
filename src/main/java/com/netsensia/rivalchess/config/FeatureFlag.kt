@@ -11,8 +11,8 @@ enum class FeatureFlag(val isActive: Boolean) {
     USE_HISTORY_HEURISTIC(true), // +5 fails when turned off
     USE_MATE_HISTORY_KILLERS(true), // +3 fails when turned off
     USE_INTERNAL_OPENING_BOOK(true),
-    USE_PIECE_SQUARES_IN_MOVE_ORDERING(false), // +154 when turned off!!!!
-    USE_LATE_MOVE_REDUCTIONS(true),
+    USE_PIECE_SQUARES_IN_MOVE_ORDERING(true), // +154 when turned off!!!!
+    USE_LATE_MOVE_REDUCTIONS(false), // +1 fail when turned off
     LMR_RESEARCH_ON_FAIL_HIGH(true),
     USE_PV_SEARCH(true),
     USE_INTERNAL_ITERATIVE_DEEPENING(true),
