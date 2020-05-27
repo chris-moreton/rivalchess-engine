@@ -5,7 +5,7 @@ enum class FeatureFlag(val isActive: Boolean) {
     USE_HEIGHT_REPLACE_HASH(true),
     USE_ALWAYS_REPLACE_HASH(true),
     USE_ASPIRATION_WINDOW(true),
-    USE_NULL_MOVE_PRUNING(true),
+    USE_NULL_MOVE_PRUNING(false),
     USE_DELTA_PRUNING(false), // (1) 20
     USE_FUTILITY_PRUNING(true),
     USE_HISTORY_HEURISTIC(true),
