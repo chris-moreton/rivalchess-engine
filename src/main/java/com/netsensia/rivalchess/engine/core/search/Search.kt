@@ -167,7 +167,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var move = getHighScoreMove(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
-            if (!shouldDeltaPrune(board, newLow, evalScore, move, isCheck) && board.makeMove(EngineMove(move))) {
+            if (board.makeMove(EngineMove(move))) {
                 legalMoveCount++
                 newPath = quiesce(
                         board,
@@ -204,16 +204,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             orderedMoves[ply] = board.getQuiesceMoveArray(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
             scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
         }
-    }
-
-    private fun shouldDeltaPrune(board: EngineBoard, low: Int, evalScore: Int, move: Int, isCheck: Boolean): Boolean {
-        if (FeatureFlag.USE_DELTA_PRUNING.isActive && !isCheck) {
-            val materialIncrease =
-                    (if (board.lastCapturePiece() != SquareOccupant.NONE) pieceValue(board.lastCapturePiece().piece) else 0) +
-                    getMaterialIncreaseForPromotion(move)
-            return materialIncrease + evalScore + SearchConfig.DELTA_PRUNING_MARGIN.value < low
-        }
-        return false
     }
 
     private fun getMaterialIncreaseForPromotion(move: Int): Int {

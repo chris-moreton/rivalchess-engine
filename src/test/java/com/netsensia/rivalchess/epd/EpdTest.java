@@ -2,13 +2,11 @@ package com.netsensia.rivalchess.epd;
 
 import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.enums.SearchState;
-import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.search.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
-import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.EpdItem;
 import com.netsensia.rivalchess.util.EpdReader;
@@ -37,6 +35,7 @@ public class EpdTest {
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
+    private static final boolean RECALCULATE_FAILURES = false;
 
     @BeforeClass
     public static void setup() {
@@ -45,7 +44,26 @@ public class EpdTest {
     }
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
-
+            "WAC.002", // Fail 1
+            "WAC.041", // Fail 2
+            "WAC.071", // Fail 3
+            "WAC.092", // Fail 4
+            "WAC.100", // Fail 5
+            "WAC.145", // Fail 6
+            "WAC.155", // Fail 7
+            "WAC.163", // Fail 8
+            "WAC.196", // Fail 9
+            "WAC.213", // Fail 10
+            "WAC.229", // Fail 11
+            "WAC.230", // Fail 12
+            "WAC.237", // Fail 13
+            "WAC.247", // Fail 14
+            "WAC.265", // Fail 15
+            "WAC.274", // Fail 16
+            "WAC.280", // Fail 17
+            "WAC.291", // Fail 18
+            "WAC.293", // Fail 19
+            "WAC.297"  // Fail 20
     ));
 
     @Test
@@ -80,7 +98,10 @@ public class EpdTest {
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
-        //System.out.println(epdItem.getId() + " " + dtf.format(now));
+
+        if (!RECALCULATE_FAILURES) {
+            System.out.println(epdItem.getId() + " " + dtf.format(now));
+        }
 
         try {
             await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !search.isSearching());
@@ -97,19 +118,20 @@ public class EpdTest {
         final String move = ChessBoardConversion.getPgnMoveFromCompactMove(
                 search.getCurrentMove(), epdItem.getFen());
 
-        if (!epdItem.getBestMoves().contains(move)) {
-            fails ++;
-            System.out.println("\"" + epdItem.getId() + "\", // Fail " + fails);
+        if (RECALCULATE_FAILURES) {
+            if (!epdItem.getBestMoves().contains(move)) {
+                fails++;
+                System.out.println("\"" + epdItem.getId() + "\", // Fail " + fails);
+            }
+        } else {
+            System.out.println("Looking for " + move + " in " + epdItem.getBestMoves());
+
+            if (expectedToPass) {
+                Assert.assertThat(epdItem.getBestMoves(), hasItem(move));
+            } else {
+                Assert.assertFalse(epdItem.getBestMoves().contains(move));
+            }
         }
-
-
-//        System.out.println("Looking for " + move + " in " + epdItem.getBestMoves());
-//
-//        if (expectedToPass) {
-//            Assert.assertThat(epdItem.getBestMoves(), hasItem(move));
-//        } else {
-//            Assert.assertFalse(epdItem.getBestMoves().contains(move));
-//        }
     }
 
     public void runEpdSuite(String filename, String startAtId, boolean expectedToPass)
