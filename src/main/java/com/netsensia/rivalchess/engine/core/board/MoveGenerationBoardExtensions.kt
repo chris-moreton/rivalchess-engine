@@ -3,7 +3,6 @@ package com.netsensia.rivalchess.engine.core.board
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.enums.CastleBitMask
-import com.netsensia.rivalchess.enums.PromotionPieceMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
@@ -25,7 +24,8 @@ fun EngineBoard.generateLegalMoves(): List<Int> {
 private fun EngineBoard.kingSquareForMover() = if (mover == Colour.WHITE) getWhiteKingSquare() else getBlackKingSquare()
 
 private fun EngineBoard.knightBitboardForMover() =
-        if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(BitboardType.WN) else engineBitboards.getPieceBitboard(BitboardType.BN)
+        if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(BitboardType.WN)
+        else engineBitboards.getPieceBitboard(BitboardType.BN)
 
 private fun EngineBoard.generateKnightMoves(knightBitboard: Long, moves: MutableList<Int>) {
     squareList(knightBitboard).forEach {
@@ -74,66 +74,7 @@ private fun EngineBoard.generateCastleMoves(
     }
 }
 
-private fun EngineBoard.generatePawnMoves(
-        pawnBitboard: Long,
-        bitboardMaskForwardPawnMoves: List<Long>,
-        bitboardMaskCapturePawnMoves: List<Long>,
-        moves: MutableList<Int>
-    ) {
-
-    var bitboardPawnMoves: Long
-
-    squareList(pawnBitboard).forEach {
-        bitboardPawnMoves = bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard()
-        bitboardPawnMoves = getBitboardPawnJumpMoves(bitboardPawnMoves)
-        bitboardPawnMoves = addBitboardPawnCaptureMoves(it, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
-        addPossiblePromotionMoves(it shl 16, bitboardPawnMoves, false, moves)
-    }
-}
-
-private fun EngineBoard.emptySquaresBitboard() = engineBitboards.getPieceBitboard(BitboardType.ALL).inv()
-
-private fun EngineBoard.getBitboardPawnJumpMoves(bitboardPawnMoves: Long) =
-        bitboardPawnMoves or (potentialPawnJumpMoves(bitboardPawnMoves) and emptySquaresBitboard())
-
-private fun EngineBoard.potentialPawnJumpMoves(bitboardPawnMoves: Long) =
-        if (mover == Colour.WHITE) (bitboardPawnMoves shl 8) and RANK_4 else (bitboardPawnMoves shr 8) and RANK_5
-
-private fun EngineBoard.addBitboardPawnCaptureMoves(bitRef: Int, bitboardMaskCapturePawnMoves: List<Long>, bitboardPawnMoves: Long) =
-        if (engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) and enPassantCaptureRank() != 0L)
-            bitboardPawnMoves or
-                    pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENEMY) or
-                    pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENPASSANTSQUARE)
-        else bitboardPawnMoves or
-                pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENEMY)
-
-private fun EngineBoard.pawnCaptures(bitboardMaskCapturePawnMoves: List<Long>, bitRef: Int, bitboardType: BitboardType) =
-        (bitboardMaskCapturePawnMoves[bitRef] and engineBitboards.getPieceBitboard(bitboardType))
-
-private fun addPossiblePromotionMoves(
-        fromSquareMoveMask: Int,
-        bitboard: Long,
-        queenCapturesOnly: Boolean,
-        moves: MutableList<Int>) {
-
-    squareList(bitboard).forEach {
-        if (it >= 56 || it <= 7) {
-            moves.add(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
-            if (!queenCapturesOnly) {
-                moves.add(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.value)
-                moves.add(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.value)
-                moves.add(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.value)
-            }
-        } else {
-            moves.add(fromSquareMoveMask or it)
-        }
-    }
-}
-
-private fun EngineBoard.enPassantCaptureRank() = if (mover == Colour.WHITE) RANK_6 else RANK_3
-
-private fun EngineBoard.pawnBitboardForMover() =
-        if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(BitboardType.WP) else engineBitboards.getPieceBitboard(BitboardType.BP)
+fun EngineBoard.emptySquaresBitboard() = engineBitboards.getPieceBitboard(BitboardType.ALL).inv()
 
 private fun EngineBoard.generateSliderMoves(
         whitePiece: SquareOccupant,
@@ -198,7 +139,7 @@ private fun EngineBoard.generateQuiescePawnMoves(includeChecks: Boolean, bitboar
     squareList(pawnBitboard).forEach {
         bitboardPawnMoves = 0
         if (includeChecks) {
-            bitboardPawnMoves = getBitboardPawnJumpMoves(
+            bitboardPawnMoves = pawnForwardMovesBitboard(
                     bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard())
             bitboardPawnMoves = if (mover == Colour.WHITE) {
                 bitboardPawnMoves and blackPawnMovesCapture[enemyKingSquare]
@@ -209,8 +150,8 @@ private fun EngineBoard.generateQuiescePawnMoves(includeChecks: Boolean, bitboar
 
         // promotions
         bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard() and (RANK_1 or RANK_8))
-        bitboardPawnMoves = addBitboardPawnCaptureMoves(it, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
-        addPossiblePromotionMoves(it shl 16, bitboardPawnMoves, true, moves)
+        bitboardPawnMoves = pawnForwardAndCaptureMovesBitboard(it, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
+        addPawnMoves(it shl 16, bitboardPawnMoves, true, moves)
     }
     return moves
 }
@@ -242,6 +183,5 @@ fun EngineBoard.numLegalMoves() = generateLegalMoves().toList().size
 
 fun EngineBoard.getQuiesceMoveArray(includeChecks: Boolean) =
     generateLegalQuiesceMoves(includeChecks).stream().mapToInt(Int::toInt).toArray() + 0
-
 
 fun EngineBoard.getMovesAsArray() = generateLegalMoves().toIntArray() + 0
