@@ -12,8 +12,8 @@ enum class FeatureFlag(val isActive: Boolean) {
     USE_MATE_HISTORY_KILLERS(true), // +3 fails when turned off
     USE_INTERNAL_OPENING_BOOK(true),
     USE_PIECE_SQUARES_IN_MOVE_ORDERING(true), // +154 when turned off!!!!
-    USE_LATE_MOVE_REDUCTIONS(false), // +1 fail when turned off
-    LMR_RESEARCH_ON_FAIL_HIGH(true),
+    USE_LATE_MOVE_REDUCTIONS(true), // +1 fail when turned off
+    LMR_RESEARCH_ON_FAIL_HIGH(false), // +0 fail when turned off
     USE_PV_SEARCH(true),
     USE_INTERNAL_ITERATIVE_DEEPENING(true),
     USE_SUPER_VERIFY_ON_HASH(false);
