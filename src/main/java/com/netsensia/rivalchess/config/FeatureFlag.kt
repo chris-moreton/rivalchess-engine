@@ -4,10 +4,10 @@ enum class FeatureFlag(val isActive: Boolean) {
     USE_HASH_TABLES(true),
     USE_HEIGHT_REPLACE_HASH(true),
     USE_ALWAYS_REPLACE_HASH(true),
-    USE_ASPIRATION_WINDOW(false),
+    USE_ASPIRATION_WINDOW(true), // +3 fails when turned off
     USE_NULL_MOVE_PRUNING(true), // +17 fails when turned off
-    USE_DELTA_PRUNING(false), // (1) 20
-    USE_FUTILITY_PRUNING(true),
+    USE_DELTA_PRUNING(false), // (1) 20 - best so far - turned off
+    USE_FUTILITY_PRUNING(false), // +4 fails when turned off
     USE_HISTORY_HEURISTIC(true),
     USE_MATE_HISTORY_KILLERS(true),
     USE_INTERNAL_OPENING_BOOK(true),
