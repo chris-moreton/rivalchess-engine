@@ -82,7 +82,7 @@ tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : Li
         when (bitboard) {
             0L -> squareList
             else -> {
-                val square = java.lang.Long.numberOfTrailingZeros(bitboard)
+                val square = numberOfTrailingZeros(bitboard)
                 squareList(unsetBit(bitboard, square), squareList + square)
             }
         }

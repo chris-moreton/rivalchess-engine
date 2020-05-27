@@ -163,7 +163,7 @@ fun EngineBoard.getFen(): String {
     }
 
 fun EngineBoard.isGameOver(): Boolean {
-    return generateLegalMoves().toList().stream()
+    return generateLegalMoves().stream()
             .filter { m: Int -> isMoveLegal(m) }
             .count() == 0L
 }
