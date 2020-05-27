@@ -8,8 +8,8 @@ enum class FeatureFlag(val isActive: Boolean) {
     USE_NULL_MOVE_PRUNING(true), // +17 fails when turned off
     USE_DELTA_PRUNING(false), // (1) 20 - best so far - turned off
     USE_FUTILITY_PRUNING(true), // +4 fails when turned off
-    USE_HISTORY_HEURISTIC(false), // +5 fails when turned off
-    USE_MATE_HISTORY_KILLERS(true),
+    USE_HISTORY_HEURISTIC(true), // +5 fails when turned off
+    USE_MATE_HISTORY_KILLERS(false), // +3 fails when turned off
     USE_INTERNAL_OPENING_BOOK(true),
     USE_PIECE_SQUARES_IN_MOVE_ORDERING(true),
     USE_LATE_MOVE_REDUCTIONS(true),
