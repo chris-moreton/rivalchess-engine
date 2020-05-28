@@ -150,7 +150,7 @@ public class EpdTest {
 
         for (EpdItem epdItem : epdReader) {
             processTests = processTests || (epdItem.getId().equals(startAtId));
-            if (processTests && expectedToPass != failingPositions.contains(epdItem.getId())) {
+            if (processTests && (RECALCULATE_FAILURES || expectedToPass != failingPositions.contains(epdItem.getId()))) {
                 testPosition(epdItem, expectedToPass);
             }
         }

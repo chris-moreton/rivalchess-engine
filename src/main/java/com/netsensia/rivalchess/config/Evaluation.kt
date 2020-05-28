@@ -8,7 +8,7 @@ import java.util.*
 enum class Evaluation(val value: Int) {
     TOTAL_PIECE_VALUE_PER_SIDE_AT_START(pieceValue(Piece.KNIGHT) * 2 + pieceValue(Piece.BISHOP) * 2 + pieceValue(Piece.ROOK) * 2 + pieceValue(Piece.QUEEN)),
     OPENING_PHASE_MATERIAL((TOTAL_PIECE_VALUE_PER_SIDE_AT_START.value * 0.8).toInt()),
-    PAWN_TRADE_BONUS_MAX(600),
+    PAWN_TRADE_BONUS_MAX(600), // (600) when == 1, +7 fails
     WRONG_COLOUR_BISHOP_PENALTY_DIVISOR(2),
     WRONG_COLOUR_BISHOP_MATERIAL_LOW(pieceValue(Piece.BISHOP) * 2),
     WRONG_COLOUR_BISHOP_MATERIAL_HIGH(pieceValue(Piece.QUEEN) * 2 + pieceValue(Piece.ROOK) * 2 + pieceValue(Piece.BISHOP) * 2),
