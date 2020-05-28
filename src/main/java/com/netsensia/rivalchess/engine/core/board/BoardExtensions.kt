@@ -159,8 +159,9 @@ fun EngineBoard.getFen(): String {
         return fen.toString()
     }
 
-fun EngineBoard.isGameOver(): Boolean {
-    return moveGenerator().generateLegalMoves().moves.stream()
-            .filter { m: Int -> moveDoesNotLeaveMoverInCheck(m) }
-            .count() == 0L
-}
+private fun EngineBoard.anyLegalMoves(moves: IntArray, moveIndex: Int): Boolean =
+    if (moves[moveIndex] == 0) false
+    else if (moveDoesNotLeaveMoverInCheck(moves[moveIndex])) true
+    else anyLegalMoves(moves, moveIndex+1)
+
+fun EngineBoard.isGameOver() = !anyLegalMoves(moveGenerator().generateLegalMoves().moves, 0)
