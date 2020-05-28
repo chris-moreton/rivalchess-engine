@@ -1,8 +1,5 @@
 package com.netsensia.rivalchess.bitboards;
 
-import com.netsensia.rivalchess.model.Colour;
-import com.netsensia.rivalchess.model.Piece;
-
 public enum BitboardType {
     NONE(-1),
     WP(0),
@@ -26,7 +23,7 @@ public enum BitboardType {
     private int index;
     private static final int numBitboardTypes = 16;
 
-    private BitboardType(int index) {
+    BitboardType(int index) {
         this.index = index;
     }
 

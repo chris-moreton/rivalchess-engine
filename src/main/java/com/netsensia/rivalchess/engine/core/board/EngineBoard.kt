@@ -184,8 +184,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     fun getBlackKingSquare() = blackKingSquare.toInt()
 
-    @Deprecated("")
-    fun getBitboardByIndex(index: Int): Long {
+    fun getBitboardType(index: Int): Long {
         return engineBitboards.getPieceBitboard(BitboardType.fromIndex(index))
     }
 

@@ -93,8 +93,8 @@ class BoardHash {
     private fun storeSuperVerifyAlwaysReplaceInformation(board: EngineBoard, hashIndex: Int) {
         if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive) {
             for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
-                hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = (board.getBitboardByIndex(i) ushr 32).toInt()
-                hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboardByIndex(i) and LOW32).toInt()
+                hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = (board.getBitboardType(i) ushr 32).toInt()
+                hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboardType(i) and LOW32).toInt()
             }
         }
     }
@@ -106,8 +106,8 @@ class BoardHash {
                     hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i]
                     hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12]
                 }
-                hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = (board.getBitboardByIndex(i) ushr 32).toInt()
-                hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboardByIndex(i) and LOW32).toInt()
+                hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = (board.getBitboardType(i) ushr 32).toInt()
+                hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboardType(i) and LOW32).toInt()
             }
         }
     }

@@ -15,7 +15,7 @@ object ZorbristHashCalculator {
         var hashValue = START_HASH_VALUE
         for (bitNum in 0..63) {
             for (piece in SquareOccupant.WP.index..SquareOccupant.BR.index) {
-                if (engineBoard.getBitboardByIndex(piece) and (1L shl bitNum) != 0L) {
+                if (engineBoard.getBitboardType(piece) and (1L shl bitNum) != 0L) {
                     hashValue = hashValue xor pieceHashValues[piece][bitNum]
                 }
             }
@@ -30,7 +30,7 @@ object ZorbristHashCalculator {
         for (bitNum in 0..63) {
             for (piece in SquareOccupant.WP.index..SquareOccupant.BR.index) {
                 val isPawn = piece == SquareOccupant.WP.index || piece == SquareOccupant.BP.index
-                if (isPawn && engineBoard.getBitboardByIndex(piece) and (1L shl bitNum) != 0L) {
+                if (isPawn && engineBoard.getBitboardType(piece) and (1L shl bitNum) != 0L) {
                     pawnHashValue = pawnHashValue xor pieceHashValues[piece][bitNum]
                 }
             }
