@@ -47,7 +47,7 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
     }
 
     private fun getCaptureMovesOnSquare(board: EngineBoard, captureSquare: Int): List<EngineMove> {
-        val moves = board.moveGenerator().generateLegalQuiesceMoves(false).getMovesAsArray()
+        val moves = board.moveGenerator().generateLegalQuiesceMoves(false).getMoveArray()
         val moveList: MutableList<EngineMove> = ArrayList()
         var moveNum = 0
         var move = moves[moveNum]

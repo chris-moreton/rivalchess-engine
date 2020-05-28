@@ -17,10 +17,10 @@ class MoveGenerator(
 
     var moves = mutableListOf<Int>()
 
-    fun numLegalMoves() = moves.toList().size
+    fun getNumLegalMoves() = moves.toList().size
 
-    fun getMovesAsArray() = moves.toIntArray() + 0
-    
+    fun getMoveArray() = moves.toIntArray() + 0
+
     fun generateLegalMoves(): MoveGenerator {
 
         moves.clear()

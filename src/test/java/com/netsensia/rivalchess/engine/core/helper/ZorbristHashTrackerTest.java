@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.helper;
 
-import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
@@ -233,8 +232,8 @@ public class ZorbristHashTrackerTest {
             r.setSeed(i);
 
             MoveGenerator mg = ecb.moveGenerator();
-            int legalMoves[] = mg.generateLegalMoves().getMovesAsArray();
-            int numLegalMoves = mg.numLegalMoves();
+            int legalMoves[] = mg.generateLegalMoves().getMoveArray();
+            int numLegalMoves = mg.getNumLegalMoves();
 
             while (!BoardExtensionsKt.isGameOver(ecb) && ecb.getHalfMoveCount() < 100) {
                 int move = legalMoves[r.nextInt(numLegalMoves)];
@@ -245,8 +244,8 @@ public class ZorbristHashTrackerTest {
                 assertEquals(calculatedHashCode, trackedCode);
 
                 mg = ecb.moveGenerator();
-                legalMoves = mg.generateLegalMoves().getMovesAsArray();
-                numLegalMoves = mg.numLegalMoves();
+                legalMoves = mg.generateLegalMoves().getMoveArray();
+                numLegalMoves = mg.getNumLegalMoves();
 
             }
         }

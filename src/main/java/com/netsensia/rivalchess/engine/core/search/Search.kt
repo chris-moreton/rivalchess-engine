@@ -200,12 +200,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (isCheck) {
             orderedMoves[ply] = board.moveGenerator()
                     .generateLegalMoves()
-                    .getMovesAsArray()
+                    .getMoveArray()
             scoreFullWidthMoves(board, ply)
         } else {
             orderedMoves[ply] = board.moveGenerator()
                     .generateLegalQuiesceMoves(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
-                    .getMovesAsArray()
+                    .getMoveArray()
             scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
         }
     }
@@ -225,10 +225,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     @Throws(InvalidMoveException::class)
     private fun scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
-        var i: Int
         var score: Int
         var count = 0
-        i = 0
+        var i = 0
         while (orderedMoves[ply][i] != 0) {
             if (orderedMoves[ply][i] != -1) {
                 score = 0
@@ -299,31 +298,25 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val fromSquare = orderedMoves[ply][i] ushr 16 and 63
                 val toSquare = orderedMoves[ply][i] and 63
                 orderedMoves[ply][i] = orderedMoves[ply][i] and 0x00FFFFFF
-                var score = scoreKillerMoves(ply, i, orderedMoves[ply])
-                score = scoreHistoryHeuristic(board, score, fromSquare, toSquare)
 
-                // must be a losing capture otherwise would have been scored in previous phase
-                // give it a score of 1 to place towards the end of the list
-                if (score == 0 && board.getSquareOccupant(toSquare) != SquareOccupant.NONE) {
-                    score = 1
-                }
-                if (score == 0 && FeatureFlag.USE_PIECE_SQUARES_IN_MOVE_ORDERING.isActive) {
-                    score = 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2
-                }
-                orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)
+                val killerScore = scoreKillerMoves(ply, i, orderedMoves[ply])
+                val historyScore = scoreHistoryHeuristic(board, killerScore, fromSquare, toSquare)
+
+                val finalScore = if (historyScore == 0)
+                    (if (board.getSquareOccupant(toSquare) != SquareOccupant.NONE) 1 // losing capture
+                     else 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2)
+                else historyScore
+
+                orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - finalScore shl 24)
             }
             i++
         }
     }
 
     private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): Int {
-        var fromSquare = fromSquare
-        var toSquare = toSquare
-        if (board.mover == Colour.BLACK) {
-            // piece square tables are set up from white's PoV
-            fromSquare = bitFlippedHorizontalAxis[fromSquare]
-            toSquare = bitFlippedHorizontalAxis[toSquare]
-        }
+        val fromSquare = if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare]
+        val toSquare = if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]
+
         return when (board.getSquareOccupant(fromSquare).piece) {
             Piece.PAWN -> linearScale(
                     if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
@@ -352,7 +345,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun scoreHistoryHeuristic(board: EngineBoard, score: Int, fromSquare: Int, toSquare: Int): Int {
         var score = score
-        if (score == 0 && FeatureFlag.USE_HISTORY_HEURISTIC.isActive && historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
+        if (score == 0 && FeatureFlag.USE_HISTORY_HEURISTIC.isActive &&
+                historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
             score = 90 + historyScore(board.mover == Colour.WHITE, fromSquare, toSquare)
         }
         return score
@@ -481,7 +475,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 board.unMakeNullMove()
             }
         }
-        orderedMoves[ply] = board.moveGenerator().generateLegalMoves().getMovesAsArray()
+        orderedMoves[ply] = board.moveGenerator().generateLegalMoves().getMoveArray()
         moveOrderStatus[ply] = MoveOrder.NONE
         var research: Boolean
         do {
@@ -792,7 +786,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setupHistoryMoveTable()
         var path: SearchPath?
         try {
-            orderedMoves[0] = engineBoard.moveGenerator().generateLegalMoves().getMovesAsArray()
+            orderedMoves[0] = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
             var depthZeroMoveCount = 0
             var c = 0
             var depth1MovesTemp: IntArray
@@ -826,7 +820,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
                         plyDraw[0] = true
                     }
-                    depth1MovesTemp = engineBoard.moveGenerator().generateLegalMoves().getMovesAsArray()
+                    depth1MovesTemp = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
                     var c1 = -1
                     while (depth1MovesTemp[++c1] and 0x00FFFFFF != 0) {
                         if (engineBoard.makeMove(EngineMove(depth1MovesTemp[c1] and 0x00FFFFFF))) {
@@ -852,7 +846,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             if (inBook) {
                 val libraryMove = OpeningLibrary.getMove(fen)
-                // Todo - check for legality
                 if (libraryMove != null) {
                     path = SearchPath()
                     path.setPath(EngineMove(libraryMove).compact)

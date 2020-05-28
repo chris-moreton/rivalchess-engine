@@ -76,22 +76,11 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long): Int {
 
 fun unsetBit(bitboard: Long, bit: Int) = bitboard xor (1L shl bit)
 
-fun orList(list: List<Long>) : Long = list.asSequence().fold(0L) { acc, i -> acc or i }
-
-tailrec fun squareList(bitboard: Long, squareList: List<Int> = emptyList()) : List<Int> =
-        when (bitboard) {
-            0L -> squareList
-            else -> {
-                val square = numberOfTrailingZeros(bitboard)
-                squareList(unsetBit(bitboard, square), squareList + square)
-            }
-        }
-
-fun squareListSequence(bitboard: Long) = sequence {
+fun squareList(bitboard: Long): List<Int> {
+    val squares = mutableListOf<Int>()
     var bitboardCopy = bitboard
     while (bitboardCopy != 0L) {
-        val square = numberOfTrailingZeros(bitboardCopy)
-        yield (square)
-        bitboardCopy = unsetBit(bitboardCopy, square)
+        squares.add(numberOfTrailingZeros(bitboardCopy).also( { unsetBit(bitboardCopy, it) } ))
     }
+    return squares
 }

@@ -37,11 +37,11 @@ fun blackKingSquareEval(bitboards: BitboardData, kingSquares: KingSquares) =
                 PieceSquareTables.king[bitFlippedHorizontalAxis[kingSquares.black]]
         )
 
-fun linearScale(situation: Int, ref1: Int, ref2: Int, score1: Int, score2: Int) =
+fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
         when {
-            situation < ref1 -> score1
-            situation > ref2 -> score2
-            else -> (situation - ref1) * (score2 - score1) / (ref2 - ref1) + score1
+            x < min -> a
+            x > max -> b
+            else -> a + (x - min) * (b - a) / (max - min)
         }
 
 fun twoWhiteRooksTrappingKingEval(bitboards: BitboardData) =

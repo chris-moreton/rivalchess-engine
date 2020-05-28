@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.util;
 
-import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
@@ -111,7 +110,7 @@ public class ChessBoardConversion
 		
 		char qualifier = ' ';
 		
-		int[] legalMoves = board.moveGenerator().generateLegalMoves().getMovesAsArray();
+		int[] legalMoves = board.moveGenerator().generateLegalMoves().getMoveArray();
 
 		int moveCount = 0;
 		int legalMove = legalMoves[moveCount] & 0x00FFFFFF;
