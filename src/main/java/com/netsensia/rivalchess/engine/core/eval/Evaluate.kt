@@ -106,7 +106,7 @@ fun tradePawnBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: 
     linearScale(
             if (materialDifference > 0) whitePawnValues(bitboards) else blackPawnValues(bitboards),
             0,
-            Evaluation.TRADE_BONUS_UPPER_PAWNS.value,
+            Evaluation.PAWN_TRADE_BONUS_MAX.value,
             -30 * materialDifference / 100,
             0)
 
@@ -804,7 +804,7 @@ fun evaluate(board: EngineBoard) : Int {
 
         val eval =  materialDifference +
                     (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
-                    (doubledRooksEval(pieceSquareLists.whiteRooks) - doubledRooksEval(pieceSquareLists.blackRooks)) +
+                    (doubledRooksEval(pieceSquareLists.whiteRooks.toList()) - doubledRooksEval(pieceSquareLists.blackRooks.toList())) +
                     pawnScore(bitboards.whitePawns,
                             bitboards.blackPawns,
                             attacks, materialValues,

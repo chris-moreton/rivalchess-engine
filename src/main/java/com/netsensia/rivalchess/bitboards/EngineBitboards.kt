@@ -1,11 +1,11 @@
 package com.netsensia.rivalchess.bitboards
 
-import com.netsensia.rivalchess.bitboards.util.getFirstOccupiedSquare
 import com.netsensia.rivalchess.bitboards.util.getPawnMovesCaptureOfColour
 import com.netsensia.rivalchess.bitboards.util.isBishopAttackingSquare
 import com.netsensia.rivalchess.bitboards.util.isRookAttackingSquare
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.SquareOccupant
+import java.lang.Long.numberOfTrailingZeros
 import java.util.*
 
 class EngineBitboards {
@@ -13,6 +13,15 @@ class EngineBitboards {
 
     val allPieceBitboard: Long
         get() = getPieceBitboard(BitboardType.ALL)
+
+    init {
+        reset()
+    }
+
+    fun reset() {
+        pieceBitboards = LongArray(BitboardType.getNumBitboardTypes())
+        Arrays.fill(pieceBitboards, 0)
+    }
 
     fun xorPieceBitboard(i: Int, xorBy: Long) {
         pieceBitboards[i] = pieceBitboards[i] xor xorBy
@@ -24,11 +33,6 @@ class EngineBitboards {
 
     fun orPieceBitboard(type: BitboardType, xorBy: Long) {
         pieceBitboards[type.index] = pieceBitboards[type.index] or xorBy
-    }
-
-    fun reset() {
-        pieceBitboards = LongArray(BitboardType.getNumBitboardTypes())
-        Arrays.fill(pieceBitboards, 0)
     }
 
     fun setPieceBitboard(type: BitboardType, bitboard: Long) {
@@ -60,11 +64,16 @@ class EngineBitboards {
     }
 
     fun isSquareAttackedBy(attackedSquare: Int, attacker: Colour): Boolean {
-        if (pieceBitboards[SquareOccupant.WN.ofColour(attacker).index] and knightMoves[attackedSquare] != 0L || pieceBitboards[SquareOccupant.WK.ofColour(attacker).index] and kingMoves[attackedSquare] != 0L || (pieceBitboards[SquareOccupant.WP.ofColour(attacker).index]
-                        and getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L) return true
+        if (pieceBitboards[SquareOccupant.WN.ofColour(attacker).index] and knightMoves[attackedSquare] != 0L ||
+                pieceBitboards[SquareOccupant.WK.ofColour(attacker).index] and kingMoves[attackedSquare] != 0L ||
+                (pieceBitboards[SquareOccupant.WP.ofColour(attacker).index]
+                        and getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L)
+            return true
+
         var bitboardBishop = getBishopMovePiecesBitboard(attacker)
+
         while (bitboardBishop != 0L) {
-            val pieceSquare = getFirstOccupiedSquare(bitboardBishop)
+            val pieceSquare = numberOfTrailingZeros(bitboardBishop)
             bitboardBishop = bitboardBishop xor (1L shl pieceSquare)
             if (isBishopAttackingSquare(attackedSquare, pieceSquare, allPieceBitboard)) {
                 return true
@@ -72,7 +81,7 @@ class EngineBitboards {
         }
         var bitboardRook = getRookMovePiecesBitboard(attacker)
         while (bitboardRook != 0L) {
-            val pieceSquare = java.lang.Long.numberOfTrailingZeros(bitboardRook)
+            val pieceSquare = numberOfTrailingZeros(bitboardRook)
             bitboardRook = bitboardRook xor (1L shl pieceSquare)
             if (isRookAttackingSquare(attackedSquare, pieceSquare, allPieceBitboard)) {
                 return true
@@ -81,7 +90,5 @@ class EngineBitboards {
         return false
     }
 
-    init {
-        reset()
-    }
+
 }

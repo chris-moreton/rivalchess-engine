@@ -7,13 +7,15 @@ import com.netsensia.rivalchess.enums.PromotionPieceMask
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
+import java.lang.Long.numberOfTrailingZeros
 
 class MoveGenerator(
-        val engineBitboards: EngineBitboards,
-        val mover: Colour,
-        val whiteKingSquare: Int,
-        val blackKingSquare: Int,
-        val castlePrivileges: Int) {
+        private val engineBitboards: EngineBitboards,
+        private val mover: Colour,
+        private val whiteKingSquare: Int,
+        private val blackKingSquare: Int,
+        private val castlePrivileges: Int
+) {
 
     var moves = mutableListOf<Int>()
 
@@ -24,13 +26,28 @@ class MoveGenerator(
     fun generateLegalMoves(): MoveGenerator {
 
         moves.clear()
+
         generateKnightMoves(knightBitboardForMover())
         generateKingMoves(kingSquareForMover())
         generatePawnMoves(pawnBitboardForMover(),
                 if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
                 if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture)
-        generateSliderMoves(SquareOccupant.WR, SquareOccupant.BR, MagicBitboards.magicMovesRook, MagicBitboards.occupancyMaskRook, MagicBitboards.magicNumberRook, MagicBitboards.magicNumberShiftsRook)
-        generateSliderMoves(SquareOccupant.WB, SquareOccupant.BB, MagicBitboards.magicMovesBishop, MagicBitboards.occupancyMaskBishop, MagicBitboards.magicNumberBishop, MagicBitboards.magicNumberShiftsBishop)
+        generateSliderMoves(
+                SquareOccupant.WR,
+                SquareOccupant.BR,
+                MagicBitboards.magicMovesRook,
+                MagicBitboards.occupancyMaskRook,
+                MagicBitboards.magicNumberRook,
+                MagicBitboards.magicNumberShiftsRook
+        )
+        generateSliderMoves(
+                SquareOccupant.WB,
+                SquareOccupant.BB,
+                MagicBitboards.magicMovesBishop,
+                MagicBitboards.occupancyMaskBishop,
+                MagicBitboards.magicNumberBishop,
+                MagicBitboards.magicNumberShiftsBishop
+        )
 
         return this
     }
@@ -48,7 +65,12 @@ class MoveGenerator(
     }
 
     private fun addMoves(fromSquareMask: Int, bitboard: Long) {
-        squareList(bitboard).forEach { moves.add(fromSquareMask or it) }
+        var bitboardCopy = bitboard
+        while (bitboardCopy != 0L) {
+            val square = numberOfTrailingZeros(bitboardCopy)
+            moves.add(fromSquareMask or square)
+            bitboardCopy = bitboardCopy xor (1L shl square)
+        }
     }
 
     private fun generateKingMoves(kingSquare: Int) {
@@ -85,27 +107,26 @@ class MoveGenerator(
         }
     }
 
-    fun emptySquaresBitboard() = engineBitboards.getPieceBitboard(BitboardType.ALL).inv()
+    private fun emptySquaresBitboard() = engineBitboards.getPieceBitboard(BitboardType.ALL).inv()
 
     private fun generateSliderMoves(
             whitePiece: SquareOccupant,
             blackPiece: SquareOccupant,
-            magicMovesRook: Array<LongArray>,
-            occupancyMaskRook: LongArray,
-            magicNumberRook: LongArray,
-            magicNumberShiftsRook: IntArray
+            magicMovesArray: Array<LongArray>,
+            occupancyMask: LongArray,
+            magicNumber: LongArray,
+            magicNumberShifts: IntArray
     ) {
 
-        val rookBitboard: Long = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(whitePiece) or
-                engineBitboards.getPieceBitboard(BitboardType.WQ)
-        else engineBitboards.getPieceBitboard(blackPiece) or
-                engineBitboards.getPieceBitboard(BitboardType.BQ)
+        val bitboard: Long = if (mover == Colour.WHITE)
+            engineBitboards.getPieceBitboard(whitePiece) or engineBitboards.getPieceBitboard(BitboardType.WQ) else
+            engineBitboards.getPieceBitboard(blackPiece) or engineBitboards.getPieceBitboard(BitboardType.BQ)
 
-        squareList(rookBitboard).forEach {
+        squareList(bitboard).forEach {
             addMoves(
                     it shl 16,
-                    magicMovesRook[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[it]) *
-                            magicNumberRook[it] ushr magicNumberShiftsRook[it]).toInt()] and
+                    magicMovesArray[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMask[it]) *
+                            magicNumber[it] ushr magicNumberShifts[it]).toInt()] and
                             engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
         }
     }
@@ -173,7 +194,7 @@ class MoveGenerator(
                 BitboardType.fromIndex(whiteSliderConstant)) or engineBitboards.getPieceBitboard(BitboardType.WQ) else engineBitboards.getPieceBitboard(
                 BitboardType.fromIndex(blackSliderConstant)) or engineBitboards.getPieceBitboard(BitboardType.BQ)
         while (pieceBitboard != 0L) {
-            val bitRef = java.lang.Long.numberOfTrailingZeros(pieceBitboard)
+            val bitRef = numberOfTrailingZeros(pieceBitboard)
             pieceBitboard = pieceBitboard xor (1L shl bitRef)
             val pieceMoves = magicMovesRook[bitRef][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[bitRef]) * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()
             if (includeChecks) {
@@ -184,11 +205,7 @@ class MoveGenerator(
         }
     }
 
-    fun addPawnMoves(
-            fromSquareMoveMask: Int,
-            bitboard: Long,
-            queenCapturesOnly: Boolean) {
-
+    private fun addPawnMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean) {
         squareList(bitboard).forEach {
             if (it >= 56 || it <= 7) {
                 moves.add(fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
@@ -203,9 +220,9 @@ class MoveGenerator(
         }
     }
 
-    fun enPassantCaptureRank(mover: Colour) = if (mover == Colour.WHITE) RANK_6 else RANK_3
+    private fun enPassantCaptureRank(mover: Colour) = if (mover == Colour.WHITE) RANK_6 else RANK_3
 
-    fun generatePawnMoves(
+    private fun generatePawnMoves(
             pawnBitboard: Long,
             bitboardMaskForwardPawnMoves: List<Long>,
             bitboardMaskCapturePawnMoves: List<Long>

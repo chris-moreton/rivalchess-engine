@@ -9,14 +9,14 @@ import com.netsensia.rivalchess.model.SquareOccupant
 class Attacks(bitboardData: BitboardData, pieceSquareLists: PieceSquareLists) {
     val whitePawns = whitePawnAttacks(bitboardData.whitePawns)
     val blackPawns = blackPawnAttacks(bitboardData.blackPawns)
-    val whiteRookPair = attackList(bitboardData, pieceSquareLists.whiteRooks, ::rookAttacks)
-    val whiteBishopPair = attackList(bitboardData, pieceSquareLists.whiteBishops, ::bishopAttacks)
-    val whiteQueenPair = attackList(bitboardData, pieceSquareLists.whiteQueens, ::queenAttacks)
-    val whiteKnightPair = knightAttackList(pieceSquareLists.whiteKnights)
-    val blackRookPair = attackList(bitboardData, pieceSquareLists.blackRooks, ::rookAttacks)
-    val blackBishopPair = attackList(bitboardData, pieceSquareLists.blackBishops, ::bishopAttacks)
-    val blackQueenPair = attackList(bitboardData, pieceSquareLists.blackQueens, ::queenAttacks)
-    val blackKnightPair = knightAttackList(pieceSquareLists.blackKnights)
+    val whiteRookPair = attackList(bitboardData, pieceSquareLists.whiteRooks.toList(), ::rookAttacks)
+    val whiteBishopPair = attackList(bitboardData, pieceSquareLists.whiteBishops.toList(), ::bishopAttacks)
+    val whiteQueenPair = attackList(bitboardData, pieceSquareLists.whiteQueens.toList(), ::queenAttacks)
+    val whiteKnightPair = knightAttackList(pieceSquareLists.whiteKnights.toList())
+    val blackRookPair = attackList(bitboardData, pieceSquareLists.blackRooks.toList(), ::rookAttacks)
+    val blackBishopPair = attackList(bitboardData, pieceSquareLists.blackBishops.toList(), ::bishopAttacks)
+    val blackQueenPair = attackList(bitboardData, pieceSquareLists.blackQueens.toList(), ::queenAttacks)
+    val blackKnightPair = knightAttackList(pieceSquareLists.blackKnights.toList())
 }
 
 fun whitePawnAttacks(whitePawns: Long) =

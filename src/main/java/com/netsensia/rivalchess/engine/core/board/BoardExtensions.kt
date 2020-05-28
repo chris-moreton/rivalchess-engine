@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.BitboardType
-import com.netsensia.rivalchess.bitboards.util.getSetBits
+import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.core.eval.onlyOneBitSet
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
@@ -83,7 +83,7 @@ fun EngineBoard.getCharBoard(): CharArray {
         val board = CharArray(64){'0'}
         val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
         for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
-            val bitsSet = getSetBits(this.engineBitboards.getPieceBitboard(BitboardType.fromIndex(i)), ArrayList())
+            val bitsSet = squareList(this.engineBitboards.getPieceBitboard(BitboardType.fromIndex(i)))
             for (bitSet in bitsSet) {
                 board[bitSet] = pieces[i]
             }

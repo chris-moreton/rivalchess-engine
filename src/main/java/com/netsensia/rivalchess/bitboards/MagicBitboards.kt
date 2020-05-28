@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.bitboards
 
-import com.netsensia.rivalchess.bitboards.util.getSetBits
-import java.util.*
+import com.netsensia.rivalchess.bitboards.util.squareList
 
 object MagicBitboards {
     @JvmField
@@ -19,7 +18,7 @@ object MagicBitboards {
         bitRef = 0
         while (bitRef <= 63) {
             mask = if (isRook) occupancyMaskRook[bitRef] else occupancyMaskBishop[bitRef]
-            setBitsInMask = getSetBits(mask, ArrayList())
+            setBitsInMask = squareList(mask).toList()
             bitCount = java.lang.Long.bitCount(mask)
             calculateOccupancyAttackSets(isRook, bitRef, setBitsInMask, bitCount)
             setMagicMoves(isRook, bitRef, bitCount)
@@ -56,17 +55,17 @@ object MagicBitboards {
     }
 
     private fun setMagicMovesForSouthWestDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMoves = validMoves
+        var validMovesShadow = validMoves
         var j: Int
         j = bitRef - 7
         while (j % 8 != 0 && j >= 0) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) {
                 break
             }
             j -= 7
         }
-        return validMoves
+        return validMovesShadow
     }
 
     private fun setMagicMovesForNorthEastDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
@@ -84,63 +83,63 @@ object MagicBitboards {
     }
 
     private fun setMagicMovesForSouthEastDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMoves = validMoves
+        var validMovesShadow = validMoves
         var j: Int
         j = bitRef - 9
         while (j % 8 != 7 && j >= 0) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) {
                 break
             }
             j -= 9
         }
-        return validMoves
+        return validMovesShadow
     }
 
     private fun setMagicMovesForNorthWestDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMoves = validMoves
+        var validMovesShadow = validMoves
         var j: Int
         j = bitRef + 9
         while (j % 8 != 0 && j <= 63) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) {
                 break
             }
             j += 9
         }
-        return validMoves
+        return validMovesShadow
     }
 
     private fun setMagicMovesForRooks(bitRef: Int, i: Int, validMoves: Long) {
-        var validMoves = validMoves
+        var validMovesShadow = validMoves
         val magicIndex: Int
         var j: Int
         magicIndex = (occupancyVariation!![i] * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()
         j = bitRef + 8
         while (j <= 63) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) break
             j += 8
         }
         j = bitRef - 8
         while (j >= 0) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) break
             j -= 8
         }
         j = bitRef + 1
         while (j % 8 != 0) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) break
             j++
         }
         j = bitRef - 1
         while (j % 8 != 7 && j >= 0) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) break
             j--
         }
-        magicMovesRook[bitRef][magicIndex] = validMoves
+        magicMovesRook[bitRef][magicIndex] = validMovesShadow
     }
 
     private fun calculateOccupancyAttackSets(isRook: Boolean, bitRef: Int, setBitsInMask: List<Int>, bitCount: Int) {
@@ -156,7 +155,7 @@ object MagicBitboards {
         while (i < variationCount) {
             occupancyVariation!![i] = 0
             // find bits set in index "i" and map them to bits in the 64 bit "occupancyVariation"
-            setBitsInIndex = getSetBits(i.toLong(), ArrayList())
+            setBitsInIndex = squareList(i.toLong()).toList()
             for (setBitInIndex in setBitsInIndex) {
                 occupancyVariation!![i] = occupancyVariation!![i] or (1L shl setBitsInMask[setBitInIndex])
                 // e.g. if setBitsInIndex[0] == 3 then the third bit (position 4) is set in counter "i"
