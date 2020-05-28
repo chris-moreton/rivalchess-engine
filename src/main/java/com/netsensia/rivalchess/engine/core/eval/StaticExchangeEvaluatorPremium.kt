@@ -1,14 +1,11 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import com.netsensia.rivalchess.config.Limit
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
-import com.netsensia.rivalchess.engine.core.board.getQuiesceMoveArray
 import com.netsensia.rivalchess.engine.core.board.makeMove
 import com.netsensia.rivalchess.engine.core.board.unMakeMove
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.util.MoveMaker.makeMove
 import java.util.*
 
 class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
@@ -50,7 +47,7 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
     }
 
     private fun getCaptureMovesOnSquare(board: EngineBoard, captureSquare: Int): List<EngineMove> {
-        val moves = board.getQuiesceMoveArray(false)
+        val moves = board.moveGenerator().generateLegalQuiesceMoves(false).getMovesAsArray()
         val moveList: MutableList<EngineMove> = ArrayList()
         var moveNum = 0
         var move = moves[moveNum]

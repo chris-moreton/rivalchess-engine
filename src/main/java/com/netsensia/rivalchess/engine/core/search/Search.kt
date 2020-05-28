@@ -198,10 +198,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun setOrderedMovesArrayForQuiesce(isCheck: Boolean, ply: Int, board: EngineBoard, quiescePly: Int) {
         if (isCheck) {
-            orderedMoves[ply] = board.getMovesAsArray()
+            orderedMoves[ply] = board.moveGenerator()
+                    .generateLegalMoves()
+                    .getMovesAsArray()
             scoreFullWidthMoves(board, ply)
         } else {
-            orderedMoves[ply] = board.getQuiesceMoveArray(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
+            orderedMoves[ply] = board.moveGenerator()
+                    .generateLegalQuiesceMoves(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
+                    .getMovesAsArray()
             scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
         }
     }
@@ -477,7 +481,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 board.unMakeNullMove()
             }
         }
-        orderedMoves[ply] = board.getMovesAsArray()
+        orderedMoves[ply] = board.moveGenerator().generateLegalMoves().getMovesAsArray()
         moveOrderStatus[ply] = MoveOrder.NONE
         var research: Boolean
         do {
@@ -788,7 +792,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setupHistoryMoveTable()
         var path: SearchPath?
         try {
-            orderedMoves[0] = engineBoard.getMovesAsArray()
+            orderedMoves[0] = engineBoard.moveGenerator().generateLegalMoves().getMovesAsArray()
             var depthZeroMoveCount = 0
             var c = 0
             var depth1MovesTemp: IntArray
@@ -822,7 +826,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
                         plyDraw[0] = true
                     }
-                    depth1MovesTemp = engineBoard.getMovesAsArray()
+                    depth1MovesTemp = engineBoard.moveGenerator().generateLegalMoves().getMovesAsArray()
                     var c1 = -1
                     while (depth1MovesTemp[++c1] and 0x00FFFFFF != 0) {
                         if (engineBoard.makeMove(EngineMove(depth1MovesTemp[c1] and 0x00FFFFFF))) {

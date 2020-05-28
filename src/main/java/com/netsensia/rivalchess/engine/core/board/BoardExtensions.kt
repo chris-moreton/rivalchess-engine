@@ -65,16 +65,13 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
     return score
 }
 
-fun EngineBoard.isMoveLegal(moveToVerify: Int): Boolean {
-    val moves: List<Int> = generateLegalMoves().toList()
+fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
+
     try {
-        for (move in moves) {
-            val engineMove = EngineMove(move and 0x00FFFFFF)
-            if (makeMove(engineMove)) {
-                unMakeMove()
-                if (engineMove.compact == moveToVerify and 0x00FFFFFF)
-                    return true
-            }
+        val engineMove = EngineMove(moveToVerify and 0x00FFFFFF)
+        if (makeMove(engineMove)) {
+            unMakeMove()
+            return true
         }
     } catch (e: InvalidMoveException) {
         return false
@@ -163,7 +160,7 @@ fun EngineBoard.getFen(): String {
     }
 
 fun EngineBoard.isGameOver(): Boolean {
-    return generateLegalMoves().stream()
-            .filter { m: Int -> isMoveLegal(m) }
+    return moveGenerator().generateLegalMoves().moves.stream()
+            .filter { m: Int -> moveDoesNotLeaveMoverInCheck(m) }
             .count() == 0L
 }

@@ -1,13 +1,11 @@
 package com.netsensia.rivalchess.engine.core;
 
-import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.getMovesAsArray;
 import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.makeMove;
 import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.unMakeMove;
 import static org.junit.Assert.assertEquals;
 
 import java.text.NumberFormat;
 
-import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
@@ -29,7 +27,7 @@ public class PerftTest {
         long nodes = 0;
         int moveNum = 0;
 
-        int[] legalMoves = getMovesAsArray(board);
+        int[] legalMoves = board.moveGenerator().generateLegalMoves().getMovesAsArray();
 
         while (legalMoves[moveNum] != 0) {
             if (makeMove(board, new EngineMove(legalMoves[moveNum]))) {

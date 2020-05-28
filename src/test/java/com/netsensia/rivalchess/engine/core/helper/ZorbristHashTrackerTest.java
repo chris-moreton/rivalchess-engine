@@ -4,6 +4,7 @@ import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
+import com.netsensia.rivalchess.engine.core.board.MoveGenerator;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashTracker;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
@@ -15,8 +16,6 @@ import org.junit.Test;
 
 import java.util.Random;
 
-import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.getMovesAsArray;
-import static com.netsensia.rivalchess.engine.core.board.MoveGenerationBoardExtensionsKt.numLegalMoves;
 import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.makeMove;
 import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.makeNullMove;
 import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.unMakeMove;
@@ -233,17 +232,21 @@ public class ZorbristHashTrackerTest {
             Random r = new Random();
             r.setSeed(i);
 
-            int legalMoves[] = getMovesAsArray(ecb);
+            MoveGenerator mg = ecb.moveGenerator();
+            int legalMoves[] = mg.generateLegalMoves().getMovesAsArray();
+            int numLegalMoves = mg.numLegalMoves();
 
             while (!BoardExtensionsKt.isGameOver(ecb) && ecb.getHalfMoveCount() < 100) {
-                int move = legalMoves[r.nextInt(numLegalMoves(ecb))];
+                int move = legalMoves[r.nextInt(numLegalMoves)];
                 makeMove(ecb, new EngineMove(move));
 
                 final long trackedCode = ecb.trackedBoardHashCode();
                 final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
                 assertEquals(calculatedHashCode, trackedCode);
 
-                legalMoves = getMovesAsArray(ecb);
+                mg = ecb.moveGenerator();
+                legalMoves = mg.generateLegalMoves().getMovesAsArray();
+                numLegalMoves = mg.numLegalMoves();
 
             }
         }
