@@ -142,14 +142,33 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 moveOrderStatus[ply] = MoveOrder.ALL
             }
         }
-        var move = getHighScoreMove(orderedMoves[ply])
+        var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         if (move == 0 && moveOrderStatus[ply] === MoveOrder.CAPTURES) {
             // we move into here if we had some captures but they are now used up
             scoreFullWidthMoves(board, ply)
             moveOrderStatus[ply] = MoveOrder.ALL
-            move = getHighScoreMove(orderedMoves[ply])
+            move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
         return move
+    }
+
+    fun getHighestScoringMoveFromArray(theseMoves: IntArray): Int {
+        var bestIndex = -1
+        var best = Int.MAX_VALUE
+        var c = -1
+        while (theseMoves[++c] != 0) {
+            if (theseMoves[c] != -1 && theseMoves[c] < best && theseMoves[c] shr 24 != 127) {
+                // update best move found so far, but don't consider moves with no score
+                best = theseMoves[c]
+                bestIndex = c
+            }
+        }
+        return if (best == Int.MAX_VALUE) {
+            0
+        } else {
+            theseMoves[bestIndex] = -1
+            best and 0x00FFFFFF
+        }
     }
 
     @Throws(InvalidMoveException::class)
@@ -164,7 +183,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (depth == 0 || searchPath[ply].score >= high) return searchPath[ply]
         var newLow = searchPath[ply].score.coerceAtLeast(low)
         setOrderedMovesArrayForQuiesce(isCheck, ply, board, quiescePly)
-        var move = getHighScoreMove(orderedMoves[ply])
+        var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
             if (board.makeMove(EngineMove(move))) {
@@ -187,7 +206,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 }
                 newLow = newLow.coerceAtLeast(newPath.score)
             }
-            move = getHighScoreMove(orderedMoves[ply])
+            move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
         if (isCheck && legalMoveCount == 0) {
             // all moves have been found to be illegal - delta pruning doesn't occur when in check
