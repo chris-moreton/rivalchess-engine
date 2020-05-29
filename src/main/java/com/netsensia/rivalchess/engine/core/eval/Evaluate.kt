@@ -84,7 +84,7 @@ fun doubledRooksEval(squares: List<Int>) =
 fun flippedSquareTableScore(table: List<Int>, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
 
 fun kingAttackCount(dangerZone: Long, attacks: List<Long>): Int {
-    return attacks.asSequence()
+    return attacks
             .map { bitCount(it and dangerZone) }
             .fold(0) { acc, i -> acc + i }
 }
@@ -547,7 +547,7 @@ fun blockedKnightLandingSquares(square: Int, enemyPawnAttacks: Long, friendlyPaw
         knightMoves[square] and (enemyPawnAttacks or friendlyPawns)
 
 fun whitePawnsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData): Int {
-    return pieceSquareLists.whitePawns.asSequence().map {
+    return pieceSquareLists.whitePawns.map {
         linearScale(
                 blackPieceValues(bitboards),
                 Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
@@ -559,7 +559,7 @@ fun whitePawnsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData):
 }
 
 fun blackPawnsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData): Int {
-    return pieceSquareLists.blackPawns.asSequence().map {
+    return pieceSquareLists.blackPawns.map {
         linearScale(
                 whitePieceValues(bitboards),
                 Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
@@ -576,7 +576,7 @@ fun blackKnightsEval(
         attacks: Attacks,
         materialValues: MaterialValues)
         : Int {
-    return pieceSquareLists.blackKnights.asSequence().map {
+    return pieceSquareLists.blackKnights.map {
         linearScale(
                 materialValues.whitePieces + materialValues.whitePawns,
                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
@@ -595,7 +595,7 @@ fun whiteKnightsEval(
         materialValues: MaterialValues)
         : Int {
 
-    return pieceSquareLists.whiteKnights.asSequence().map {
+    return pieceSquareLists.whiteKnights.map {
         linearScale(materialValues.blackPieces + materialValues.blackPawns,
                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
                 Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
@@ -607,35 +607,35 @@ fun whiteKnightsEval(
 }
 
 fun blackBishopsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, blackPieces: Long): Int {
-    return pieceSquareLists.blackBishops.asSequence().map {
+    return pieceSquareLists.blackBishops.map {
         Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and blackPieces.inv())) +
                 flippedSquareTableScore(PieceSquareTables.bishop, it)
     }.fold(0) { acc, i -> acc + i }
 }
 
 fun whiteBishopEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, whitePieces: Long): Int {
-    return pieceSquareLists.whiteBishops.asSequence().map {
+    return pieceSquareLists.whiteBishops.map {
         Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and whitePieces.inv())) +
                 PieceSquareTables.bishop[it]
     }.fold(0) { acc, i -> acc + i }
 }
 
 private fun blackQueensEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, blackPieces: Long): Int {
-    return pieceSquareLists.blackQueens.asSequence().map {
+    return pieceSquareLists.blackQueens.map {
         Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and blackPieces.inv())) +
                 flippedSquareTableScore(PieceSquareTables.queen, it)
     }.fold(0) { acc, i -> acc + i }
 }
 
 private fun whiteQueensEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, whitePieces: Long): Int {
-    return pieceSquareLists.whiteQueens.asSequence().map {
+    return pieceSquareLists.whiteQueens.map {
         Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and whitePieces.inv())) +
                 PieceSquareTables.queen[it]
     }.fold(0) { acc, i -> acc + i }
 }
 
 private fun blackRooksEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, blackPieces: Long): Int {
-    return pieceSquareLists.blackRooks.asSequence().map {
+    return pieceSquareLists.blackRooks.map {
         blackRookOpenFilesEval(bitboards, it % 8) +
                 Evaluation.getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and blackPieces.inv())) +
                 flippedSquareTableScore(PieceSquareTables.rook, it) * rookEnemyPawnMultiplier(whitePawnValues(bitboards)) / 6
@@ -643,7 +643,7 @@ private fun blackRooksEval(pieceSquareLists: PieceSquareLists, bitboards: Bitboa
 }
 
 fun whiteRooksEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, whitePieces: Long): Int {
-    return pieceSquareLists.whiteRooks.asSequence().map {
+    return pieceSquareLists.whiteRooks.map {
         whiteRookOpenFilesEval(bitboards, it % 8) +
                 Evaluation.getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and whitePieces.inv())) +
                 PieceSquareTables.rook[it] * rookEnemyPawnMultiplier(blackPawnValues(bitboards)) / 6
@@ -676,11 +676,11 @@ fun pawnScore(whitePawnBitboard: Long,
     val blackOccupiedFileMask = southFill(blackPawnBitboard, 8) and RANK_1
 
     val whitePassedPawnScore = bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value +
-            squareList(whitePassedPawnsBitboard).asSequence()
+            squareList(whitePassedPawnsBitboard)
                     .map { Evaluation.getPassedPawnBonus(yCoordOfSquare(it)) }.fold(0) { acc, i -> acc + i }
 
     val blackPassedPawnScore = bitCount(blackGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value +
-            squareList(blackPassedPawnsBitboard).asSequence()
+            squareList(blackPassedPawnsBitboard)
                     .map { Evaluation.getPassedPawnBonus(7 - yCoordOfSquare(it)) }.fold(0) { acc, i -> acc + i }
 
     return bitCount(blackIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.value -
@@ -751,7 +751,7 @@ fun calculateLowMaterialPawnBonus(
     val lowMaterialSidePieceValues = if (lowMaterialColour == Colour.WHITE) materialValues.whitePieces else materialValues.blackPieces
 
     return squareList(if (lowMaterialColour == Colour.WHITE) blackPassedPawnsBitboard else whitePassedPawnsBitboard)
-            .asSequence().map {
+            .map {
                 val pawnDistance = pawnDistanceFromPromotion(lowMaterialColour, it).coerceAtMost(5)
                 val kingXDistanceFromPawn = difference(kingX, it)
                 val kingYDistanceFromPawn = difference(colourAdjustedYRank(lowMaterialColour, kingY), it)

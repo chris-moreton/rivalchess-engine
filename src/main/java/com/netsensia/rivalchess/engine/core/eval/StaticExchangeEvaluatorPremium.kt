@@ -38,24 +38,20 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
         return bestScore
     }
 
-    private fun materialBalanceFromMoverPerspective(board: EngineBoard): Int {
-        val whiteMaterial = board.whitePawnValues + board.whitePieceValues
-        val blackMaterial = board.blackPawnValues + board.blackPieceValues
-        return if (board.mover == Colour.WHITE) {
-            whiteMaterial - blackMaterial
-        } else blackMaterial - whiteMaterial
-    }
+    private fun materialBalanceFromMoverPerspective(board: EngineBoard) =
+        if (board.mover == Colour.WHITE)
+            (board.whitePawnValues + board.whitePieceValues - (board.blackPawnValues + board.blackPieceValues)) else
+            (board.blackPawnValues + board.blackPieceValues - (board.whitePawnValues + board.whitePieceValues))
 
     private fun getCaptureMovesOnSquare(board: EngineBoard, captureSquare: Int): List<EngineMove> {
         val moves = board.moveGenerator().generateLegalQuiesceMoves(false).getMoveArray()
         val moveList: MutableList<EngineMove> = ArrayList()
-        var moveNum = 0
-        var move = moves[moveNum]
-        while (move != 0) {
+        var moveNum = -1
+        var move: Int
+        while (moves[++moveNum].also { move = it } != 0) {
             if (move and 63 == captureSquare) {
                 moveList.add(EngineMove(move))
             }
-            move = moves[++moveNum]
         }
         return moveList
     }

@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.util.squareList
 
-class PieceSquareLists(private val bitboardData: BitboardData) {
+class PieceSquareLists(bitboardData: BitboardData) {
     val whitePawns = squareList(bitboardData.whitePawns)
     val whiteRooks = squareList(bitboardData.whiteRooks)
     val whiteBishops = squareList(bitboardData.whiteBishops)

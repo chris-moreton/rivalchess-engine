@@ -11,7 +11,6 @@ import com.netsensia.rivalchess.engine.core.hash.isAlwaysReplaceHashTableEntryVa
 import com.netsensia.rivalchess.engine.core.hash.isHeightHashTableEntryValid
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.enums.*
-import com.netsensia.rivalchess.enums.PromotionPieceMask.Companion.fromValue
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
@@ -142,14 +141,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 moveOrderStatus[ply] = MoveOrder.ALL
             }
         }
-        var move = getHighestScoringMoveFromArray(orderedMoves[ply])
-        if (move == 0 && moveOrderStatus[ply] === MoveOrder.CAPTURES) {
+        val move = getHighestScoringMoveFromArray(orderedMoves[ply])
+        return if (move == 0 && moveOrderStatus[ply] === MoveOrder.CAPTURES) {
             // we move into here if we had some captures but they are now used up
             scoreFullWidthMoves(board, ply)
             moveOrderStatus[ply] = MoveOrder.ALL
-            move = getHighestScoringMoveFromArray(orderedMoves[ply])
-        }
-        return move
+            getHighestScoringMoveFromArray(orderedMoves[ply])
+        } else move
     }
 
     fun getHighestScoringMoveFromArray(theseMoves: IntArray): Int {
@@ -229,19 +227,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun getMaterialIncreaseForPromotion(move: Int): Int {
-        val promotionMaskValue = move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
-        return if (promotionMaskValue == 0) {
-            0
-        } else when (fromValue(promotionMaskValue)) {
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> pieceValue(Piece.QUEEN) - pieceValue(Piece.PAWN)
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> pieceValue(Piece.BISHOP) - pieceValue(Piece.PAWN)
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> pieceValue(Piece.KNIGHT) - pieceValue(Piece.PAWN)
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> pieceValue(Piece.ROOK) - pieceValue(Piece.PAWN)
-            else -> 0
-        }
-    }
-
     @Throws(InvalidMoveException::class)
     private fun scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
         var score: Int
@@ -252,7 +237,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 score = 0
                 val toSquare = orderedMoves[ply][i] and 63
                 var capturePiece = Piece.fromSquareOccupant(board.getSquareOccupant(toSquare))
-                if (capturePiece == Piece.NONE && 1L shl toSquare and board.getBitboard(BitboardType.ENPASSANTSQUARE) != 0L && board.getSquareOccupant(orderedMoves[ply][i] ushr 16 and 63).piece == Piece.PAWN) {
+                if (capturePiece == Piece.NONE && 1L shl toSquare and board.getBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
+                        board.getSquareOccupant(orderedMoves[ply][i] ushr 16 and 63).piece == Piece.PAWN) {
                     capturePiece = Piece.PAWN
                 }
                 orderedMoves[ply][i] = orderedMoves[ply][i] and 0x00FFFFFF

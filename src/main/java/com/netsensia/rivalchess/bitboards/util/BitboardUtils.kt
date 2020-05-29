@@ -48,9 +48,7 @@ fun squareList(bitboard: Long): List<Int> {
     val squares = mutableListOf<Int>()
     var bitboardCopy = bitboard
     while (bitboardCopy != 0L) {
-        val square = numberOfTrailingZeros(bitboardCopy)
-        squares.add(square)
-        bitboardCopy = bitboardCopy xor (1L shl square)
+        squares.add(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
     }
     return squares
 }
@@ -58,8 +56,6 @@ fun squareList(bitboard: Long): List<Int> {
 fun squareSequence(bitboard: Long) = sequence {
     var bitboardCopy = bitboard
     while (bitboardCopy != 0L) {
-        val square = numberOfTrailingZeros(bitboardCopy)
-        yield(square)
-        bitboardCopy = bitboardCopy xor (1L shl square)
+        yield(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
     }
 }

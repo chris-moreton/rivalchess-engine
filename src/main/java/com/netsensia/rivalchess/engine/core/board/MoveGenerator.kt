@@ -140,13 +140,12 @@ class MoveGenerator(
         moves = IntArray(Limit.MAX_LEGAL_MOVES.value)
         moveCount = 0
         
-        val possibleDestinations = engineBitboards.getPieceBitboard(BitboardType.ENEMY)
         val kingSquare: Int = (if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare).toInt()
         val enemyKingSquare:Int = (if (mover == Colour.WHITE) blackKingSquare else whiteKingSquare).toInt()
         generateQuiesceKnightMoves(includeChecks,
                 enemyKingSquare,
                 knightBitboardForMover())
-        addMoves(kingSquare shl 16, kingMoves[kingSquare] and possibleDestinations)
+        addMoves(kingSquare shl 16, kingMoves[kingSquare] and engineBitboards.getPieceBitboard(BitboardType.ENEMY))
         generateQuiescePawnMoves(includeChecks,
                 if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
                 if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture,
@@ -160,14 +159,12 @@ class MoveGenerator(
     }
 
     private fun generateQuiesceKnightMoves(includeChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long) {
-        var possibleDestinations: Long
         squareList(knightBitboard).forEach {
-            possibleDestinations = if (includeChecks) {
-                engineBitboards.getPieceBitboard(BitboardType.ENEMY) or (knightMoves[enemyKingSquare] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
-            } else {
-                engineBitboards.getPieceBitboard(BitboardType.ENEMY)
-            }
-            addMoves(it shl 16, knightMoves[it] and possibleDestinations)
+            addMoves(it shl 16, knightMoves[it] and if (includeChecks)
+                engineBitboards.getPieceBitboard(BitboardType.ENEMY) or
+                        (knightMoves[enemyKingSquare] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
+                    else engineBitboards.getPieceBitboard(BitboardType.ENEMY)
+            )
         }
     }
 
