@@ -24,21 +24,15 @@ fun whitePawnAttacks(whitePawns: Long) = whitePawns and FILE_A.inv() shl 9 or (w
 fun blackPawnAttacks(blackPawns: Long) = blackPawns and FILE_A.inv() ushr 7 or (blackPawns and FILE_H.inv() ushr 9)
 
 inline fun attackList(bitboards: BitboardData, squares: List<Int>, fn: (BitboardData, Int) -> Long): Pair<List<Long>, Long> {
-    val list = mutableListOf<Long>()
     var orred = 0L
 
-    squares.forEach { it -> list.add(fn(bitboards, it).also {orred = orred or it}) }
-
-    return Pair(list, orred)
+    return Pair(squares.map { it -> (fn(bitboards, it).also {orred = orred or it}) }.toList(), orred)
 }
 
 fun knightAttackList(squares: List<Int>): Pair<List<Long>, Long> {
-    val list = mutableListOf<Long>()
     var orred = 0L
 
-    squares.forEach { it -> list.add(knightMoves[it].also {orred = orred or it}) }
-
-    return Pair(list, orred)
+    return Pair(squares.map { it -> (knightMoves[it].also {orred = orred or it}) }.toList(), orred)
 }
 
 fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>) =
