@@ -304,7 +304,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val finalScore = if (historyScore == 0)
                     (if (board.getSquareOccupant(toSquare) != SquareOccupant.NONE) 1 // losing capture
-                     else 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2)
+                     else 50 + scorePieceSquareValues(
+                            board,
+                            if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare],
+                            if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]) / 2)
                 else historyScore
 
                 orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - finalScore shl 24)
@@ -313,11 +316,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): Int {
-        val fromSquare = if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare]
-        val toSquare = if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]
-
-        return when (board.getSquareOccupant(fromSquare).piece) {
+    private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int) =
+        when (board.getSquareOccupant(fromSquare).piece) {
             Piece.PAWN -> linearScale(
                     if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
                     Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
@@ -341,16 +341,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     PieceSquareTables.king[toSquare] - PieceSquareTables.king[fromSquare])
             else -> 0
         }
-    }
 
-    private fun scoreHistoryHeuristic(board: EngineBoard, score: Int, fromSquare: Int, toSquare: Int): Int {
-        var score = score
+    private fun scoreHistoryHeuristic(board: EngineBoard, score: Int, fromSquare: Int, toSquare: Int) =
         if (score == 0 && FeatureFlag.USE_HISTORY_HEURISTIC.isActive &&
                 historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
-            score = 90 + historyScore(board.mover == Colour.WHITE, fromSquare, toSquare)
-        }
-        return score
-    }
+            90 + historyScore(board.mover == Colour.WHITE, fromSquare, toSquare)
+        } else score
 
     private fun scoreKillerMoves(ply: Int, i: Int, movesForSorting: IntArray): Int {
         for (j in 0 until SearchConfig.NUM_KILLER_MOVES.value) {

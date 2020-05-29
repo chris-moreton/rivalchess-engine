@@ -123,8 +123,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun setCastlePrivileges(board: Board) {
-        castlePrivileges = 0
-        castlePrivileges = castlePrivileges or if (board.isKingSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WK.value else 0
+        castlePrivileges = if (board.isKingSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WK.value else 0
         castlePrivileges = castlePrivileges or if (board.isQueenSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WQ.value else 0
         castlePrivileges = castlePrivileges or if (board.isKingSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BK.value else 0
         castlePrivileges = castlePrivileges or if (board.isQueenSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BQ.value else 0
@@ -151,10 +150,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                             engineBitboards.getPieceBitboard(BitboardType.BK) or engineBitboards.getPieceBitboard(BitboardType.BR))
         }
         engineBitboards.setPieceBitboard(BitboardType.ALL, engineBitboards.getPieceBitboard(BitboardType.FRIENDLY) or engineBitboards.getPieceBitboard(BitboardType.ENEMY))
-    }
-
-    fun lastCapturePiece(): SquareOccupant {
-        return moveHistory[numMovesMade - 1].capturePiece
     }
 
     fun wasCapture(): Boolean {

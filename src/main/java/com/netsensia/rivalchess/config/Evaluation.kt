@@ -32,20 +32,13 @@ enum class Evaluation(val value: Int) {
     KNIGHT_LANDING_SQ_PAWN_ATK_PENALTY(2),
     VALUE_SIDE_PAWN_PENALTY(10),
     VALUE_DOUBLED_PAWN_PENALTY(25),
-    VALUE_PAWN_ISLAND_PENALTY(15),  /*
-     *  gets scaled up on rank and scaled down on material (0.9 - material ratio, < 0.1 = 0.1)
-     *  7th rank + 0 pieces = 6*50 * 0.9 = 270
-     *  5th rank, half material remaining = 4*50 * 0.4 = 80
-     *  3rd rank, all material remaining = 2*60 * 0.1 = 12
-     */
+    VALUE_PAWN_ISLAND_PENALTY(15),
     VALUE_ISOLATED_PAWN_PENALTY(15),
     VALUE_BACKWARD_PAWN_PENALTY(15),
     VALUE_GUARDED_PASSED_PAWN(15),
     VALUE_KING_CANNOT_CATCH_PAWN(500),
     PAWN_ADJUST_MAX_MATERIAL(pieceValue(Piece.QUEEN) + pieceValue(Piece.ROOK)),  // passed pawn bonus starts increasing once enemy material falls below this
-    VALUE_ISOLATED_DPAWN_PENALTY(30),  /*
-     * King Safety
-     */
+    VALUE_ISOLATED_DPAWN_PENALTY(30),
     KINGSAFTEY_HALFOPEN_MIDFILE(25),
     KINGSAFTEY_HALFOPEN_NONMIDFILE(10),
     KINGSAFTEY_UNIT(16),

@@ -198,19 +198,19 @@ class MoveGenerator(
         val magicNumberRook = if (piece == Piece.ROOK) MagicBitboards.magicNumberRook else MagicBitboards.magicNumberBishop
         val magicNumberShiftsRook = if (piece == Piece.ROOK) MagicBitboards.magicNumberShiftsRook else MagicBitboards.magicNumberShiftsBishop
         val rookCheckSquares = magicMovesRook[enemyKingSquare][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[enemyKingSquare]) * magicNumberRook[enemyKingSquare] ushr magicNumberShiftsRook[enemyKingSquare]).toInt()]
-        var pieceBitboard = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(
+        val pieceBitboard = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(
                 BitboardType.fromIndex(whiteSliderConstant)) or engineBitboards.getPieceBitboard(BitboardType.WQ) else engineBitboards.getPieceBitboard(
                 BitboardType.fromIndex(blackSliderConstant)) or engineBitboards.getPieceBitboard(BitboardType.BQ)
-        while (pieceBitboard != 0L) {
-            val bitRef = numberOfTrailingZeros(pieceBitboard)
-            pieceBitboard = pieceBitboard xor (1L shl bitRef)
-            val pieceMoves = magicMovesRook[bitRef][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[bitRef]) * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()
+
+        squareList(pieceBitboard).forEach {
+            val pieceMoves = magicMovesRook[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[it]) * magicNumberRook[it] ushr magicNumberShiftsRook[it]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()
             if (includeChecks) {
-                addMoves(bitRef shl 16, pieceMoves and (rookCheckSquares or engineBitboards.getPieceBitboard(BitboardType.ENEMY)))
+                addMoves(it shl 16, pieceMoves and (rookCheckSquares or engineBitboards.getPieceBitboard(BitboardType.ENEMY)))
             } else {
-                addMoves(bitRef shl 16, pieceMoves and engineBitboards.getPieceBitboard(BitboardType.ENEMY))
+                addMoves(it shl 16, pieceMoves and engineBitboards.getPieceBitboard(BitboardType.ENEMY))
             }
         }
+
     }
 
     private fun addPawnMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean) {
