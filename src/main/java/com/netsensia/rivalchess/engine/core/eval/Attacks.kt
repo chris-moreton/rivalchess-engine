@@ -25,13 +25,11 @@ fun blackPawnAttacks(blackPawns: Long) = blackPawns and FILE_A.inv() ushr 7 or (
 
 inline fun attackList(bitboards: BitboardData, squares: List<Int>, fn: (BitboardData, Int) -> Long): Pair<List<Long>, Long> {
     var orred = 0L
-
     return Pair(squares.map { it -> (fn(bitboards, it).also {orred = orred or it}) }.toList(), orred)
 }
 
 fun knightAttackList(squares: List<Int>): Pair<List<Long>, Long> {
     var orred = 0L
-
     return Pair(squares.map { it -> (knightMoves[it].also {orred = orred or it}) }.toList(), orred)
 }
 

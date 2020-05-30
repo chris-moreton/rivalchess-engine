@@ -227,6 +227,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
+    private fun adjustedSee(see: Int) =
+            if (see > -Int.MAX_VALUE) (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt() else see
+
     @Throws(InvalidMoveException::class)
     private fun scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
         var score: Int
@@ -236,19 +239,17 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (orderedMoves[ply][i] != -1) {
                 score = 0
                 val toSquare = orderedMoves[ply][i] and 63
-                var capturePiece = Piece.fromSquareOccupant(board.getSquareOccupant(toSquare))
-                if (capturePiece == Piece.NONE && 1L shl toSquare and board.getBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
-                        board.getSquareOccupant(orderedMoves[ply][i] ushr 16 and 63).piece == Piece.PAWN) {
-                    capturePiece = Piece.PAWN
-                }
+                val isCapture = board.getSquareOccupant(toSquare) != SquareOccupant.NONE ||
+                        (1L shl toSquare and board.getBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
+                        board.getSquareOccupant(orderedMoves[ply][i] ushr 16 and 63).piece == Piece.PAWN)
+
                 orderedMoves[ply][i] = orderedMoves[ply][i] and 0x00FFFFFF
                 if (orderedMoves[ply][i] == mateKiller[ply]) {
                     score = 126
-                } else if (capturePiece != Piece.NONE) {
-                    var see = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(orderedMoves[ply][i]))
-                    if (see > -Int.MAX_VALUE) {
-                        see = (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt()
-                    }
+                } else if (isCapture) {
+
+                    val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(orderedMoves[ply][i])))
+
                     score = if (see > 0) {
                         110 + see
                     } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
@@ -263,9 +264,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
                     score = 108
                 }
-                if (score > 0) {
-                    count++
-                }
+                if (score > 0) count++
                 orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)
             }
             i++

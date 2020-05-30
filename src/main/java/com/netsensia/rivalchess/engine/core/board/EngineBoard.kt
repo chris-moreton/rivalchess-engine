@@ -67,9 +67,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         boardHashObject.initialiseHashCode(this)
     }
 
-    fun getSquareOccupant(bitRef: Int): SquareOccupant {
-        return squareContents[bitRef]
-    }
+    fun getSquareOccupant(bitRef: Int) = squareContents[bitRef]
 
     fun moveGenerator() =
         MoveGenerator(
