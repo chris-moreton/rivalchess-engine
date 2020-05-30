@@ -232,44 +232,46 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     @Throws(InvalidMoveException::class)
     private fun scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
-        var score: Int
-        var count = 0
-        var i = 0
-        while (orderedMoves[ply][i] != 0) {
-            if (orderedMoves[ply][i] != -1) {
-                score = 0
-                val toSquare = orderedMoves[ply][i] and 63
-                val isCapture = board.getSquareOccupant(toSquare) != SquareOccupant.NONE ||
-                        (1L shl toSquare and board.getBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
+        var movesScored = 0
+        var i = -1
+        while (orderedMoves[ply][++i] != 0) {
+            if (orderedMoves[ply][i] != -1 && scoreMove(ply, i, board) > 0) {
+                movesScored++
+            }
+        }
+        return movesScored
+    }
+
+    private fun scoreMove(ply: Int, i: Int, board: EngineBoard): Int {
+        var score = 0
+        val toSquare = orderedMoves[ply][i] and 63
+        val isCapture = board.getSquareOccupant(toSquare) != SquareOccupant.NONE ||
+                (1L shl toSquare and board.getBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
                         board.getSquareOccupant(orderedMoves[ply][i] ushr 16 and 63).piece == Piece.PAWN)
 
-                orderedMoves[ply][i] = orderedMoves[ply][i] and 0x00FFFFFF
-                if (orderedMoves[ply][i] == mateKiller[ply]) {
-                    score = 126
-                } else if (isCapture) {
+        orderedMoves[ply][i] = orderedMoves[ply][i] and 0x00FFFFFF
+        if (orderedMoves[ply][i] == mateKiller[ply]) {
+            score = 126
+        } else if (isCapture) {
 
-                    val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(orderedMoves[ply][i])))
+            val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(orderedMoves[ply][i])))
 
-                    score = if (see > 0) {
-                        110 + see
-                    } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
-                            == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
-                        109
-                    } else if (see == 0) {
-                        107
-                    } else {
-                        scoreLosingCapturesWithWinningHistory(board, ply, i, score, orderedMoves[ply], toSquare)
-                    }
-                } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
-                        == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
-                    score = 108
-                }
-                if (score > 0) count++
-                orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)
+            score = if (see > 0) {
+                110 + see
+            } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value ==
+                    PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
+                109
+            } else if (see == 0) {
+                107
+            } else {
+                scoreLosingCapturesWithWinningHistory(board, ply, i, score, orderedMoves[ply], toSquare)
             }
-            i++
+        } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value ==
+                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
+            score = 108
         }
-        return count
+        orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)
+        return score
     }
 
     private fun scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, i: Int, score: Int, movesForSorting: IntArray, toSquare: Int): Int {
@@ -287,12 +289,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun historyScore(isWhite: Boolean, from: Int, to: Int): Int {
-        val success = historyMovesSuccess[if (isWhite) 0 else 1][from][to]
-        val fail = historyMovesFail[if (isWhite) 0 else 1][from][to]
-        val total = success + fail
-        return if (total > 0) {
-            success * 10 / total
-        } else 0
+        val colourIndex = if (isWhite) 0 else 1
+        val success = historyMovesSuccess[colourIndex][from][to]
+        val total = success + historyMovesFail[colourIndex][from][to]
+        return if (total > 0) success * 10 / total else 0
     }
 
     private fun scoreFullWidthMoves(board: EngineBoard, ply: Int) {
