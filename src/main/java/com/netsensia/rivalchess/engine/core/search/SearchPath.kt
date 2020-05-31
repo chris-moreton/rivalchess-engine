@@ -28,6 +28,17 @@ class SearchPath {
         if (path.height >= 0) System.arraycopy(path.move, 0, move, 0, path.height)
     }
 
+    fun withScore(newScore: Int): SearchPath {
+        score = newScore
+        return this
+    }
+
+    fun withPath(move: Int): SearchPath {
+        height = 1
+        this.move[0] = move
+        return this
+    }
+
     fun setPath(compactMove: Int, path: SearchPath) {
         height = path.height + 1
         move[0] = compactMove

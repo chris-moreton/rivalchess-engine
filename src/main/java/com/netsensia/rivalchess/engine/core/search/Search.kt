@@ -384,12 +384,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var bestPath = searchPath[ply]
         bestPath.reset()
         if (board.previousOccurrencesOfThisPosition() == 2 || board.halfMoveCount >= 100) {
-            bestPath.score = Evaluation.DRAW_CONTEMPT.value
-            return bestPath
+            return bestPath.withScore(Evaluation.DRAW_CONTEMPT.value)
         }
         if (board.onlyKingsRemain()) {
-            bestPath.score = 0
-            return bestPath
+            return bestPath.withScore(0)
         }
         val depthRemaining = depth + extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value
         var flag = HashValueType.UPPER.index
@@ -405,9 +403,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 } else if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
                         boardHash.useHeight(hashIndex + HashIndex.SCORE.index) < high) high = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
                 if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || low >= high) {
-                    bestPath.score = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
-                    bestPath.setPath(hashMove)
-                    return bestPath
+                    return bestPath.withScore(boardHash.useHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove)
                 }
             }
             if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
@@ -417,9 +413,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 } else if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
                         boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) < high) high = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
                 if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || low >= high) {
-                    bestPath.score = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
-                    bestPath.setPath(hashMove)
-                    return bestPath
+                    return bestPath.withScore(boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove)
                 }
             }
         }
