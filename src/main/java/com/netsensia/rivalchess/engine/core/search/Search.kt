@@ -118,9 +118,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         nodes += 1
         var numMoves = 0
         var flag = HashValueType.UPPER.index
-        var move: Int
         var bestMoveForHash = 0
-        move = moveNoScore(orderedMoves[0][numMoves])
         var newPath: SearchPath?
         val bestPath = searchPath[0]
         bestPath.reset()
@@ -128,6 +126,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var scoutSearch = false
         var checkExtend: Int
         var pawnExtend: Int
+        
+        var move = moveNoScore(orderedMoves[0][numMoves])
         while (move != 0 && !isAbortingSearch) {
             if (engineBoard.makeMove(EngineMove(move))) {
                 val isCheck = board.isCheck(mover)
@@ -147,35 +147,23 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 currentDepthZeroMove = move
                 currentDepthZeroMoveNumber = numLegalMovesAtDepthZero
                 val boardHash = engineBoard.boardHashObject
+
                 if (isDrawnAtRoot(0)) newPath = SearchPath().withScore(0).withPath(move) else {
                     if (scoutSearch) {
                         newPath = search(engineBoard, (depth - 1), ply + 1, -low - 1, -low, newExtensions, -1, isCheck)
-                        if (newPath != null)
-                            newPath.score += if (newPath.score > Evaluation.MATE_SCORE_START.value) -1
-                                        else if (newPath.score < -Evaluation.MATE_SCORE_START.value) 1
-                                        else 0
+                        if (newPath != null) adjustScoreForMateDepth(newPath)
 
                         if (!isAbortingSearch && -Objects.requireNonNull(newPath)!!.score > low) {
-                            newPath = search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck)
-                            if (newPath != null) {
-                                if (newPath.score > Evaluation.MATE_SCORE_START.value) {
-                                    newPath.score--
-                                } else {
-                                    if (newPath.score < -Evaluation.MATE_SCORE_START.value) {
-                                        newPath.score++
-                                    }
-                                }
+                            newPath = search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck). also {
+                                if (it != null) adjustScoreForMateDepth(it)
                             }
                         }
                     } else {
                         newPath = search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck)
-                        if (newPath != null) {
-                            if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else {
-                                if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
-                            }
-                        }
+                        if (newPath != null) adjustScoreForMateDepth(newPath)
                     }
                 }
+
                 if (!isAbortingSearch) {
                     Objects.requireNonNull(newPath)!!.score = -Objects.requireNonNull(newPath)!!.score
                     if (newPath!!.score >= high) {
@@ -216,6 +204,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         } else {
             null
         }
+    }
+
+    private fun adjustScoreForMateDepth(newPath: SearchPath) {
+        newPath.score += if (newPath.score > Evaluation.MATE_SCORE_START.value) -1
+        else if (newPath.score < -Evaluation.MATE_SCORE_START.value) 1
+        else 0
     }
 
     private fun reorderMoves(ply: Int) {
