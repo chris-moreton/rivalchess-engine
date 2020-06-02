@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "com.netsensia.rivalchess"
-version = '10.0.5'
+version = '11.0.0'
 
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin'

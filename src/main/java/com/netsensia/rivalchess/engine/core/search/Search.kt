@@ -24,11 +24,12 @@ import java.util.*
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
+    private val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
     private val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluatorPremium()
+
     private val moveOrderStatus = arrayOfNulls<MoveOrder>(Limit.MAX_TREE_DEPTH.value)
     private val drawnPositionsAtRoot: MutableList<MutableList<Long>>
     private val drawnPositionsAtRootCount: MutableList<Int> = ArrayList()
-    private val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
     private val mateKiller: MutableList<Int> = ArrayList()
     private val killerMoves: Array<IntArray>
     private val historyMovesSuccess = Array(2) { Array(64) { IntArray(64) } }
@@ -42,7 +43,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     @get:Synchronized
     var engineState: SearchState
         private set
-    var quit = false
+    private var quit = false
     var nodes = 0
     var millisSetByEngineMonitor: Long = 0
     private var aspirationLow = 0
@@ -56,25 +57,132 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private var searchEndTime: Long = 0
     private var finalDepthToSearch = 1
     var iterativeDeepeningDepth = 0 // current search depth for iterative deepening
-        private set
-    private var useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive
-    private var inBook = useOpeningBook
     var currentDepthZeroMove = 0
-        private set
     var currentDepthZeroMoveNumber = 0
-        private set
-    private var currentPath: SearchPath
-
-    // don't want to calculate it if called from another thread
-    var currentPathString: String
-        private set
+    var currentPath: SearchPath
     var isUciMode = false
-        private set
+
+    var useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive
+        set(useOpeningBook) {
+            field = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive && useOpeningBook
+        }
 
     constructor(board: Board) : this(System.out, board) {}
 
-    fun setUCIMode(uciMode: Boolean) {
-        isUciMode = uciMode
+    fun go() {
+        initSearchVariables()
+        var path: SearchPath?
+
+        if (isBookMoveAvailable()) return
+
+        orderedMoves[0] = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
+        var depthZeroMoveCount = 0
+        var depth1MovesTemp: IntArray
+        var moveNumber = 0
+        var move = orderedMoves[0][moveNumber] and 0x00FFFFFF
+        drawnPositionsAtRootCount.addAll(listOf(0,0))
+        var legal = 0
+        var bestNewbieScore = -Int.MAX_VALUE
+
+        while (move != 0) {
+            if (engineBoard.makeMove(EngineMove(move))) {
+                val plyDraw: MutableList<Boolean> = ArrayList()
+                plyDraw.addAll(listOf(false,false))
+                legal++
+                if (iterativeDeepeningDepth < 1)
+                {
+                    val sp = quiesce(engineBoard, 40, 1, 0, -Int.MAX_VALUE, Int.MAX_VALUE, engineBoard.isCheck(mover))
+                    sp.score = -sp.score
+                    if (sp.score > bestNewbieScore) {
+                        bestNewbieScore = sp.score
+                        currentPath.withHeight(0).withPath(move).withScore(sp.score)
+                    }
+                } else if (legal == 1) {
+                    // use this opportunity to set a move in the odd event that there is no time to search
+                    currentPath.withHeight(0).withPath(move).withScore(0)
+                }
+                if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
+                    plyDraw[0] = true
+                }
+                depth1MovesTemp = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
+                var c1 = -1
+                while (depth1MovesTemp[++c1] and 0x00FFFFFF != 0) {
+                    if (engineBoard.makeMove(EngineMove(depth1MovesTemp[c1] and 0x00FFFFFF))) {
+                        if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
+                            plyDraw[1] = true
+                        }
+                        engineBoard.unMakeMove()
+                    }
+                }
+                for (i in 0..1) if (plyDraw[i]) drawnPositionsAtRoot[i].add(engineBoard.boardHashObject.trackedHashValue)
+                engineBoard.unMakeMove()
+            }
+            depthZeroMoveCount++
+            move = orderedMoves[0][++moveNumber] and 0x00FFFFFF
+        }
+
+        while (orderedMoves[0][depthZeroMoveCount] != 0) depthZeroMoveCount++
+        scoreFullWidthMoves(engineBoard, 0)
+        var depth: Byte = 1
+        while (depth <= finalDepthToSearch && !isAbortingSearch) {
+            iterativeDeepeningDepth = depth.toInt()
+            if (depth > 1) okToSendInfo = true
+            if (FeatureFlag.USE_ASPIRATION_WINDOW.isActive) {
+                path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh)
+                if (!isAbortingSearch && Objects.requireNonNull(path)!!.score <= aspirationLow) {
+                    aspirationLow = -Int.MAX_VALUE
+                    path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh)
+                } else if (!isAbortingSearch && path!!.score >= aspirationHigh) {
+                    aspirationHigh = Int.MAX_VALUE
+                    path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh)
+                }
+                if (!isAbortingSearch && (Objects.requireNonNull(path)!!.score <= aspirationLow || path!!.score >= aspirationHigh)) {
+                    path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
+                }
+                if (!isAbortingSearch) {
+                    currentPath.setPath(Objects.requireNonNull(path)!!)
+                    aspirationLow = path!!.score - SearchConfig.ASPIRATION_RADIUS.value
+                    aspirationHigh = path.score + SearchConfig.ASPIRATION_RADIUS.value
+                }
+            } else {
+                path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
+            }
+            if (!isAbortingSearch) {
+                currentPath.setPath(Objects.requireNonNull(path)!!)
+                if (path!!.score > Evaluation.MATE_SCORE_START.value) {
+                    setSearchComplete()
+                    return
+                }
+                for (pass in 1 until depthZeroMoveCount) {
+                    for (i in 0 until depthZeroMoveCount - pass) {
+                        if (depthZeroMoveScores[i] < depthZeroMoveScores[i + 1]) {
+                            var tempScore: Int
+                            tempScore = depthZeroMoveScores[i]
+                            depthZeroMoveScores[i] = depthZeroMoveScores[i + 1]
+                            depthZeroMoveScores[i + 1] = tempScore
+                            var tempMove: Int
+                            tempMove = orderedMoves[0][i]
+                            orderedMoves[0][i] = orderedMoves[0][i + 1]
+                            orderedMoves[0][i + 1] = tempMove
+                        }
+                    }
+                }
+            }
+            depth++
+        }
+        setSearchComplete()
+    }
+
+    private fun isBookMoveAvailable(): Boolean {
+        if (useOpeningBook) {
+            val libraryMove = OpeningLibrary.getMove(fen)
+            if (libraryMove != null) {
+                currentPath = SearchPath().withPath(EngineMove(libraryMove).compact)
+                setSearchComplete()
+                return true
+            }
+        }
+        return false
     }
 
     fun setHashSizeMB(hashSizeMB: Int) {
@@ -92,7 +200,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     fun newGame() {
-        inBook = useOpeningBook
         engineBoard.boardHashObject.clearHash()
     }
 
@@ -431,13 +538,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive
                 && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && hashMove == 0 && !board.isOnNullMove) {
-            val doIt = true
-            if (doIt) {
-                if (depth - IterativeDeepening.IID_REDUCE_DEPTH.value > 0) {
-                    newPath = search(board, (depth - IterativeDeepening.IID_REDUCE_DEPTH.value), ply, low, high, extensions, recaptureSquare, isCheck)
-                    // it's not really a hash move, but this will cause the order routine to rank it first
-                    if (newPath != null && newPath.height > 0) hashMove = newPath.move[0]
-                }
+            if (depth - IterativeDeepening.IID_REDUCE_DEPTH.value > 0) {
+                newPath = search(board, (depth - IterativeDeepening.IID_REDUCE_DEPTH.value), ply, low, high, extensions, recaptureSquare, isCheck)
+                // it's not really a hash move, but this will cause the order routine to rank it first
+                if (newPath != null && newPath.height > 0) hashMove = newPath.move[0]
             }
             bestPath.reset()
             // We reset this here because it may have been mucked about with during IID
@@ -654,7 +758,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     @Throws(InvalidMoveException::class)
     fun searchZero(board: EngineBoard, depth: Byte, ply: Int, low: Int, high: Int): SearchPath? {
         var low = low
-        nodes = nodes + 1
+        nodes += 1
         var numMoves = 0
         var flag = HashValueType.UPPER.index
         var move: Int
@@ -740,7 +844,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         low = newPath.score
                         scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive && depth + newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.value >= SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.value
                         currentPath.setPath(bestPath)
-                        currentPathString = "" + currentPath
                     }
                     depthZeroMoveScores[numMoves] = newPath.score
                 }
@@ -755,7 +858,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (numLegalMovesAtDepthZero == 1 && millisToThink < Limit.MAX_SEARCH_MILLIS.value) {
                 isAbortingSearch = true
                 currentPath.setPath(bestPath) // otherwise we will crash!
-                currentPathString = "" + currentPath
             } else {
                 val boardHash = engineBoard.boardHashObject
                 boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag.toByte(), depth.toInt())
@@ -774,141 +876,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         engineBoard.makeMove(engineMove)
     }
 
-    fun go() {
-        initSearchVariables()
-        setupMateAndKillerMoveTables()
-        setupHistoryMoveTable()
-        var path: SearchPath?
-        try {
-            orderedMoves[0] = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
-            var depthZeroMoveCount = 0
-            var c = 0
-            var depth1MovesTemp: IntArray
-            var move = orderedMoves[0][c] and 0x00FFFFFF
-            drawnPositionsAtRootCount.addAll(listOf(0,0))
-            var legal = 0
-            var bestNewbieScore = -Int.MAX_VALUE
-            while (move != 0) {
-                if (engineBoard.makeMove(EngineMove(move))) {
-                    val plyDraw: MutableList<Boolean> = ArrayList()
-                    plyDraw.addAll(listOf(false,false))
-                    legal++
-                    if (iterativeDeepeningDepth < 1) // super beginner mode
-                    {
-                        val sp = quiesce(engineBoard, 40, 1, 0, -Int.MAX_VALUE, Int.MAX_VALUE, engineBoard.isCheck(mover))
-                        sp.score = -sp.score
-                        if (sp.score > bestNewbieScore) {
-                            bestNewbieScore = sp.score
-                            currentPath.height = 0
-                            currentPath.setPath(move)
-                            currentPath.score = sp.score
-                            currentPathString = currentPath.toString()
-                        }
-                    } else if (legal == 1) {
-                        // use this opportunity to set a move in the odd event that there is no time to search
-                        currentPath.height = 0
-                        currentPath.setPath(move)
-                        currentPath.score = 0
-                        currentPathString = currentPath.toString()
-                    }
-                    if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
-                        plyDraw[0] = true
-                    }
-                    depth1MovesTemp = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
-                    var c1 = -1
-                    while (depth1MovesTemp[++c1] and 0x00FFFFFF != 0) {
-                        if (engineBoard.makeMove(EngineMove(depth1MovesTemp[c1] and 0x00FFFFFF))) {
-                            if (engineBoard.previousOccurrencesOfThisPosition() == 2) {
-                                plyDraw[1] = true
-                            }
-                            engineBoard.unMakeMove()
-                        }
-                    }
-                    val boardHash = engineBoard.boardHashObject
-                    for (i in 0..1) {
-                        if (java.lang.Boolean.TRUE == plyDraw[i]) {
-                            drawnPositionsAtRoot[i].add(boardHash.trackedHashValue)
-                        }
-                    }
-                    engineBoard.unMakeMove()
-                }
-                depthZeroMoveCount++
-                move = orderedMoves[0][++c] and 0x00FFFFFF
-            }
-            if (useOpeningBook && fen.trim { it <= ' ' } == "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -") {
-                inBook = true
-            }
-            if (inBook) {
-                val libraryMove = OpeningLibrary.getMove(fen)
-                if (libraryMove != null) {
-                    path = SearchPath()
-                    path.setPath(EngineMove(libraryMove).compact)
-                    currentPath = path
-                    currentPathString = "" + currentPath
-                    setSearchComplete()
-                    return
-                } else {
-                    inBook = false
-                }
-            }
-            while (orderedMoves[0][depthZeroMoveCount] != 0) depthZeroMoveCount++
-            scoreFullWidthMoves(engineBoard, 0)
-            var depth: Byte = 1
-            while (depth <= finalDepthToSearch && !isAbortingSearch) {
-                iterativeDeepeningDepth = depth.toInt()
-                if (depth > 1) okToSendInfo = true
-                if (FeatureFlag.USE_ASPIRATION_WINDOW.isActive) {
-                    path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh)
-                    if (!isAbortingSearch && Objects.requireNonNull(path)!!.score <= aspirationLow) {
-                        aspirationLow = -Int.MAX_VALUE
-                        path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh)
-                    } else if (!isAbortingSearch && path!!.score >= aspirationHigh) {
-                        aspirationHigh = Int.MAX_VALUE
-                        path = searchZero(engineBoard, depth, 0, aspirationLow, aspirationHigh)
-                    }
-                    if (!isAbortingSearch && (Objects.requireNonNull(path)!!.score <= aspirationLow || path!!.score >= aspirationHigh)) {
-                        path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
-                    }
-                    if (!isAbortingSearch) {
-                        currentPath.setPath(Objects.requireNonNull(path)!!)
-                        currentPathString = "" + currentPath
-                        aspirationLow = path!!.score - SearchConfig.ASPIRATION_RADIUS.value
-                        aspirationHigh = path.score + SearchConfig.ASPIRATION_RADIUS.value
-                    }
-                } else {
-                    path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
-                }
-                if (!isAbortingSearch) {
-                    currentPath.setPath(Objects.requireNonNull(path)!!)
-                    currentPathString = "" + currentPath
-                    if (path!!.score > Evaluation.MATE_SCORE_START.value) {
-                        setSearchComplete()
-                        return
-                    }
-                    for (pass in 1 until depthZeroMoveCount) {
-                        for (i in 0 until depthZeroMoveCount - pass) {
-                            if (depthZeroMoveScores[i] < depthZeroMoveScores[i + 1]) {
-                                var tempScore: Int
-                                tempScore = depthZeroMoveScores[i]
-                                depthZeroMoveScores[i] = depthZeroMoveScores[i + 1]
-                                depthZeroMoveScores[i + 1] = tempScore
-                                var tempMove: Int
-                                tempMove = orderedMoves[0][i]
-                                orderedMoves[0][i] = orderedMoves[0][i + 1]
-                                orderedMoves[0][i + 1] = tempMove
-                            }
-                        }
-                    }
-                }
-                depth++
-            }
-        } catch (e: Exception) {
-            printStream.println(e.stackTrace)
-        } finally {
-            setSearchComplete()
-        }
-    }
-
     private fun initSearchVariables() {
         engineState = SearchState.SEARCHING
         isAbortingSearch = false
@@ -920,6 +887,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         aspirationLow = -Int.MAX_VALUE
         aspirationHigh = Int.MAX_VALUE
         nodes = 0
+        setupMateAndKillerMoveTables()
+        setupHistoryMoveTable()
     }
 
     private fun setupMateAndKillerMoveTables() {
@@ -1027,11 +996,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         engineState = SearchState.COMPLETE
     }
 
-    fun setUseOpeningBook(useBook: Boolean) {
-        useOpeningBook = FeatureFlag.USE_INTERNAL_OPENING_BOOK.isActive && useBook
-        inBook = useOpeningBook
-    }
-
     fun quit() {
         quit = true
     }
@@ -1048,7 +1012,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             " currmovenumber " + currentDepthZeroMoveNumber +
                             " depth " + iterativeDeepeningDepth +
                             " score " + currentScoreHuman +
-                            " pv " + currentPathString +
+                            " pv " + currentPath.toString() +
                             " time " + searchDuration +
                             " nodes " + nodes +
                             " nps " + nodesPerSecond
@@ -1071,7 +1035,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         this.printStream = printStream
         millisSetByEngineMonitor = System.currentTimeMillis()
         currentPath = SearchPath()
-        currentPathString = ""
         engineState = SearchState.READY
         searchPath = Array(Limit.MAX_TREE_DEPTH.value) { SearchPath() }
         killerMoves = Array(Limit.MAX_TREE_DEPTH.value) { IntArray(SearchConfig.NUM_KILLER_MOVES.value) }
