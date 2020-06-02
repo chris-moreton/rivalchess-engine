@@ -38,9 +38,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private val orderedMoves: Array<IntArray>
     private val searchPath: Array<SearchPath>
     private var depthZeroMoveScores: IntArray
-    var okToSendInfo = false
 
-    @get:Synchronized
+    var okToSendInfo = false
     var engineState: SearchState
         private set
     private var quit = false
@@ -56,7 +55,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private var searchTargetEndTime: Long = 0
     private var searchEndTime: Long = 0
     private var finalDepthToSearch = 1
-    var iterativeDeepeningDepth = 0 // current search depth for iterative deepening
+    var iterativeDeepeningDepth = 1 // current search depth for iterative deepening
     var currentDepthZeroMove = 0
     var currentDepthZeroMoveNumber = 0
     var currentPath: SearchPath
@@ -72,32 +71,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     fun go() {
         initSearchVariables()
         if (isBookMoveAvailable()) return
+        determineDrawnPositionsAtRoot()
 
         var path: SearchPath?
-
-        moveSequence(setPlyMoves(0)).forEach {
-            if (engineBoard.makeMove(EngineMove(it))) {
-                val plyDraw = mutableListOf(false, false)
-
-                if (iterativeDeepeningDepth < 1)
-                    quiesceForZeroIterativeDeepeningDepth(it)
-                else if (currentPath.score == -Int.MAX_VALUE)
-                    currentPath.withHeight(0).withPath(it).withScore(0)
-
-                if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[0] = true
-
-                moveSequence(boardMoves()).forEach {
-                    if (engineBoard.makeMove(EngineMove(moveNoScore(it)))) {
-                        if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[1] = true
-                        engineBoard.unMakeMove()
-                    }
-                }
-                for (i in 0..1)
-                    if (plyDraw[i]) drawnPositionsAtRoot[i].add(engineBoard.boardHashObject.trackedHashValue)
-                engineBoard.unMakeMove()
-            }
-        }
-
         val depthZeroMoveCount = moveCount(orderedMoves[0])
 
         scoreFullWidthMoves(engineBoard, 0)
@@ -151,9 +127,24 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setSearchComplete()
     }
 
-    private fun quiesceForZeroIterativeDeepeningDepth(move: Int) {
-        val sp = quiesce(engineBoard, 40, 1, 0, -Int.MAX_VALUE, Int.MAX_VALUE, engineBoard.isCheck(mover))
-        if (-sp.score > currentPath.score) currentPath.withHeight(0).withPath(move).withScore(-sp.score)
+    private fun determineDrawnPositionsAtRoot() {
+        moveSequence(setPlyMoves(0)).forEach {
+            if (engineBoard.makeMove(EngineMove(it))) {
+                val plyDraw = mutableListOf(false, false)
+
+                if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[0] = true
+
+                moveSequence(boardMoves()).forEach {
+                    if (engineBoard.makeMove(EngineMove(moveNoScore(it)))) {
+                        if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[1] = true
+                        engineBoard.unMakeMove()
+                    }
+                }
+                for (i in 0..1)
+                    if (plyDraw[i]) drawnPositionsAtRoot[i].add(engineBoard.boardHashObject.trackedHashValue)
+                engineBoard.unMakeMove()
+            }
+        }
     }
 
     private fun setPlyMoves(ply: Int): IntArray {
