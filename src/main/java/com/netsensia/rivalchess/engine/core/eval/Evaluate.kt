@@ -779,10 +779,10 @@ private fun colourAdjustedYRank(colour: Colour, yRank: Int) =
 
 private fun difference(kingX: Int, it: Int) = abs(kingX - xCoordOfSquare(it))
 
-private fun xCoordOfSquare(it: Int) = it % 8
-
 private fun pawnDistanceFromPromotion(colour: Colour, square: Int) =
         if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
+
+private fun xCoordOfSquare(it: Int) = it % 8
 
 private fun yCoordOfSquare(kingSquare: Int) = kingSquare / 8
 

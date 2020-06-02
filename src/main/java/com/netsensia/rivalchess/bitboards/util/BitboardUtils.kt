@@ -22,7 +22,7 @@ fun getPawnFiles(pawns: Long) = southFill(pawns) and RANK_1
 fun getWhitePassedPawns(whitePawns: Long, blackPawns: Long) =
     whitePawns and southFill(blackPawns or blackPawnAttacks(blackPawns) or (whitePawns ushr 8)).inv()
 
-fun getPawnMovesCaptureOfColour(colour: Colour) =
+fun getPawnMovesCaptureOfColour(colour: Colour): List<Long> =
         if (colour == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture
 
 fun isBishopAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long) =
