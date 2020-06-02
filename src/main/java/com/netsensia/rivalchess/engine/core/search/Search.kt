@@ -72,33 +72,33 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     fun go() {
         initSearchVariables()
         if (isBookMoveAvailable()) return
-        setPlyMoves(0)
 
         var path: SearchPath?
-        var depthZeroMoveCount = 0
-        var depth1MovesTemp: IntArray
 
-        moveSequence(orderedMoves[0]).forEach {
+        moveSequence(setPlyMoves(0)).forEach {
             if (engineBoard.makeMove(EngineMove(it))) {
                 val plyDraw = mutableListOf(false, false)
 
-                if (iterativeDeepeningDepth < 1) quiesceForZeroIterativeDeepeningDepth(it) else
-                    if (currentPath.score == -Int.MAX_VALUE) currentPath.withHeight(0).withPath(it).withScore(0)
+                if (iterativeDeepeningDepth < 1)
+                    quiesceForZeroIterativeDeepeningDepth(it)
+                else if (currentPath.score == -Int.MAX_VALUE)
+                    currentPath.withHeight(0).withPath(it).withScore(0)
 
                 if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[0] = true
 
-                depth1MovesTemp = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
-                moveSequence(depth1MovesTemp).forEach {
+                moveSequence(boardMoves()).forEach {
                     if (engineBoard.makeMove(EngineMove(moveNoScore(it)))) {
                         if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[1] = true
                         engineBoard.unMakeMove()
                     }
                 }
-                for (i in 0..1) if (plyDraw[i]) drawnPositionsAtRoot[i].add(engineBoard.boardHashObject.trackedHashValue)
+                for (i in 0..1)
+                    if (plyDraw[i]) drawnPositionsAtRoot[i].add(engineBoard.boardHashObject.trackedHashValue)
                 engineBoard.unMakeMove()
             }
-            depthZeroMoveCount++
         }
+
+        val depthZeroMoveCount = moveCount(orderedMoves[0])
 
         scoreFullWidthMoves(engineBoard, 0)
         var depth: Byte = 1
@@ -156,9 +156,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (-sp.score > currentPath.score) currentPath.withHeight(0).withPath(move).withScore(-sp.score)
     }
 
-    private fun setPlyMoves(ply: Int) {
-        orderedMoves[ply] = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
+    private fun setPlyMoves(ply: Int): IntArray {
+        orderedMoves[ply] = boardMoves()
+        return orderedMoves[ply]
     }
+
+    private fun boardMoves() = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
 
     private fun isBookMoveAvailable(): Boolean {
         if (useOpeningBook) {
