@@ -12,9 +12,10 @@ class SearchPath {
     @JvmField
 	var height = 0
 
-    fun reset() {
+    fun reset(): SearchPath {
         height = 0
         score = -Int.MAX_VALUE
+        return this
     }
 
     fun setPath(move: Int) {

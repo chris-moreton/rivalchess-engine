@@ -27,8 +27,8 @@ class BoardHash {
         return hashTableIgnoreHeight[index]
     }
 
-    fun setHashTableUseHeight(index: Int, value: Int) {
-        hashTableUseHeight[index] = value
+    fun setHashTableUseHeightVersion(index: Int, value: Int) {
+        hashTableUseHeight[index + HashIndex.VERSION.index] = value
     }
 
     fun clearHash() {
