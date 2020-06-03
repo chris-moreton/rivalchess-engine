@@ -37,7 +37,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private val historyPruneMoves = Array(2) { Array(64) { IntArray(64) } }
     private val orderedMoves: Array<IntArray>
     private val searchPath: Array<SearchPath>
-    private var depthZeroMoveScores: IntArray
+
+    private var depthZeroMoveScores = IntArray(Limit.MAX_LEGAL_MOVES.value)
 
     var okToSendInfo = false
     var engineState: SearchState
@@ -56,6 +57,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private var searchEndTime: Long = 0
     private var finalDepthToSearch = 1
     var iterativeDeepeningDepth = 1 // current search depth for iterative deepening
+
     var currentDepthZeroMove = 0
     var currentDepthZeroMoveNumber = 0
     var currentPath: SearchPath
@@ -112,99 +114,93 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return path
     }
 
+    fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
+        currentDepthZeroMove = move
+        currentDepthZeroMoveNumber = arrayIndex
+    }
+
     @Throws(InvalidMoveException::class)
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath? {
         var low = low
         nodes += 1
         var numMoves = 0
-        var flag = HashValueType.UPPER.index
+        var hashEntryType = HashValueType.UPPER.index
         var bestMoveForHash = 0
-        var newPath: SearchPath?
-        val bestPath = searchPath[0]
-        bestPath.reset()
         var numLegalMovesAtDepthZero = 0
         var scoutSearch = false
-        var checkExtend: Int
-        var pawnExtend: Int
-        
-        var move = moveNoScore(orderedMoves[0][numMoves])
-        while (move != 0 && !isAbortingSearch) {
-            if (engineBoard.makeMove(EngineMove(move))) {
-                val isCheck = board.isCheck(mover)
-                checkExtend = 0
-                pawnExtend = 0
-                if (Extensions.FRACTIONAL_EXTENSION_CHECK.value > 0 && isCheck) {
-                    checkExtend = 1
-                } else if (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0) {
-                    if (board.wasPawnPush()) {
-                        pawnExtend = 1
-                    }
-                }
-                val newExtensions = (checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.value + pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.value)
-                        .coerceAtMost(Extensions.FRACTIONAL_EXTENSION_FULL.value)
+        val bestPath = searchPath[0]
+        bestPath.reset()
 
-                numLegalMovesAtDepthZero++
-                currentDepthZeroMove = move
-                currentDepthZeroMoveNumber = numLegalMovesAtDepthZero
-                val boardHash = engineBoard.boardHashObject
+        moveSequence(orderedMoves[0]).forEach { it ->
+            val move = moveNoScore(it)
+            if (!isAbortingSearch) {
+                if (engineBoard.makeMove(EngineMove(move))) {
+                    val isCheck = board.isCheck(mover)
 
-                if (isDrawnAtRoot(0)) newPath = SearchPath().withScore(0).withPath(move) else {
-                    if (scoutSearch) {
-                        newPath = search(engineBoard, (depth - 1), ply + 1, -low - 1, -low, newExtensions, -1, isCheck)
-                        if (newPath != null) adjustScoreForMateDepth(newPath)
+                    val newExtensions =
+                            if (Extensions.FRACTIONAL_EXTENSION_CHECK.value > 0 && isCheck) Extensions.FRACTIONAL_EXTENSION_CHECK.value
+                            else if (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 && board.wasPawnPush()) Extensions.FRACTIONAL_EXTENSION_PAWN.value
+                            else 0
 
-                        if (!isAbortingSearch && -Objects.requireNonNull(newPath)!!.score > low) {
-                            newPath = search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck). also {
-                                if (it != null) adjustScoreForMateDepth(it)
-                            }
+                    updateCurrentDepthZeroMove(move, ++numLegalMovesAtDepthZero)
+
+                    val newPath = getPathFromSearch(move, scoutSearch, depth, ply, low, high, newExtensions, isCheck)
+
+                    if (!isAbortingSearch) {
+                        Objects.requireNonNull(newPath)!!.score = -Objects.requireNonNull(newPath)!!.score
+                        if (newPath!!.score >= high) {
+                            board.unMakeMove()
+                            bestPath.setPath(move, newPath)
+                            engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depth)
+                            depthZeroMoveScores[numMoves] = newPath.score
+                            return bestPath
                         }
-                    } else {
-                        newPath = search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, -1, isCheck)
-                        if (newPath != null) adjustScoreForMateDepth(newPath)
-                    }
-                }
-
-                if (!isAbortingSearch) {
-                    Objects.requireNonNull(newPath)!!.score = -Objects.requireNonNull(newPath)!!.score
-                    if (newPath!!.score >= high) {
-                        board.unMakeMove()
-                        bestPath.setPath(move, newPath)
-                        boardHash.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depth.toInt())
+                        if (newPath.score > bestPath.score) bestPath.setPath(move, newPath)
+                        if (newPath.score > low) {
+                            hashEntryType = HashValueType.EXACT.index
+                            bestMoveForHash = move
+                            low = newPath.score
+                            scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive && depth + newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.value >= SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.value
+                            currentPath.setPath(bestPath)
+                        }
                         depthZeroMoveScores[numMoves] = newPath.score
-                        return bestPath
                     }
-                    if (newPath.score > bestPath.score) {
-                        bestPath.setPath(move, newPath)
-                    }
-                    if (newPath.score > low) {
-                        flag = HashValueType.EXACT.index
-                        bestMoveForHash = move
-                        low = newPath.score
-                        scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive && depth + newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.value >= SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.value
-                        currentPath.setPath(bestPath)
-                    }
-                    depthZeroMoveScores[numMoves] = newPath.score
+                    engineBoard.unMakeMove()
+                } else {
+                    depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
                 }
-                engineBoard.unMakeMove()
-            } else {
-                depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
+                numMoves++
             }
-            numMoves++
-            move = moveNoScore(orderedMoves[0][numMoves])
         }
-        return if (!isAbortingSearch) {
-            if (numLegalMovesAtDepthZero == 1 && millisToThink < Limit.MAX_SEARCH_MILLIS.value) {
+
+        if (isAbortingSearch) return null
+
+        if (numLegalMovesAtDepthZero == 1 && millisToThink < Limit.MAX_SEARCH_MILLIS.value) {
                 isAbortingSearch = true
                 currentPath.setPath(bestPath) // otherwise we will crash!
             } else {
-                val boardHash = engineBoard.boardHashObject
-                boardHash.storeHashMove(bestMoveForHash, board, bestPath.score, flag.toByte(), depth.toInt())
+                engineBoard.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashEntryType.toByte(), depth)
             }
-            bestPath
-        } else {
-            null
-        }
+
+        return bestPath
     }
+
+    private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
+        if (isDrawnAtRoot(0)) SearchPath().withScore(0).withPath(move) else
+            if (scoutSearch) {
+                val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low - 1, -low, extensions, -1, isCheck).also {
+                    if (it != null) adjustScoreForMateDepth(it)
+                }
+
+                if (!isAbortingSearch && -Objects.requireNonNull(scoutPath)!!.score > low)
+                    search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
+                else
+                    scoutPath
+            } else {
+                search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
+            }.also {
+                if (it != null) adjustScoreForMateDepth(it)
+            }
 
     private fun adjustScoreForMateDepth(newPath: SearchPath) {
         newPath.score += if (newPath.score > Evaluation.MATE_SCORE_START.value) -1
@@ -217,12 +213,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         for (pass in 1 until moveCount) {
             for (i in 0 until moveCount - pass) {
                 if (depthZeroMoveScores[i] < depthZeroMoveScores[i + 1]) {
-                    val tempScore: Int = depthZeroMoveScores[i]
-                    depthZeroMoveScores[i] = depthZeroMoveScores[i + 1]
-                    depthZeroMoveScores[i + 1] = tempScore
-                    val tempMove: Int = orderedMoves[ply][i]
-                    orderedMoves[ply][i] = orderedMoves[ply][i + 1]
-                    orderedMoves[ply][i + 1] = tempMove
+                    swapElements(depthZeroMoveScores, i, i + 1)
+                    swapElements(orderedMoves[ply], i, i + 1)
                 }
             }
         }
@@ -1012,6 +1004,5 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             killerMoves[i] = IntArray(SearchConfig.NUM_KILLER_MOVES.value)
         }
         orderedMoves = Array(Limit.MAX_TREE_DEPTH.value) { IntArray(Limit.MAX_LEGAL_MOVES.value) }
-        depthZeroMoveScores = IntArray(Limit.MAX_LEGAL_MOVES.value)
     }
 }

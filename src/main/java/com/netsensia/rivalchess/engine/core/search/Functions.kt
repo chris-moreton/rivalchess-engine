@@ -10,3 +10,9 @@ fun moveSequence(moves: IntArray) = sequence {
 }
 
 fun moveCount(moves: IntArray) = moves.indexOfFirst { it == 0 }
+
+fun swapElements(a: IntArray, i1: Int, i2: Int) {
+    val tempScore: Int = a[i1]
+    a[i1] = a[i2]
+    a[i2] = tempScore
+}
