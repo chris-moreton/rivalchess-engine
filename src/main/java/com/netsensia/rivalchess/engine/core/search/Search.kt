@@ -117,7 +117,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     @Throws(InvalidMoveException::class)
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
-        var low = low
         nodes += 1
         var numMoves = 0
         var hashEntryType = HashValueType.UPPER.index
@@ -127,6 +126,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val bestPath = searchPath[0]
         bestPath.reset()
 
+        var localLow = low
         moveSequence(orderedMoves[0]).forEach {
             val move = moveNoScore(it)
             if (!abortingSearch) {
@@ -135,7 +135,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                     val isCheck = board.isCheck(mover)
                     val extensions = getExtensions(isCheck, board.wasPawnPush())
-                    val newPath = getPathFromSearch(move, isScoutSearch, depth, ply, low, high, extensions, isCheck)
+                    val newPath = getPathFromSearch(move, isScoutSearch, depth, ply, localLow, high, extensions, isCheck)
 
                     if (!abortingSearch) {
                         Objects.requireNonNull(newPath)!!.score = -Objects.requireNonNull(newPath)!!.score
@@ -147,10 +147,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             return bestPath
                         }
                         if (newPath.score > bestPath.score) bestPath.setPath(move, newPath)
-                        if (newPath.score > low) {
+                        if (newPath.score > localLow) {
                             hashEntryType = HashValueType.EXACT.index
                             bestMoveForHash = move
-                            low = newPath.score
+                            localLow = newPath.score
                             isScoutSearch = FeatureFlag.USE_PV_SEARCH.isActive && depth +
                                     extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value >=
                                     SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.value
@@ -211,7 +211,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         var bestMoveForHash = 0
         var scoutSearch = false
-        val verifyingNullMoveDepthReduction: Byte = 0
         var threatExtend = 0
         var pawnExtend = 0
 
@@ -244,13 +243,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 futilityScore = futilityPruningEvaluation + SearchConfig.getFutilityMargin(depthRemaining - 1)
                 if (futilityScore < localLow) canFutilityPrune = true
             }
-            var lateMoveReductionsMade = 0
             var newExtensions = 0
-            var reductions = 0
             var move: Int
             while (getHighScoreMove(board, ply, highRankingMove).also { move = it } != 0 && !abortingSearch) {
-                val targetPiece = board.getSquareOccupant(move and 63).index
-                val movePiece = board.getSquareOccupant(move ushr 16 and 63).index
+                val targetPiece = board.getSquareOccupant(toSquare(move)).index
+                val movePiece = board.getSquareOccupant(fromSquare(move)).index
                 var recaptureExtend = 0
                 var newRecaptureSquare = -1
                 var currentSEEValue = -Int.MAX_VALUE
@@ -258,9 +255,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     recaptureExtend = 0
                     if (targetPiece != -1 && Evaluation.pieceValues[movePiece] == Evaluation.pieceValues[targetPiece]) {
                         currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
-                        if (Math.abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.value) newRecaptureSquare = move and 63
+                        if (Math.abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.value) newRecaptureSquare = toSquare(move)
                     }
-                    if (move and 63 == recaptureSquare) {
+                    if (toSquare(move) == recaptureSquare) {
                         if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
                         if (Math.abs(currentSEEValue) > Evaluation.getPieceValue(board.getSquareOccupant(recaptureSquare))
                                 - Extensions.RECAPTURE_EXTENSION_MARGIN.value) {
@@ -285,101 +282,55 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                                         threatExtend * Extensions.FRACTIONAL_EXTENSION_THREAT.value +
                                         recaptureExtend * Extensions.FRACTIONAL_EXTENSION_RECAPTURE.value +
                                         pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.value).coerceAtMost(maxNewExtensionsInThisPart)
-                        var lateMoveReduction = 0
-                        if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive && newExtensions == 0 &&
-                                legalMoveCount > LateMoveReductions.LMR_LEGALMOVES_BEFORE_ATTEMPT.value &&
-                                depthRemaining - verifyingNullMoveDepthReduction > 1 &&
-                                move != highRankingMove &&
-                                !wasCheckBeforeMove &&
-                                (historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] <= LateMoveReductions.LMR_THRESHOLD.value) &&
-                                board.wasCapture() &&
-                                (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 || !board.wasPawnPush()) && -evaluate(board) <= localLow + LateMoveReductions.LMR_CUT_MARGIN.value) {
-                                    lateMoveReduction = 1
-                                    historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] = LateMoveReductions.LMR_REPLACE_VALUE_AFTER_CUT.value
-                        }
-                        if (LateMoveReductions.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION.value > -1) {
-                            lateMoveReductionsMade += lateMoveReduction
-                            if (lateMoveReductionsMade > LateMoveReductions.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION.value && depthRemaining > 3) {
-                                lateMoveReduction = 2
-                            }
-                        }
-                        reductions = verifyingNullMoveDepthReduction + lateMoveReduction
-                        var lmrResearch: Boolean
-                        do {
-                            lmrResearch = false
-                            if (scoutSearch) {
-                                newPath = search(engineBoard, (depth - 1).toByte() - reductions, ply + 1, -localLow - 1, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
-                                if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
-                                if (!abortingSearch && -Objects.requireNonNull(newPath)!!.score > localLow) {
-                                    // research with normal window
-                                    newPath = search(engineBoard, (depth - 1).toByte() - reductions, ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
-                                    if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
-                                }
-                            } else {
-                                newPath = search(board, (depth - 1).toByte() - reductions, ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
+
+                        if (scoutSearch) {
+                            newPath = search(engineBoard, (depth - 1), ply + 1, -localLow - 1, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
+                            if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
+                            if (!abortingSearch && -Objects.requireNonNull(newPath)!!.score > localLow) {
+                                // research with normal window
+                                newPath = search(engineBoard, (depth - 1), ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
                                 if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
                             }
-                            if (!abortingSearch && lateMoveReduction > 0 && -Objects.requireNonNull(newPath)!!.score >= localLow) {
-                                lmrResearch = FeatureFlag.LMR_RESEARCH_ON_FAIL_HIGH.isActive
-                                lateMoveReduction = 0
-                            }
-                        } while (lmrResearch)
+                        } else {
+                            newPath = search(board, depth - 1, ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
+                            if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
+                        }
+
                     }
                     if (abortingSearch) return null
                     Objects.requireNonNull(newPath)!!.score = -newPath!!.score
                     if (newPath.score >= localHigh) {
-                        if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive) {
-                            historyMovesSuccess[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] += depthRemaining
-                            if (historyMovesSuccess[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63]
-                                    > SearchConfig.HISTORY_MAX_VALUE.value) {
-                                for (i in 0..1) for (j in 0..63) for (k in 0..63) {
-                                    if (historyMovesSuccess[i][j][k] > 0) historyMovesSuccess[i][j][k] /= 2
-                                    if (historyMovesFail[i][j][k] > 0) historyMovesFail[i][j][k] /= 2
-                                }
-                            }
-                        }
-                        if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive) historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] += LateMoveReductions.LMR_ABOVE_ALPHA_ADDITION.value
+                        updateHistoryMoves(board, move, depthRemaining, true)
                         board.unMakeMove()
                         bestPath.setPath(move, newPath)
                         board.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depthRemaining)
-                        if (SearchConfig.NUM_KILLER_MOVES.value > 0) {
-                            if (board.getBitboard(BitboardType.ENEMY) and (move and 63).toLong() == 0L || move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value == 0) {
-                                // if this move is in second place, or if it's not in the table at all,
-                                // then move first to second, and replace first with this move
-                                if (killerMoves[ply][0] != move) {
-                                    System.arraycopy(killerMoves[ply], 0, killerMoves[ply], 1, SearchConfig.NUM_KILLER_MOVES.value - 1)
-                                    killerMoves[ply][0] = move
-                                }
-                                if (FeatureFlag.USE_MATE_HISTORY_KILLERS.isActive && newPath.score > Evaluation.MATE_SCORE_START.value) {
-                                    mateKiller[ply] = move
-                                }
+
+                        if (SearchConfig.NUM_KILLER_MOVES.value <= 0) return bestPath
+
+                        if (board.getBitboard(BitboardType.ENEMY) and toSquare(move).toLong() == 0L || move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value == 0) {
+                            // if this move is in second place, or if it's not in the table at all,
+                            // then move first to second, and replace first with this move
+                            if (killerMoves[ply][0] != move) {
+                                System.arraycopy(killerMoves[ply], 0, killerMoves[ply], 1, SearchConfig.NUM_KILLER_MOVES.value - 1)
+                                killerMoves[ply][0] = move
+                            }
+                            if (FeatureFlag.USE_MATE_HISTORY_KILLERS.isActive && newPath.score > Evaluation.MATE_SCORE_START.value) {
+                                mateKiller[ply] = move
                             }
                         }
                         return bestPath
                     }
-                    if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive) {
-                        historyMovesFail[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] += depthRemaining
-                        if (historyMovesFail[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63]
-                                > SearchConfig.HISTORY_MAX_VALUE.value) {
-                            for (i in 0..1) for (j in 0..63) for (k in 0..63) {
-                                if (historyMovesSuccess[i][j][k] > 0) historyMovesSuccess[i][j][k] /= 2
-                                if (historyMovesFail[i][j][k] > 0) historyMovesFail[i][j][k] /= 2
-                            }
-                        }
-                    }
-                    if (newPath.score > bestPath.score) {
-                        bestPath.setPath(move, newPath)
-                    }
+                    updateHistoryMoves(board, move, depthRemaining, false)
+
+                    if (newPath.score > bestPath.score) bestPath.setPath(move, newPath)
+
                     if (newPath.score > localLow) {
                         hashFlag = HashValueType.EXACT.index
                         bestMoveForHash = move
                         localLow = newPath.score
-                        scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive && depth - reductions +
+                        scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive && depth +
                                 (newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.value) >=
                                 SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.value
-                        if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive) historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] += LateMoveReductions.LMR_ABOVE_ALPHA_ADDITION.value
-                    } else if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive) {
-                        historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] -= LateMoveReductions.LMR_NOT_ABOVE_ALPHA_REDUCTION.value
                     }
                     board.unMakeMove()
                 }
@@ -396,6 +347,19 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
         } while (research)
         return null
+    }
+
+    private fun updateHistoryMoves(board: EngineBoard, move: Int, depthRemaining: Int, success: Boolean) {
+        val historyMovesArray = if (success) historyMovesSuccess else historyMovesFail
+        if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive) {
+            historyMovesArray[if (board.mover == Colour.WHITE) 1 else 0][fromSquare(move)][toSquare(move)] += depthRemaining
+            if (historyMovesArray[if (board.mover == Colour.WHITE) 1 else 0][fromSquare(move)][toSquare(move)] > SearchConfig.HISTORY_MAX_VALUE.value) {
+                for (i in 0..1) for (j in 0..63) for (k in 0..63) {
+                    if (historyMovesSuccess[i][j][k] > 0) historyMovesSuccess[i][j][k] /= 2
+                    if (historyMovesFail[i][j][k] > 0) historyMovesFail[i][j][k] /= 2
+                }
+            }
+        }
     }
 
     private fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
@@ -721,10 +685,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun scoreMove(ply: Int, i: Int, board: EngineBoard): Int {
         var score = 0
-        val toSquare = orderedMoves[ply][i] and 63
+        val toSquare = toSquare(orderedMoves[ply][i])
         val isCapture = board.getSquareOccupant(toSquare) != SquareOccupant.NONE ||
                 (1L shl toSquare and board.getBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
-                        board.getSquareOccupant(orderedMoves[ply][i] ushr 16 and 63).piece == Piece.PAWN)
+                        board.getSquareOccupant(fromSquare(orderedMoves[ply][i])).piece == Piece.PAWN)
 
         orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
         if (orderedMoves[ply][i] == mateKiller[ply]) {
@@ -752,7 +716,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, i: Int, score: Int, movesForSorting: IntArray, toSquare: Int): Int {
-        val historyScore = historyScore(board.mover == Colour.WHITE, movesForSorting[i] ushr 16 and 63, toSquare)
+        val historyScore = historyScore(board.mover == Colour.WHITE, fromSquare(movesForSorting[i]), toSquare)
         if (historyScore > 5) {
             return historyScore
         } else {
@@ -776,8 +740,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var i = 0
         while (orderedMoves[ply][i] != 0) {
             if (orderedMoves[ply][i] != -1) {
-                val fromSquare = orderedMoves[ply][i] ushr 16 and 63
-                val toSquare = orderedMoves[ply][i] and 63
+                val fromSquare = fromSquare(orderedMoves[ply][i])
+                val toSquare = toSquare(orderedMoves[ply][i])
                 orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
 
                 val killerScore = scoreKillerMoves(ply, i, orderedMoves[ply])
@@ -796,6 +760,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             i++
         }
     }
+
+    private fun fromSquare(move: Int) = toSquare(move ushr 16)
+
+    private fun toSquare(move: Int) = move and 63
 
     private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int) =
             when (board.getSquareOccupant(fromSquare).piece) {

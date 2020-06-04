@@ -49,21 +49,22 @@ public class EpdTest {
             "WAC.071", // Fail 3
             "WAC.092", // Fail 4
             "WAC.100", // Fail 5
-            "WAC.145", // Fail 6
-            "WAC.155", // Fail 7
-            "WAC.163", // Fail 8
-            "WAC.196", // Fail 9
+            "WAC.141", // Fail 6
+            "WAC.145", // Fail 7
+            "WAC.155", // Fail 8
+            "WAC.163", // Fail 9
             "WAC.213", // Fail 10
             "WAC.229", // Fail 11
             "WAC.230", // Fail 12
             "WAC.237", // Fail 13
             "WAC.247", // Fail 14
-            "WAC.265", // Fail 15
-            "WAC.274", // Fail 16
-            "WAC.280", // Fail 17
-            "WAC.291", // Fail 18
-            "WAC.293", // Fail 19
-            "WAC.297"  // Fail 20
+            "WAC.261", // Fail 15
+            "WAC.265", // Fail 16
+            "WAC.274", // Fail 17
+            "WAC.280", // Fail 18
+            "WAC.291", // Fail 19
+            "WAC.293", // Fail 20
+            "WAC.297" // Fail 21
     ));
 
     @Test
