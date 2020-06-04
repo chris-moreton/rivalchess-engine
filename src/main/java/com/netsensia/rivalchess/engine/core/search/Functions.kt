@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.engine.core.search
 
+import com.netsensia.rivalchess.config.SearchConfig
+
 fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
 fun moveSequence(moves: IntArray) = sequence {
@@ -16,3 +18,7 @@ fun swapElements(a: IntArray, i1: Int, i2: Int) {
     a[i1] = a[i2]
     a[i2] = tempScore
 }
+
+fun nullMoveReduceDepth(depthRemaining: Int) =
+        if (depthRemaining > SearchConfig.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE.value) SearchConfig.NULLMOVE_REDUCE_DEPTH.value + 1
+        else SearchConfig.NULLMOVE_REDUCE_DEPTH.value
