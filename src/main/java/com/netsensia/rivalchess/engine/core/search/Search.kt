@@ -210,7 +210,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             bestPath.reset()
         }
         var bestMoveForHash = 0
-        var scoutSearch = false
+        var useScoutSearch = false
         var threatExtend = 0
         var pawnExtend = 0
 
@@ -243,14 +243,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 futilityScore = futilityPruningEvaluation + SearchConfig.getFutilityMargin(depthRemaining - 1)
                 if (futilityScore < localLow) canFutilityPrune = true
             }
-            var newExtensions = 0
             var move: Int
             while (getHighScoreMove(board, ply, highRankingMove).also { move = it } != 0 && !abortingSearch) {
-                val targetPiece = board.getSquareOccupant(toSquare(move)).index
-                val movePiece = board.getSquareOccupant(fromSquare(move)).index
                 var recaptureExtend = 0
                 var newRecaptureSquare = -1
                 var currentSEEValue = -Int.MAX_VALUE
+                val movePiece = board.getSquareOccupant(fromSquare(move)).index
+                val targetPiece = board.getSquareOccupant(toSquare(move)).index
                 if (Extensions.FRACTIONAL_EXTENSION_RECAPTURE.value > 0 && extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value) {
                     recaptureExtend = 0
                     if (targetPiece != -1 && Evaluation.pieceValues[movePiece] == Evaluation.pieceValues[targetPiece]) {
@@ -265,6 +264,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         }
                     }
                 }
+                var newExtensions = 0
                 if (board.makeMove(EngineMove(move))) {
                     legalMoveCount++
                     val localIsCheck = board.isCheck(mover)
@@ -277,13 +277,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         }
                         val partOfTree = ply / iterativeDeepeningDepth
                         val maxNewExtensionsInThisPart = Extensions.maxNewExtensionsTreePart[partOfTree.coerceAtMost(Extensions.LAST_EXTENSION_LAYER.value)]
-                        newExtensions = extensions +
-                                (checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.value +
-                                        threatExtend * Extensions.FRACTIONAL_EXTENSION_THREAT.value +
-                                        recaptureExtend * Extensions.FRACTIONAL_EXTENSION_RECAPTURE.value +
-                                        pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.value).coerceAtMost(maxNewExtensionsInThisPart)
+                        newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtend, pawnExtend, maxNewExtensionsInThisPart)
 
-                        if (scoutSearch) {
+                        if (useScoutSearch) {
                             newPath = search(engineBoard, (depth - 1), ply + 1, -localLow - 1, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
                             if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
                             if (!abortingSearch && -Objects.requireNonNull(newPath)!!.score > localLow) {
@@ -328,7 +324,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         hashFlag = HashValueType.EXACT.index
                         bestMoveForHash = move
                         localLow = newPath.score
-                        scoutSearch = FeatureFlag.USE_PV_SEARCH.isActive && depth +
+                        useScoutSearch = FeatureFlag.USE_PV_SEARCH.isActive && depth +
                                 (newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.value) >=
                                 SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.value
                     }
@@ -348,6 +344,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         } while (research)
         return null
     }
+
+    private fun extensions(checkExtend: Int, threatExtend: Int, recaptureExtend: Int, pawnExtend: Int, maxNewExtensionsInThisPart: Int) =
+                (checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.value +
+                        threatExtend * Extensions.FRACTIONAL_EXTENSION_THREAT.value +
+                        recaptureExtend * Extensions.FRACTIONAL_EXTENSION_RECAPTURE.value +
+                        pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.value).coerceAtMost(maxNewExtensionsInThisPart)
 
     private fun updateHistoryMoves(board: EngineBoard, move: Int, depthRemaining: Int, success: Boolean) {
         val historyMovesArray = if (success) historyMovesSuccess else historyMovesFail
