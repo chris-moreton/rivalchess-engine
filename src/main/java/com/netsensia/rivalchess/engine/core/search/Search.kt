@@ -238,6 +238,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return HashProbeResult(hashMove, newLow, newHigh, null)
     }
 
+    private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath? {
+        val bestPath = quiesce(board, Limit.MAX_QUIESCE_DEPTH.value - 1, ply, 0, low, high, isCheck)
+        val hashFlag = if (bestPath.score < low) HashValueType.UPPER.index else if (bestPath.score > high) HashValueType.LOWER.index else HashValueType.EXACT.index
+        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag.toByte(),0)
+        return bestPath
+    }
+
     @Throws(InvalidMoveException::class)
     fun search(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath? {
 
@@ -258,28 +265,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (hashProbeResult.bestPath != null) return bestPath
         var low = hashProbeResult.low;
         val high = hashProbeResult.high
-        var hashMove = hashProbeResult.move
+        var highRankingMove = hashProbeResult.move
 
         val checkExtend = isCheckExtension(extensions, isCheck)
 
         var hashFlag = HashValueType.UPPER.index
-        if (depthRemaining <= 0) {
-            bestPath = quiesce(board, Limit.MAX_QUIESCE_DEPTH.value - 1, ply, 0, low, high, isCheck)
-            hashFlag = if (bestPath.score < low) HashValueType.UPPER.index else if (bestPath.score > high) HashValueType.LOWER.index else HashValueType.EXACT.index
-            board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag.toByte(), 0)
-            return bestPath
-        }
+        if (depthRemaining <= 0) return finalPath(board, ply, low, high, isCheck)
 
         var newPath: SearchPath?
-        if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && hashMove == 0 && !board.isOnNullMove) {
+        if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && highRankingMove == 0 && !board.isOnNullMove) {
             if (depth - IterativeDeepening.IID_REDUCE_DEPTH.value > 0) {
                 newPath = search(board, (depth - IterativeDeepening.IID_REDUCE_DEPTH.value), ply, low, high, extensions, recaptureSquare, isCheck)
-                // it's not really a hash move, but this will cause the order routine to rank it first
-                if (newPath != null && newPath.height > 0) hashMove = newPath.move[0]
+                if (newPath != null && newPath.height > 0) highRankingMove = newPath.move[0]
             }
             bestPath.reset()
-            // We reset this here because it may have been mucked about with during IID
-            // Notice that the search calls with ply, not ply+1, because search is for this level (we haven't made a move)
         }
         var bestMoveForHash = 0
         var scoutSearch = false
@@ -329,7 +328,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             var newExtensions = 0
             var reductions = 0
             var move: Int
-            while (getHighScoreMove(board, ply, hashMove).also { move = it } != 0 && !abortingSearch) {
+            while (getHighScoreMove(board, ply, highRankingMove).also { move = it } != 0 && !abortingSearch) {
                 val targetPiece = board.getSquareOccupant(move and 63).index
                 val movePiece = board.getSquareOccupant(move ushr 16 and 63).index
                 var recaptureExtend = 0
@@ -377,7 +376,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                                                 pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.value,
                                         maxNewExtensionsInThisPart)
                         var lateMoveReduction = 0
-                        if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive && newExtensions == 0 && legalMoveCount > LateMoveReductions.LMR_LEGALMOVES_BEFORE_ATTEMPT.value && depthRemaining - verifyingNullMoveDepthReduction > 1 && move != hashMove &&
+                        if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive && newExtensions == 0 && legalMoveCount > LateMoveReductions.LMR_LEGALMOVES_BEFORE_ATTEMPT.value && depthRemaining - verifyingNullMoveDepthReduction > 1 && move != highRankingMove &&
                                 !wasCheckBeforeMove && (historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63]
                                         <= LateMoveReductions.LMR_THRESHOLD.value) &&
                                 board.wasCapture() &&
