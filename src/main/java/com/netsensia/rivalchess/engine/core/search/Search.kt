@@ -184,31 +184,25 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         nodes++
 
         if (abortIfTimeIsUp()) return null
-        val bestPath = searchPath[ply].reset()
+        val searchPathPly = searchPath[ply].reset()
 
-        if (board.previousOccurrencesOfThisPosition() == 2 || board.halfMoveCount >= 100) return bestPath.withScore(Evaluation.DRAW_CONTEMPT.value)
-        if (board.onlyKingsRemain()) return bestPath.withScore(0)
+        if (board.previousOccurrencesOfThisPosition() == 2 || board.halfMoveCount >= 100) return searchPathPly.withScore(Evaluation.DRAW_CONTEMPT.value)
+        if (board.onlyKingsRemain()) return searchPathPly.withScore(0)
 
         val depthRemaining = depth + extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value
 
-        val hashProbeResult = hashProbe(board, depthRemaining, low, high, bestPath)
-        if (hashProbeResult.bestPath != null) return bestPath
+        val hashProbeResult = hashProbe(board, depthRemaining, low, high, searchPathPly)
+        if (hashProbeResult.bestPath != null) return searchPathPly
         var localLow = hashProbeResult.low
         val localHigh = hashProbeResult.high
 
-        val checkExtend = isCheckExtension(extensions, isCheck)
+        val checkExtend = checkExtension(extensions, isCheck)
 
         var hashFlag = HashValueType.UPPER.index
         if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck)
 
-        var highRankingMove = hashProbeResult.move
-        if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && highRankingMove == 0 && !board.isOnNullMove) {
-            val iidDepth = depth - IterativeDeepening.IID_REDUCE_DEPTH.value
-            if (iidDepth > 0) search(board, iidDepth, ply, localLow, localHigh, extensions, recaptureSquare, isCheck).also {
-                if (it != null && it.height > 0) highRankingMove = it.move[0]
-            }
-            bestPath.reset()
-        }
+        val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, localLow, localHigh, extensions, recaptureSquare, isCheck)
+        searchPathPly.reset()
 
         var bestMoveForHash = 0
         var useScoutSearch = false
@@ -220,7 +214,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             searchNullMove(board, depth, nullMoveReduceDepth, ply, localHigh, localLow, extensions).also {
                 if (abortingSearch) return null
                 adjustScoreForMateDepth(it)
-                if (-Objects.requireNonNull(it)!!.score >= localHigh) return bestPath.withScore(-it!!.score)
+                if (-Objects.requireNonNull(it)!!.score >= localHigh) return searchPathPly.withScore(-it!!.score)
                 else threatExtend = threatExtensions(it, extensions)
             }
         }
@@ -281,7 +275,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     if (newPath.score >= localHigh) {
                         updateHistoryMoves(board, move, depthRemaining, true)
                         board.unMakeMove()
-                        bestPath.setPath(move, newPath)
+                        searchPathPly.setPath(move, newPath)
                         board.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depthRemaining)
 
                         if (board.getBitboard(BitboardType.ENEMY) and toSquare(move).toLong() == 0L || move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value == 0) {
@@ -289,11 +283,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             killerMoves[ply][0] = move
                             if (FeatureFlag.USE_MATE_HISTORY_KILLERS.isActive && newPath.score > Evaluation.MATE_SCORE_START.value) mateKiller[ply] = move
                         }
-                        return bestPath
+                        return searchPathPly
                     }
                     updateHistoryMoves(board, move, depthRemaining, false)
 
-                    if (newPath.score > bestPath.score) bestPath.setPath(move, newPath)
+                    if (newPath.score > searchPathPly.score) searchPathPly.setPath(move, newPath)
 
                     if (newPath.score > localLow) {
                         hashFlag = HashValueType.EXACT.index
@@ -308,15 +302,25 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             if (abortingSearch) return null
             if (legalMoveCount == 0) {
-                board.boardHashObject.storeHashMove(0, board, bestPath.score, HashValueType.EXACT.index.toByte(), Limit.MAX_SEARCH_DEPTH.value)
-                return bestPath.withScore(if (board.isCheck(mover)) -Evaluation.VALUE_MATE.value else 0)
+                board.boardHashObject.storeHashMove(0, board, searchPathPly.score, HashValueType.EXACT.index.toByte(), Limit.MAX_SEARCH_DEPTH.value)
+                return searchPathPly.withScore(if (board.isCheck(mover)) -Evaluation.VALUE_MATE.value else 0)
             }
             if (!research) {
-                board.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashFlag.toByte(), depthRemaining)
-                return bestPath
+                board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag.toByte(), depthRemaining)
+                return searchPathPly
             }
         } while (research)
         return null
+    }
+
+    private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, recaptureSquare: Int, isCheck: Boolean): Int {
+        if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && hashMove == 0 && !board.isOnNullMove) {
+            val iidDepth = depth - IterativeDeepening.IID_REDUCE_DEPTH.value
+            if (iidDepth > 0) search(board, iidDepth, ply, low, high, extensions, recaptureSquare, isCheck).also {
+                if (it != null && it.height > 0) return it.move[0]
+            }
+        }
+        return hashMove
     }
 
     private fun extensions(checkExtend: Int, threatExtend: Int, recaptureExtend: Int, pawnExtend: Int, maxNewExtensionsInThisPart: Int) =
@@ -428,7 +432,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (Extensions.FRACTIONAL_EXTENSION_THREAT.value > 0 && -newPath!!.score < -Evaluation.MATE_SCORE_START.value && extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value)
             1 else 0
 
-    private fun isCheckExtension(extensions: Int, isCheck: Boolean): Int {
+    private fun checkExtension(extensions: Int, isCheck: Boolean): Int {
         val checkExtend =
                 if (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value && Extensions.FRACTIONAL_EXTENSION_CHECK.value > 0 && isCheck)
                     1 else 0
