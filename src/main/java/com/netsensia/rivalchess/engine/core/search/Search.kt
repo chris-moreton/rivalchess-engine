@@ -178,85 +178,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return bestPath
     }
 
-    private fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
-        currentDepthZeroMove = move
-        currentDepthZeroMoveNumber = arrayIndex
-    }
-
-    private fun getExtensions(isCheck: Boolean, wasPawnPush: Boolean) =
-            if (Extensions.FRACTIONAL_EXTENSION_CHECK.value > 0 && isCheck) Extensions.FRACTIONAL_EXTENSION_CHECK.value
-            else if (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 && wasPawnPush) Extensions.FRACTIONAL_EXTENSION_PAWN.value
-            else 0
-
-    private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
-            if (isDrawnAtRoot(0)) SearchPath().withScore(0).withPath(move) else
-                if (scoutSearch) {
-                    val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low - 1, -low, extensions, -1, isCheck).also {
-                        adjustScoreForMateDepth(it)
-                    }
-
-                    if (!abortingSearch && -Objects.requireNonNull(scoutPath)!!.score > low)
-                        search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
-                    else
-                        scoutPath
-                } else {
-                    search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
-                }.also {
-                    adjustScoreForMateDepth(it)
-                }
-
-    fun hashProbe(board: EngineBoard, depthRemaining: Int, low: Int, high: Int, bestPath: SearchPath): HashProbeResult {
-        val boardHash = board.boardHashObject
-        var hashMove = 0
-        var newLow = low
-        var newHigh = high
-        val hashIndex = board.boardHashObject.getHashIndex(board)
-
-        if (FeatureFlag.USE_HASH_TABLES.isActive) {
-            if (FeatureFlag.USE_HEIGHT_REPLACE_HASH.isActive && isHeightHashTableEntryValid(depthRemaining, board)) {
-                boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
-                hashMove = boardHash.useHeight(hashIndex + HashIndex.MOVE.index)
-                if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.LOWER.index) {
-                    if (boardHash.useHeight(hashIndex + HashIndex.SCORE.index) > newLow) newLow = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
-                } else if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
-                        boardHash.useHeight(hashIndex + HashIndex.SCORE.index) < newHigh) newHigh = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
-                if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || newLow >= newHigh) {
-                    return HashProbeResult(hashMove, newLow, newHigh, bestPath.withScore(boardHash.useHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
-                }
-            }
-            if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
-                hashMove = boardHash.ignoreHeight(hashIndex + HashIndex.MOVE.index)
-                if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.LOWER.index) {
-                    if (boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) > newLow) newLow = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
-                } else if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
-                        boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) < newHigh) newHigh = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
-                if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || newLow >= newHigh) {
-                    return HashProbeResult(hashMove, newLow, newHigh, bestPath.withScore(boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
-                }
-            }
-        }
-        return HashProbeResult(hashMove, newLow, newHigh, null)
-    }
-
-    private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath? {
-        val bestPath = quiesce(board, Limit.MAX_QUIESCE_DEPTH.value - 1, ply, 0, low, high, isCheck)
-        val hashFlag = if (bestPath.score < low) HashValueType.UPPER.index else if (bestPath.score > high) HashValueType.LOWER.index else HashValueType.EXACT.index
-        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag.toByte(),0)
-        return bestPath
-    }
-
-    fun abortIfTimeIsUp(): Boolean {
-        if (millisSetByEngineMonitor > searchTargetEndTime || nodes >= nodesToSearch) {
-            abortingSearch = true
-        }
-        return abortingSearch
-    }
-
-    fun performNullMove(board: EngineBoard, depthRemaining: Int, isCheck: Boolean) =
-            ((FeatureFlag.USE_NULL_MOVE_PRUNING.isActive && !isCheck && !board.isOnNullMove && depthRemaining > 1) &&
-            ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.value &&
-                    (if (board.mover == Colour.WHITE) board.whitePawnValues else board.blackPawnValues) > 0))
-
     @Throws(InvalidMoveException::class)
     fun search(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath? {
 
@@ -301,7 +222,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (abortingSearch) return null
                 adjustScoreForMateDepth(it)
                 if (-Objects.requireNonNull(it)!!.score >= localHigh) return bestPath.withScore(-it!!.score)
-                    else threatExtend = threatExtensions(it, extensions)
+                else threatExtend = threatExtensions(it, extensions)
             }
         }
 
@@ -351,38 +272,30 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     legalMoveCount++
                     val localIsCheck = board.isCheck(mover)
                     if (FeatureFlag.USE_FUTILITY_PRUNING.isActive && canFutilityPrune && !localIsCheck && board.wasCapture() && !board.wasPawnPush()) {
-                        newPath = searchPath[ply + 1]
-                        newPath.height = 0
-                        newPath.score = -futilityScore // newPath.score gets reversed later
+                        newPath = searchPath[ply + 1].withHeight(0).withScore(-futilityScore) // newPath.score gets reversed later
                     } else {
-                        if (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value
-                                < Limit.MAX_EXTENSION_DEPTH.value) {
+                        if (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value) {
                             pawnExtend = 0
-                            if (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0) {
-                                if (board.wasPawnPush()) {
-                                    pawnExtend = 1
-                                }
-                            }
+                            if (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 && board.wasPawnPush()) pawnExtend = 1
                         }
                         val partOfTree = ply / iterativeDeepeningDepth
-                        val maxNewExtensionsInThisPart = Extensions.maxNewExtensionsTreePart[Math.min(partOfTree, Extensions.LAST_EXTENSION_LAYER.value)]
+                        val maxNewExtensionsInThisPart = Extensions.maxNewExtensionsTreePart[partOfTree.coerceAtMost(Extensions.LAST_EXTENSION_LAYER.value)]
                         newExtensions = extensions +
-                                Math.min(
-                                        checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.value +
-                                                threatExtend * Extensions.FRACTIONAL_EXTENSION_THREAT.value +
-                                                recaptureExtend * Extensions.FRACTIONAL_EXTENSION_RECAPTURE.value +
-                                                pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.value,
-                                        maxNewExtensionsInThisPart)
+                                (checkExtend * Extensions.FRACTIONAL_EXTENSION_CHECK.value +
+                                        threatExtend * Extensions.FRACTIONAL_EXTENSION_THREAT.value +
+                                        recaptureExtend * Extensions.FRACTIONAL_EXTENSION_RECAPTURE.value +
+                                        pawnExtend * Extensions.FRACTIONAL_EXTENSION_PAWN.value).coerceAtMost(maxNewExtensionsInThisPart)
                         var lateMoveReduction = 0
-                        if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive && newExtensions == 0 && legalMoveCount > LateMoveReductions.LMR_LEGALMOVES_BEFORE_ATTEMPT.value && depthRemaining - verifyingNullMoveDepthReduction > 1 && move != highRankingMove &&
-                                !wasCheckBeforeMove && (historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63]
-                                        <= LateMoveReductions.LMR_THRESHOLD.value) &&
+                        if (FeatureFlag.USE_LATE_MOVE_REDUCTIONS.isActive && newExtensions == 0 &&
+                                legalMoveCount > LateMoveReductions.LMR_LEGALMOVES_BEFORE_ATTEMPT.value &&
+                                depthRemaining - verifyingNullMoveDepthReduction > 1 &&
+                                move != highRankingMove &&
+                                !wasCheckBeforeMove &&
+                                (historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] <= LateMoveReductions.LMR_THRESHOLD.value) &&
                                 board.wasCapture() &&
-                                (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 || !board.wasPawnPush())) {
-                            if (-evaluate(board) <= localLow + LateMoveReductions.LMR_CUT_MARGIN.value) {
-                                lateMoveReduction = 1
-                                historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] = LateMoveReductions.LMR_REPLACE_VALUE_AFTER_CUT.value
-                            }
+                                (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 || !board.wasPawnPush()) && -evaluate(board) <= localLow + LateMoveReductions.LMR_CUT_MARGIN.value) {
+                                    lateMoveReduction = 1
+                                    historyPruneMoves[if (board.mover == Colour.WHITE) 1 else 0][move ushr 16 and 63][move and 63] = LateMoveReductions.LMR_REPLACE_VALUE_AFTER_CUT.value
                         }
                         if (LateMoveReductions.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION.value > -1) {
                             lateMoveReductionsMade += lateMoveReduction
@@ -484,6 +397,85 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         } while (research)
         return null
     }
+
+    private fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
+        currentDepthZeroMove = move
+        currentDepthZeroMoveNumber = arrayIndex
+    }
+
+    private fun getExtensions(isCheck: Boolean, wasPawnPush: Boolean) =
+            if (Extensions.FRACTIONAL_EXTENSION_CHECK.value > 0 && isCheck) Extensions.FRACTIONAL_EXTENSION_CHECK.value
+            else if (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 && wasPawnPush) Extensions.FRACTIONAL_EXTENSION_PAWN.value
+            else 0
+
+    private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
+            if (isDrawnAtRoot(0)) SearchPath().withScore(0).withPath(move) else
+                if (scoutSearch) {
+                    val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low - 1, -low, extensions, -1, isCheck).also {
+                        adjustScoreForMateDepth(it)
+                    }
+
+                    if (!abortingSearch && -Objects.requireNonNull(scoutPath)!!.score > low)
+                        search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
+                    else
+                        scoutPath
+                } else {
+                    search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
+                }.also {
+                    adjustScoreForMateDepth(it)
+                }
+
+    fun hashProbe(board: EngineBoard, depthRemaining: Int, low: Int, high: Int, bestPath: SearchPath): HashProbeResult {
+        val boardHash = board.boardHashObject
+        var hashMove = 0
+        var newLow = low
+        var newHigh = high
+        val hashIndex = board.boardHashObject.getHashIndex(board)
+
+        if (FeatureFlag.USE_HASH_TABLES.isActive) {
+            if (FeatureFlag.USE_HEIGHT_REPLACE_HASH.isActive && isHeightHashTableEntryValid(depthRemaining, board)) {
+                boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
+                hashMove = boardHash.useHeight(hashIndex + HashIndex.MOVE.index)
+                if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.LOWER.index) {
+                    if (boardHash.useHeight(hashIndex + HashIndex.SCORE.index) > newLow) newLow = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
+                } else if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
+                        boardHash.useHeight(hashIndex + HashIndex.SCORE.index) < newHigh) newHigh = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
+                if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || newLow >= newHigh) {
+                    return HashProbeResult(hashMove, newLow, newHigh, bestPath.withScore(boardHash.useHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
+                }
+            }
+            if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
+                hashMove = boardHash.ignoreHeight(hashIndex + HashIndex.MOVE.index)
+                if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.LOWER.index) {
+                    if (boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) > newLow) newLow = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
+                } else if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
+                        boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) < newHigh) newHigh = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
+                if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || newLow >= newHigh) {
+                    return HashProbeResult(hashMove, newLow, newHigh, bestPath.withScore(boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
+                }
+            }
+        }
+        return HashProbeResult(hashMove, newLow, newHigh, null)
+    }
+
+    private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath? {
+        val bestPath = quiesce(board, Limit.MAX_QUIESCE_DEPTH.value - 1, ply, 0, low, high, isCheck)
+        val hashFlag = if (bestPath.score < low) HashValueType.UPPER.index else if (bestPath.score > high) HashValueType.LOWER.index else HashValueType.EXACT.index
+        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag.toByte(),0)
+        return bestPath
+    }
+
+    fun abortIfTimeIsUp(): Boolean {
+        if (millisSetByEngineMonitor > searchTargetEndTime || nodes >= nodesToSearch) {
+            abortingSearch = true
+        }
+        return abortingSearch
+    }
+
+    fun performNullMove(board: EngineBoard, depthRemaining: Int, isCheck: Boolean) =
+            ((FeatureFlag.USE_NULL_MOVE_PRUNING.isActive && !isCheck && !board.isOnNullMove && depthRemaining > 1) &&
+            ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.value &&
+                    (if (board.mover == Colour.WHITE) board.whitePawnValues else board.blackPawnValues) > 0))
 
     private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, high: Int, low: Int, extensions: Int): SearchPath? {
         board.makeNullMove()
