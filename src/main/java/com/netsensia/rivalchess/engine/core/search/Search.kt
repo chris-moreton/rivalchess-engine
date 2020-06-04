@@ -195,13 +195,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (hashProbeResult.bestPath != null) return bestPath
         var localLow = hashProbeResult.low
         val localHigh = hashProbeResult.high
-        var highRankingMove = hashProbeResult.move
 
         val checkExtend = isCheckExtension(extensions, isCheck)
 
         var hashFlag = HashValueType.UPPER.index
         if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck)
 
+        var highRankingMove = hashProbeResult.move
         if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && highRankingMove == 0 && !board.isOnNullMove) {
             val iidDepth = depth - IterativeDeepening.IID_REDUCE_DEPTH.value
             if (iidDepth > 0) search(board, iidDepth, ply, localLow, localHigh, extensions, recaptureSquare, isCheck).also {
@@ -209,10 +209,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             bestPath.reset()
         }
+
         var bestMoveForHash = 0
         var useScoutSearch = false
         var threatExtend = 0
-        var pawnExtend = 0
 
         val nullMoveReduceDepth = nullMoveReduceDepth(depthRemaining)
 
@@ -232,17 +232,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         do {
             research = false
             var legalMoveCount = 0
-            var futilityPruningEvaluation: Int
-            val wasCheckBeforeMove = board.isCheck(mover)
-
-            // Check to see if we can futility prune this whole node
-            var canFutilityPrune = false
-            var futilityScore = localLow
-            if (FeatureFlag.USE_FUTILITY_PRUNING.isActive && depthRemaining < 4 && !wasCheckBeforeMove && threatExtend == 0 && Math.abs(localLow) < Evaluation.MATE_SCORE_START.value && Math.abs(localHigh) < Evaluation.MATE_SCORE_START.value) {
-                futilityPruningEvaluation = evaluate(board)
-                futilityScore = futilityPruningEvaluation + SearchConfig.getFutilityMargin(depthRemaining - 1)
-                if (futilityScore < localLow) canFutilityPrune = true
-            }
             var move: Int
             while (getHighScoreMove(board, ply, highRankingMove).also { move = it } != 0 && !abortingSearch) {
                 var recaptureExtend = 0
@@ -264,35 +253,29 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         }
                     }
                 }
-                var newExtensions = 0
                 if (board.makeMove(EngineMove(move))) {
                     legalMoveCount++
                     val localIsCheck = board.isCheck(mover)
-                    if (FeatureFlag.USE_FUTILITY_PRUNING.isActive && canFutilityPrune && !localIsCheck && board.wasCapture() && !board.wasPawnPush()) {
-                        newPath = searchPath[ply + 1].withHeight(0).withScore(-futilityScore) // newPath.score gets reversed later
+                    val pawnExtend = if (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value &&
+                            Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 && board.wasPawnPush()) 1 else 0
+
+                    val partOfTree = ply / iterativeDeepeningDepth
+                    val maxNewExtensionsInThisPart = Extensions.maxNewExtensionsTreePart[partOfTree.coerceAtMost(Extensions.LAST_EXTENSION_LAYER.value)]
+                    val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtend, pawnExtend, maxNewExtensionsInThisPart)
+
+                    if (useScoutSearch) {
+                        newPath = search(engineBoard, (depth - 1), ply + 1, -localLow - 1, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
+                        if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
+                        if (!abortingSearch && -Objects.requireNonNull(newPath)!!.score > localLow) {
+                            // research with normal window
+                            newPath = search(engineBoard, (depth - 1), ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
+                            if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
+                        }
                     } else {
-                        if (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value) {
-                            pawnExtend = 0
-                            if (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 && board.wasPawnPush()) pawnExtend = 1
-                        }
-                        val partOfTree = ply / iterativeDeepeningDepth
-                        val maxNewExtensionsInThisPart = Extensions.maxNewExtensionsTreePart[partOfTree.coerceAtMost(Extensions.LAST_EXTENSION_LAYER.value)]
-                        newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtend, pawnExtend, maxNewExtensionsInThisPart)
-
-                        if (useScoutSearch) {
-                            newPath = search(engineBoard, (depth - 1), ply + 1, -localLow - 1, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
-                            if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
-                            if (!abortingSearch && -Objects.requireNonNull(newPath)!!.score > localLow) {
-                                // research with normal window
-                                newPath = search(engineBoard, (depth - 1), ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
-                                if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
-                            }
-                        } else {
-                            newPath = search(board, depth - 1, ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
-                            if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
-                        }
-
+                        newPath = search(board, depth - 1, ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
+                        if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
                     }
+
                     if (abortingSearch) return null
                     Objects.requireNonNull(newPath)!!.score = -newPath!!.score
                     if (newPath.score >= localHigh) {
@@ -301,18 +284,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         bestPath.setPath(move, newPath)
                         board.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depthRemaining)
 
-                        if (SearchConfig.NUM_KILLER_MOVES.value <= 0) return bestPath
-
                         if (board.getBitboard(BitboardType.ENEMY) and toSquare(move).toLong() == 0L || move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value == 0) {
-                            // if this move is in second place, or if it's not in the table at all,
-                            // then move first to second, and replace first with this move
-                            if (killerMoves[ply][0] != move) {
-                                System.arraycopy(killerMoves[ply], 0, killerMoves[ply], 1, SearchConfig.NUM_KILLER_MOVES.value - 1)
-                                killerMoves[ply][0] = move
-                            }
-                            if (FeatureFlag.USE_MATE_HISTORY_KILLERS.isActive && newPath.score > Evaluation.MATE_SCORE_START.value) {
-                                mateKiller[ply] = move
-                            }
+                            killerMoves[ply][1] = killerMoves[ply][0]
+                            killerMoves[ply][0] = move
+                            if (FeatureFlag.USE_MATE_HISTORY_KILLERS.isActive && newPath.score > Evaluation.MATE_SCORE_START.value) mateKiller[ply] = move
                         }
                         return bestPath
                     }
@@ -333,9 +308,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             if (abortingSearch) return null
             if (legalMoveCount == 0) {
-                bestPath.score = if (board.isCheck(mover)) -Evaluation.VALUE_MATE.value else 0
                 board.boardHashObject.storeHashMove(0, board, bestPath.score, HashValueType.EXACT.index.toByte(), Limit.MAX_SEARCH_DEPTH.value)
-                return bestPath
+                return bestPath.withScore(if (board.isCheck(mover)) -Evaluation.VALUE_MATE.value else 0)
             }
             if (!research) {
                 board.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashFlag.toByte(), depthRemaining)
@@ -722,7 +696,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (historyScore > 5) {
             return historyScore
         } else {
-            for (j in 0 until SearchConfig.NUM_KILLER_MOVES.value) {
+            for (j in 0 until 2) {
                 if (movesForSorting[i] == killerMoves[ply][j]) {
                     return 106 - j
                 }
@@ -800,7 +774,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             } else score
 
     private fun scoreKillerMoves(ply: Int, i: Int, movesForSorting: IntArray): Int {
-        for (j in 0 until SearchConfig.NUM_KILLER_MOVES.value) {
+        for (j in 0 until 2) {
             if (movesForSorting[i] == killerMoves[ply][j]) {
                 return 106 - j
             }
@@ -832,7 +806,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun setupMateAndKillerMoveTables() {
         for (i in 0 until Limit.MAX_TREE_DEPTH.value) {
             mateKiller.add(-1)
-            for (j in 0 until SearchConfig.NUM_KILLER_MOVES.value) {
+            for (j in 0 until 2) {
                 killerMoves[i][j] = -1
             }
         }
@@ -975,9 +949,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         currentPath = SearchPath()
         engineState = SearchState.READY
         searchPath = Array(Limit.MAX_TREE_DEPTH.value) { SearchPath() }
-        killerMoves = Array(Limit.MAX_TREE_DEPTH.value) { IntArray(SearchConfig.NUM_KILLER_MOVES.value) }
+        killerMoves = Array(Limit.MAX_TREE_DEPTH.value) { IntArray(2) }
         for (i in 0 until Limit.MAX_TREE_DEPTH.value) {
-            killerMoves[i] = IntArray(SearchConfig.NUM_KILLER_MOVES.value)
+            killerMoves[i] = IntArray(2)
         }
         orderedMoves = Array(Limit.MAX_TREE_DEPTH.value) { IntArray(Limit.MAX_LEGAL_MOVES.value) }
     }
