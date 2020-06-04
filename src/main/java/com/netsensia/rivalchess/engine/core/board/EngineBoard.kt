@@ -174,10 +174,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return false
     }
 
-    fun switchMover() {
-        mover = if (mover == Colour.WHITE) Colour.BLACK else Colour.WHITE
-    }
-
     val allPiecesBitboard: Long
         get() = engineBitboards.getPieceBitboard(BitboardType.ALL)
 
