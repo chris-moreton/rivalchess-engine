@@ -68,7 +68,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     constructor(board: Board) : this(System.out, board) {}
 
-    private fun go() {
+    fun go() {
         initSearchVariables()
         if (isBookMoveAvailable()) return
         determineDrawnPositionsAndGenerateDepthZeroMoves()

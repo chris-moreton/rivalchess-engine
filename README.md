@@ -17,3 +17,29 @@ The Rival chess Java engine libraries used in the Rival Chess Android App.
 
     compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '11.0.0'
     
+### Testing
+    
+    ./gradlew test
+    
+### Example
+
+The Search class would normally be run as a Thread, allowing a caller to probe for the current state of the search
+and to request the search to stop.
+
+The following example doesn't start the process as a thread, but shows the basic usage.
+
+    package com.netsensia.rivalchess.example
+    
+    import com.netsensia.rivalchess.engine.core.search.Search
+    import com.netsensia.rivalchess.model.Board
+
+    fun main(args: Array<String>) {
+        val board = Board.fromFen("6k1/6p1/1p2q2p/1p5P/1P3RP1/2PK1B2/1r2N3/8 b - g3 5 56")
+        val searcher = Search(board)
+        searcher.setMillisToThink(5000)
+        searcher.setNodesToSearch(Int.MAX_VALUE)
+        searcher.setSearchDepth(5)
+        searcher.go()
+        println("Path = ${searcher.currentPath}")
+    }
+    
