@@ -210,18 +210,16 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val nullMoveReduceDepth = nullMoveReduceDepth(depthRemaining)
 
-        if (performNullMove(board, depthRemaining, isCheck)) {
+        if (performNullMove(board, depthRemaining, isCheck))
             searchNullMove(board, depth, nullMoveReduceDepth, ply, localHigh, localLow, extensions).also {
                 if (abortingSearch) return null
                 adjustScoreForMateDepth(it)
-                if (-Objects.requireNonNull(it)!!.score >= localHigh) return searchPathPly.withScore(-it!!.score)
-                else threatExtend = threatExtensions(it, extensions)
+                if (-it!!.score >= localHigh) return searchPathPly.withScore(-it.score)
+                    else threatExtend = threatExtensions(it, extensions)
             }
-        }
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().getMoveArray()
         moveOrderStatus[ply] = MoveOrder.NONE
-        var newPath: SearchPath?
         var research: Boolean
         do {
             research = false
@@ -257,17 +255,23 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     val maxNewExtensionsInThisPart = Extensions.maxNewExtensionsTreePart[partOfTree.coerceAtMost(Extensions.LAST_EXTENSION_LAYER.value)]
                     val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtend, pawnExtend, maxNewExtensionsInThisPart)
 
-                    if (useScoutSearch) {
-                        newPath = search(engineBoard, (depth - 1), ply + 1, -localLow - 1, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
-                        if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
-                        if (!abortingSearch && -Objects.requireNonNull(newPath)!!.score > localLow) {
-                            // research with normal window
-                            newPath = search(engineBoard, (depth - 1), ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
-                            if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
+                    val newPath = if (useScoutSearch) {
+                        val scoutPath = search(engineBoard, (depth - 1), ply + 1, -localLow - 1, -localLow, newExtensions, newRecaptureSquare, localIsCheck).also {
+                            if (it != null) if (it.score > Evaluation.MATE_SCORE_START.value) it.score-- else
+                                if (it.score < -Evaluation.MATE_SCORE_START.value) it.score++
                         }
+
+                        if (!abortingSearch && -scoutPath!!.score > localLow) {
+                            search(engineBoard, (depth - 1), ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck).also{
+                                if (it != null) if (it.score > Evaluation.MATE_SCORE_START.value) it.score-- else
+                                    if (it.score < -Evaluation.MATE_SCORE_START.value) it.score++
+                            }
+                        } else scoutPath
                     } else {
-                        newPath = search(board, depth - 1, ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck)
-                        if (newPath != null) if (newPath.score > Evaluation.MATE_SCORE_START.value) newPath.score-- else if (newPath.score < -Evaluation.MATE_SCORE_START.value) newPath.score++
+                        search(board, depth - 1, ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck).also {
+                            if (it != null) if (it.score > Evaluation.MATE_SCORE_START.value) it.score-- else
+                                if (it.score < -Evaluation.MATE_SCORE_START.value) it.score++
+                        }
                     }
 
                     if (abortingSearch) return null
