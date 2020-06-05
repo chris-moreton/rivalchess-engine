@@ -75,17 +75,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var result = AspirationSearchResult(null, -Int.MAX_VALUE, Int.MAX_VALUE)
 
         for (depth in 1..finalDepthToSearch) {
-
             iterativeDeepeningDepth = depth
-
             result = aspirationSearch(depth, result.windowLow, result.windowHigh)
-
             reorderMoves(0)
-
             if (abortingSearch) break
-
             currentPath.setPath(Objects.requireNonNull(result.path)!!)
-
             if (result.path!!.score > Evaluation.MATE_SCORE_START.value) break
         }
         setSearchComplete()
@@ -216,27 +210,26 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().getMoveArray()
         moveOrderStatus[ply] = MoveOrder.NONE
-        var searchedAtLeastOneLegalMove = false
-        var move: Int
-        while (getHighScoreMove(board, ply, highRankingMove).also { move = it } != 0) {
-
+        val startNodes = nodes
+        highScoreMoveSequence(board, ply, highRankingMove).forEach {
+            val move = it
             val recaptureExtensionResponse =
                     recaptureExtensions(extensions,
                             board.getSquareOccupant(toSquare(move)).index,
                             board.getSquareOccupant(fromSquare(move)).index, board, move, recaptureSquare)
 
             if (board.makeMove(EngineMove(move))) {
-                searchedAtLeastOneLegalMove = true
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
                 val newPath =
                         scoutSearch(useScoutSearch, depth, ply, localLow, newExtensions,
-                                recaptureExtensionResponse.captureSquare, board.isCheck(mover), localHigh, board)
+                                recaptureExtensionResponse.captureSquare, board.isCheck(mover), localHigh, board).also {
+                            if (it != null) it.score = -it.score
+                        }
 
                 if (abortingSearch) return null
 
-                newPath!!.score = -newPath.score
-                if (newPath.score >= localHigh) {
+                if (newPath!!.score >= localHigh) {
                     updateHistoryMoves(board.mover, move, depthRemaining, true)
                     board.unMakeMove()
                     board.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depthRemaining)
@@ -258,12 +251,16 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
         }
         if (abortingSearch) return null
-        if (!searchedAtLeastOneLegalMove) {
+        if (nodes == startNodes) {
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, HashValueType.EXACT.index.toByte(), Limit.MAX_SEARCH_DEPTH.value)
             return searchPathPly.withScore(if (board.isCheck(mover)) -Evaluation.VALUE_MATE.value else 0)
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag.toByte(), depthRemaining)
         return searchPathPly
+    }
+
+    private fun highScoreMoveSequence(board: EngineBoard, ply: Int, highRankingMove: Int) = sequence {
+        while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0) {}
     }
 
     private fun pawnExtensions(extensions: Int, board: EngineBoard) =
