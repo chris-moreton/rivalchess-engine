@@ -115,7 +115,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var numMoves = 0
         var hashEntryType = HashValueType.UPPER.index
         var bestMoveForHash = 0
-        var numLegalMovesAtDepthZero = 0
+        var numLegalMoves = 0
         var isScoutSearch = false
         val bestPath = searchPath[0]
         bestPath.reset()
@@ -123,44 +123,46 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var localLow = low
         moveSequence(orderedMoves[0]).forEach {
             val move = moveNoScore(it)
-            if (!abortingSearch) {
-                if (engineBoard.makeMove(EngineMove(move))) {
-                    updateCurrentDepthZeroMove(move, ++numLegalMovesAtDepthZero)
 
-                    val isCheck = board.isCheck(mover)
-                    val extensions = getExtensions(isCheck, board.wasPawnPush())
-                    val newPath = getPathFromSearch(move, isScoutSearch, depth, ply, localLow, high, extensions, isCheck)
+            if (abortingSearch) return SearchPath()
 
-                    if (!abortingSearch) {
-                        Objects.requireNonNull(newPath)!!.score = -Objects.requireNonNull(newPath)!!.score
-                        if (newPath!!.score >= high) {
-                            board.unMakeMove()
-                            bestPath.setPath(move, newPath)
-                            engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depth)
-                            depthZeroMoveScores[numMoves] = newPath.score
-                            return bestPath
-                        }
-                        if (newPath.score > bestPath.score) bestPath.setPath(move, newPath)
-                        if (newPath.score > localLow) {
-                            hashEntryType = HashValueType.EXACT.index
-                            bestMoveForHash = move
-                            localLow = newPath.score
-                            isScoutSearch = useScoutSearch(depth, extensions)
-                            currentPath.setPath(bestPath)
-                        }
-                        depthZeroMoveScores[numMoves] = newPath.score
-                    }
-                    engineBoard.unMakeMove()
-                } else {
-                    depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
+            if (engineBoard.makeMove(EngineMove(move))) {
+                updateCurrentDepthZeroMove(move, ++numLegalMoves)
+
+                val isCheck = board.isCheck(mover)
+                val extensions = getExtensions(isCheck, board.wasPawnPush())
+                val newPath = getPathFromSearch(move, isScoutSearch, depth, ply, localLow, high, extensions, isCheck)
+
+                if (abortingSearch) return SearchPath()
+
+                newPath!!.score = -newPath.score
+                if (newPath.score >= high) {
+                    board.unMakeMove()
+                    bestPath.setPath(move, newPath)
+                    engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depth)
+                    depthZeroMoveScores[numMoves] = newPath.score
+                    return bestPath
                 }
-                numMoves++
+                if (newPath.score > bestPath.score) bestPath.setPath(move, newPath)
+                if (newPath.score > localLow) {
+                    hashEntryType = HashValueType.EXACT.index
+                    bestMoveForHash = move
+                    localLow = newPath.score
+                    isScoutSearch = useScoutSearch(depth, extensions)
+                    currentPath.setPath(bestPath)
+                }
+                depthZeroMoveScores[numMoves] = newPath.score
+
+                engineBoard.unMakeMove()
+            } else {
+                depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
             }
+            numMoves++
         }
 
         if (abortingSearch) return SearchPath()
 
-        if (numLegalMovesAtDepthZero == 1 && millisToThink < Limit.MAX_SEARCH_MILLIS.value) {
+        if (numLegalMoves == 1 && millisToThink < Limit.MAX_SEARCH_MILLIS.value) {
             abortingSearch = true
             currentPath.setPath(bestPath) // otherwise we will crash!
         } else {
