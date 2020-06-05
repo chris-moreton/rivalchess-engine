@@ -204,12 +204,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         var bestMoveForHash = 0
         var useScoutSearch = false
+
         var threatExtend = 0
-
-        val nullMoveReduceDepth = nullMoveReduceDepth(depthRemaining)
-
         if (performNullMove(board, depthRemaining, isCheck))
-            searchNullMove(board, depth, nullMoveReduceDepth, ply, localHigh, localLow, extensions).also {
+            searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply, localHigh, localLow, extensions).also {
                 if (abortingSearch) return null
                 adjustScoreForMateDepth(it)
                 if (-it!!.score >= localHigh) return searchPathPly.withScore(-it.score)
@@ -218,7 +216,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().getMoveArray()
         moveOrderStatus[ply] = MoveOrder.NONE
-        var legalMoveCount = 0
+        var searchedAtLeastOneLegalMove = false
         var move: Int
         while (getHighScoreMove(board, ply, highRankingMove).also { move = it } != 0) {
 
@@ -228,7 +226,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             board.getSquareOccupant(fromSquare(move)).index, board, move, recaptureSquare)
 
             if (board.makeMove(EngineMove(move))) {
-                legalMoveCount++
+                searchedAtLeastOneLegalMove = true
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
                 val newPath = scoutSearch(useScoutSearch, depth, ply, localLow, newExtensions, recaptureExtensionResponse.captureSquare, board.isCheck(mover), localHigh, board)
@@ -258,7 +256,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
         }
         if (abortingSearch) return null
-        if (legalMoveCount == 0) {
+        if (searchedAtLeastOneLegalMove) {
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, HashValueType.EXACT.index.toByte(), Limit.MAX_SEARCH_DEPTH.value)
             return searchPathPly.withScore(if (board.isCheck(mover)) -Evaluation.VALUE_MATE.value else 0)
         }
