@@ -204,8 +204,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         var bestMoveForHash = 0
         var useScoutSearch = false
-
         var threatExtend = 0
+
         if (performNullMove(board, depthRemaining, isCheck))
             searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply, localHigh, localLow, extensions).also {
                 if (abortingSearch) return null
@@ -229,7 +229,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 searchedAtLeastOneLegalMove = true
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
-                val newPath = scoutSearch(useScoutSearch, depth, ply, localLow, newExtensions, recaptureExtensionResponse.captureSquare, board.isCheck(mover), localHigh, board)
+                val newPath =
+                        scoutSearch(useScoutSearch, depth, ply, localLow, newExtensions,
+                                recaptureExtensionResponse.captureSquare, board.isCheck(mover), localHigh, board)
 
                 if (abortingSearch) return null
 
@@ -256,7 +258,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
         }
         if (abortingSearch) return null
-        if (searchedAtLeastOneLegalMove) {
+        if (!searchedAtLeastOneLegalMove) {
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, HashValueType.EXACT.index.toByte(), Limit.MAX_SEARCH_DEPTH.value)
             return searchPathPly.withScore(if (board.isCheck(mover)) -Evaluation.VALUE_MATE.value else 0)
         }
