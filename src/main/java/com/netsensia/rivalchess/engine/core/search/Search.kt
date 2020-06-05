@@ -368,7 +368,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         adjustScoreForMateDepth(it)
                     }
 
-                    if (!abortingSearch && -Objects.requireNonNull(scoutPath)!!.score > low)
+                    if (!abortingSearch && -scoutPath!!.score > low)
                         search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
                     else
                         scoutPath
