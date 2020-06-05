@@ -23,7 +23,7 @@ The Rival chess Java engine libraries used in the Rival Chess Android App.
     
 ### Example
 
-The Search class would normally be run as a Thread, allowing a caller to probe for the current state of the search
+The Search class would normally be run as a thread, allowing a caller to probe for the current state of the search
 and to request the search to stop.
 
 The following example doesn't start the process as a thread, but shows the basic usage.
