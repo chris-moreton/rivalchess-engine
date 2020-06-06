@@ -72,11 +72,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         initSearchVariables()
         if (isBookMoveAvailable()) return
         determineDrawnPositionsAndGenerateDepthZeroMoves()
-        var result = AspirationSearchResult(null, -Int.MAX_VALUE, Int.MAX_VALUE)
+        var result = AspirationSearchResult(null, Window(-Int.MAX_VALUE, Int.MAX_VALUE))
 
         for (depth in 1..finalDepthToSearch) {
             iterativeDeepeningDepth = depth
-            result = aspirationSearch(depth, result.windowLow, result.windowHigh)
+            result = aspirationSearch(depth, result.window)
             reorderMoves(0)
             if (abortingSearch) break
             currentPath.setPath(Objects.requireNonNull(result.path)!!)
@@ -85,32 +85,32 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setSearchComplete()
     }
 
-    private fun aspirationSearch(depth: Int, aspirationLow: Int, aspirationHigh: Int): AspirationSearchResult {
+    private fun aspirationSearch(depth: Int, aspirationWindow: Window): AspirationSearchResult {
         var path: SearchPath?
-        var low = aspirationLow
-        var high = aspirationHigh
+        var low = aspirationWindow.low
+        var high = aspirationWindow.high
 
-        path = searchZero(engineBoard, depth, 0, low, high)
+        path = searchZero(engineBoard, depth, 0, Window(low, high))
         if (!abortingSearch && Objects.requireNonNull(path)!!.score <= low) {
             low = -Int.MAX_VALUE
-            path = searchZero(engineBoard, depth, 0, low, high)
+            path = searchZero(engineBoard, depth, 0, Window(low, high))
         } else if (!abortingSearch && path.score >= high) {
             high = Int.MAX_VALUE
-            path = searchZero(engineBoard, depth, 0, low, high)
+            path = searchZero(engineBoard, depth, 0, Window(low, high))
         }
         if (!abortingSearch && (Objects.requireNonNull(path)!!.score <= low || path.score >= high)) {
-            path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
+            path = searchZero(engineBoard, depth, 0, Window(-Int.MAX_VALUE, Int.MAX_VALUE))
         }
         if (!abortingSearch) {
             currentPath.setPath(Objects.requireNonNull(path)!!)
             low = path.score - SearchConfig.ASPIRATION_RADIUS.value
             high = path.score + SearchConfig.ASPIRATION_RADIUS.value
         }
-        return AspirationSearchResult(path, low, high)
+        return AspirationSearchResult(path, Window(low, high))
     }
 
     @Throws(InvalidMoveException::class)
-    fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
+    fun searchZero(board: EngineBoard, depth: Int, ply: Int, window: Window): SearchPath {
         nodes += 1
         var numMoves = 0
         var hashEntryType = HashValueType.UPPER.index
@@ -120,7 +120,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val bestPath = searchPath[0]
         bestPath.reset()
 
-        var localLow = low
+        var low = window.low
+
         moveSequence(orderedMoves[0]).forEach {
             val move = moveNoScore(it)
 
@@ -131,12 +132,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = getExtensions(isCheck, board.wasPawnPush())
-                val newPath = getPathFromSearch(move, isScoutSearch, depth, ply, localLow, high, extensions, isCheck)
+                val newPath = getPathFromSearch(move, isScoutSearch, depth, ply, Window(low, window.high), extensions, isCheck)
 
                 if (abortingSearch) return SearchPath()
 
                 newPath!!.score = -newPath.score
-                if (newPath.score >= high) {
+                if (newPath.score >= window.high) {
                     board.unMakeMove()
                     bestPath.setPath(move, newPath)
                     engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depth)
@@ -144,10 +145,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     return bestPath
                 }
                 if (newPath.score > bestPath.score) bestPath.setPath(move, newPath)
-                if (newPath.score > localLow) {
+                if (newPath.score > low) {
                     hashEntryType = HashValueType.EXACT.index
                     bestMoveForHash = move
-                    localLow = newPath.score
+                    low = newPath.score
                     isScoutSearch = useScoutSearch(depth, extensions)
                     currentPath.setPath(bestPath)
                 }
@@ -173,7 +174,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     @Throws(InvalidMoveException::class)
-    fun search(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath? {
+    fun search(board: EngineBoard, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath? {
 
         nodes++
 
@@ -185,17 +186,17 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val depthRemaining = depth + extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value
 
-        val hashProbeResult = hashProbe(board, depthRemaining, low, high, searchPathPly)
+        val hashProbeResult = hashProbe(board, depthRemaining, window, searchPathPly)
         if (hashProbeResult.bestPath != null) return searchPathPly
-        var localLow = hashProbeResult.low
-        val localHigh = hashProbeResult.high
+        var localLow = hashProbeResult.window.low
+        val localHigh = hashProbeResult.window.high
 
         val checkExtend = checkExtension(extensions, isCheck)
 
         var hashFlag = HashValueType.UPPER.index
         if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck)
 
-        val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, localLow, localHigh, extensions, recaptureSquare, isCheck)
+        val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, Window(localLow, localHigh), extensions, recaptureSquare, isCheck)
         searchPathPly.reset()
 
         var bestMoveForHash = 0
@@ -203,7 +204,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var threatExtend = 0
 
         if (performNullMove(board, depthRemaining, isCheck))
-            searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply, localHigh, localLow, extensions).also {
+            searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply, Window(localLow, localHigh), extensions).also {
                 if (abortingSearch) return null
                 adjustScoreForMateDepth(it)
                 if (-it!!.score >= localHigh) return searchPathPly.withScore(-it.score)
@@ -224,8 +225,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
                 val newPath =
-                        scoutSearch(useScoutSearch, depth, ply, localLow, newExtensions,
-                                recaptureExtensionResponse.captureSquare, board.isCheck(mover), localHigh, board).also {
+                        scoutSearch(useScoutSearch, depth, ply, Window(localLow, localHigh), newExtensions,
+                                recaptureExtensionResponse.captureSquare, board.isCheck(mover), board).also {
                             if (it != null) it.score = -it.score
                         }
 
@@ -302,30 +303,30 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             RecaptureExtensionResponse(-Int.MAX_VALUE, -1)
         }
 
-    private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, localLow: Int, newExtensions: Int, newRecaptureSquare: Int, localIsCheck: Boolean, localHigh: Int, board: EngineBoard) =
+    private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, window: Window, newExtensions: Int, newRecaptureSquare: Int, localIsCheck: Boolean, board: EngineBoard) =
         if (useScoutSearch) {
-            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -localLow - 1, -localLow, newExtensions, newRecaptureSquare, localIsCheck).also {
+            val scoutPath = search(engineBoard, (depth - 1), ply + 1, Window(-window.low - 1, -window.low), newExtensions, newRecaptureSquare, localIsCheck).also {
                 if (it != null) if (it.score > Evaluation.MATE_SCORE_START.value) it.score-- else
                     if (it.score < -Evaluation.MATE_SCORE_START.value) it.score++
             }
 
-            if (!abortingSearch && -scoutPath!!.score > localLow) {
-                search(engineBoard, (depth - 1), ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck).also {
+            if (!abortingSearch && -scoutPath!!.score > window.low) {
+                search(engineBoard, (depth - 1), ply + 1, Window(-window.high, -window.low), newExtensions, newRecaptureSquare, localIsCheck).also {
                     if (it != null) if (it.score > Evaluation.MATE_SCORE_START.value) it.score-- else
                         if (it.score < -Evaluation.MATE_SCORE_START.value) it.score++
                 }
             } else scoutPath
         } else {
-            search(board, depth - 1, ply + 1, -localHigh, -localLow, newExtensions, newRecaptureSquare, localIsCheck).also {
+            search(board, depth - 1, ply + 1, Window(-window.high, -window.low), newExtensions, newRecaptureSquare, localIsCheck).also {
                 if (it != null) if (it.score > Evaluation.MATE_SCORE_START.value) it.score-- else
                     if (it.score < -Evaluation.MATE_SCORE_START.value) it.score++
             }
         }
 
-    private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, recaptureSquare: Int, isCheck: Boolean): Int {
+    private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): Int {
         if (FeatureFlag.USE_INTERNAL_ITERATIVE_DEEPENING.isActive && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && hashMove == 0 && !board.isOnNullMove) {
             val iidDepth = depth - IterativeDeepening.IID_REDUCE_DEPTH.value
-            if (iidDepth > 0) search(board, iidDepth, ply, low, high, extensions, recaptureSquare, isCheck).also {
+            if (iidDepth > 0) search(board, iidDepth, ply, window, extensions, recaptureSquare, isCheck).also {
                 if (it != null && it.height > 0) return it.move[0]
             }
         }
@@ -361,28 +362,27 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             else if (Extensions.FRACTIONAL_EXTENSION_PAWN.value > 0 && wasPawnPush) Extensions.FRACTIONAL_EXTENSION_PAWN.value
             else 0
 
-    private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
+    private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, window: Window, extensions: Int, isCheck: Boolean) =
             if (isDrawnAtRoot(0)) SearchPath().withScore(0).withPath(move) else
                 if (scoutSearch) {
-                    val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low - 1, -low, extensions, -1, isCheck).also {
+                    val scoutPath = search(engineBoard, (depth - 1), ply + 1, Window(-window.low - 1, -window.low), extensions, -1, isCheck).also {
                         adjustScoreForMateDepth(it)
                     }
 
-                    if (!abortingSearch && -scoutPath!!.score > low)
-                        search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
+                    if (!abortingSearch && -scoutPath!!.score > window.low)
+                        search(engineBoard, (depth - 1), ply + 1, Window(-window.high, -window.low), extensions, -1, isCheck)
                     else
                         scoutPath
                 } else {
-                    search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
+                    search(engineBoard, (depth - 1), ply + 1, Window(-window.high, -window.low), extensions, -1, isCheck)
                 }.also {
                     adjustScoreForMateDepth(it)
                 }
 
-    fun hashProbe(board: EngineBoard, depthRemaining: Int, low: Int, high: Int, bestPath: SearchPath): HashProbeResult {
+    fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
         val boardHash = board.boardHashObject
         var hashMove = 0
-        var newLow = low
-        var newHigh = high
+        var newWindow = window
         val hashIndex = board.boardHashObject.getHashIndex(board)
 
         if (FeatureFlag.USE_HASH_TABLES.isActive) {
@@ -390,25 +390,25 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
                 hashMove = boardHash.useHeight(hashIndex + HashIndex.MOVE.index)
                 if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.LOWER.index) {
-                    if (boardHash.useHeight(hashIndex + HashIndex.SCORE.index) > newLow) newLow = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
+                    if (boardHash.useHeight(hashIndex + HashIndex.SCORE.index) > newWindow.low) newWindow.low = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
                 } else if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
-                        boardHash.useHeight(hashIndex + HashIndex.SCORE.index) < newHigh) newHigh = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
-                if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || newLow >= newHigh) {
-                    return HashProbeResult(hashMove, newLow, newHigh, bestPath.withScore(boardHash.useHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
+                        boardHash.useHeight(hashIndex + HashIndex.SCORE.index) < newWindow.high) newWindow.high = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
+                if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || newWindow.low >= newWindow.high) {
+                    return HashProbeResult(hashMove, newWindow, bestPath.withScore(boardHash.useHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
                 }
             }
             if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
                 hashMove = boardHash.ignoreHeight(hashIndex + HashIndex.MOVE.index)
                 if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.LOWER.index) {
-                    if (boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) > newLow) newLow = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
+                    if (boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) > newWindow.low) newWindow.low = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
                 } else if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
-                        boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) < newHigh) newHigh = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
-                if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || newLow >= newHigh) {
-                    return HashProbeResult(hashMove, newLow, newHigh, bestPath.withScore(boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
+                        boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) < newWindow.high) newWindow.high = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
+                if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || newWindow.low >= newWindow.high) {
+                    return HashProbeResult(hashMove, newWindow, bestPath.withScore(boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
                 }
             }
         }
-        return HashProbeResult(hashMove, newLow, newHigh, null)
+        return HashProbeResult(hashMove, newWindow, null)
     }
 
     private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath? {
@@ -430,9 +430,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.value &&
                     (if (board.mover == Colour.WHITE) board.whitePawnValues else board.blackPawnValues) > 0))
 
-    private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, high: Int, low: Int, extensions: Int): SearchPath? {
+    private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, window: Window, extensions: Int): SearchPath? {
         board.makeNullMove()
-        val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, -1, false)
+        val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply + 1, Window(-window.high, -window.low), extensions, -1, false)
         board.unMakeNullMove()
         return newPath
     }
