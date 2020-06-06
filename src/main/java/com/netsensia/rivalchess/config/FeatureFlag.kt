@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.config
 
 enum class FeatureFlag(val isActive: Boolean) {
-    USE_HASH_TABLES(true),
     USE_HEIGHT_REPLACE_HASH(true),
     USE_ALWAYS_REPLACE_HASH(true),
     USE_NULL_MOVE_PRUNING(true), // +17 fails when turned off

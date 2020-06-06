@@ -25,6 +25,48 @@ fun EngineBoard.unMakeNullMove() {
 }
 
 @Throws(InvalidMoveException::class)
+fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
+    val compactMove = engineMove.compact
+    val moveFrom = (compactMove ushr 16).toByte()
+    val moveTo = (compactMove and 63).toByte()
+    val capturePiece = squareContents[moveTo.toInt()]
+    val movePiece = squareContents[moveFrom.toInt()]
+
+    val moveDetail = MoveDetail()
+    moveDetail.capturePiece = SquareOccupant.NONE
+    moveDetail.move = compactMove
+    moveDetail.hashValue = boardHashObject.trackedHashValue
+    moveDetail.isOnNullMove = isOnNullMove
+    moveDetail.pawnHashValue = boardHashObject.trackedPawnHashValue
+    moveDetail.halfMoveCount = halfMoveCount.toByte()
+    moveDetail.enPassantBitboard = engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
+    moveDetail.castlePrivileges = castlePrivileges.toByte()
+    moveDetail.movePiece = movePiece
+
+    if (moveHistory.size <= numMovesMade) moveHistory.add(moveDetail) else moveHistory[numMovesMade] = moveDetail
+
+    boardHashObject.move(this, engineMove)
+    isOnNullMove = false
+    halfMoveCount++
+    engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 0)
+    engineBitboards.movePiece(movePiece, compactMove)
+    squareContents[moveFrom.toInt()] = SquareOccupant.NONE
+    squareContents[moveTo.toInt()] = movePiece
+
+    makeNonTrivialMoveTypeAdjustments(moveFrom, moveTo, compactMove, capturePiece, movePiece)
+
+    mover = mover.opponent()
+
+    numMovesMade++
+
+    calculateSupplementaryBitboards()
+
+    if (isCheck(mover.opponent())) unMakeMove().also { return false }
+
+    return true
+}
+
+@Throws(InvalidMoveException::class)
 fun EngineBoard.unMakeMove() {
     numMovesMade--
     halfMoveCount = moveHistory[numMovesMade].halfMoveCount.toInt()
@@ -148,81 +190,23 @@ private fun EngineBoard.replaceMovedPiece(fromSquare: Int, fromMask: Long, toMas
 }
 
 @Throws(InvalidMoveException::class)
-private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(compactMove: Int, capturePiece: SquareOccupant, movePiece: SquareOccupant?) {
-    val moveFrom = (compactMove ushr 16).toByte()
-    val moveTo = (compactMove and 63).toByte()
-    val toMask = 1L shl moveTo.toInt()
+private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Byte, moveTo: Byte, compactMove: Int, capturePiece: SquareOccupant, movePiece: SquareOccupant?) {
     if (mover == Colour.WHITE) {
-        if (movePiece == SquareOccupant.WP) {
-            makeSpecialWhitePawnMoveAdjustments(compactMove)
-        } else if (movePiece == SquareOccupant.WR) {
-            adjustCastlePrivilegesForWhiteRookMove(moveFrom)
-        } else if (movePiece == SquareOccupant.WK) {
-            adjustKingVariablesForWhiteKingMove(compactMove)
-        }
-        if (capturePiece != SquareOccupant.NONE) {
-            makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece, toMask)
-        }
+        if (movePiece == SquareOccupant.WP) makeSpecialWhitePawnMoveAdjustments(compactMove)
+        else if (movePiece == SquareOccupant.WR) adjustCastlePrivilegesForWhiteRookMove(moveFrom)
+        else if (movePiece == SquareOccupant.WK) adjustKingVariablesForWhiteKingMove(compactMove)
+        if (capturePiece != SquareOccupant.NONE) makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece, moveTo)
     } else {
-        if (movePiece == SquareOccupant.BP) {
-            makeSpecialBlackPawnMoveAdjustments(compactMove)
-        } else if (movePiece == SquareOccupant.BR) {
-            adjustCastlePrivilegesForBlackRookMove(moveFrom)
-        } else if (movePiece == SquareOccupant.BK) {
-            adjustKingVariablesForBlackKingMove(compactMove)
-        }
-        if (capturePiece != SquareOccupant.NONE) {
-            makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece, toMask)
-        }
+        if (movePiece == SquareOccupant.BP) makeSpecialBlackPawnMoveAdjustments(compactMove)
+        else if (movePiece == SquareOccupant.BR) adjustCastlePrivilegesForBlackRookMove(moveFrom)
+        else if (movePiece == SquareOccupant.BK) adjustKingVariablesForBlackKingMove(compactMove)
+        if (capturePiece != SquareOccupant.NONE) makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece, moveTo)
     }
 }
 
-@Throws(InvalidMoveException::class)
-fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
-    val compactMove = engineMove.compact
-    val moveFrom = (compactMove ushr 16).toByte()
-    val moveTo = (compactMove and 63).toByte()
-    val capturePiece = squareContents[moveTo.toInt()]
-    val movePiece = squareContents[moveFrom.toInt()]
+private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece: SquareOccupant, moveTo: Byte) {
+    val toMask = 1L shl moveTo.toInt()
 
-    val moveDetail = MoveDetail()
-    moveDetail.capturePiece = SquareOccupant.NONE
-    moveDetail.move = compactMove
-    moveDetail.hashValue = boardHashObject.trackedHashValue
-    moveDetail.isOnNullMove = isOnNullMove
-    moveDetail.pawnHashValue = boardHashObject.trackedPawnHashValue
-    moveDetail.halfMoveCount = halfMoveCount.toByte()
-    moveDetail.enPassantBitboard = this.engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
-    moveDetail.castlePrivileges = castlePrivileges.toByte()
-    moveDetail.movePiece = movePiece
-
-    if (moveHistory.size <= numMovesMade) {
-        moveHistory.add(moveDetail)
-    } else {
-        moveHistory[numMovesMade] = moveDetail
-    }
-
-    boardHashObject.move(this, engineMove)
-    isOnNullMove = false
-    halfMoveCount++
-    this.engineBitboards.setPieceBitboard(BitboardType.ENPASSANTSQUARE, 0)
-    this.engineBitboards.movePiece(movePiece, compactMove)
-    squareContents[moveFrom.toInt()] = SquareOccupant.NONE
-    squareContents[moveTo.toInt()] = movePiece
-    makeNonTrivialMoveTypeAdjustments(compactMove, capturePiece, movePiece)
-    mover = mover.opponent()
-
-    numMovesMade++
-
-    calculateSupplementaryBitboards()
-    if (this.isCheck(mover.opponent())) {
-        unMakeMove()
-        return false
-    }
-    return true
-}
-
-private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece: SquareOccupant, toMask: Long) {
     moveHistory[numMovesMade].capturePiece = capturePiece
     halfMoveCount = 0
     this.engineBitboards.xorPieceBitboard(capturePiece.index, toMask)
@@ -289,14 +273,14 @@ private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
                 this.engineBitboards.orPieceBitboard(BitboardType.BB, toMask)
                 squareContents[moveTo.toInt()] = SquareOccupant.BB
             }
-            else -> throw InvalidMoveException(
-                    "compactMove $compactMove produced invalid promotion piece")
+            else -> throw InvalidMoveException("compactMove $compactMove produced invalid promotion piece")
         }
         this.engineBitboards.xorPieceBitboard(BitboardType.BP, toMask)
     }
 }
 
-private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece: SquareOccupant?, toMask: Long) {
+private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece: SquareOccupant?, moveTo: Byte) {
+    val toMask = 1L shl moveTo.toInt()
     moveHistory[numMovesMade].capturePiece = capturePiece!!
     halfMoveCount = 0
     this.engineBitboards.xorPieceBitboard(capturePiece.index, toMask)
@@ -349,8 +333,7 @@ private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
         moveHistory[numMovesMade].capturePiece = SquareOccupant.BP
         squareContents[moveTo - 8] = SquareOccupant.NONE
     } else if (compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value != 0) {
-        val promotionPieceMask = PromotionPieceMask.fromValue(compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value)
-        when (promotionPieceMask) {
+        when (PromotionPieceMask.fromValue(compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value)) {
             PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
                 this.engineBitboards.orPieceBitboard(BitboardType.WQ, toMask)
                 squareContents[moveTo.toInt()] = SquareOccupant.WQ
