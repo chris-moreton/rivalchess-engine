@@ -79,7 +79,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             result = aspirationSearch(depth, result.window)
             reorderMoves(0)
             if (abortingSearch) break
-            currentPath.setPath(Objects.requireNonNull(result.path)!!)
+            currentPath.setPath((result.path)!!)
             if (result.path!!.score > Evaluation.MATE_SCORE_START.value) break
         }
         setSearchComplete()
@@ -91,18 +91,18 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var high = aspirationWindow.high
 
         path = searchZero(engineBoard, depth, 0, Window(low, high))
-        if (!abortingSearch && Objects.requireNonNull(path)!!.score <= low) {
+        if (!abortingSearch && (path)!!.score <= low) {
             low = -Int.MAX_VALUE
             path = searchZero(engineBoard, depth, 0, Window(low, high))
         } else if (!abortingSearch && path.score >= high) {
             high = Int.MAX_VALUE
             path = searchZero(engineBoard, depth, 0, Window(low, high))
         }
-        if (!abortingSearch && (Objects.requireNonNull(path)!!.score <= low || path.score >= high)) {
+        if (!abortingSearch && ((path)!!.score <= low || path.score >= high)) {
             path = searchZero(engineBoard, depth, 0, Window(-Int.MAX_VALUE, Int.MAX_VALUE))
         }
         if (!abortingSearch) {
-            currentPath.setPath(Objects.requireNonNull(path)!!)
+            currentPath.setPath((path)!!)
             low = path.score - SearchConfig.ASPIRATION_RADIUS.value
             high = path.score + SearchConfig.ASPIRATION_RADIUS.value
         }
@@ -382,7 +382,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
         val boardHash = board.boardHashObject
         var hashMove = 0
-        var newWindow = window
+        val newWindow = window
         val hashIndex = board.boardHashObject.getHashIndex(board)
 
         if (FeatureFlag.USE_HASH_TABLES.isActive) {
