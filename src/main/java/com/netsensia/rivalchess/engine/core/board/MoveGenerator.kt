@@ -6,9 +6,7 @@ import com.netsensia.rivalchess.config.Limit
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.enums.PromotionPieceMask
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
-import java.lang.Long.numberOfTrailingZeros
 
 class MoveGenerator(
         private val engineBitboards: EngineBitboards,
@@ -68,7 +66,7 @@ class MoveGenerator(
     }
 
     private fun addMoves(fromSquareMask: Int, squares: List<Int>) {
-        squares.forEach() {
+        squares.forEach {
             moves[moveCount++] = (fromSquareMask or it)
         }
     }
