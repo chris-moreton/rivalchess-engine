@@ -7,8 +7,14 @@ object MagicBitboards {
     val magicMovesRook: Array<LongArray>
     @JvmField
     val magicMovesBishop: Array<LongArray>
+    @JvmField
+    val bishopVars: MagicVars
+    @JvmField
+    val rookVars: MagicVars
+
     var occupancyVariation: LongArray?
     var occupancyAttackSet: LongArray?
+
 
     private fun generateOccupancyVariationsAndDatabase(isRook: Boolean) {
         var bitRef: Int
@@ -246,6 +252,8 @@ object MagicBitboards {
             58, 59, 59, 59, 59, 59, 59, 58, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 57, 57, 57, 57, 59, 59, 59, 59, 57, 55, 55, 57, 59, 59, 59, 59, 57, 55, 55, 57, 59, 59, 59, 59, 57, 57, 57, 57, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 58, 59, 59, 59, 59, 59, 59, 58
     )
 
+
+
     init {
         magicMovesRook = Array(64) { LongArray(4096) }
         magicMovesBishop = Array(64) { LongArray(1024) }
@@ -255,5 +263,7 @@ object MagicBitboards {
         generateOccupancyVariationsAndDatabase(true)
         occupancyVariation = null
         occupancyAttackSet = null
+        rookVars = MagicVars(magicMovesRook, occupancyMaskRook, magicNumberRook, magicNumberShiftsRook)
+        bishopVars = MagicVars(magicMovesBishop, occupancyMaskBishop, magicNumberBishop, magicNumberShiftsBishop)
     }
 }

@@ -77,9 +77,7 @@ public class SearchTest {
         } else {
             assertEquals(expectedScore, actualScore);
 
-            if (flip) {
-                assertEvaluationScore(FenUtils.invertFen(fen), expectedScore, false);
-            }
+            if (flip) assertEvaluationScore(FenUtils.invertFen(fen), expectedScore, false);
         }
 
     }

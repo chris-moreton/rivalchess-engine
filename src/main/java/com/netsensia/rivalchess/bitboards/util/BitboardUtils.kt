@@ -47,9 +47,9 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long) =
 fun squareList(bitboard: Long): List<Int> {
     val squares = mutableListOf<Int>()
     var bitboardCopy = bitboard
-    while (bitboardCopy != 0L) {
+    while (bitboardCopy != 0L)
         squares.add(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
-    }
+
     return squares
 }
 

@@ -38,18 +38,12 @@ class MoveGenerator(
         generateSliderMoves(
                 SquareOccupant.WR,
                 SquareOccupant.BR,
-                MagicBitboards.magicMovesRook,
-                MagicBitboards.occupancyMaskRook,
-                MagicBitboards.magicNumberRook,
-                MagicBitboards.magicNumberShiftsRook
+                MagicBitboards.rookVars
         )
         generateSliderMoves(
                 SquareOccupant.WB,
                 SquareOccupant.BB,
-                MagicBitboards.magicMovesBishop,
-                MagicBitboards.occupancyMaskBishop,
-                MagicBitboards.magicNumberBishop,
-                MagicBitboards.magicNumberShiftsBishop
+                MagicBitboards.bishopVars
         )
 
         moves[moveCount] = 0
@@ -70,11 +64,12 @@ class MoveGenerator(
     }
 
     private fun addMoves(fromSquareMask: Int, bitboard: Long) {
-        var bitboardCopy = bitboard
-        while (bitboardCopy != 0L) {
-            val square = numberOfTrailingZeros(bitboardCopy)
-            moves[moveCount++] = (fromSquareMask or square)
-            bitboardCopy = bitboardCopy xor (1L shl square)
+        addMoves(fromSquareMask, squareList(bitboard))
+    }
+
+    private fun addMoves(fromSquareMask: Int, squares: List<Int>) {
+        squares.forEach() {
+            moves[moveCount++] = (fromSquareMask or it)
         }
     }
 
@@ -117,10 +112,7 @@ class MoveGenerator(
     private fun generateSliderMoves(
             whitePiece: SquareOccupant,
             blackPiece: SquareOccupant,
-            magicMovesArray: Array<LongArray>,
-            occupancyMask: LongArray,
-            magicNumber: LongArray,
-            magicNumberShifts: IntArray
+            magicVars: MagicVars
     ) {
 
         val bitboard: Long = if (mover == Colour.WHITE)
@@ -130,8 +122,8 @@ class MoveGenerator(
         squareList(bitboard).forEach {
             addMoves(
                     it shl 16,
-                    magicMovesArray[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMask[it]) *
-                            magicNumber[it] ushr magicNumberShifts[it]).toInt()] and
+                    magicVars.moves[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and magicVars.mask[it]) *
+                            magicVars.number[it] ushr magicVars.shift[it]).toInt()] and
                             engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
         }
     }
@@ -151,8 +143,9 @@ class MoveGenerator(
                 if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture,
                 enemyKingSquare,
                 pawnBitboardForMover())
-        generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Piece.ROOK, SquareOccupant.WR.index, SquareOccupant.BR.index)
-        generateQuiesceSliderMoves(includeChecks, enemyKingSquare, Piece.BISHOP, SquareOccupant.WB.index, SquareOccupant.BB.index)
+
+        generateQuiesceSliderMoves(includeChecks, enemyKingSquare, MagicBitboards.rookVars, SquareOccupant.WR.index, SquareOccupant.BR.index)
+        generateQuiesceSliderMoves(includeChecks, enemyKingSquare, MagicBitboards.bishopVars, SquareOccupant.WB.index, SquareOccupant.BB.index)
 
         moves[moveCount] = 0
         return this
@@ -189,25 +182,22 @@ class MoveGenerator(
         }
     }
 
-    private fun generateQuiesceSliderMoves(includeChecks: Boolean, enemyKingSquare: Int, piece: Piece, whiteSliderConstant: Int, blackSliderConstant: Int) {
-        val magicMovesRook = if (piece == Piece.ROOK) MagicBitboards.magicMovesRook else MagicBitboards.magicMovesBishop
-        val occupancyMaskRook = if (piece == Piece.ROOK) MagicBitboards.occupancyMaskRook else MagicBitboards.occupancyMaskBishop
-        val magicNumberRook = if (piece == Piece.ROOK) MagicBitboards.magicNumberRook else MagicBitboards.magicNumberBishop
-        val magicNumberShiftsRook = if (piece == Piece.ROOK) MagicBitboards.magicNumberShiftsRook else MagicBitboards.magicNumberShiftsBishop
-        val rookCheckSquares = magicMovesRook[enemyKingSquare][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[enemyKingSquare]) * magicNumberRook[enemyKingSquare] ushr magicNumberShiftsRook[enemyKingSquare]).toInt()]
+    private fun generateQuiesceSliderMoves(includeChecks: Boolean, enemyKingSquare: Int, magicVars: MagicVars, whiteSliderConstant: Int, blackSliderConstant: Int) {
+        val checkSquares = magicVars.moves[enemyKingSquare][((engineBitboards.getPieceBitboard(BitboardType.ALL) and magicVars.mask[enemyKingSquare]) *
+                magicVars.number[enemyKingSquare] ushr magicVars.shift[enemyKingSquare]).toInt()]
         val pieceBitboard = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(
                 BitboardType.fromIndex(whiteSliderConstant)) or engineBitboards.getPieceBitboard(BitboardType.WQ) else engineBitboards.getPieceBitboard(
                 BitboardType.fromIndex(blackSliderConstant)) or engineBitboards.getPieceBitboard(BitboardType.BQ)
 
         squareList(pieceBitboard).forEach {
-            val pieceMoves = magicMovesRook[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and occupancyMaskRook[it]) * magicNumberRook[it] ushr magicNumberShiftsRook[it]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()
+            val pieceMoves = magicVars.moves[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and magicVars.mask[it]) *
+                    magicVars.number[it] ushr magicVars.shift[it]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()
             if (includeChecks) {
-                addMoves(it shl 16, pieceMoves and (rookCheckSquares or engineBitboards.getPieceBitboard(BitboardType.ENEMY)))
+                addMoves(it shl 16, pieceMoves and (checkSquares or engineBitboards.getPieceBitboard(BitboardType.ENEMY)))
             } else {
                 addMoves(it shl 16, pieceMoves and engineBitboards.getPieceBitboard(BitboardType.ENEMY))
             }
         }
-
     }
 
     private fun addPawnMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean) {
