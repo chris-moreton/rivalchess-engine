@@ -226,6 +226,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (board.makeMove(EngineMove(move))) {
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
+
                 val newPath =
                         scoutSearch(useScoutSearch, depth, ply, Window(localLow, localHigh), newExtensions,
                                 recaptureExtensionResponse.captureSquare, board.isCheck(mover), board).also {
@@ -388,27 +389,31 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (FeatureFlag.USE_HEIGHT_REPLACE_HASH.isActive && isHeightHashTableEntryValid(depthRemaining, board)) {
             boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
             hashMove = boardHash.useHeight(hashIndex + HashIndex.MOVE.index)
-            if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.LOWER.index) {
-                if (boardHash.useHeight(hashIndex + HashIndex.SCORE.index) > window.low) window.low = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
-            } else if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
-                    boardHash.useHeight(hashIndex + HashIndex.SCORE.index) < window.high) window.high = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
-            if (boardHash.useHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || window.low >= window.high) {
-                return HashProbeResult(hashMove, window, bestPath.withScore(boardHash.useHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
-            }
+            val flag = boardHash.useHeight(hashIndex + HashIndex.FLAG.index)
+            val score = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
+            if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
         }
 
         if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
             hashMove = boardHash.ignoreHeight(hashIndex + HashIndex.MOVE.index)
-            if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.LOWER.index) {
-                if (boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) > window.low) window.low = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
-            } else if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.UPPER.index &&
-                    boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index) < window.high) window.high = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
-            if (boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) == HashValueType.EXACT.index || window.low >= window.high) {
-                return HashProbeResult(hashMove, window, bestPath.withScore(boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)).withPath(hashMove))
-            }
+            val flag = boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index)
+            val score = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
+            if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
         }
 
         return HashProbeResult(hashMove, window, null)
+    }
+
+    private fun hashProbeResult(flag: Int, score: Int, window: Window): Boolean {
+
+        when (flag) {
+            HashValueType.EXACT.index -> return true
+            HashValueType.LOWER.index -> if (score > window.low) window.low = score
+            HashValueType.UPPER.index -> if (score < window.high) window.high = score
+        }
+
+        return window.low >= window.high
+
     }
 
     private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath? {

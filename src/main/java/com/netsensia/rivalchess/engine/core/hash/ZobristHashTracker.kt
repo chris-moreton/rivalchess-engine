@@ -125,7 +125,7 @@ class ZobristHashTracker {
         return false
     }
 
-    fun unMakeCapture(bitRefTo: Int, moveDetail: MoveDetail): Boolean {
+    private fun unMakeCapture(bitRefTo: Int, moveDetail: MoveDetail): Boolean {
         if (moveDetail.capturePiece != SquareOccupant.NONE) {
             removeOrPlacePieceOnEmptySquare(moveDetail.capturePiece, bitRefTo)
             return true
@@ -133,7 +133,7 @@ class ZobristHashTracker {
         return false
     }
 
-    fun unMakeWhiteCastle(bitRefTo: Int): Boolean {
+    private fun unMakeWhiteCastle(bitRefTo: Int): Boolean {
         return when (bitRefTo) {
             1 -> {
                 removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 2)
@@ -149,7 +149,7 @@ class ZobristHashTracker {
         }
     }
 
-    fun unMakeBlackCastle(bitRefTo: Int): Boolean {
+    private fun unMakeBlackCastle(bitRefTo: Int): Boolean {
         return when (bitRefTo) {
             61 -> {
                 removeOrPlacePieceOnEmptySquare(SquareOccupant.BR, 60)
@@ -165,7 +165,7 @@ class ZobristHashTracker {
         }
     }
 
-    fun unMakePromotion(bitRefFrom: Int, bitRefTo: Int, moveDetail: MoveDetail): Boolean {
+    private fun unMakePromotion(bitRefFrom: Int, bitRefTo: Int, moveDetail: MoveDetail): Boolean {
         val move = getMoveRefFromEngineMove(moveDetail.move)
         val movedPiece = moveDetail.movePiece
         val promotedPiece = move.promotedPiece
@@ -178,9 +178,7 @@ class ZobristHashTracker {
         return false
     }
 
-    fun nullMove() {
-        switchMover()
-    }
+    fun nullMove() = switchMover()
 
     fun makeMove(board: EngineBoard, engineMove: EngineMove) {
         val move = getMoveRefFromEngineMove(engineMove.compact)
@@ -202,15 +200,9 @@ class ZobristHashTracker {
         if (!unMakePromotion(bitRefFrom, bitRefTo, moveDetail)) {
             removeOrPlacePieceOnEmptySquare(moveDetail.movePiece, bitRefFrom)
             removeOrPlacePieceOnEmptySquare(moveDetail.movePiece, bitRefTo)
-            if (!unMakeEnPassant(bitRefTo, moveDetail)) {
-                if (!unMakeCapture(bitRefTo, moveDetail)) {
-                    if (moveDetail.movePiece == SquareOccupant.WK && bitRefFrom == 3) {
-                        unMakeWhiteCastle(bitRefTo)
-                    }
-                    if (moveDetail.movePiece == SquareOccupant.BK && bitRefFrom == 59) {
-                        unMakeBlackCastle(bitRefTo)
-                    }
-                }
+            if (!unMakeEnPassant(bitRefTo, moveDetail) && !unMakeCapture(bitRefTo, moveDetail)) {
+                if (moveDetail.movePiece == SquareOccupant.WK && bitRefFrom == 3) unMakeWhiteCastle(bitRefTo)
+                if (moveDetail.movePiece == SquareOccupant.BK && bitRefFrom == 59) unMakeBlackCastle(bitRefTo)
             }
         }
         switchMover()

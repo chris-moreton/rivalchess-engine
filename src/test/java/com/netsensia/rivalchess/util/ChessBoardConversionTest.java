@@ -15,10 +15,10 @@ public class ChessBoardConversionTest {
 
     @Test
     public void getBoardRefFromBitRef() {
-        assertEquals(Square.fromCoords(7, 7), ChessBoardConversionKt.getBoardRefFromBitRef(0));
-        assertEquals(Square.fromCoords(0, 7), ChessBoardConversionKt.getBoardRefFromBitRef(7));
-        assertEquals(Square.fromCoords(7, 0), ChessBoardConversionKt.getBoardRefFromBitRef(56));
-        assertEquals(Square.fromCoords(0, 0), ChessBoardConversionKt.getBoardRefFromBitRef(63));
+        assertEquals(Square.fromCoords(7, 7), Square.fromBitRef(0));
+        assertEquals(Square.fromCoords(0, 7), Square.fromBitRef(7));
+        assertEquals(Square.fromCoords(7, 0), Square.fromBitRef(56));
+        assertEquals(Square.fromCoords(0, 0), Square.fromBitRef(63));
     }
 
     @Test
