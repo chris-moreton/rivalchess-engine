@@ -37,7 +37,6 @@ fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
     moveDetail.move = compactMove
     moveDetail.hashValue = boardHashObject.trackedHashValue
     moveDetail.isOnNullMove = isOnNullMove
-    moveDetail.pawnHashValue = boardHashObject.trackedPawnHashValue
     moveDetail.halfMoveCount = halfMoveCount.toByte()
     moveDetail.enPassantBitboard = engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE)
     moveDetail.castlePrivileges = castlePrivileges.toByte()

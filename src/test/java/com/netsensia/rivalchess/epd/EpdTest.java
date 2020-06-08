@@ -45,7 +45,7 @@ public class EpdTest {
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
             "WAC.002", // Fail 1
-            "WAC.041", // Fail 2
+            "WAC.041", // Fail 2 .
             "WAC.071", // Fail 3
             "WAC.092", // Fail 4
             "WAC.100", // Fail 5
@@ -60,13 +60,13 @@ public class EpdTest {
             "WAC.193", // Fail 14
             "WAC.213", // Fail 15
             "WAC.229", // Fail 16
-            "WAC.230", // Fail 17
+            "WAC.230", // Fail 17 .
             "WAC.237", // Fail 18
             "WAC.238", // Fail 19
             "WAC.247", // Fail 20
             "WAC.261", // Fail 21
             "WAC.265", // Fail 22
-            "WAC.274", // Fail 23
+            "WAC.274", // Fail 23 .
             "WAC.291", // Fail 24
             "WAC.297" // Fail 25
     ));
@@ -104,9 +104,7 @@ public class EpdTest {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
 
-        if (!RECALCULATE_FAILURES) {
-            System.out.println(epdItem.getId() + " " + dtf.format(now));
-        }
+        if (!RECALCULATE_FAILURES) System.out.println(epdItem.getId() + " " + dtf.format(now));
 
         try {
             await().atMost(MAX_SEARCH_SECONDS, SECONDS).until(() -> !search.isSearching());
@@ -114,10 +112,7 @@ public class EpdTest {
             search.stopSearch();
 
             SearchState state;
-            do {
-                state = search.getEngineState();
-            }
-            while (state != SearchState.READY && state != SearchState.COMPLETE);
+            do state = search.getEngineState(); while (state != SearchState.READY && state != SearchState.COMPLETE);
         }
 
         final String move = ChessBoardConversion.getPgnMoveFromCompactMove(

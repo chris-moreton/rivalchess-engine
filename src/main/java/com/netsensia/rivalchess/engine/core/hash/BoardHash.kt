@@ -11,7 +11,7 @@ import com.netsensia.rivalchess.model.SquareOccupant
 
 class BoardHash {
 
-    private val hashTracker = ZorbristHashTracker()
+    private val hashTracker = ZobristHashTracker()
 
     var hashTableVersion = 0
 
@@ -148,9 +148,6 @@ class BoardHash {
 
     val trackedHashValue: Long
         get() = hashTracker.trackedBoardHashValue
-
-    val trackedPawnHashValue: Long
-        get() = hashTracker.trackedPawnHashValue
 
     fun setMaxHashEntries(maxHashEntries: Int) {
         this.maxHashEntries = maxHashEntries

@@ -5,7 +5,7 @@ import com.netsensia.rivalchess.engine.core.board.BoardExtensionsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.board.MoveGenerator;
 import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator;
-import com.netsensia.rivalchess.engine.core.hash.ZorbristHashTracker;
+import com.netsensia.rivalchess.engine.core.hash.ZobristHashTracker;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
@@ -21,11 +21,11 @@ import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensio
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-public class ZorbristHashTrackerTest {
+public class ZobristHashTrackerTest {
 
     @Test
     public void initHash() throws IllegalFenException {
-        ZorbristHashTracker hashCalculator = new ZorbristHashTracker();
+        ZobristHashTracker hashCalculator = new ZobristHashTracker();
 
         assertEquals(8377675270202223558L, ZorbristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("2R2k2/p7/7K/8/6p1/6P1/8/8 b - - 6 5"))));
         assertEquals(7804811707366554848L, ZorbristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("6rk/p7/7K/8/6p1/6P1/8/4R3 w - - 5 3"))));
@@ -54,51 +54,6 @@ public class ZorbristHashTrackerTest {
         assertEquals(1798995394321752692L, ZorbristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("r4rk1/pp1b1ppp/4p3/7n/1bBN4/P1N5/1P3PKP/2RR4 w - - 1 6"))));
         assertEquals(3427826734247474712L, ZorbristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("r1b2rk1/pp3ppp/3NNn2/6q1/2B5/8/PP2QPPP/2bR2K1 b - - 0 6"))));
         assertEquals(3185928038993651253L, ZorbristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("3q3k/2pnbrpp/2Q5/8/1r1PN1b1/8/PP3PPP/R1B2RK1 b - - 2 6"))));
-    }
-
-    @Test
-    public void initPawnHash() throws IllegalFenException {
-        ZorbristHashTracker hashCalculator = new ZorbristHashTracker();
-
-        assertEquals(7352919752223822497L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/k7/p7/q6P/2P5/2n1P3/3K4/8 w - - 0 5"))));
-        assertEquals(9083264183814045386L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/k7/p7/4p2P/2P5/2K1P2q/3Q4/8 b - - 1 5"))));
-        assertEquals(4038912975424041097L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/k7/p2P4/7P/4P3/8/4K3/5q2 w - - 1 7"))));
-        assertEquals(6965160378581448749L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("k7/7P/8/p2P4/4K3/4P3/1q6/8 w - - 1 7"))));
-        assertEquals(7621802180616499029L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/k2P3P/8/8/8/4P3/4K3/n7 w - - 0 9"))));
-        assertEquals(777983314143753872L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("1k6/8/3P3P/p7/8/4P3/1q1K4/8 w - - 3 7"))));
-        assertEquals(777983314143753872L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/k7/3P3P/p7/1q6/3KP3/8/8 b - - 4 8"))));
-        assertEquals(6309194122560902729L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/k7/p3K3/4Q2P/n1P5/4q3/8/8 b - - 5 10"))));
-        assertEquals(4370290739485241797L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/k7/p7/4Q2P/8/4P3/4q3/3n3K b - - 3 8"))));
-        assertEquals(8612591920639253787L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/1r4k1/4p1p1/3pP2Q/8/7R/5PK1/8 b - - 1 7"))));
-        assertEquals(7665015188837026086L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("6k1/8/4p1Q1/4P3/3p4/7R/1r3P2/3K4 b - - 0 9"))));
-        assertEquals(6316535876622580026L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("4kQ2/2r1r3/4p1p1/3pP3/8/2P5/4KP2/7R b - - 10 9"))));
-        assertEquals(6316535876622580026L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("2r5/6k1/4p1p1/3pPr2/8/2P3K1/3Q1P2/5R2 b - - 5 7"))));
-        assertEquals(1324052202440718771L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("4k3/1r6/6p1/3pP3/8/2r2Q2/5P2/6KR b - - 0 8"))));
-        assertEquals(6316535876622580026L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("8/1r3k2/4p1p1/3pP3/6Q1/2P2K2/5P2/7R b - - 1 6"))));
-        assertEquals(2997313563610617575L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("3r1k2/1r6/4p2N/3pP3/8/2P2P2/5PK1/R6Q b - - 4 6"))));
-        assertEquals(8195978013708418088L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("2r3k1/R7/4pQp1/3pP2p/2r3N1/2P2P2/5PK1/8 w - - 6 5"))));
-        assertEquals(2997313563610617575L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("7Q/4kr2/4p3/2rpP3/6N1/2P2P2/5PK1/R7 w - - 3 7"))));
-        assertEquals(6023279362077622357L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("2r1k3/2r5/4pQp1/3pP3/6P1/2P5/5PK1/R7 b - - 0 6"))));
-        assertEquals(6577527402777839590L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("r1b2q1k/ppp2Bb1/6PR/1Q2P3/3P1p2/8/PPP3P1/1K1n4 b - - 0 4"))));
-        assertEquals(8567503273084485862L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("r4q1k/pQ3Bb1/6Pp/3pPb2/3P1p2/8/PPP3nR/1K2R3 b - - 1 5"))));
-        assertEquals(7415905118449312519L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("r1b5/pp5k/4P2b/3p4/1qnP1p2/8/PPP3P1/1K1R4 w - - 0 7"))));
-        assertEquals(2198063286082472680L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("r3q2k/p2bPB2/6PR/1p1pb3/3P1p2/4n3/PPP3P1/1K1R4 b - - 0 7"))));
-        assertEquals(1021364507498586413L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("r4q1k/pB4b1/1n4Pp/4P3/3P1p2/8/PPQ3PR/1K6 b - - 0 6"))));
-        assertEquals(6014530957643070140L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("1r3rk1/5p2/N2p2p1/Q1n4p/2P1P3/5P1B/Pb5P/1K1rR3 w - - 0 4"))));
-        assertEquals(850291719126799406L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("1r3rk1/5p2/N4bp1/7p/2P5/5n1B/PPK4P/4r3 b - - 0 8"))));
-        assertEquals(8137463193395310810L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("1r3rk1/5pb1/p2p2p1/q6p/PNP1P3/3p3B/1P1R3P/1K2R3 b - a3 0 3"))));
-        assertEquals(1860252939522023149L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("5rk1/5pb1/p2p2p1/4q2p/1rP1P3/3p3B/PP5P/1K1RR3 b - - 1 4"))));
-        assertEquals(7051412142713837419L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("1r3rk1/5p2/p2p2p1/7p/5N2/7B/Pn6/K6R w - - 0 7"))));
-        assertEquals(2084855075960490445L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("1r3rk1/5pb1/p2p2p1/2Q2B1p/1NP5/3p1P2/Pq1n3P/3KR3 w - - 2 4"))));
-        assertEquals(5322111833311617531L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("5rk1/2N2pb1/p2p2p1/7p/P1P5/3p1P1r/8/2K1R3 w - - 1 7"))));
-        assertEquals(7306199229900872213L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("5rk1/5pb1/p5p1/4p2p/2P2N2/3p1P1B/P6r/K7 w - - 1 7"))));
-        assertEquals(4957166182224300487L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("5r2/5pbk/p2p2N1/7p/2P5/3p1P1r/P7/1K2R3 b - - 0 8"))));
-        assertEquals(7707459286097982763L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("2r2rk1/5pb1/3p2p1/1P2q2p/1N2P3/3p3B/PP1R3P/1K2R3 w - - 1 4"))));
-        assertEquals(2398052764475699268L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("1r3rk1/5p2/p2p2p1/Q3R2p/nNP5/3R1P1B/PP6/2K5 b - - 0 6"))));
-        assertEquals(2857364192485741149L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("1r3r1k/6b1/p2p1pp1/Q1n4p/1NP1P3/5P1B/PR2q2P/2K5 w - - 4 5"))));
-        assertEquals(4737023572921181958L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("r1bq4/1pp2p1p/p2p2p1/5N1k/Q7/8/PPPPrPPP/R1B3K1 w - - 0 6"))));
-        assertEquals(4737023572921181958L, ZorbristHashCalculator.calculatePawnHash(new EngineBoard(FenUtils.getBoardModel("r1bq1rN1/1pp2pkp/p2p2p1/2n3Q1/4R3/8/PPPP1PPP/R1B3K1 b - - 5 3"))));
-
     }
 
     private void compareCalculatedHashWithTrackedHash(EngineBoard ecb, String move) throws InvalidMoveException {

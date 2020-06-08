@@ -26,9 +26,12 @@ public class ChessBoardConversion
 		return Square.fromCoords(x,y);
 	}
 	
-	public static int getBitRefFromBoardRef(Square boardRef)
-	{
+	public static int getBitRefFromBoardRef(Square boardRef) {
 		return 63 - (8*boardRef.getYRank()) - boardRef.getXFile();
+	}
+
+	public static int getBitRefFromBoardRef(final int xFile, final int yRank) {
+		return 63 - (8 * yRank) - xFile;
 	}
 
 	public static Move getMoveRefFromEngineMove(int move)
