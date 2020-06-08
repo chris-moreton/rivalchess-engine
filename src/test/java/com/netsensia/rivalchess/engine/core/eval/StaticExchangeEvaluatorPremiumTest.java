@@ -4,12 +4,12 @@ import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
-import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import junit.framework.TestCase;
 import org.junit.Test;
 
 import static com.netsensia.rivalchess.engine.core.eval.PieceValueKt.pieceValue;
+import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic;
 
 public class StaticExchangeEvaluatorPremiumTest extends TestCase {
 
@@ -19,7 +19,7 @@ public class StaticExchangeEvaluatorPremiumTest extends TestCase {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(fen));
         assertEquals(expectedScore, staticExchangeEvaluator.staticExchangeEvaluation(
                 engineBoard,
-                ChessBoardConversion.getEngineMoveFromSimpleAlgebraic(move)));
+                getEngineMoveFromSimpleAlgebraic(move)));
     }
 
     @Test

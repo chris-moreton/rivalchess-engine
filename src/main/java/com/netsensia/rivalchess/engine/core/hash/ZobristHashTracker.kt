@@ -7,9 +7,9 @@ import com.netsensia.rivalchess.engine.core.hash.ZorbristHashCalculator.whiteMov
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.engine.core.type.MoveDetail
 import com.netsensia.rivalchess.model.Move
-import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
-import com.netsensia.rivalchess.util.ChessBoardConversion
+import com.netsensia.rivalchess.util.getBitRefFromBoardRef
+import com.netsensia.rivalchess.util.getMoveRefFromEngineMove
 
 class ZobristHashTracker {
     var trackedBoardHashValue: Long = 0
@@ -60,14 +60,14 @@ class ZobristHashTracker {
 
     private fun processPossibleWhitePawnEnPassantCapture(move: Move, capturedPiece: SquareOccupant) {
         if (move.srcBoardRef.xFile != move.tgtBoardRef.xFile && capturedPiece == SquareOccupant.NONE) {
-            val capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(move.tgtBoardRef.xFile, move.tgtBoardRef.yRank + 1)
+            val capturedPawnBitRef = getBitRefFromBoardRef(move.tgtBoardRef.xFile, move.tgtBoardRef.yRank + 1)
             removeOrPlacePieceOnEmptySquare(SquareOccupant.BP, capturedPawnBitRef)
         }
     }
 
     private fun processPossibleBlackPawnEnPassantCapture(move: Move, capturedPiece: SquareOccupant) {
         if (move.srcBoardRef.xFile != move.tgtBoardRef.xFile && capturedPiece == SquareOccupant.NONE) {
-            val capturedPawnBitRef = ChessBoardConversion.getBitRefFromBoardRef(move.tgtBoardRef.xFile, move.tgtBoardRef.yRank - 1)
+            val capturedPawnBitRef = getBitRefFromBoardRef(move.tgtBoardRef.xFile, move.tgtBoardRef.yRank - 1)
             removeOrPlacePieceOnEmptySquare(SquareOccupant.WP, capturedPawnBitRef)
         }
     }
@@ -166,7 +166,7 @@ class ZobristHashTracker {
     }
 
     fun unMakePromotion(bitRefFrom: Int, bitRefTo: Int, moveDetail: MoveDetail): Boolean {
-        val move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move)
+        val move = getMoveRefFromEngineMove(moveDetail.move)
         val movedPiece = moveDetail.movePiece
         val promotedPiece = move.promotedPiece
         if (promotedPiece != SquareOccupant.NONE) {
@@ -183,10 +183,10 @@ class ZobristHashTracker {
     }
 
     fun makeMove(board: EngineBoard, engineMove: EngineMove) {
-        val move = ChessBoardConversion.getMoveRefFromEngineMove(engineMove.compact)
-        val bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.srcBoardRef)
+        val move = getMoveRefFromEngineMove(engineMove.compact)
+        val bitRefFrom = getBitRefFromBoardRef(move.srcBoardRef)
         val movedPiece = board.getSquareOccupant(bitRefFrom)
-        val bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.tgtBoardRef)
+        val bitRefTo = getBitRefFromBoardRef(move.tgtBoardRef)
         val capturedPiece = board.getSquareOccupant(bitRefTo)
         removeOrPlacePieceOnEmptySquare(movedPiece, bitRefFrom)
         processCapture(movedPiece, capturedPiece, bitRefTo)
@@ -196,9 +196,9 @@ class ZobristHashTracker {
     }
 
     fun unMakeMove(moveDetail: MoveDetail) {
-        val move = ChessBoardConversion.getMoveRefFromEngineMove(moveDetail.move)
-        val bitRefFrom = ChessBoardConversion.getBitRefFromBoardRef(move.srcBoardRef)
-        val bitRefTo = ChessBoardConversion.getBitRefFromBoardRef(move.tgtBoardRef)
+        val move = getMoveRefFromEngineMove(moveDetail.move)
+        val bitRefFrom = getBitRefFromBoardRef(move.srcBoardRef)
+        val bitRefTo = getBitRefFromBoardRef(move.tgtBoardRef)
         if (!unMakePromotion(bitRefFrom, bitRefTo, moveDetail)) {
             removeOrPlacePieceOnEmptySquare(moveDetail.movePiece, bitRefFrom)
             removeOrPlacePieceOnEmptySquare(moveDetail.movePiece, bitRefTo)

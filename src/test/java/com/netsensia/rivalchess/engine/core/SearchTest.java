@@ -7,8 +7,8 @@ import com.netsensia.rivalchess.engine.core.search.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.util.FenUtils;
-import com.netsensia.rivalchess.util.ChessBoardConversion;
 
+import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
@@ -99,7 +99,7 @@ public class SearchTest {
 
         await().atMost(30, SECONDS).until(() -> !search.isSearching());
 
-        assertEquals(expectedMove, ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(search.getCurrentMove()));
+        assertEquals(expectedMove, getSimpleAlgebraicMoveFromCompactMove(search.getCurrentMove()));
         assertEquals(expectedScore, search.getCurrentScore());
 
     }

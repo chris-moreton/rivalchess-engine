@@ -7,7 +7,6 @@ import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
-import com.netsensia.rivalchess.util.ChessBoardConversion;
 import com.netsensia.rivalchess.util.EpdItem;
 import com.netsensia.rivalchess.util.EpdReader;
 import org.awaitility.core.ConditionTimeoutException;
@@ -24,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getPgnMoveFromCompactMove;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -115,7 +115,7 @@ public class EpdTest {
             do state = search.getEngineState(); while (state != SearchState.READY && state != SearchState.COMPLETE);
         }
 
-        final String move = ChessBoardConversion.getPgnMoveFromCompactMove(
+        final String move = getPgnMoveFromCompactMove(
                 search.getCurrentMove(), epdItem.getFen());
 
         if (RECALCULATE_FAILURES) {

@@ -9,12 +9,12 @@ import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.model.util.FenUtils;
-import com.netsensia.rivalchess.util.ChessBoardConversion;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigInteger;
 
+import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getBitRefFromBoardRef;
+import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic;
 import static org.junit.Assert.assertEquals;
 
 public class EngineBitboardsTest {
@@ -59,7 +59,7 @@ public class EngineBitboardsTest {
         final long bitboard = new BigInteger(bitboardString, 2).longValue();
         final long bitboardExpected = new BigInteger(bitboardStringExpected, 2).longValue();
 
-        final EngineMove engineMove = ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("h4d8");
+        final EngineMove engineMove = getEngineMoveFromSimpleAlgebraic("h4d8");
 
         bitboards.setPieceBitboard(BitboardType.WB, bitboard);
         bitboards.movePiece(SquareOccupant.WB, engineMove.compact);
@@ -98,11 +98,11 @@ public class EngineBitboardsTest {
             for (int x=0; x<8; x++) {
 
                 assertEquals(expectedWhiteAttacks[y][x], engineBoard.getEngineBitboards().isSquareAttackedBy(
-                        ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(x, y)),
+                        getBitRefFromBoardRef(Square.fromCoords(x, y)),
                         Colour.WHITE));
 
                 assertEquals(expectedBlackAttacks[y][x], engineBoard.getEngineBitboards().isSquareAttackedBy(
-                        ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(x, y)),
+                        getBitRefFromBoardRef(Square.fromCoords(x, y)),
                         Colour.BLACK));
             }
         }

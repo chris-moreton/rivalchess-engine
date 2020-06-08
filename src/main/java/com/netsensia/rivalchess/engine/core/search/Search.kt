@@ -17,7 +17,7 @@ import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
-import com.netsensia.rivalchess.util.ChessBoardConversion
+import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.util.*
 import kotlin.math.abs
@@ -919,7 +919,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 go()
                 if (isUciMode) {
                     val s1 = "info" +
-                            " currmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(currentDepthZeroMove) +
+                            " currmove " + getSimpleAlgebraicMoveFromCompactMove(currentDepthZeroMove) +
                             " currmovenumber " + currentDepthZeroMoveNumber +
                             " depth " + iterativeDeepeningDepth +
                             " score " + currentScoreHuman +
@@ -927,7 +927,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             " time " + searchDuration +
                             " nodes " + nodes +
                             " nps " + nodesPerSecond
-                    val s2 = "bestmove " + ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(currentMove)
+                    val s2 = "bestmove " + getSimpleAlgebraicMoveFromCompactMove(currentMove)
                     printStream.println(s1)
                     printStream.println(s2)
                 }

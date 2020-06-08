@@ -15,86 +15,86 @@ public class ChessBoardConversionTest {
 
     @Test
     public void getBoardRefFromBitRef() {
-        assertEquals(Square.fromCoords(7, 7), ChessBoardConversion.getBoardRefFromBitRef(0));
-        assertEquals(Square.fromCoords(0, 7), ChessBoardConversion.getBoardRefFromBitRef(7));
-        assertEquals(Square.fromCoords(7, 0), ChessBoardConversion.getBoardRefFromBitRef(56));
-        assertEquals(Square.fromCoords(0, 0), ChessBoardConversion.getBoardRefFromBitRef(63));
+        assertEquals(Square.fromCoords(7, 7), ChessBoardConversionKt.getBoardRefFromBitRef(0));
+        assertEquals(Square.fromCoords(0, 7), ChessBoardConversionKt.getBoardRefFromBitRef(7));
+        assertEquals(Square.fromCoords(7, 0), ChessBoardConversionKt.getBoardRefFromBitRef(56));
+        assertEquals(Square.fromCoords(0, 0), ChessBoardConversionKt.getBoardRefFromBitRef(63));
     }
 
     @Test
     public void getBitRefFromBoardRef() {
-        assertEquals(0, ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(7, 7)));
-        assertEquals(7, ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(0, 7)));
-        assertEquals(56, ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(7, 0)));
-        assertEquals(63, ChessBoardConversion.getBitRefFromBoardRef(Square.fromCoords(0, 0)));
+        assertEquals(0, ChessBoardConversionKt.getBitRefFromBoardRef(Square.fromCoords(7, 7)));
+        assertEquals(7, ChessBoardConversionKt.getBitRefFromBoardRef(Square.fromCoords(0, 7)));
+        assertEquals(56, ChessBoardConversionKt.getBitRefFromBoardRef(Square.fromCoords(7, 0)));
+        assertEquals(63, ChessBoardConversionKt.getBitRefFromBoardRef(Square.fromCoords(0, 0)));
     }
 
     @Test
     public void getMoveRefFromEngineMove() {
         assertEquals(new Move(Square.fromCoords(4, 6), Square.fromCoords(4, 4)),
-                ChessBoardConversion.getMoveRefFromEngineMove(720923));
+                ChessBoardConversionKt.getMoveRefFromEngineMove(720923));
 
         assertNotEquals(new Move(Square.fromCoords(1, 1), Square.fromCoords(1, 0)),
-                ChessBoardConversion.getMoveRefFromEngineMove(3539198));
+                ChessBoardConversionKt.getMoveRefFromEngineMove(3539198));
 
         Move move1 = new Move(Square.fromCoords(1, 1), Square.fromCoords(1, 0), SquareOccupant.WQ);
-        assertEquals(move1, ChessBoardConversion.getMoveRefFromEngineMove(3539198));
+        assertEquals(move1, ChessBoardConversionKt.getMoveRefFromEngineMove(3539198));
 
         Move move2 = new Move(Square.fromCoords(0, 6), Square.fromCoords(1, 7), SquareOccupant.BN);
-        assertEquals(move2, ChessBoardConversion.getMoveRefFromEngineMove(983302));
+        assertEquals(move2, ChessBoardConversionKt.getMoveRefFromEngineMove(983302));
     }
 
     @Test
     public void getSimpleAlgebraicMoveFromCompactMove() {
-        assertEquals("e2e4", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(720923));
-        assertEquals("b7b8Q", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(3539198));
-        assertEquals("a1a2", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(458767));
-        assertEquals("a2b1n", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(983302));
-        assertEquals("b7b8", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(3539006));
-        assertEquals("a1h8", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(458808));
-        assertEquals("g1f3", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(65554));
-        assertEquals("d4d5", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(1835044));
-        assertEquals("c7b8N", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(3473726));
-        assertEquals("b7b8N", ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(3539262));
+        assertEquals("e2e4", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(720923));
+        assertEquals("b7b8Q", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(3539198));
+        assertEquals("a1a2", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(458767));
+        assertEquals("a2b1n", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(983302));
+        assertEquals("b7b8", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(3539006));
+        assertEquals("a1h8", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(458808));
+        assertEquals("g1f3", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(65554));
+        assertEquals("d4d5", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(1835044));
+        assertEquals("c7b8N", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(3473726));
+        assertEquals("b7b8N", ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove(3539262));
     }
 
     @Test
     public void getSimpleAlgebraicFromBitRef() {
-        assertEquals("h1", ChessBoardConversion.getSimpleAlgebraicFromBitRef(0));
-        assertEquals("g1", ChessBoardConversion.getSimpleAlgebraicFromBitRef(1));
-        assertEquals("a8", ChessBoardConversion.getSimpleAlgebraicFromBitRef(63));
+        assertEquals("h1", ChessBoardConversionKt.getSimpleAlgebraicFromBitRef(0));
+        assertEquals("g1", ChessBoardConversionKt.getSimpleAlgebraicFromBitRef(1));
+        assertEquals("a8", ChessBoardConversionKt.getSimpleAlgebraicFromBitRef(63));
     }
 
     @Test
     public void getPgnMoveFromCompactMove() throws IllegalFenException, InvalidMoveException {
         assertEquals("e4",
-                ChessBoardConversion.getPgnMoveFromCompactMove(720923, ConstantsKt.FEN_START_POS));
+                ChessBoardConversionKt.getPgnMoveFromCompactMove(720923, ConstantsKt.FEN_START_POS));
         assertEquals("Nf3",
-                ChessBoardConversion.getPgnMoveFromCompactMove(65554, ConstantsKt.FEN_START_POS));
+                ChessBoardConversionKt.getPgnMoveFromCompactMove(65554, ConstantsKt.FEN_START_POS));
         assertEquals("cxb8=N",
-                ChessBoardConversion.getPgnMoveFromCompactMove(
+                ChessBoardConversionKt.getPgnMoveFromCompactMove(
                         3473726, "rnbqkb1r/ppP1pppp/21p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq -"));
     }
 
     @Test(expected = InvalidMoveException.class)
     public void getPgnMoveFromCompactMoveIllegalMoveException() throws IllegalFenException, InvalidMoveException {
         assertEquals("Nf3",
-                ChessBoardConversion.getPgnMoveFromCompactMove(1835044, ConstantsKt.FEN_START_POS));
+                ChessBoardConversionKt.getPgnMoveFromCompactMove(1835044, ConstantsKt.FEN_START_POS));
     }
 
     @Test
     public void getCompactMoveFromSimpleAlgebraic() {
-        assertEquals(720923, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("e2e4").compact);
-        assertEquals(3539198, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b8q").compact);
-        assertEquals(3539198, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b8Q").compact);
-        assertEquals(3539262, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b8N").compact);
-        assertEquals(458767, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("a1a2").compact);
-        assertEquals(983302, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("a2b1n").compact);
-        assertEquals(3539006, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("b7b8").compact);
-        assertEquals(458808, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("a1h8").compact);
-        assertEquals(65554, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("g1f3").compact);
-        assertEquals(1835044, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("d4d5").compact);
-        assertEquals(3473726, ChessBoardConversion.getEngineMoveFromSimpleAlgebraic("c7b8n").compact);
+        assertEquals(720923, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("e2e4").compact);
+        assertEquals(3539198, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b7b8q").compact);
+        assertEquals(3539198, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b7b8Q").compact);
+        assertEquals(3539262, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b7b8N").compact);
+        assertEquals(458767, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("a1a2").compact);
+        assertEquals(983302, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("a2b1n").compact);
+        assertEquals(3539006, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b7b8").compact);
+        assertEquals(458808, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("a1h8").compact);
+        assertEquals(65554, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("g1f3").compact);
+        assertEquals(1835044, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d4d5").compact);
+        assertEquals(3473726, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("c7b8n").compact);
 
     }
 }

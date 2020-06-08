@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.search
 
 import com.netsensia.rivalchess.config.Limit
-import com.netsensia.rivalchess.util.ChessBoardConversion
+import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 
 class SearchPath {
     @JvmField
@@ -60,7 +60,7 @@ class SearchPath {
     override fun toString(): String {
         var retString = ""
         try {
-            for (i in 0 until height) retString += if (move[i] != 0) ChessBoardConversion.getSimpleAlgebraicMoveFromCompactMove(move[i]) + " " else break
+            for (i in 0 until height) retString += if (move[i] != 0) getSimpleAlgebraicMoveFromCompactMove(move[i]) + " " else break
         } catch (e: NullPointerException) {
             throw RuntimeException()
         }
