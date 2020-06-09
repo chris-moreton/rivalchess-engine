@@ -70,8 +70,7 @@ fun blackRookOpenFilesEval(bitboards: BitboardData, file: Int) =
                 Evaluation.VALUE_ROOK_ON_HALF_OPEN_FILE.value
         else 0
 
-fun rookEnemyPawnMultiplier(enemyPawnValues: Int) =
-        (enemyPawnValues / pieceValue(Piece.PAWN)).coerceAtMost(6)
+fun rookEnemyPawnMultiplier(enemyPawnValues: Int) = (enemyPawnValues / pieceValue(Piece.PAWN)).coerceAtMost(6)
 
 fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 
@@ -83,24 +82,18 @@ fun doubledRooksEval(squares: List<Int>) =
 
 fun flippedSquareTableScore(table: List<Int>, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
 
-fun kingAttackCount(dangerZone: Long, attacks: List<Long>): Int {
-    return attacks
-            .map { bitCount(it and dangerZone) }
-            .fold(0) { acc, i -> acc + i }
-}
+fun kingAttackCount(dangerZone: Long, attacks: List<Long>) =
+    attacks.map { bitCount(it and dangerZone) }.fold(0) { acc, i -> acc + i }
 
-fun tradePieceBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int): Int {
-    return linearScale(
+fun tradePieceBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int) =
+    linearScale(
             if (materialDifference > 0)
-                blackPieceValues(bitboards) +
-                        blackPawnValues(bitboards) else
-                whitePieceValues(bitboards) +
-                        whitePawnValues(bitboards),
-            0,
+                blackPieceValues(bitboards) + blackPawnValues(bitboards) else
+                whitePieceValues(bitboards) + whitePawnValues(bitboards),
+         0,
             Evaluation.TOTAL_PIECE_VALUE_PER_SIDE_AT_START.value,
             30 * materialDifference / 100,
             0)
-}
 
 fun tradePawnBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int) =
     linearScale(
@@ -786,7 +779,7 @@ private fun xCoordOfSquare(it: Int) = it % 8
 
 private fun yCoordOfSquare(kingSquare: Int) = kingSquare / 8
 
-fun evaluate(board: EngineBoard) : Int {
+fun evaluate(board: EngineBoard): Int {
 
     val bitboards = BitboardData(board)
     val pieceSquareLists = PieceSquareLists(bitboards)

@@ -3,6 +3,8 @@ package com.netsensia.rivalchess.bitboards.util
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Ignore
+import java.lang.Long
+import java.lang.Math.abs
 
 import kotlin.random.Random
 
@@ -40,6 +42,28 @@ internal class BitboardUtilsKtTest {
                 r = r and (1L shl Random.nextInt(0, 63))
             }
             val l = squareListNew(r)
+        }
+    }
+
+    @Test
+    @Ignore
+    fun speed3() {
+        for (i in 1..500000000) {
+            var attacks = sequenceOf(Random.nextLong(), Random.nextLong(), Random.nextLong(), Random.nextLong())
+            val n = attacks
+                    .map { Long.bitCount(it and 789) }
+                    .fold(0) { acc, i -> acc + i }
+        }
+    }
+
+    @Test
+    @Ignore
+    fun speed4() {
+        for (i in 1..500000000) {
+            var attacks = sequenceOf(Random.nextLong(), Random.nextLong(), Random.nextLong(), Random.nextLong())
+            var c = 0
+            attacks.forEach { c += Long.bitCount(it and 789) }
+
         }
     }
 }

@@ -35,7 +35,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private val killerMoves: Array<IntArray>
     private val historyMovesSuccess = Array(2) { Array(64) { IntArray(64) } }
     private val historyMovesFail = Array(2) { Array(64) { IntArray(64) } }
-    private val historyPruneMoves = Array(2) { Array(64) { IntArray(64) } }
     private val orderedMoves: Array<IntArray>
     private val searchPath: Array<SearchPath>
 
@@ -828,8 +827,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             historyMovesSuccess[1][i][j] = 0
             historyMovesFail[0][i][j] = 0
             historyMovesFail[1][i][j] = 0
-            historyPruneMoves[0][i][j] = LateMoveReductions.LMR_INITIAL_VALUE.value
-            historyPruneMoves[1][i][j] = LateMoveReductions.LMR_INITIAL_VALUE.value
         }
     }
 
@@ -878,11 +875,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     val nodesPerSecond: Int
         get() {
             val timePassed = searchDuration
-            return if (timePassed == 0L) {
-                0
-            } else {
-                (nodes.toDouble() / timePassed.toDouble() * 1000.0).toInt()
-            }
+            return if (timePassed == 0L) 0 else (nodes.toDouble() / timePassed.toDouble() * 1000.0).toInt()
         }
 
     private fun isDrawnAtRoot(ply: Int): Boolean {
