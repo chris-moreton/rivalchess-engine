@@ -343,9 +343,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun updateHistoryMoves(mover: Colour, move: Int, depthRemaining: Int, success: Boolean) {
         val historyMovesArray = if (success) historyMovesSuccess else historyMovesFail
+        val moverIndex = if (mover == Colour.WHITE) 1 else 0
+        val fromSquare = fromSquare(move)
+        val toSquare = toSquare(move)
         if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive) {
-            historyMovesArray[if (mover == Colour.WHITE) 1 else 0][fromSquare(move)][toSquare(move)] += depthRemaining
-            if (historyMovesArray[if (mover == Colour.WHITE) 1 else 0][fromSquare(move)][toSquare(move)] > SearchConfig.HISTORY_MAX_VALUE.value) {
+            historyMovesArray[moverIndex][fromSquare][toSquare] += depthRemaining
+            if (historyMovesArray[moverIndex][fromSquare][toSquare] > SearchConfig.HISTORY_MAX_VALUE.value) {
                 for (i in 0..1) for (j in 0..63) for (k in 0..63) {
                     if (historyMovesSuccess[i][j][k] > 0) historyMovesSuccess[i][j][k] /= 2
                     if (historyMovesFail[i][j][k] > 0) historyMovesFail[i][j][k] /= 2
@@ -746,7 +749,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun fromSquare(move: Int) = toSquare(move ushr 16)
+    private fun fromSquare(move: Int) = (move ushr 16) and 63
 
     private fun toSquare(move: Int) = move and 63
 

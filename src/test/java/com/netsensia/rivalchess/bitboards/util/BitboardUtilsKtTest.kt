@@ -11,6 +11,7 @@ import kotlin.random.Random
 internal class BitboardUtilsKtTest {
 
     @Test
+    @Ignore
     @ExperimentalStdlibApi
     fun squareListNew() {
         for (i in 1..10000) {
@@ -20,8 +21,8 @@ internal class BitboardUtilsKtTest {
     }
 
     @Test
-    @ExperimentalStdlibApi
     @Ignore
+    @ExperimentalStdlibApi
     fun speed1() {
         for (i in 1..500000000) {
             var r = 0L
@@ -33,8 +34,8 @@ internal class BitboardUtilsKtTest {
     }
 
     @Test
-    @ExperimentalStdlibApi
     @Ignore
+    @ExperimentalStdlibApi
     fun speed2() {
         for (i in 1..500000000) {
             var r = 0L

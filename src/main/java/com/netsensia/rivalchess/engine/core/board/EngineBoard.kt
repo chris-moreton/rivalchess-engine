@@ -116,33 +116,29 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun setCastlePrivileges(board: Board) {
-        castlePrivileges = if (board.isKingSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WK.value else 0
-        castlePrivileges = castlePrivileges or if (board.isQueenSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WQ.value else 0
-        castlePrivileges = castlePrivileges or if (board.isKingSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BK.value else 0
-        castlePrivileges = castlePrivileges or if (board.isQueenSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BQ.value else 0
+        castlePrivileges =
+                if (board.isKingSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WK.value else 0 or
+                if (board.isQueenSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WQ.value else 0 or
+                if (board.isKingSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BK.value else 0 or
+                if (board.isQueenSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BQ.value else 0
     }
 
     fun calculateSupplementaryBitboards() {
+        val white = engineBitboards.getPieceBitboard(BITBOARD_WP) or engineBitboards.getPieceBitboard(BITBOARD_WN) or
+                engineBitboards.getPieceBitboard(BITBOARD_WB) or engineBitboards.getPieceBitboard(BITBOARD_WQ) or
+                engineBitboards.getPieceBitboard(BITBOARD_WK) or engineBitboards.getPieceBitboard(BITBOARD_WR)
+
+        val black = engineBitboards.getPieceBitboard(BITBOARD_BP) or engineBitboards.getPieceBitboard(BITBOARD_BN) or
+                engineBitboards.getPieceBitboard(BITBOARD_BB) or engineBitboards.getPieceBitboard(BITBOARD_BQ) or
+                engineBitboards.getPieceBitboard(BITBOARD_BK) or engineBitboards.getPieceBitboard(BITBOARD_BR)
         if (mover == Colour.WHITE) {
-            engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY,
-                    engineBitboards.getPieceBitboard(BITBOARD_WP) or engineBitboards.getPieceBitboard(BITBOARD_WN) or
-                            engineBitboards.getPieceBitboard(BITBOARD_WB) or engineBitboards.getPieceBitboard(BITBOARD_WQ) or
-                            engineBitboards.getPieceBitboard(BITBOARD_WK) or engineBitboards.getPieceBitboard(BITBOARD_WR))
-            engineBitboards.setPieceBitboard(BITBOARD_ENEMY,
-                    engineBitboards.getPieceBitboard(BITBOARD_BP) or engineBitboards.getPieceBitboard(BITBOARD_BN) or
-                            engineBitboards.getPieceBitboard(BITBOARD_BB) or engineBitboards.getPieceBitboard(BITBOARD_BQ) or
-                            engineBitboards.getPieceBitboard(BITBOARD_BK) or engineBitboards.getPieceBitboard(BITBOARD_BR))
+            engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY, white)
+            engineBitboards.setPieceBitboard(BITBOARD_ENEMY, black)
         } else {
-            engineBitboards.setPieceBitboard(BITBOARD_ENEMY,
-                    engineBitboards.getPieceBitboard(BITBOARD_WP) or engineBitboards.getPieceBitboard(BITBOARD_WN) or
-                            engineBitboards.getPieceBitboard(BITBOARD_WB) or engineBitboards.getPieceBitboard(BITBOARD_WQ) or
-                            engineBitboards.getPieceBitboard(BITBOARD_WK) or engineBitboards.getPieceBitboard(BITBOARD_WR))
-            engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY,
-                    engineBitboards.getPieceBitboard(BITBOARD_BP) or engineBitboards.getPieceBitboard(BITBOARD_BN) or
-                            engineBitboards.getPieceBitboard(BITBOARD_BB) or engineBitboards.getPieceBitboard(BITBOARD_BQ) or
-                            engineBitboards.getPieceBitboard(BITBOARD_BK) or engineBitboards.getPieceBitboard(BITBOARD_BR))
+            engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY, black)
+            engineBitboards.setPieceBitboard(BITBOARD_ENEMY, white)
         }
-        engineBitboards.setPieceBitboard(BITBOARD_ALL, engineBitboards.getPieceBitboard(BITBOARD_FRIENDLY) or engineBitboards.getPieceBitboard(BITBOARD_ENEMY))
+        engineBitboards.setPieceBitboard(BITBOARD_ALL, white or black)
     }
 
     fun wasCapture(): Boolean {

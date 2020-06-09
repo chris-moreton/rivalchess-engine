@@ -28,20 +28,21 @@ fun EngineBoard.unMakeNullMove() {
 @Throws(InvalidMoveException::class)
 fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
     val compactMove = engineMove.compact
-    val moveFrom = (compactMove ushr 16).toByte()
-    val moveTo = (compactMove and 63).toByte()
-    val capturePiece = squareContents[moveTo.toInt()]
-    val movePiece = squareContents[moveFrom.toInt()]
+    val moveFrom = (compactMove ushr 16)
+    val moveTo = (compactMove and 63)
+    val capturePiece = squareContents[moveTo]
+    val movePiece = squareContents[moveFrom]
 
-    val moveDetail = MoveDetail()
-    moveDetail.capturePiece = SquareOccupant.NONE
-    moveDetail.move = compactMove
-    moveDetail.hashValue = boardHashObject.trackedHashValue
-    moveDetail.isOnNullMove = isOnNullMove
-    moveDetail.halfMoveCount = halfMoveCount.toByte()
-    moveDetail.enPassantBitboard = engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE)
-    moveDetail.castlePrivileges = castlePrivileges.toByte()
-    moveDetail.movePiece = movePiece
+    val moveDetail = MoveDetail(
+        capturePiece = SquareOccupant.NONE,
+        move = compactMove,
+        hashValue = boardHashObject.trackedHashValue,
+        isOnNullMove = isOnNullMove,
+        halfMoveCount = halfMoveCount.toByte(),
+        enPassantBitboard = engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE),
+        castlePrivileges = castlePrivileges.toByte(),
+        movePiece = movePiece
+    )
 
     if (moveHistory.size <= numMovesMade) moveHistory.add(moveDetail) else moveHistory[numMovesMade] = moveDetail
 
@@ -50,8 +51,8 @@ fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
     halfMoveCount++
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
     engineBitboards.movePiece(movePiece, compactMove)
-    squareContents[moveFrom.toInt()] = SquareOccupant.NONE
-    squareContents[moveTo.toInt()] = movePiece
+    squareContents[moveFrom] = SquareOccupant.NONE
+    squareContents[moveTo] = movePiece
 
     makeNonTrivialMoveTypeAdjustments(moveFrom, moveTo, compactMove, capturePiece, movePiece)
 
@@ -61,7 +62,10 @@ fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
 
     calculateSupplementaryBitboards()
 
-    if (isCheck(mover.opponent())) unMakeMove().also { return false }
+    if (isCheck(mover.opponent())) {
+        unMakeMove()
+        return false
+    }
 
     return true
 }
@@ -190,7 +194,7 @@ private fun EngineBoard.replaceMovedPiece(fromSquare: Int, fromMask: Long, toMas
 }
 
 @Throws(InvalidMoveException::class)
-private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Byte, moveTo: Byte, compactMove: Int, capturePiece: SquareOccupant, movePiece: SquareOccupant?) {
+private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Int, moveTo: Int, compactMove: Int, capturePiece: SquareOccupant, movePiece: SquareOccupant?) {
     if (mover == Colour.WHITE) {
         if (movePiece == SquareOccupant.WP) makeSpecialWhitePawnMoveAdjustments(compactMove)
         else if (movePiece == SquareOccupant.WR) adjustCastlePrivilegesForWhiteRookMove(moveFrom)
@@ -204,8 +208,8 @@ private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Byte, moveTo
     }
 }
 
-private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece: SquareOccupant, moveTo: Byte) {
-    val toMask = 1L shl moveTo.toInt()
+private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece: SquareOccupant, moveTo: Int) {
+    val toMask = 1L shl moveTo
 
     moveHistory[numMovesMade].capturePiece = capturePiece
     halfMoveCount = 0
@@ -237,8 +241,8 @@ private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
     }
 }
 
-private fun EngineBoard.adjustCastlePrivilegesForBlackRookMove(moveFrom: Byte) {
-    if (moveFrom.toInt() == Square.A8.bitRef) castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value.inv() else if (moveFrom.toInt() == Square.H8.bitRef) castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value.inv()
+private fun EngineBoard.adjustCastlePrivilegesForBlackRookMove(moveFrom: Int) {
+    if (moveFrom == Square.A8.bitRef) castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BQ.value.inv() else if (moveFrom == Square.H8.bitRef) castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BK.value.inv()
 }
 
 @Throws(InvalidMoveException::class)
@@ -279,8 +283,8 @@ private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
     }
 }
 
-private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece: SquareOccupant?, moveTo: Byte) {
-    val toMask = 1L shl moveTo.toInt()
+private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece: SquareOccupant?, moveTo: Int) {
+    val toMask = 1L shl moveTo
     moveHistory[numMovesMade].capturePiece = capturePiece!!
     halfMoveCount = 0
     this.engineBitboards.xorPieceBitboard(capturePiece.index, toMask)
@@ -311,10 +315,10 @@ private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
     }
 }
 
-private fun EngineBoard.adjustCastlePrivilegesForWhiteRookMove(moveFrom: Byte) {
-    if (moveFrom.toInt() == Square.A1.bitRef) {
+private fun EngineBoard.adjustCastlePrivilegesForWhiteRookMove(moveFrom: Int) {
+    if (moveFrom == Square.A1.bitRef) {
         castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_WQ.value.inv()
-    } else if (moveFrom.toInt() == Square.H1.bitRef) {
+    } else if (moveFrom == Square.H1.bitRef) {
         castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_WK.value.inv()
     }
 }

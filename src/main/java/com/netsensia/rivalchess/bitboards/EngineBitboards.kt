@@ -39,10 +39,8 @@ class EngineBitboards {
     fun getPieceBitboard(type: SquareOccupant) = getPieceBitboard(type.index)
 
     fun movePiece(piece: SquareOccupant, compactMove: Int) {
-        val moveFrom = (compactMove ushr 16).toByte()
-        val moveTo = (compactMove and 63).toByte()
-        val fromMask = (1L shl moveFrom.toInt())
-        val toMask = (1L shl moveTo.toInt())
+        val fromMask = (1L shl (compactMove ushr 16))
+        val toMask = (1L shl (compactMove and 63))
         pieceBitboards[piece.index] = pieceBitboards[piece.index] xor (fromMask or toMask)
     }
 

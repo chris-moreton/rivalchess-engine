@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.engine.core.eval.blackPawnAttacks
 import com.netsensia.rivalchess.engine.core.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
+import java.lang.Long.bitCount
 
 tailrec fun southFill(bitboard: Long, shiftBy: Int = 8): Long =
     if (shiftBy == 32) bitboard or (bitboard ushr shiftBy)
@@ -57,17 +58,11 @@ fun squareSeqRec(bitboard: Long): Sequence<Int> = sequence {
     }
 }
 
-inline fun squareList(bitboard: Long): List<Int> {
+fun squareList(bitboard: Long): List<Int> {
     val squares = mutableListOf<Int>()
     var bitboardCopy = bitboard
     while (bitboardCopy != 0L) squares.add(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
     return squares
 }
 
-@ExperimentalStdlibApi
-inline fun squareListNew(bitboard: Long): List<Int> {
-    val squares = mutableListOf<Int>()
-    var bitboardCopy = bitboard
-    while (bitboardCopy != 0L) squares.add(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor bitboardCopy.takeLowestOneBit()})
-    return squares
-}
+fun squareListNew(bitboard: Long) = squareList(bitboard).parallelStream()

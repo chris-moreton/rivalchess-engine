@@ -129,32 +129,32 @@ class MoveGenerator(
         }
     }
 
-    fun generateLegalQuiesceMoves(includeChecks: Boolean): MoveGenerator {
+    fun generateLegalQuiesceMoves(generateChecks: Boolean): MoveGenerator {
         moves = IntArray(Limit.MAX_LEGAL_MOVES.value)
         moveCount = 0
         
         val kingSquare: Int = (if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare).toInt()
         val enemyKingSquare:Int = (if (mover == Colour.WHITE) blackKingSquare else whiteKingSquare).toInt()
-        generateQuiesceKnightMoves(includeChecks,
+        generateQuiesceKnightMoves(generateChecks,
                 enemyKingSquare,
                 knightBitboardForMover())
         addMoves(kingSquare shl 16, kingMoves[kingSquare] and bitboards[BITBOARD_ENEMY])
-        generateQuiescePawnMoves(includeChecks,
+        generateQuiescePawnMoves(generateChecks,
                 if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
                 if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture,
                 enemyKingSquare,
                 pawnBitboardForMover())
 
-        generateQuiesceSliderMoves(includeChecks, enemyKingSquare, MagicBitboards.rookVars, SquareOccupant.WR.index, SquareOccupant.BR.index)
-        generateQuiesceSliderMoves(includeChecks, enemyKingSquare, MagicBitboards.bishopVars, SquareOccupant.WB.index, SquareOccupant.BB.index)
+        generateQuiesceSliderMoves(generateChecks, enemyKingSquare, MagicBitboards.rookVars, SquareOccupant.WR.index, SquareOccupant.BR.index)
+        generateQuiesceSliderMoves(generateChecks, enemyKingSquare, MagicBitboards.bishopVars, SquareOccupant.WB.index, SquareOccupant.BB.index)
 
         moves[moveCount] = 0
         return this
     }
 
-    private fun generateQuiesceKnightMoves(includeChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long) {
+    private fun generateQuiesceKnightMoves(generateChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long) {
         squareList(knightBitboard).forEach {
-            addMoves(it shl 16, knightMoves[it] and if (includeChecks)
+            addMoves(it shl 16, knightMoves[it] and if (generateChecks)
                 bitboards[BITBOARD_ENEMY] or
                         (knightMoves[enemyKingSquare] and bitboards[BITBOARD_FRIENDLY].inv())
                     else bitboards[BITBOARD_ENEMY]
@@ -162,11 +162,11 @@ class MoveGenerator(
         }
     }
 
-    private fun generateQuiescePawnMoves(includeChecks: Boolean, bitboardMaskForwardPawnMoves: List<Long>, bitboardMaskCapturePawnMoves: List<Long>, enemyKingSquare: Int, pawnBitboard: Long) {
+    private fun generateQuiescePawnMoves(generateChecks: Boolean, bitboardMaskForwardPawnMoves: List<Long>, bitboardMaskCapturePawnMoves: List<Long>, enemyKingSquare: Int, pawnBitboard: Long) {
         var bitboardPawnMoves: Long
         squareList(pawnBitboard).forEach {
             bitboardPawnMoves = 0
-            if (includeChecks) {
+            if (generateChecks) {
                 bitboardPawnMoves = pawnForwardMovesBitboard(bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard())
                 bitboardPawnMoves = bitboardPawnMoves and
                         if (mover == Colour.WHITE) blackPawnMovesCapture[enemyKingSquare] else whitePawnMovesCapture[enemyKingSquare]
@@ -178,7 +178,7 @@ class MoveGenerator(
         }
     }
 
-    private fun generateQuiesceSliderMoves(includeChecks: Boolean, enemyKingSquare: Int, magicVars: MagicVars, whiteSliderConstant: Int, blackSliderConstant: Int) {
+    private fun generateQuiesceSliderMoves(generateChecks: Boolean, enemyKingSquare: Int, magicVars: MagicVars, whiteSliderConstant: Int, blackSliderConstant: Int) {
         val checkSquares = magicVars.moves[enemyKingSquare][((bitboards[BITBOARD_ALL] and magicVars.mask[enemyKingSquare]) *
                 magicVars.number[enemyKingSquare] ushr magicVars.shift[enemyKingSquare]).toInt()]
         val pieceBitboard = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(whiteSliderConstant) or
@@ -188,7 +188,7 @@ class MoveGenerator(
             val pieceMoves = magicVars.moves[it][((bitboards[BITBOARD_ALL] and magicVars.mask[it]) *
                     magicVars.number[it] ushr magicVars.shift[it]).toInt()] and bitboards[BITBOARD_FRIENDLY].inv()
             addMoves(it shl 16, pieceMoves and
-                    if (includeChecks) checkSquares or bitboards[BITBOARD_ENEMY]
+                    if (generateChecks) checkSquares or bitboards[BITBOARD_ENEMY]
                     else bitboards[BITBOARD_ENEMY])
         }
     }
