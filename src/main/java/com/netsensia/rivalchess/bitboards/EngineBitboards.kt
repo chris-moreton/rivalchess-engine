@@ -41,16 +41,18 @@ class EngineBitboards {
     fun movePiece(piece: SquareOccupant, compactMove: Int) {
         val moveFrom = (compactMove ushr 16).toByte()
         val moveTo = (compactMove and 63).toByte()
-        val fromMask = 1L shl moveFrom.toInt()
-        val toMask = 1L shl moveTo.toInt()
+        val fromMask = (1L shl moveFrom.toInt())
+        val toMask = (1L shl moveTo.toInt())
         pieceBitboards[piece.index] = pieceBitboards[piece.index] xor (fromMask or toMask)
     }
 
     private fun getRookMovePiecesBitboard(colour: Colour) =
-        if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WR) or getPieceBitboard(BITBOARD_WQ) else getPieceBitboard(BITBOARD_BR) or getPieceBitboard(BITBOARD_BQ)
+        if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WR) or getPieceBitboard(BITBOARD_WQ) else
+            getPieceBitboard(BITBOARD_BR) or getPieceBitboard(BITBOARD_BQ)
 
     private fun getBishopMovePiecesBitboard(colour: Colour) =
-        if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WB) or getPieceBitboard(BITBOARD_WQ) else getPieceBitboard(BITBOARD_BB) or getPieceBitboard(BITBOARD_BQ)
+        if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WB) or getPieceBitboard(BITBOARD_WQ) else
+            getPieceBitboard(BITBOARD_BB) or getPieceBitboard(BITBOARD_BQ)
 
     fun isSquareAttackedBy(attackedSquare: Int, attacker: Colour): Boolean {
         if (pieceBitboards[SquareOccupant.WN.ofColour(attacker).index] and knightMoves[attackedSquare] != 0L ||
