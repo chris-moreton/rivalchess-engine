@@ -1,12 +1,12 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import java.lang.Long
+import java.lang.Long.numberOfTrailingZeros
 
-class KingSquares(private val bitboardData: BitboardData) {
+class KingSquares(bitboardData: BitboardData) {
     val white = whiteKingSquare(bitboardData)
     val black = blackKingSquare(bitboardData)
 }
 
-fun whiteKingSquare(bitboards: BitboardData) = Long.numberOfTrailingZeros(bitboards.whiteKing)
+fun whiteKingSquare(bitboards: BitboardData) = numberOfTrailingZeros(bitboards.whiteKing)
 
-fun blackKingSquare(bitboards: BitboardData) = Long.numberOfTrailingZeros(bitboards.blackKing)
+fun blackKingSquare(bitboards: BitboardData) = numberOfTrailingZeros(bitboards.blackKing)

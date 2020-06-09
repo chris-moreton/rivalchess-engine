@@ -2,7 +2,9 @@ package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.squareList
+import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.Limit
+import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.enums.PromotionPieceMask
 import com.netsensia.rivalchess.model.Colour
@@ -17,6 +19,7 @@ class MoveGenerator(
 ) {
 
     lateinit var moves: IntArray
+    val bitboards = engineBitboards.pieceBitboards
     var moveCount = 0
 
     fun getNumLegalMoves() = moveCount
@@ -51,24 +54,24 @@ class MoveGenerator(
 
     private fun kingSquareForMover() = if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare
 
-    private fun knightBitboardForMover() =
-            if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(BitboardType.WN)
-            else engineBitboards.getPieceBitboard(BitboardType.BN)
+    private fun knightBitboardForMover() = if (mover == Colour.WHITE) bitboards[BITBOARD_WN] else bitboards[BITBOARD_BN]
 
     private fun generateKnightMoves(knightBitboard: Long) {
         squareList(knightBitboard).forEach {
             addMoves(it shl 16, knightMoves[it] and
-                    engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()) }
+                    bitboards[BITBOARD_FRIENDLY].inv()) }
     }
 
     private fun addMoves(fromSquareMask: Int, bitboard: Long) {
         addMoves(fromSquareMask, squareList(bitboard))
     }
 
+    private fun addMoves(fromSquareMask: Int, squares: Sequence<Int>) {
+        squares.forEach {moves[moveCount++] = (fromSquareMask or it) }
+    }
+
     private fun addMoves(fromSquareMask: Int, squares: List<Int>) {
-        squares.forEach {
-            moves[moveCount++] = (fromSquareMask or it)
-        }
+        squares.forEach {moves[moveCount++] = (fromSquareMask or it) }
     }
 
     private fun generateKingMoves(kingSquare: Int) {
@@ -83,7 +86,7 @@ class MoveGenerator(
                     Pair(BLACKKINGSIDECASTLESQUARES, BLACKQUEENSIDECASTLESQUARES))
 
         addMoves(kingSquare shl 16, kingMoves[kingSquare] and
-                engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
+                bitboards[BITBOARD_FRIENDLY].inv())
     }
 
     private fun generateCastleMoves(
@@ -93,19 +96,19 @@ class MoveGenerator(
             privileges: Pair<Int,Int>,
             castleSquares: Pair<Long,Long>
     ) {
-        if ((castlePrivileges and privileges.first).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and castleSquares.first == 0L &&
+        if ((castlePrivileges and privileges.first).toLong() != 0L && bitboards[BITBOARD_ALL] and castleSquares.first == 0L &&
                 !engineBitboards.isSquareAttackedBy(kingStartSquare, opponent) &&
                 !engineBitboards.isSquareAttackedBy(kingStartSquare - 1, opponent)) {
             moves[moveCount++] = (kingStartSquare shl 16 or kingStartSquare - 2)
         }
-        if ((castlePrivileges and privileges.second).toLong() != 0L && engineBitboards.getPieceBitboard(BitboardType.ALL) and castleSquares.second == 0L &&
+        if ((castlePrivileges and privileges.second).toLong() != 0L && bitboards[BITBOARD_ALL] and castleSquares.second == 0L &&
                 !engineBitboards.isSquareAttackedBy(kingStartSquare, opponent) &&
                 !engineBitboards.isSquareAttackedBy(queenStartSquare, opponent)) {
             moves[moveCount++] = (kingStartSquare shl 16 or queenStartSquare + 1)
         }
     }
 
-    private fun emptySquaresBitboard() = engineBitboards.getPieceBitboard(BitboardType.ALL).inv()
+    private fun emptySquaresBitboard() = bitboards[BITBOARD_ALL].inv()
 
     private fun generateSliderMoves(
             whitePiece: SquareOccupant,
@@ -114,15 +117,15 @@ class MoveGenerator(
     ) {
 
         val bitboard: Long = if (mover == Colour.WHITE)
-            engineBitboards.getPieceBitboard(whitePiece) or engineBitboards.getPieceBitboard(BitboardType.WQ) else
-            engineBitboards.getPieceBitboard(blackPiece) or engineBitboards.getPieceBitboard(BitboardType.BQ)
+            bitboards[whitePiece.index] or bitboards[BITBOARD_WQ] else
+            bitboards[blackPiece.index] or bitboards[BITBOARD_BQ]
 
         squareList(bitboard).forEach {
             addMoves(
                     it shl 16,
-                    magicVars.moves[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and magicVars.mask[it]) *
+                    magicVars.moves[it][((bitboards[BITBOARD_ALL] and magicVars.mask[it]) *
                             magicVars.number[it] ushr magicVars.shift[it]).toInt()] and
-                            engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
+                            bitboards[BITBOARD_FRIENDLY].inv())
         }
     }
 
@@ -135,7 +138,7 @@ class MoveGenerator(
         generateQuiesceKnightMoves(includeChecks,
                 enemyKingSquare,
                 knightBitboardForMover())
-        addMoves(kingSquare shl 16, kingMoves[kingSquare] and engineBitboards.getPieceBitboard(BitboardType.ENEMY))
+        addMoves(kingSquare shl 16, kingMoves[kingSquare] and bitboards[BITBOARD_ENEMY])
         generateQuiescePawnMoves(includeChecks,
                 if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
                 if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture,
@@ -152,9 +155,9 @@ class MoveGenerator(
     private fun generateQuiesceKnightMoves(includeChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long) {
         squareList(knightBitboard).forEach {
             addMoves(it shl 16, knightMoves[it] and if (includeChecks)
-                engineBitboards.getPieceBitboard(BitboardType.ENEMY) or
-                        (knightMoves[enemyKingSquare] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv())
-                    else engineBitboards.getPieceBitboard(BitboardType.ENEMY)
+                bitboards[BITBOARD_ENEMY] or
+                        (knightMoves[enemyKingSquare] and bitboards[BITBOARD_FRIENDLY].inv())
+                    else bitboards[BITBOARD_ENEMY]
             )
         }
     }
@@ -164,8 +167,7 @@ class MoveGenerator(
         squareList(pawnBitboard).forEach {
             bitboardPawnMoves = 0
             if (includeChecks) {
-                bitboardPawnMoves = pawnForwardMovesBitboard(
-                        bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard())
+                bitboardPawnMoves = pawnForwardMovesBitboard(bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard())
                 bitboardPawnMoves = if (mover == Colour.WHITE) {
                     bitboardPawnMoves and blackPawnMovesCapture[enemyKingSquare]
                 } else {
@@ -181,18 +183,18 @@ class MoveGenerator(
     }
 
     private fun generateQuiesceSliderMoves(includeChecks: Boolean, enemyKingSquare: Int, magicVars: MagicVars, whiteSliderConstant: Int, blackSliderConstant: Int) {
-        val checkSquares = magicVars.moves[enemyKingSquare][((engineBitboards.getPieceBitboard(BitboardType.ALL) and magicVars.mask[enemyKingSquare]) *
+        val checkSquares = magicVars.moves[enemyKingSquare][((bitboards[BITBOARD_ALL] and magicVars.mask[enemyKingSquare]) *
                 magicVars.number[enemyKingSquare] ushr magicVars.shift[enemyKingSquare]).toInt()]
         val pieceBitboard = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(
-                BitboardType.fromIndex(whiteSliderConstant)) or engineBitboards.getPieceBitboard(BitboardType.WQ) else engineBitboards.getPieceBitboard(
-                BitboardType.fromIndex(blackSliderConstant)) or engineBitboards.getPieceBitboard(BitboardType.BQ)
+                whiteSliderConstant) or bitboards[BITBOARD_WQ] else engineBitboards.getPieceBitboard(
+                blackSliderConstant) or bitboards[BITBOARD_BQ]
 
         squareList(pieceBitboard).forEach {
-            val pieceMoves = magicVars.moves[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and magicVars.mask[it]) *
-                    magicVars.number[it] ushr magicVars.shift[it]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()
+            val pieceMoves = magicVars.moves[it][((bitboards[BITBOARD_ALL] and magicVars.mask[it]) *
+                    magicVars.number[it] ushr magicVars.shift[it]).toInt()] and bitboards[BITBOARD_FRIENDLY].inv()
             addMoves(it shl 16, pieceMoves and
-                    if (includeChecks) checkSquares or engineBitboards.getPieceBitboard(BitboardType.ENEMY)
-                    else engineBitboards.getPieceBitboard(BitboardType.ENEMY))
+                    if (includeChecks) checkSquares or bitboards[BITBOARD_ENEMY]
+                    else bitboards[BITBOARD_ENEMY])
         }
     }
 
@@ -235,17 +237,17 @@ class MoveGenerator(
             if (mover == Colour.WHITE) (bitboardPawnMoves shl 8) and RANK_4 else (bitboardPawnMoves shr 8) and RANK_5
 
     private fun pawnForwardAndCaptureMovesBitboard(bitRef: Int, bitboardMaskCapturePawnMoves: List<Long>, bitboardPawnMoves: Long) =
-            if (engineBitboards.getPieceBitboard(BitboardType.ENPASSANTSQUARE) and enPassantCaptureRank(mover) != 0L)
+            if (bitboards[BITBOARD_ENPASSANTSQUARE] and enPassantCaptureRank(mover) != 0L)
                 bitboardPawnMoves or
-                        pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENEMY) or
-                        pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENPASSANTSQUARE)
+                        pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY) or
+                        pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENPASSANTSQUARE)
             else bitboardPawnMoves or
-                    pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BitboardType.ENEMY)
+                    pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY)
 
-    private fun pawnCaptures(bitboardMaskCapturePawnMoves: List<Long>, bitRef: Int, bitboardType: BitboardType) =
-            (bitboardMaskCapturePawnMoves[bitRef] and engineBitboards.getPieceBitboard(bitboardType))
+    private fun pawnCaptures(bitboardMaskCapturePawnMoves: List<Long>, bitRef: Int, bitboardType: Int) =
+            (bitboardMaskCapturePawnMoves[bitRef] and bitboards[bitboardType])
 
     private fun pawnBitboardForMover() =
-            if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(BitboardType.WP) else engineBitboards.getPieceBitboard(BitboardType.BP)
+            if (mover == Colour.WHITE) bitboards[BITBOARD_WP] else bitboards[BITBOARD_BP]
 
 }

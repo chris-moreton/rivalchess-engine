@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.DARK_SQUARES
 import com.netsensia.rivalchess.bitboards.LIGHT_SQUARES
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
@@ -26,10 +25,10 @@ fun scoreRightWayPositions(
         cornerColour: Colour
 ): Int {
     val offset = if (isWhite) 0 else 6
-    val friendlyPawns = board.getBitboard(BitboardType.fromIndex(SquareOccupant.WP.index + offset))
-    val friendlyRooks = board.getBitboard(BitboardType.fromIndex(SquareOccupant.WR.index + offset))
-    val friendlyKnights = board.getBitboard(BitboardType.fromIndex(SquareOccupant.WN.index + offset))
-    val friendlyBishops = board.getBitboard(BitboardType.fromIndex(SquareOccupant.WB.index + offset))
+    val friendlyPawns = board.getBitboard((SquareOccupant.WP.index + offset))
+    val friendlyRooks = board.getBitboard((SquareOccupant.WR.index + offset))
+    val friendlyKnights = board.getBitboard((SquareOccupant.WN.index + offset))
+    val friendlyBishops = board.getBitboard((SquareOccupant.WB.index + offset))
 
     if (board.allPiecesBitboard and (1L shl rightWaySquares.h1) != 0L ||
             friendlyRooks and (1L shl rightWaySquares.f1) == 0L) {

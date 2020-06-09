@@ -1,8 +1,9 @@
 package com.netsensia.rivalchess.engine.core.search
 
-import com.netsensia.rivalchess.bitboards.BitboardType
 import com.netsensia.rivalchess.bitboards.bitFlippedHorizontalAxis
 import com.netsensia.rivalchess.config.*
+import com.netsensia.rivalchess.engine.core.BITBOARD_ENEMY
+import com.netsensia.rivalchess.engine.core.BITBOARD_ENPASSANTSQUARE
 import com.netsensia.rivalchess.engine.core.FEN_START_POS
 import com.netsensia.rivalchess.engine.core.board.*
 import com.netsensia.rivalchess.engine.core.eval.*
@@ -239,7 +240,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     updateHistoryMoves(board.mover, move, depthRemaining, true)
                     board.unMakeMove()
                     board.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depthRemaining)
-                    updateKillerMoves(board.getBitboard(BitboardType.ENEMY), move, ply, newPath)
+                    updateKillerMoves(board.getBitboard(BITBOARD_ENEMY), move, ply, newPath)
                     return searchPathPly.withPath(move, newPath)
                 }
 
@@ -672,7 +673,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var score = 0
         val toSquare = toSquare(orderedMoves[ply][i])
         val isCapture = board.getSquareOccupant(toSquare) != SquareOccupant.NONE ||
-                (1L shl toSquare and board.getBitboard(BitboardType.ENPASSANTSQUARE) != 0L &&
+                (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
                         board.getSquareOccupant(fromSquare(orderedMoves[ply][i])).piece == Piece.PAWN)
 
         orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])

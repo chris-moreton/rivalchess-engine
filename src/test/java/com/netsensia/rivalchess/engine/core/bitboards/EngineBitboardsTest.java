@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.core.bitboards;
 
 import com.netsensia.rivalchess.bitboards.EngineBitboards;
-import com.netsensia.rivalchess.bitboards.BitboardType;
 import com.netsensia.rivalchess.model.Colour;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.type.EngineMove;
@@ -13,6 +12,8 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 
+import static com.netsensia.rivalchess.engine.core.ConstantsKt.BITBOARD_WB;
+import static com.netsensia.rivalchess.engine.core.ConstantsKt.BITBOARD_WQ;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getBitRefFromBoardRef;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic;
 import static org.junit.Assert.assertEquals;
@@ -23,15 +24,15 @@ public class EngineBitboardsTest {
     
     @Test
     public void testGetAndSetPieceBitboardsByIndex() {
-        bitboards.setPieceBitboard(BitboardType.WQ, 829282L);
-        assertEquals(829282L, bitboards.getPieceBitboard(BitboardType.WQ));
+        bitboards.setPieceBitboard(BITBOARD_WQ, 829282L);
+        assertEquals(829282L, bitboards.getPieceBitboard(BITBOARD_WQ));
     }
 
     @Test
     public void testXorPieceBitboard() {
-        bitboards.setPieceBitboard(BitboardType.WQ, 829282L);
-        bitboards.xorPieceBitboard(BitboardType.WQ, 817222323L);
-        assertEquals(829282L ^ 817222323L, bitboards.getPieceBitboard(BitboardType.WQ));
+        bitboards.setPieceBitboard(BITBOARD_WQ, 829282L);
+        bitboards.xorPieceBitboard(BITBOARD_WQ, 817222323L);
+        assertEquals(829282L ^ 817222323L, bitboards.getPieceBitboard(BITBOARD_WQ));
     }
 
     @Test
@@ -61,10 +62,10 @@ public class EngineBitboardsTest {
 
         final EngineMove engineMove = getEngineMoveFromSimpleAlgebraic("h4d8");
 
-        bitboards.setPieceBitboard(BitboardType.WB, bitboard);
+        bitboards.setPieceBitboard(BITBOARD_WB, bitboard);
         bitboards.movePiece(SquareOccupant.WB, engineMove.compact);
 
-        assertEquals(bitboardExpected, bitboards.getPieceBitboard(BitboardType.WB));
+        assertEquals(bitboardExpected, bitboards.getPieceBitboard(BITBOARD_WB));
     }
 
     @Test
