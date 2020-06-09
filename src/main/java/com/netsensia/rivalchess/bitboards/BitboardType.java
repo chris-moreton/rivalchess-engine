@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.bitboards;
 
+
 public enum BitboardType {
     NONE(-1),
     WP(0),

@@ -11,7 +11,7 @@ import java.util.*
 class EngineBitboards {
     private lateinit var pieceBitboards: LongArray
 
-    val allPieceBitboard: Long
+    private val allPieceBitboard: Long
         get() = getPieceBitboard(BitboardType.ALL)
 
     init {
@@ -39,13 +39,9 @@ class EngineBitboards {
         pieceBitboards[type.index] = bitboard
     }
 
-    fun getPieceBitboard(type: BitboardType): Long {
-        return pieceBitboards[type.index]
-    }
+    fun getPieceBitboard(type: BitboardType) = pieceBitboards[type.index]
 
-    fun getPieceBitboard(type: SquareOccupant): Long {
-        return getPieceBitboard(BitboardType.fromIndex(type.index))
-    }
+    fun getPieceBitboard(type: SquareOccupant) = getPieceBitboard(BitboardType.fromIndex(type.index))
 
     fun movePiece(piece: SquareOccupant, compactMove: Int) {
         val moveFrom = (compactMove ushr 16).toByte()

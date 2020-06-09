@@ -39,11 +39,11 @@ public class SearchHashTest extends TestCase {
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b8c6"));
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("g1f3"));
 
-        assertFalse(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
+        assertFalse(SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
 
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("g8f6"));
 
-        assertTrue(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
+        assertTrue(SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
 
         // gets correct move from use height hash table
         assertEquals(ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
@@ -56,7 +56,7 @@ public class SearchHashTest extends TestCase {
                         boardHash.getHashIndex(engineBoard) + HashIndex.MOVE.getIndex()));
 
         // entry does not have enough height
-        assertFalse(SearchHashKt.isHeightHashTableEntryValid(5, engineBoard));
+        assertFalse(SearchHashKt.isHeightHashTableEntryValid(5, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
 
         // try to store another move with lower height
         boardHash.storeHashMove(
@@ -90,12 +90,12 @@ public class SearchHashTest extends TestCase {
 
         for (int i = 0; i < SearchConfig.MAXIMUM_HASH_AGE.getValue(); i++) {
             boardHash.incVersion();
-            assertTrue(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
+            assertTrue(SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
         }
 
         boardHash.incVersion();
         // Hash table is too old
-        assertFalse(SearchHashKt.isHeightHashTableEntryValid(2, engineBoard));
+        assertFalse(SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
 
     }
 

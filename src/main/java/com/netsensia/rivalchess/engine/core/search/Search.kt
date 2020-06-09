@@ -381,12 +381,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     adjustScoreForMateDepth(it)
                 }
 
-    fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
+    private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
         val boardHash = board.boardHashObject
         var hashMove = 0
         val hashIndex = board.boardHashObject.getHashIndex(board)
 
-        if (FeatureFlag.USE_HEIGHT_REPLACE_HASH.isActive && isHeightHashTableEntryValid(depthRemaining, board)) {
+        if (FeatureFlag.USE_HEIGHT_REPLACE_HASH.isActive && isHeightHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
             hashMove = boardHash.useHeight(hashIndex + HashIndex.MOVE.index)
             val flag = boardHash.useHeight(hashIndex + HashIndex.FLAG.index)
@@ -394,7 +394,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
         }
 
-        if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, board)) {
+        if (FeatureFlag.USE_ALWAYS_REPLACE_HASH.isActive && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             hashMove = boardHash.ignoreHeight(hashIndex + HashIndex.MOVE.index)
             val flag = boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index)
             val score = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)

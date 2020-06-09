@@ -19,13 +19,9 @@ class BoardHash {
     private lateinit var hashTableIgnoreHeight: IntArray
     private var maxHashEntries = 0
     private var lastHashSizeCreated = 0
-    fun useHeight(index: Int): Int {
-        return hashTableUseHeight[index]
-    }
 
-    fun ignoreHeight(index: Int): Int {
-        return hashTableIgnoreHeight[index]
-    }
+    fun useHeight(index: Int) = hashTableUseHeight[index]
+    fun ignoreHeight(index: Int) = hashTableIgnoreHeight[index]
 
     fun setHashTableUseHeightVersion(index: Int, value: Int) {
         hashTableUseHeight[index + HashIndex.VERSION.index] = value

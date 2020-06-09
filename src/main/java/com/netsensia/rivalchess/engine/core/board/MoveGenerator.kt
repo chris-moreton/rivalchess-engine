@@ -190,11 +190,9 @@ class MoveGenerator(
         squareList(pieceBitboard).forEach {
             val pieceMoves = magicVars.moves[it][((engineBitboards.getPieceBitboard(BitboardType.ALL) and magicVars.mask[it]) *
                     magicVars.number[it] ushr magicVars.shift[it]).toInt()] and engineBitboards.getPieceBitboard(BitboardType.FRIENDLY).inv()
-            if (includeChecks) {
-                addMoves(it shl 16, pieceMoves and (checkSquares or engineBitboards.getPieceBitboard(BitboardType.ENEMY)))
-            } else {
-                addMoves(it shl 16, pieceMoves and engineBitboards.getPieceBitboard(BitboardType.ENEMY))
-            }
+            addMoves(it shl 16, pieceMoves and
+                    if (includeChecks) checkSquares or engineBitboards.getPieceBitboard(BitboardType.ENEMY)
+                    else engineBitboards.getPieceBitboard(BitboardType.ENEMY))
         }
     }
 
