@@ -44,13 +44,6 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long) =
             MagicBitboards.magicNumberRook[pieceSquare] ushr
             MagicBitboards.magicNumberShiftsRook[pieceSquare]).toInt()
 
-fun squareList(bitboard: Long): List<Int> {
-    val squares = mutableListOf<Int>()
-    var bitboardCopy = bitboard
-    while (bitboardCopy != 0L) squares.add(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
-    return squares
-}
-
 fun squareSequence(bitboard: Long) = sequence {
     var bitboardCopy = bitboard
     while (bitboardCopy != 0L) yield(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
@@ -62,4 +55,19 @@ fun squareSeqRec(bitboard: Long): Sequence<Int> = sequence {
         yield(square)
         yieldAll(squareSeqRec(bitboard xor (1L shl square)))
     }
+}
+
+inline fun squareList(bitboard: Long): List<Int> {
+    val squares = mutableListOf<Int>()
+    var bitboardCopy = bitboard
+    while (bitboardCopy != 0L) squares.add(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
+    return squares
+}
+
+@ExperimentalStdlibApi
+inline fun squareListNew(bitboard: Long): List<Int> {
+    val squares = mutableListOf<Int>()
+    var bitboardCopy = bitboard
+    while (bitboardCopy != 0L) squares.add(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor bitboardCopy.takeLowestOneBit()})
+    return squares
 }
