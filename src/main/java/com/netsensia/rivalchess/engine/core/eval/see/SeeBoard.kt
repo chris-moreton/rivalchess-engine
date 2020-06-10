@@ -3,33 +3,28 @@ package com.netsensia.rivalchess.engine.core.eval.see
 import com.netsensia.rivalchess.bitboards.blackPawnMovesCapture
 import com.netsensia.rivalchess.bitboards.kingMoves
 import com.netsensia.rivalchess.bitboards.knightMoves
-import com.netsensia.rivalchess.bitboards.util.getPawnMovesCaptureOfColour
 import com.netsensia.rivalchess.bitboards.util.squareSequence
 import com.netsensia.rivalchess.bitboards.whitePawnMovesCapture
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.engine.core.board.getFen
-import java.lang.Long.numberOfTrailingZeros
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.enums.PromotionPieceMask
-import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.Piece
-import com.netsensia.rivalchess.model.SquareOccupant
+import com.netsensia.rivalchess.model.*
+import com.netsensia.rivalchess.model.exception.EnumConversionException
 
 class SeeBoard(board: EngineBoard) {
     val bitboardMap: MutableMap<Int, Long> = mutableMapOf()
-    private val lastBitboardMap: MutableMap<Int, Long> = mutableMapOf()
+    private val bitboardMapHistory: MutableMap<Int, MutableMap<Int, Long>> = mutableMapOf()
     private val whiteList = listOf(BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR)
     private val blackList = listOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
-    var lastFromBit: Long = 0
-    var lastToBit: Long = 0
+
     var mover: Colour
-    var lastEnPassantBitboard: Long = 0
-    val board: EngineBoard
+    val board: EngineBoard = board
+    var movePointer = 0
 
     init {
-        this.board = board
         whiteList.forEach { bitboardMap.put(it, board.engineBitboards.getPieceBitboard(it)) }
         blackList.forEach { bitboardMap.put(it, board.engineBitboards.getPieceBitboard(it)) }
         bitboardMap.put(BITBOARD_ENPASSANTSQUARE, board.engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE))
@@ -37,21 +32,20 @@ class SeeBoard(board: EngineBoard) {
     }
 
     fun makeMove(move: EngineMove): Boolean {
-        lastBitboardMap.clear()
-        lastBitboardMap.putAll(bitboardMap)
+        bitboardMapHistory.put(movePointer, HashMap(bitboardMap))
+        movePointer ++
 
-        lastFromBit = 1L shl move.from()
-        lastToBit = 1L shl move.to()
-        lastEnPassantBitboard = bitboardMap[BITBOARD_ENPASSANTSQUARE]!!
+        val fromBit = 1L shl move.from()
+        val toBit = 1L shl move.to()
 
-        val movedPieceBitboardType = removeFromRelevantBitboard(lastFromBit, if (mover == Colour.BLACK) blackList else whiteList)
+        val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackList else whiteList)
         require(movedPieceBitboardType != BITBOARD_NONE) { "" + move.from() + "-" + move.to() + " on board " + board.getFen() }
-        val capturedPieceBitboardType = removeFromRelevantBitboard(lastToBit, if (mover == Colour.WHITE) blackList else whiteList)
-        togglePiece(lastToBit, movedPieceBitboardType)
+        val capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.WHITE) blackList else whiteList)
+        togglePiece(toBit, movedPieceBitboardType)
 
         if (mover == Colour.WHITE) {
             if (movedPieceBitboardType == BITBOARD_WP && move.to() - move.from() == 16) {
-                bitboardMap[BITBOARD_ENPASSANTSQUARE] = lastToBit shr 8
+                bitboardMap[BITBOARD_ENPASSANTSQUARE] = toBit shr 8
             } else {
                 bitboardMap[BITBOARD_ENPASSANTSQUARE] = 0
             }
@@ -61,7 +55,7 @@ class SeeBoard(board: EngineBoard) {
             }
         } else {
             if (movedPieceBitboardType == BITBOARD_BP && move.from() - move.to() == 16) {
-                bitboardMap[BITBOARD_ENPASSANTSQUARE] = lastToBit shl 8
+                bitboardMap[BITBOARD_ENPASSANTSQUARE] = toBit shl 8
             } else {
                 bitboardMap[BITBOARD_ENPASSANTSQUARE] = 0
             }
@@ -76,7 +70,7 @@ class SeeBoard(board: EngineBoard) {
                 if ((move.to() - move.from()) % 2 != 0) {
                     togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
                 }
-            } else {
+            } else if (movedPieceBitboardType == BITBOARD_BP) {
                 if ((move.to() - move.from()) % 2 != 0) {
                     togglePiece(1L shl (move.to() - 8), BITBOARD_WP)
                 }
@@ -85,22 +79,8 @@ class SeeBoard(board: EngineBoard) {
 
         mover = mover.opponent()
 
-        if (isCheck(mover.opponent())) {
-            unMakeMove()
-            return false
-        }
-
         return true
     }
-
-    private fun isCheck(colour: Colour) =
-            if (colour == Colour.WHITE) isSquareAttackedBy(numberOfTrailingZeros(bitboardMap[BITBOARD_WK]!!), Colour.BLACK)
-            else isSquareAttackedBy(numberOfTrailingZeros(bitboardMap[BITBOARD_BK]!!), Colour.WHITE)
-
-    private fun isSquareAttackedBy(attackedSquare: Int, attacker: Colour) =
-            bitboardMap[SquareOccupant.WN.ofColour(attacker).index]!! and knightMoves[attackedSquare] != 0L ||
-                    bitboardMap[SquareOccupant.WK.ofColour(attacker).index]!! and kingMoves[attackedSquare] != 0L ||
-                    (bitboardMap[SquareOccupant.WP.ofColour(attacker).index]!! and getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L
 
     private fun removePieceIfExistsInBitboard(squareBit: Long, bitboardType: Int): Boolean {
         val pieceBitboard = bitboardMap[bitboardType]!!
@@ -121,19 +101,22 @@ class SeeBoard(board: EngineBoard) {
     }
 
     fun unMakeMove() {
+        movePointer--
         bitboardMap.clear()
-        bitboardMap.putAll(lastBitboardMap)
+        bitboardMap.putAll(bitboardMapHistory[movePointer]!!)
         mover = mover.opponent()
     }
 
     val whitePieceValues: Int
-        get() = java.lang.Long.bitCount(bitboardMap[BITBOARD_WN]!!) * pieceValue(Piece.KNIGHT) +
+        get() = java.lang.Long.bitCount(bitboardMap[BITBOARD_WK]!!) * pieceValue(Piece.KING) +
+                java.lang.Long.bitCount(bitboardMap[BITBOARD_WN]!!) * pieceValue(Piece.KNIGHT) +
                 java.lang.Long.bitCount(bitboardMap[BITBOARD_WR]!!) * pieceValue(Piece.ROOK) +
                 java.lang.Long.bitCount(bitboardMap[BITBOARD_WB]!!) * pieceValue(Piece.BISHOP) +
                 java.lang.Long.bitCount(bitboardMap[BITBOARD_WQ]!!) * pieceValue(Piece.QUEEN)
 
     val blackPieceValues: Int
-        get() = java.lang.Long.bitCount(bitboardMap[BITBOARD_BN]!!) * pieceValue(Piece.KNIGHT) +
+        get() = java.lang.Long.bitCount(bitboardMap[BITBOARD_BK]!!) * pieceValue(Piece.KING) +
+                java.lang.Long.bitCount(bitboardMap[BITBOARD_BN]!!) * pieceValue(Piece.KNIGHT) +
                 java.lang.Long.bitCount(bitboardMap[BITBOARD_BR]!!) * pieceValue(Piece.ROOK) +
                 java.lang.Long.bitCount(bitboardMap[BITBOARD_BB]!!) * pieceValue(Piece.BISHOP) +
                 java.lang.Long.bitCount(bitboardMap[BITBOARD_BQ]!!) * pieceValue(Piece.QUEEN)
@@ -155,15 +138,11 @@ class SeeBoard(board: EngineBoard) {
         val pawnCaptureMoves = if (mover == Colour.WHITE) blackPawnMovesCapture[square] else whitePawnMovesCapture[square]
         squareSequence(pawnCaptureMoves and pawnLocations).forEach {
             if (square >= 56 || square <= 7) {
-                yield(EngineMove(((it shl 16) or square) and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value))
+                yield(EngineMove(((it shl 16) or square) or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value))
             } else {
                 yield(EngineMove((it shl 16) or square))
             }
         }
-
-        val sideSquares = listOf(0,1,2,3,4,5,6,7,8,15,16,23,24,31,32,39,40,47,48,56,57,58,59,60,61,62,63)
-        val rookDirs = listOf(1,-1,8,-8)
-        val bishopDirs = listOf(7,-7,9,-9)
 
         val bishopLocations = bitboardMap[if (mover == Colour.WHITE) BITBOARD_WB else BITBOARD_BB]!! or
                 bitboardMap[if (mover == Colour.WHITE) BITBOARD_WQ else BITBOARD_BQ]!!
@@ -183,32 +162,40 @@ class SeeBoard(board: EngineBoard) {
                 bitboardMap[BITBOARD_WK]!! or
                 bitboardMap[BITBOARD_BK]!!
 
-        rookDirs.forEach() {
-            var sq = square
+        listOf(Pair(1,0), Pair(0,1), Pair(0,-1), Pair(-1,0)).forEach {
+            var sq = Square.fromBitRef(square)
             var done = false
             do {
-                sq += it
-                if ((rookLocations and (1L shl sq)) != 0L) {
-                    done = true
-                    yield(EngineMove((sq shl 16) or square))
-                } else if ((allLocations xor rookLocations) and (1L shl sq) != 0L) {
+                try {
+                    sq = Square.fromCoords(sq.xFile + it.first, sq.yRank + it.second)
+                    if ((rookLocations and (1L shl sq.bitRef)) != 0L) {
+                        done = true
+                        yield(EngineMove(Move(sq, Square.fromBitRef(square))))
+                    } else if ((allLocations xor rookLocations) and (1L shl sq.bitRef) != 0L) {
+                        done = true
+                    }
+                } catch (e: EnumConversionException) {
                     done = true
                 }
-            } while ((sq !in sideSquares) and !done)
+            } while (!done)
         }
 
-        bishopDirs.forEach() {
-            var sq = square
+        listOf(Pair(1,1), Pair(-1,1), Pair(1,-1), Pair(-1,-1)).forEach {
+            var sq = Square.fromBitRef(square)
             var done = false
             do {
-                sq += it
-                if (bishopLocations and (1L shl sq) != 0L) {
-                    done = true
-                    yield(EngineMove((sq shl 16) or square))
-                } else if ((allLocations xor bishopLocations) and (1L shl sq) != 0L) {
+                try {
+                    sq = Square.fromCoords(sq.xFile + it.first, sq.yRank + it.second)
+                    if ((bishopLocations and (1L shl sq.bitRef)) != 0L) {
+                        done = true
+                        yield(EngineMove(Move(sq, Square.fromBitRef(square))))
+                    } else if ((allLocations xor rookLocations) and (1L shl sq.bitRef) != 0L) {
+                        done = true
+                    }
+                } catch (e: EnumConversionException) {
                     done = true
                 }
-            } while ((sq !in sideSquares) and !done)
+            } while (!done)
         }
 
     }

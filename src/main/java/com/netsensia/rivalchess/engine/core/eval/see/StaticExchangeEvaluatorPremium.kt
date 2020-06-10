@@ -11,9 +11,9 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
     override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
         val captureSquare = move.compact and 63
 
-        println(board.getFen())
+        //println(board.getFen())
         if (board.makeMove(move)) {
-            println("" + move.from() + "-" + move.to())
+            //println("seeSearchTop: " + move.from() + "-" + move.to())
             val seeBoard = SeeBoard(board)
             val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
             val seeValue = -seeSearch(seeBoard, captureSquare) - materialBalance
@@ -29,12 +29,11 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
         var bestScore = materialBalanceFromMoverPerspective(seeBoard)
 
         for (move in seeBoard.generateCaptureMovesOnSquare(captureSquare)) {
-            if (seeBoard.makeMove(move)) {
-                println("" + move.from() + "-" + move.to())
-                val seeScore = -seeSearch(seeBoard, captureSquare)
-                seeBoard.unMakeMove()
-                bestScore = seeScore.coerceAtLeast(bestScore)
-            }
+            seeBoard.makeMove(move)
+            //println("seeSearch: " + move.from() + "-" + move.to())
+            val seeScore = -seeSearch(seeBoard, captureSquare)
+            seeBoard.unMakeMove()
+            bestScore = seeScore.coerceAtLeast(bestScore)
         }
 
         return bestScore
@@ -45,10 +44,4 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
             (seeBoard.whitePawnValues + seeBoard.whitePieceValues - (seeBoard.blackPawnValues + seeBoard.blackPieceValues)) else
             (seeBoard.blackPawnValues + seeBoard.blackPieceValues - (seeBoard.whitePawnValues + seeBoard.whitePieceValues))
 
-    private fun getCaptureMovesOnSquare(board: EngineBoard, captureSquare: Int) = sequence {
-        for (move in board.moveGenerator().generateLegalQuiesceMoves(false).getMoveArray()) {
-                    if (move == 0) break
-                    if (move and 63 == captureSquare) yield(EngineMove(move))
-                }
-    }
 }

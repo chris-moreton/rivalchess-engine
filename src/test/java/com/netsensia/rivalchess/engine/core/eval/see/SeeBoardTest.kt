@@ -65,7 +65,38 @@ internal class SeeBoardTest {
         assertTrue(moves.contains(EngineMove(Move(Square.H8, Square.G7))))
         assertTrue(seeBoard.makeMove(EngineMove(Move(Square.E5, Square.G7))))
         seeBoard.unMakeMove()
-        assertFalse(seeBoard.makeMove(EngineMove(Move(Square.H8, Square.G7))))
+        assertTrue(seeBoard.makeMove(EngineMove(Move(Square.H8, Square.G7))))
+    }
+
+    @Test
+    fun moveGenerationFromComplexPosition3() {
+        val engineBoard = EngineBoard(getBoardModel("2r1r2k/pp2qpp1/1nn1b2p/3pN3/2pP4/2P3Q1/PPB4P/R3R1K1 w - - 1 6"))
+        val seeBoard = SeeBoard(engineBoard)
+        val moves = seeBoard.generateCaptureMovesOnSquare(59).toList()
+        assertEquals(0, moves.size)
+    }
+
+    @Test
+    fun moveGenerationFromComplexPosition4() {
+        val engineBoard = EngineBoard(getBoardModel("2rrq2k/pp3pp1/1nn1b1Bp/3pN3/2pP4/2P3Q1/PP5P/R4RK1 w - - 0 3"))
+        val seeBoard = SeeBoard(engineBoard)
+        var moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
+        assertEquals(3, moves.size)
+        assertTrue(seeBoard.makeMove(EngineMove(Move(Square.E5, Square.F7))))
+        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
+        assertEquals(2, moves.size)
+        assertTrue(seeBoard.makeMove(EngineMove(Move(Square.E6, Square.F7))))
+        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
+        assertEquals(2, moves.size)
+        assertTrue(seeBoard.makeMove(EngineMove(Move(Square.F1, Square.F7))))
+        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
+        assertEquals(1, moves.size)
+        assertTrue(seeBoard.makeMove(EngineMove(Move(Square.E8, Square.F7))))
+        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
+        assertEquals(1, moves.size)
+        assertTrue(seeBoard.makeMove(EngineMove(Move(Square.G6, Square.F7))))
+        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
+        assertEquals(0, moves.size)
     }
 
     private fun makeMove(board: EngineBoard, seeBoard: SeeBoard, moveString: String) {
