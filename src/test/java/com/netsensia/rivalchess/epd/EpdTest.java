@@ -149,6 +149,7 @@ public class EpdTest {
         boolean processTests = false;
 
         for (EpdItem epdItem : epdReader) {
+            System.out.println(epdItem.getId());
             processTests = processTests || (epdItem.getId().equals(startAtId));
             if (processTests && (RECALCULATE_FAILURES || expectedToPass != failingPositions.contains(epdItem.getId()))) {
                 testPosition(epdItem, expectedToPass);
