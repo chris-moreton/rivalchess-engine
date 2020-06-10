@@ -10,9 +10,11 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
     @Throws(InvalidMoveException::class)
     override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
         val captureSquare = move.compact and 63
-        val materialBalance = materialBalanceFromMoverPerspective(board)
+        val seeBoard = SeeBoard(board)
+        val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
+
         if (board.makeMove(move)) {
-            val seeValue = -seeSearch(board, captureSquare) - materialBalance
+            val seeValue = -seeSearch(seeBoard, captureSquare) - materialBalance
             board.unMakeMove()
             return seeValue
         }
@@ -20,14 +22,14 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
     }
 
     @Throws(InvalidMoveException::class)
-    fun seeSearch(board: EngineBoard, captureSquare: Int): Int {
+    fun seeSearch(seeBoard: SeeBoard, captureSquare: Int): Int {
 
-        var bestScore = materialBalanceFromMoverPerspective(board)
+        var bestScore = materialBalanceFromMoverPerspective(seeBoard)
 
-        for (move in getCaptureMovesOnSquare(board, captureSquare)) {
-            if (board.makeMove(move)) {
-                val seeScore = -seeSearch(board, captureSquare)
-                board.unMakeMove()
+        for (move in seeBoard.generateCaptureMovesOnSquare(captureSquare)) {
+            if (seeBoard.makeMove(move)) {
+                val seeScore = -seeSearch(seeBoard, captureSquare)
+                seeBoard.unMakeMove()
                 bestScore = seeScore.coerceAtLeast(bestScore)
             }
         }
@@ -35,10 +37,10 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
         return bestScore
     }
 
-    private fun materialBalanceFromMoverPerspective(board: EngineBoard) =
-        if (board.mover == Colour.WHITE)
-            (board.whitePawnValues + board.whitePieceValues - (board.blackPawnValues + board.blackPieceValues)) else
-            (board.blackPawnValues + board.blackPieceValues - (board.whitePawnValues + board.whitePieceValues))
+    private fun materialBalanceFromMoverPerspective(seeBoard: SeeBoard) =
+        if (seeBoard.mover == Colour.WHITE)
+            (seeBoard.whitePawnValues + seeBoard.whitePieceValues - (seeBoard.blackPawnValues + seeBoard.blackPieceValues)) else
+            (seeBoard.blackPawnValues + seeBoard.blackPieceValues - (seeBoard.whitePawnValues + seeBoard.whitePieceValues))
 
     private fun getCaptureMovesOnSquare(board: EngineBoard, captureSquare: Int) = sequence {
         for (move in board.moveGenerator().generateLegalQuiesceMoves(false).getMoveArray()) {
