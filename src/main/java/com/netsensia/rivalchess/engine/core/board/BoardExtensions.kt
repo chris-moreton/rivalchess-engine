@@ -4,7 +4,7 @@ import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.engine.core.BITBOARD_ENEMY
 import com.netsensia.rivalchess.engine.core.BITBOARD_ENPASSANTSQUARE
 import com.netsensia.rivalchess.engine.core.BITBOARD_FRIENDLY
-import com.netsensia.rivalchess.engine.core.eval.StaticExchangeEvaluator
+import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.core.eval.onlyOneBitSet
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
 import com.netsensia.rivalchess.engine.core.type.EngineMove

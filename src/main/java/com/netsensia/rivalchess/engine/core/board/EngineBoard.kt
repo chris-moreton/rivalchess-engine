@@ -116,10 +116,10 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun setCastlePrivileges(board: Board) {
-        castlePrivileges = if (board.isKingSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WK.value else 0
-        castlePrivileges = castlePrivileges or if (board.isQueenSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WQ.value else 0
-        castlePrivileges = castlePrivileges or if (board.isKingSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BK.value else 0
-        castlePrivileges = castlePrivileges or if (board.isQueenSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BQ.value else 0
+        castlePrivileges = (if (board.isKingSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WK.value else 0) or
+                (if (board.isQueenSideCastleAvailable(Colour.WHITE)) CastleBitMask.CASTLEPRIV_WQ.value else 0) or
+                (if (board.isKingSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BK.value else 0) or
+                                if (board.isQueenSideCastleAvailable(Colour.BLACK)) CastleBitMask.CASTLEPRIV_BQ.value else 0
     }
 
     fun calculateSupplementaryBitboards() {
@@ -130,6 +130,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         val black = engineBitboards.getPieceBitboard(BITBOARD_BP) or engineBitboards.getPieceBitboard(BITBOARD_BN) or
                 engineBitboards.getPieceBitboard(BITBOARD_BB) or engineBitboards.getPieceBitboard(BITBOARD_BQ) or
                 engineBitboards.getPieceBitboard(BITBOARD_BK) or engineBitboards.getPieceBitboard(BITBOARD_BR)
+
         if (mover == Colour.WHITE) {
             engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY, white)
             engineBitboards.setPieceBitboard(BITBOARD_ENEMY, black)

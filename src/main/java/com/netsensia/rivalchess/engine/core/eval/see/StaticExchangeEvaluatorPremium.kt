@@ -1,8 +1,6 @@
-package com.netsensia.rivalchess.engine.core.eval
+package com.netsensia.rivalchess.engine.core.eval.see
 
-import com.netsensia.rivalchess.engine.core.board.EngineBoard
-import com.netsensia.rivalchess.engine.core.board.makeMove
-import com.netsensia.rivalchess.engine.core.board.unMakeMove
+import com.netsensia.rivalchess.engine.core.board.*
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour

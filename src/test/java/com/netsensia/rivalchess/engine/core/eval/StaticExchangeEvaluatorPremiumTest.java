@@ -1,5 +1,7 @@
 package com.netsensia.rivalchess.engine.core.eval;
 
+import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluator;
+import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluatorPremium;
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.exception.IllegalFenException;

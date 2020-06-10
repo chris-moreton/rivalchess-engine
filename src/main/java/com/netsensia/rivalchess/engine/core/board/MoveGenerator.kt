@@ -232,12 +232,13 @@ class MoveGenerator(
             if (mover == Colour.WHITE) (bitboardPawnMoves shl 8) and RANK_4 else (bitboardPawnMoves shr 8) and RANK_5
 
     private fun pawnForwardAndCaptureMovesBitboard(bitRef: Int, bitboardMaskCapturePawnMoves: List<Long>, bitboardPawnMoves: Long) =
-            if (bitboards[BITBOARD_ENPASSANTSQUARE] and enPassantCaptureRank(mover) != 0L)
-                bitboardPawnMoves or
-                        pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY) or
-                        pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENPASSANTSQUARE)
-            else bitboardPawnMoves or
-                    pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY)
+            bitboardPawnMoves or if (bitboards[BITBOARD_ENPASSANTSQUARE] and enPassantCaptureRank(mover) != 0L)
+                pawnCapturesPlusEnPassantSquare(bitboardMaskCapturePawnMoves, bitRef)
+            else pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY)
+
+    private fun pawnCapturesPlusEnPassantSquare(bitboardMaskCapturePawnMoves: List<Long>, bitRef: Int) =
+            pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY) or
+                    pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENPASSANTSQUARE)
 
     private fun pawnCaptures(bitboardMaskCapturePawnMoves: List<Long>, bitRef: Int, bitboardType: Int) =
             (bitboardMaskCapturePawnMoves[bitRef] and bitboards[bitboardType])
