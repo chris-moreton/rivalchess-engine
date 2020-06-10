@@ -25,4 +25,9 @@ class EngineMove {
         val promotionPart = if (promotionPiece == SquareOccupant.NONE) 0 else fromPiece(promotionPiece.piece).value
         compact = to + (from shl 16) + (promotionPart shl 32)
     }
+
+    override fun equals(other: Any?): Boolean {
+        other as EngineMove
+        return this.compact == other.compact
+    }
 }
