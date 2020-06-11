@@ -166,17 +166,19 @@ class SeeBoard(board: EngineBoard) {
             var sq = Square.fromBitRef(square)
             var done = false
             do {
-                try {
-                    sq = Square.fromCoords(sq.xFile + it.first, sq.yRank + it.second)
+                val newX = sq.xFile + it.first
+                val newY = sq.yRank + it.second
+                done = newX < 0 || newX > 7 || newY < 0 || newY > 7
+                if (!done) {
+                    sq = Square.fromCoords(newX, newY)
                     if ((rookLocations and (1L shl sq.bitRef)) != 0L) {
                         done = true
                         yield(EngineMove(Move(sq, Square.fromBitRef(square))))
-                    } else if ((allLocations xor rookLocations) and (1L shl sq.bitRef) != 0L) {
+                    } else if (allLocations and (1L shl sq.bitRef) != 0L) {
                         done = true
                     }
-                } catch (e: EnumConversionException) {
-                    done = true
                 }
+
             } while (!done)
         }
 
@@ -184,16 +186,17 @@ class SeeBoard(board: EngineBoard) {
             var sq = Square.fromBitRef(square)
             var done = false
             do {
-                try {
-                    sq = Square.fromCoords(sq.xFile + it.first, sq.yRank + it.second)
+                val newX = sq.xFile + it.first
+                val newY = sq.yRank + it.second
+                done = newX < 0 || newX > 7 || newY < 0 || newY > 7
+                if (!done) {
+                    sq = Square.fromCoords(newX, newY)
                     if ((bishopLocations and (1L shl sq.bitRef)) != 0L) {
                         done = true
                         yield(EngineMove(Move(sq, Square.fromBitRef(square))))
-                    } else if ((allLocations xor rookLocations) and (1L shl sq.bitRef) != 0L) {
+                    } else if (allLocations and (1L shl sq.bitRef) != 0L) {
                         done = true
                     }
-                } catch (e: EnumConversionException) {
-                    done = true
                 }
             } while (!done)
         }

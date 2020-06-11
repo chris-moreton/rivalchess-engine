@@ -99,18 +99,40 @@ internal class SeeBoardTest {
         assertEquals(0, moves.size)
     }
 
+    @Test
+    fun moveGenerationFromComplexPosition5() {
+        val engineBoard = EngineBoard(getBoardModel("2rr3k/pp3pp1/1nn1bN1p/3p4/3P4/2PQ4/PPB4q/R4RK1 w - - 0 3"))
+        val seeBoard = SeeBoard(engineBoard)
+        val moves = seeBoard.generateCaptureMovesOnSquare(8).toList()
+        assertEquals(1, moves.size)
+    }
+
+    @Test
+    fun moveGenerationFromComplexPosition6() {
+        val engineBoard = EngineBoard(getBoardModel("2rr3k/pp3pp1/1n1qbN1p/3pn3/2pP1R2/2P3Q1/PPB4P/R5K1 w - - 0 2"))
+        val seeBoard = SeeBoard(engineBoard)
+        val moves = seeBoard.generateCaptureMovesOnSquare(35).toList()
+        assertEquals(1, moves.size)
+    }
+
     private fun makeMove(board: EngineBoard, seeBoard: SeeBoard, moveString: String) {
         var move: EngineMove
 
         board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
         seeBoard.makeMove(move)
         assertPieceBitboardsMatch(board, seeBoard)
+        assertEquals(board.mover, seeBoard.mover)
+
         board.unMakeMove()
         seeBoard.unMakeMove()
         assertPieceBitboardsMatch(board, seeBoard)
+        assertEquals(board.mover, seeBoard.mover)
 
         board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
         seeBoard.makeMove(move)
+        assertEquals(board.mover, seeBoard.mover)
+
+
     }
 
     private fun assertPieceBitboardsMatch(board: EngineBoard, seeBoard: SeeBoard) {
