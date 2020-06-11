@@ -35,7 +35,7 @@ public class EpdTest {
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
-    private static final boolean RECALCULATE_FAILURES = true;
+    private static final boolean RECALCULATE_FAILURES = false;
 
     @BeforeClass
     public static void setup() {
@@ -149,7 +149,6 @@ public class EpdTest {
         boolean processTests = false;
 
         for (EpdItem epdItem : epdReader) {
-            System.out.println(epdItem.getId());
             processTests = processTests || (epdItem.getId().equals(startAtId));
             if (processTests && (RECALCULATE_FAILURES || expectedToPass != failingPositions.contains(epdItem.getId()))) {
                 testPosition(epdItem, expectedToPass);

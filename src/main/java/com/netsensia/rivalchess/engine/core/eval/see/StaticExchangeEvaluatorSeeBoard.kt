@@ -17,7 +17,7 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
         val seeBoard = SeeBoard(board)
         val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
 
-        if (board.makeMove(move, true)) {
+        if (board.makeMove(move)) {
             seeBoard.makeMove(move)
             val seeValue = -seeSearch(seeBoard, captureSquare) - materialBalance
             board.unMakeMove()
