@@ -101,7 +101,7 @@ class SeeBoard(board: EngineBoard) {
     }
 
     val whitePieceValues: Int
-        get() = if (bitboardMap[BITBOARD_WK]!! != 0L) pieceValue(Piece.KING) else 0 +
+        get() = (if (bitboardMap[BITBOARD_WK]!! != 0L) pieceValue(Piece.KING) else 0) +
                 bitCount(bitboardMap[BITBOARD_WN]!!) * pieceValue(Piece.KNIGHT) +
                 bitCount(bitboardMap[BITBOARD_WR]!!) * pieceValue(Piece.ROOK) +
                 bitCount(bitboardMap[BITBOARD_WB]!!) * pieceValue(Piece.BISHOP) +
@@ -109,7 +109,7 @@ class SeeBoard(board: EngineBoard) {
                 bitCount(bitboardMap[BITBOARD_WP]!!) * pieceValue(Piece.PAWN)
 
     val blackPieceValues: Int
-        get() = if (bitboardMap[BITBOARD_BK]!! != 0L) pieceValue(Piece.KING) else 0 +
+        get() = (if (bitboardMap[BITBOARD_BK]!! != 0L) pieceValue(Piece.KING) else 0) +
                 bitCount(bitboardMap[BITBOARD_BN]!!) * pieceValue(Piece.KNIGHT) +
                 bitCount(bitboardMap[BITBOARD_BR]!!) * pieceValue(Piece.ROOK) +
                 bitCount(bitboardMap[BITBOARD_BB]!!) * pieceValue(Piece.BISHOP) +
