@@ -17,11 +17,9 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
         val seeBoard = SeeBoard(board)
         val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
 
-        //println(board.getFen())
         if (board.makeMove(move, true)) {
             seeBoard.makeMove(move)
-            //println("seeSearchTop: " + move.from() + "-" + move.to())
-            val seeValue = -seeSearch(seeBoard, captureSquare, board) - materialBalance
+            val seeValue = -seeSearch(seeBoard, captureSquare) - materialBalance
             board.unMakeMove()
             seeBoard.unMakeMove()
             return seeValue
@@ -30,32 +28,20 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
     }
 
     @Throws(InvalidMoveException::class)
-    fun seeSearch(seeBoard: SeeBoard, captureSquare: Int, board: EngineBoard): Int {
+    fun seeSearch(seeBoard: SeeBoard, captureSquare: Int): Int {
 
-        var board = board
         var bestScore = materialBalanceFromMoverPerspective(seeBoard)
-        val oldMoves = board.moveGenerator()
-                .generateLegalQuiesceMoves(false).getMoveArray()
-                .filter {it and 63 == captureSquare}.map { EngineMove(it) }
-                .sortedByDescending { it.compact }
-                .toList()
-        val newMoves = seeBoard.generateCaptureMovesOnSquare(captureSquare).sortedByDescending { it.compact }.toList()
 
         for (move in seeBoard.generateCaptureMovesOnSquare(captureSquare)) {
             seeBoard.makeMove(move)
-            board.makeMove(move, true)
-            require(oldMoves.equals(newMoves))
 
             val kingBitboard = if (seeBoard.mover == Colour.WHITE) BITBOARD_BK else BITBOARD_WK
             if (seeBoard.bitboardMap[kingBitboard] == 0L) {
                 seeBoard.unMakeMove()
-                board.unMakeMove()
                 return pieceValue(Piece.KING)
             }
-            //println("seeSearch: " + move.from() + "-" + move.to())
-            val seeScore = -seeSearch(seeBoard, captureSquare, board)
+            val seeScore = -seeSearch(seeBoard, captureSquare)
             seeBoard.unMakeMove()
-            board.unMakeMove()
             bestScore = seeScore.coerceAtLeast(bestScore)
         }
 

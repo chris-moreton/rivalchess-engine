@@ -39,7 +39,6 @@ class SeeBoard(board: EngineBoard) {
         val toBit = 1L shl move.to()
 
         val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackList else whiteList)
-        require(movedPieceBitboardType != BITBOARD_NONE) { "" + move.from() + "-" + move.to() + " on board " + board.getFen() }
         val capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.WHITE) blackList else whiteList)
         togglePiece(toBit, movedPieceBitboardType)
 
