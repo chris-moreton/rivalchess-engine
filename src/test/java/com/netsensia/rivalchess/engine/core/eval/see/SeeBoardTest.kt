@@ -36,6 +36,64 @@ internal class SeeBoardTest {
         makeMove(engineBoard, seeBoard, "d6e7")
         makeMove(engineBoard, seeBoard, "a7a5")
         makeMove(engineBoard, seeBoard, "e7f8Q")
+        makeMove(engineBoard, seeBoard, "e8f8")
+        makeMove(engineBoard, seeBoard, "f1b5")
+
+        unMakeMove(engineBoard, seeBoard)
+        makeMove(engineBoard, seeBoard, "f1b5")
+
+        unMakeMove(engineBoard, seeBoard)
+        unMakeMove(engineBoard, seeBoard)
+
+        makeMove(engineBoard, seeBoard, "e8f8")
+        makeMove(engineBoard, seeBoard, "f1b5")
+
+        makeMove(engineBoard, seeBoard, "d8d2")
+        makeMove(engineBoard, seeBoard, "d1d2")
+        makeMove(engineBoard, seeBoard, "f7f5")
+        makeMove(engineBoard, seeBoard, "b1c3")
+        makeMove(engineBoard, seeBoard, "f5f4")
+        makeMove(engineBoard, seeBoard, "g2g4")
+        makeMove(engineBoard, seeBoard, "f4g3")
+
+        unMakeMove(engineBoard, seeBoard)
+
+        makeMove(engineBoard, seeBoard, "f4g3")
+
+        unMakeMove(engineBoard, seeBoard)
+        unMakeMove(engineBoard, seeBoard)
+
+        makeMove(engineBoard, seeBoard, "g2g4")
+        makeMove(engineBoard, seeBoard, "f4g3")
+    }
+
+    @ExperimentalStdlibApi
+    private fun makeMove(board: EngineBoard, seeBoard: SeeBoard, moveString: String) {
+        var move: EngineMove
+
+        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
+        seeBoard.makeMove(move)
+        assertPieceBitboardsMatch(board, seeBoard)
+        assertEquals(board.mover, seeBoard.mover)
+
+        board.unMakeMove()
+        seeBoard.unMakeMove()
+        assertPieceBitboardsMatch(board, seeBoard)
+        assertEquals(board.mover, seeBoard.mover)
+
+        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
+        seeBoard.makeMove(move)
+        assertEquals(board.mover, seeBoard.mover)
+    }
+
+    @ExperimentalStdlibApi
+    private fun unMakeMove(board: EngineBoard, seeBoard: SeeBoard) {
+
+        board.unMakeMove()
+        seeBoard.unMakeMove()
+        assertPieceBitboardsMatch(board, seeBoard)
+        assertEquals(board.mover, seeBoard.mover)
+
     }
 
     @Test
@@ -115,25 +173,6 @@ internal class SeeBoardTest {
         val seeBoard = SeeBoard(engineBoard)
         val moves = seeBoard.generateCaptureMovesOnSquare(35).toList()
         assertEquals(1, moves.size)
-    }
-
-    @ExperimentalStdlibApi
-    private fun makeMove(board: EngineBoard, seeBoard: SeeBoard, moveString: String) {
-        var move: EngineMove
-
-        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
-        seeBoard.makeMove(move)
-        assertPieceBitboardsMatch(board, seeBoard)
-        assertEquals(board.mover, seeBoard.mover)
-
-        board.unMakeMove()
-        seeBoard.unMakeMove()
-        assertPieceBitboardsMatch(board, seeBoard)
-        assertEquals(board.mover, seeBoard.mover)
-
-        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
-        seeBoard.makeMove(move)
-        assertEquals(board.mover, seeBoard.mover)
     }
 
     private fun assertPieceBitboardsMatch(board: EngineBoard, seeBoard: SeeBoard) {

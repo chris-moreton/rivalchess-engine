@@ -69,7 +69,7 @@ class SeeBoard(board: EngineBoard) {
 
         mover = mover.opponent()
 
-        moveHistory.add(deltas)
+        moveHistory.add(deltas.toMutableList())
         return true
     }
 
@@ -94,9 +94,7 @@ class SeeBoard(board: EngineBoard) {
 
     @ExperimentalStdlibApi
     fun unMakeMove() {
-        moveHistory[moveHistory.size-1].forEach {
-            bitboardMap[it.first] = bitboardMap[it.first]!! xor it.second
-        }
+        moveHistory[moveHistory.size-1].forEach {bitboardMap[it.first] = bitboardMap[it.first]!! xor it.second }
         bitboardMap[BITBOARD_ENPASSANTSQUARE] = enpassantHistory[enpassantHistory.size-1]
         mover = mover.opponent()
         moveHistory.removeLast()
