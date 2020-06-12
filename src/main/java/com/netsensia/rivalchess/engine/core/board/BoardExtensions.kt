@@ -53,16 +53,10 @@ fun EngineBoard.isCheck(colour: Colour) =
 fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {
     var score = 0
     val promotionMask = move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
-    val sevaluator2 = StaticExchangeEvaluatorPremium()
     if (isCapture) {
         val see = staticExchangeEvaluator.staticExchangeEvaluation(this, EngineMove(move))
-        val see2 = sevaluator2.staticExchangeEvaluation(this, EngineMove(move))
-        if (see > 0) {
-            score = 100 + (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt()
-        }
-        if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
-            score += 9
-        }
+        if (see > 0) score = 100 + (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt()
+        if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) score += 9
     } else if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
         score = 116
     } else if (includeChecks) {

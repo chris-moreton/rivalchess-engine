@@ -52,6 +52,9 @@ public class StaticExchangeEvaluatorPremiumTest extends TestCase {
 
         assertSeeScore("2rr1q1k/pp3pp1/1nn1b2p/3pN2N/2pP4/2P3Q1/PPB4P/R4RK1 w - - 2 2", "g3g7", pieceValue(Piece.PAWN) - pieceValue(Piece.KNIGHT));
 
+        // This is corrected in the SeeBoard version - this one doesn't notice that the rook can capture the knight to remove the check
+        assertSeeScore("2rr1q2/pp3ppk/1nn1b1Np/3p3N/2pP4/2P3Q1/PPB4P/R4RK1 w - - 4 3", "g6f8", pieceValue(Piece.QUEEN));
+
     }
 
 }

@@ -1,11 +1,8 @@
 package com.netsensia.rivalchess.engine.core.eval.see
 
-import com.netsensia.rivalchess.bitboards.blackPawnMovesCapture
-import com.netsensia.rivalchess.bitboards.kingMoves
-import com.netsensia.rivalchess.bitboards.knightMoves
+import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.bitboards.util.squareList
-import com.netsensia.rivalchess.bitboards.whitePawnMovesCapture
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.engine.core.board.getFen
@@ -226,6 +223,25 @@ class SeeBoard(board: EngineBoard) {
                     } while (!done)
                 }
             }
+        }
+    }
+
+    private fun generateSliderMoves(
+            whitePiece: SquareOccupant,
+            blackPiece: SquareOccupant,
+            magicVars: MagicVars
+    ) {
+
+        val bitboard: Long = if (mover == Colour.WHITE)
+            bitboardMap[whitePiece.index]!! or bitboardMap[BITBOARD_WQ]!! else
+            bitboardMap[blackPiece.index]!! or bitboardMap[BITBOARD_BQ]!!
+
+        squareList(bitboard).forEach {
+            addMoves(
+                    it shl 16,
+                    magicVars.moves[it][((bitboardMap[BITBOARD_ALL]!! and magicVars.mask[it]) *
+                            magicVars.number[it] ushr magicVars.shift[it]).toInt()] and
+                            bitboardMap[BITBOARD_FRIENDLY]!!.inv())
         }
     }
 }
