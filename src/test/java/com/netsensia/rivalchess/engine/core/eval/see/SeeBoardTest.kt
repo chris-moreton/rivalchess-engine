@@ -131,16 +131,23 @@ internal class SeeBoardTest {
         board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
         seeBoard.makeMove(move)
         assertEquals(board.mover, seeBoard.mover)
-
-
     }
 
     private fun assertPieceBitboardsMatch(board: EngineBoard, seeBoard: SeeBoard) {
-        val bitboardTypes = listOf(BITBOARD_ENPASSANTSQUARE, BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR, BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
 
-        bitboardTypes.forEach{
-            assertEquals(board.engineBitboards.getPieceBitboard(it), seeBoard.bitboardMap[it])
-        }
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE), seeBoard.bitboardMap[BITBOARD_ENPASSANTSQUARE])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WP), seeBoard.bitboardMap[BITBOARD_WP])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WQ), seeBoard.bitboardMap[BITBOARD_WQ])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WK), seeBoard.bitboardMap[BITBOARD_WK])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WN), seeBoard.bitboardMap[BITBOARD_WN])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WB), seeBoard.bitboardMap[BITBOARD_WB])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WR), seeBoard.bitboardMap[BITBOARD_WR])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BP), seeBoard.bitboardMap[BITBOARD_BP])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BQ), seeBoard.bitboardMap[BITBOARD_BQ])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BK), seeBoard.bitboardMap[BITBOARD_BK])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BN), seeBoard.bitboardMap[BITBOARD_BN])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BB), seeBoard.bitboardMap[BITBOARD_BB])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BR), seeBoard.bitboardMap[BITBOARD_BR])
 
         assertEquals(board.mover, seeBoard.mover)
     }

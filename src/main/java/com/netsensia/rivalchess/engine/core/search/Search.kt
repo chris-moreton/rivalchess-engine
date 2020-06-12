@@ -8,7 +8,6 @@ import com.netsensia.rivalchess.engine.core.FEN_START_POS
 import com.netsensia.rivalchess.engine.core.board.*
 import com.netsensia.rivalchess.engine.core.eval.*
 import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluator
-import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluatorPremium
 import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluatorSeeBoard
 import com.netsensia.rivalchess.engine.core.hash.isAlwaysReplaceHashTableEntryValid
 import com.netsensia.rivalchess.engine.core.hash.isHeightHashTableEntryValid

@@ -7,8 +7,6 @@ import com.netsensia.rivalchess.engine.core.BITBOARD_FRIENDLY
 import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.core.eval.onlyOneBitSet
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
-import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluatorPremium
-import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluatorSeeBoard
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.enums.PromotionPieceMask
