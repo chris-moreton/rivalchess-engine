@@ -8,19 +8,20 @@ import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
+import java.lang.Long.numberOfTrailingZeros
 
 class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 
     @ExperimentalStdlibApi
     @Throws(InvalidMoveException::class)
     override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
-        val captureSquare = move.compact and 63
         val seeBoard = SeeBoard(board)
-        val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
 
         if (board.makeMove(move)) {
-            seeBoard.makeMove(move)
-            val seeValue = -seeSearch(seeBoard, captureSquare) - materialBalance
+            val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
+            val captureSquare = move.compact and 63
+            val materialGain = seeBoard.makeMove(move)
+            val seeValue = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain)) - materialBalance
             board.unMakeMove()
             return seeValue
         }
@@ -29,12 +30,12 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 
     @ExperimentalStdlibApi
     @Throws(InvalidMoveException::class)
-    fun seeSearch(seeBoard: SeeBoard, captureSquare: Int): Int {
+    fun seeSearch(seeBoard: SeeBoard, captureSquare: Int, materialBalance: Int): Int {
 
-        var bestScore = materialBalanceFromMoverPerspective(seeBoard)
+        var bestScore = materialBalance
 
         for (move in seeBoard.generateCaptureMovesOnSquare(captureSquare)) {
-            seeBoard.makeMove(move)
+            val materialGain = seeBoard.makeMove(move)
 
             val kingBitboard = if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK
             if (seeBoard.bitboards.getPieceBitboard(kingBitboard) == 0L) {
@@ -42,7 +43,7 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
                 return bestScore + pieceValue(Piece.KING)
             }
 
-            val seeScore = -seeSearch(seeBoard, captureSquare)
+            val seeScore = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain))
             seeBoard.unMakeMove()
             bestScore = seeScore.coerceAtLeast(bestScore)
         }

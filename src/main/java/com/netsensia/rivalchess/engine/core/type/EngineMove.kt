@@ -30,4 +30,8 @@ class EngineMove {
         other as EngineMove
         return this.compact == other.compact
     }
+
+    override fun toString(): String {
+        return "" + from() + "-" + to()
+    }
 }

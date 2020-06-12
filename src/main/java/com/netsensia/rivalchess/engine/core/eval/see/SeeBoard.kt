@@ -20,53 +20,56 @@ class SeeBoard(board: EngineBoard) {
     var moveHistory: MutableList<MutableList<Pair<Int, Long>>> = ArrayList()
 
     var mover: Colour
-    val board: EngineBoard = board
 
     init {
         mover = board.mover
     }
 
-    fun makeMove(move: EngineMove): Boolean {
+    fun makeMove(move: EngineMove): Int {
         deltas.clear()
         enpassantHistory.add(bitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE))
+
 
         val fromBit = 1L shl move.from()
         val toBit = 1L shl move.to()
 
         val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackList else whiteList)
-        val capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.WHITE) blackList else whiteList)
+        val capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteList else blackList)
+        var materialGain = if (capturedPieceBitboardType == BITBOARD_NONE) pieceValue(Piece.PAWN) else pieceValue(capturedPieceBitboardType)
+
         togglePiece(toBit, movedPieceBitboardType)
 
         bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
 
         if (movedPieceBitboardType == BITBOARD_WP) {
-            if (move.to() - move.from() == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shr 8) 
+            if (move.to() - move.from() == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shr 8)
             if (move.to() >= 56) {
                 togglePiece(1L shl move.to(), BITBOARD_WP)
                 togglePiece(1L shl move.to(), BITBOARD_WQ)
+                materialGain += pieceValue(Piece.QUEEN) - pieceValue(Piece.PAWN)
             }
         } else if (movedPieceBitboardType == BITBOARD_BP) {
             if (move.from() - move.to() == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shl 8)
             if (move.to() <= 7) {
                 togglePiece(1L shl move.to(), BITBOARD_BP)
                 togglePiece(1L shl move.to(), BITBOARD_BQ)
+                materialGain += pieceValue(Piece.QUEEN) - pieceValue(Piece.PAWN)
             }
         }
 
         if (capturedPieceBitboardType == BITBOARD_NONE) {
-            if (movedPieceBitboardType == BITBOARD_WP) {
-                if ((move.to() - move.from()) % 2 != 0) togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
-            } else if (movedPieceBitboardType == BITBOARD_BP) {
-                if ((move.to() - move.from()) % 2 != 0) {
-                    togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
-                }
+            if (movedPieceBitboardType == BITBOARD_WP && (move.to() - move.from()) % 2 != 0) {
+                togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
+            } else if (movedPieceBitboardType == BITBOARD_BP && (move.to() - move.from()) % 2 != 0) {
+                togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
             }
         }
 
         mover = mover.opponent()
 
         moveHistory.add(deltas.toMutableList())
-        return true
+
+        return materialGain
     }
 
     private fun removePieceIfExistsInBitboard(squareBit: Long, bitboardType: Int): Boolean {
@@ -98,16 +101,14 @@ class SeeBoard(board: EngineBoard) {
     }
 
     val whitePieceValues: Int
-        get() = (if (bitboards.getPieceBitboard(BITBOARD_WK) != 0L) pieceValue(Piece.KING) else 0) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_WN)) * pieceValue(Piece.KNIGHT) +
+        get() = bitCount(bitboards.getPieceBitboard(BITBOARD_WN)) * pieceValue(Piece.KNIGHT) +
                 bitCount(bitboards.getPieceBitboard(BITBOARD_WR)) * pieceValue(Piece.ROOK) +
                 bitCount(bitboards.getPieceBitboard(BITBOARD_WB)) * pieceValue(Piece.BISHOP) +
                 bitCount(bitboards.getPieceBitboard(BITBOARD_WQ)) * pieceValue(Piece.QUEEN) +
                 bitCount(bitboards.getPieceBitboard(BITBOARD_WP)) * pieceValue(Piece.PAWN)
 
     val blackPieceValues: Int
-        get() = (if (bitboards.getPieceBitboard(BITBOARD_BK) != 0L) pieceValue(Piece.KING) else 0) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_BN)) * pieceValue(Piece.KNIGHT) +
+        get() = bitCount(bitboards.getPieceBitboard(BITBOARD_BN)) * pieceValue(Piece.KNIGHT) +
                 bitCount(bitboards.getPieceBitboard(BITBOARD_BR)) * pieceValue(Piece.ROOK) +
                 bitCount(bitboards.getPieceBitboard(BITBOARD_BB)) * pieceValue(Piece.BISHOP) +
                 bitCount(bitboards.getPieceBitboard(BITBOARD_BQ)) * pieceValue(Piece.QUEEN) +

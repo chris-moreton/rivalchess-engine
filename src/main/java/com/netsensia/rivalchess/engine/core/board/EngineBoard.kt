@@ -195,4 +195,8 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return boardHashObject.trackedHashValue
     }
 
+    override fun toString(): String {
+        return this.getFen()
+    }
+
 }

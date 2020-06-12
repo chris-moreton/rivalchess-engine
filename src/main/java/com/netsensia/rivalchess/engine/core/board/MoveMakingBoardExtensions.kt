@@ -38,16 +38,15 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false): 
     val capturePiece = squareContents[moveTo]
     val movePiece = squareContents[moveFrom]
 
-    val moveDetail = MoveDetail(
-        capturePiece = SquareOccupant.NONE,
-        move = compactMove,
-        hashValue = boardHashObject.trackedHashValue,
-        isOnNullMove = isOnNullMove,
-        halfMoveCount = halfMoveCount.toByte(),
-        enPassantBitboard = engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE),
-        castlePrivileges = castlePrivileges.toByte(),
-        movePiece = movePiece
-    )
+    val moveDetail = MoveDetail()
+    moveDetail.capturePiece = SquareOccupant.NONE
+    moveDetail.move = compactMove
+    moveDetail.hashValue = boardHashObject.trackedHashValue
+    moveDetail.isOnNullMove = isOnNullMove
+    moveDetail.halfMoveCount = halfMoveCount.toByte()
+    moveDetail.enPassantBitboard = engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE)
+    moveDetail.castlePrivileges = castlePrivileges.toByte()
+    moveDetail.movePiece = movePiece
 
     if (moveHistory.size <= numMovesMade) moveHistory.add(moveDetail) else moveHistory[numMovesMade] = moveDetail
 
