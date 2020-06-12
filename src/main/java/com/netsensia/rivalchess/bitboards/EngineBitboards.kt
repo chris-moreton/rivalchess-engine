@@ -10,11 +10,17 @@ import com.netsensia.rivalchess.model.SquareOccupant
 import java.lang.Long.numberOfTrailingZeros
 import java.util.*
 
-class EngineBitboards {
+class EngineBitboards() {
     lateinit var pieceBitboards: LongArray
 
     init {
         reset()
+    }
+
+    constructor(thoseBitboards: EngineBitboards) : this() {
+        for (i in BITBOARD_WP..BITBOARD_ENPASSANTSQUARE) {
+            pieceBitboards[i] = thoseBitboards.getPieceBitboard(i)
+        }
     }
 
     fun reset() {

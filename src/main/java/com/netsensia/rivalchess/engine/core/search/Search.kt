@@ -7,6 +7,8 @@ import com.netsensia.rivalchess.engine.core.BITBOARD_ENPASSANTSQUARE
 import com.netsensia.rivalchess.engine.core.FEN_START_POS
 import com.netsensia.rivalchess.engine.core.board.*
 import com.netsensia.rivalchess.engine.core.eval.*
+import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluator
+import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluatorSeeBoard
 import com.netsensia.rivalchess.engine.core.hash.isAlwaysReplaceHashTableEntryValid
 import com.netsensia.rivalchess.engine.core.hash.isHeightHashTableEntryValid
 import com.netsensia.rivalchess.engine.core.type.EngineMove
@@ -26,7 +28,7 @@ import kotlin.math.abs
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
     private val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
-    private val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluatorPremium()
+    private val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluatorSeeBoard()
 
     private val moveOrderStatus = arrayOfNulls<MoveOrder>(Limit.MAX_TREE_DEPTH.value)
     private val drawnPositionsAtRoot: MutableList<MutableList<Long>>
@@ -427,9 +429,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun abortIfTimeIsUp(): Boolean {
-        if (millisSetByEngineMonitor > searchTargetEndTime || nodes >= nodesToSearch) {
-            abortingSearch = true
-        }
+        if (millisSetByEngineMonitor > searchTargetEndTime || nodes >= nodesToSearch) abortingSearch = true
         return abortingSearch
     }
 
