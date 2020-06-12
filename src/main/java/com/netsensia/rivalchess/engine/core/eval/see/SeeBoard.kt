@@ -12,13 +12,15 @@ import java.lang.Long.bitCount
 
 class SeeBoard(board: EngineBoard) {
     val bitboardMap: MutableMap<Int, Long> = mutableMapOf()
-    private val bitboardMapHistory: MutableMap<Int, MutableMap<Int, Long>> = mutableMapOf()
     private val whiteList = listOf(BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR)
     private val blackList = listOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
 
+    var deltas: MutableList<Pair<Int, Long>> = mutableListOf()
+    var enpassantHistory: MutableList<Long> = ArrayList()
+    var moveHistory: MutableList<MutableList<Pair<Int, Long>>> = ArrayList()
+
     var mover: Colour
     val board: EngineBoard = board
-    var movePointer = 0
 
     init {
         whiteList.forEach { bitboardMap[it] = board.engineBitboards.getPieceBitboard(it) }
@@ -29,8 +31,8 @@ class SeeBoard(board: EngineBoard) {
     }
 
     fun makeMove(move: EngineMove): Boolean {
-        bitboardMapHistory.put(movePointer, HashMap(bitboardMap))
-        movePointer ++
+        deltas.clear()
+        enpassantHistory.add(bitboardMap[BITBOARD_ENPASSANTSQUARE]!!)
 
         val fromBit = 1L shl move.from()
         val toBit = 1L shl move.to()
@@ -67,13 +69,14 @@ class SeeBoard(board: EngineBoard) {
 
         mover = mover.opponent()
 
+        moveHistory.add(deltas)
         return true
     }
 
     private fun removePieceIfExistsInBitboard(squareBit: Long, bitboardType: Int): Boolean {
         val pieceBitboard = bitboardMap[bitboardType]!!
         if (pieceBitboard or squareBit == pieceBitboard) {
-            bitboardMap[bitboardType] = pieceBitboard xor squareBit
+            togglePiece(squareBit, bitboardType)
             return true
         }
         return false
@@ -86,13 +89,18 @@ class SeeBoard(board: EngineBoard) {
 
     private fun togglePiece(squareBit: Long, bitboardType: Int) {
         bitboardMap[bitboardType] = bitboardMap[bitboardType]!! xor squareBit
+        deltas.add(Pair(bitboardType, squareBit))
     }
 
+    @ExperimentalStdlibApi
     fun unMakeMove() {
-        movePointer--
-        bitboardMap.clear()
-        bitboardMap.putAll(bitboardMapHistory[movePointer]!!)
+        moveHistory[moveHistory.size-1].forEach {
+            bitboardMap[it.first] = bitboardMap[it.first]!! xor it.second
+        }
+        bitboardMap[BITBOARD_ENPASSANTSQUARE] = enpassantHistory[enpassantHistory.size-1]
         mover = mover.opponent()
+        moveHistory.removeLast()
+        enpassantHistory.removeLast()
     }
 
     val whitePieceValues: Int
