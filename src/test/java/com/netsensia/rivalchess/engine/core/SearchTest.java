@@ -17,7 +17,7 @@ import org.junit.Test;
 
 public class SearchTest {
 
-    private static Boolean RECALCULATE = true;
+    private static Boolean RECALCULATE = false;
 
     @Test
     public void testEvaluationScores() throws IllegalFenException {
