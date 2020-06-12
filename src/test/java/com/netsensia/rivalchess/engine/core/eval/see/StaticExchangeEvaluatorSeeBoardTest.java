@@ -45,6 +45,11 @@ public class StaticExchangeEvaluatorSeeBoardTest extends TestCase {
 
         assertSeeScore("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", "e5d7", pieceValue(Piece.PAWN) - pieceValue(Piece.KNIGHT));
         assertSeeScore("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", "f3f6", pieceValue(Piece.KNIGHT) - pieceValue(Piece.QUEEN));
+
+        assertSeeScore("2rr3k/pp3pp1/1nnqbN1p/3pN3/1PpP4/2P3Q1/P1B4P/R4RK1 b - b3 0 1", "c4b3", 0);
+
+        assertSeeScore("2rr1q1k/pp3pp1/1nn1b2p/3pN2N/2pP4/2P3Q1/PPB4P/R4RK1 w - - 2 2", "g3g7", pieceValue(Piece.PAWN) - pieceValue(Piece.KNIGHT));
+
     }
 
 }

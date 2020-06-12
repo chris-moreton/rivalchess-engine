@@ -13,6 +13,7 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
     override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
         val captureSquare = move.compact and 63
         val materialBalance = materialBalanceFromMoverPerspective(board)
+
         if (board.makeMove(move)) {
             val seeValue = -seeSearch(board, captureSquare) - materialBalance
             board.unMakeMove()

@@ -54,7 +54,7 @@ class SeeBoard(board: EngineBoard) {
             }
         } else if (movedPieceBitboardType == BITBOARD_BP) {
             if (move.from() - move.to() == 16) bitboardMap[BITBOARD_ENPASSANTSQUARE] = toBit shl 8
-            if (move.to() >= 56) {
+            if (move.to() <= 7) {
                 togglePiece(1L shl move.to(), BITBOARD_BP)
                 togglePiece(1L shl move.to(), BITBOARD_BQ)
             }
@@ -62,10 +62,10 @@ class SeeBoard(board: EngineBoard) {
 
         if (capturedPieceBitboardType == BITBOARD_NONE) {
             if (movedPieceBitboardType == BITBOARD_WP) {
-                if ((move.to() - move.from()) % 2 != 0) togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
+                if (move.to() - move.from() % 2 != 0) togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
             } else if (movedPieceBitboardType == BITBOARD_BP) {
-                if ((move.to() - move.from()) % 2 != 0) {
-                    togglePiece(1L shl (move.to() - 8), BITBOARD_WP)
+                if (move.to() - move.from() % 2 != 0) {
+                    togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
                 }
             }
         }
