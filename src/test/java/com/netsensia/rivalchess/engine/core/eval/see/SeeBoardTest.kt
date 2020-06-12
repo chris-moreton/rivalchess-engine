@@ -177,19 +177,19 @@ internal class SeeBoardTest {
 
     private fun assertPieceBitboardsMatch(board: EngineBoard, seeBoard: SeeBoard) {
 
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE), seeBoard.bitboardMap[BITBOARD_ENPASSANTSQUARE])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WP), seeBoard.bitboardMap[BITBOARD_WP])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WQ), seeBoard.bitboardMap[BITBOARD_WQ])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WK), seeBoard.bitboardMap[BITBOARD_WK])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WN), seeBoard.bitboardMap[BITBOARD_WN])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WB), seeBoard.bitboardMap[BITBOARD_WB])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WR), seeBoard.bitboardMap[BITBOARD_WR])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BP), seeBoard.bitboardMap[BITBOARD_BP])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BQ), seeBoard.bitboardMap[BITBOARD_BQ])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BK), seeBoard.bitboardMap[BITBOARD_BK])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BN), seeBoard.bitboardMap[BITBOARD_BN])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BB), seeBoard.bitboardMap[BITBOARD_BB])
-        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BR), seeBoard.bitboardMap[BITBOARD_BR])
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE), seeBoard.bitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WP), seeBoard.bitboards.getPieceBitboard(BITBOARD_WP))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WQ), seeBoard.bitboards.getPieceBitboard(BITBOARD_WQ))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WK), seeBoard.bitboards.getPieceBitboard(BITBOARD_WK))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WN), seeBoard.bitboards.getPieceBitboard(BITBOARD_WN))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WB), seeBoard.bitboards.getPieceBitboard(BITBOARD_WB))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_WR), seeBoard.bitboards.getPieceBitboard(BITBOARD_WR))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BP), seeBoard.bitboards.getPieceBitboard(BITBOARD_BP))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BQ), seeBoard.bitboards.getPieceBitboard(BITBOARD_BQ))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BK), seeBoard.bitboards.getPieceBitboard(BITBOARD_BK))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BN), seeBoard.bitboards.getPieceBitboard(BITBOARD_BN))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BB), seeBoard.bitboards.getPieceBitboard(BITBOARD_BB))
+        assertEquals(board.engineBitboards.getPieceBitboard(BITBOARD_BR), seeBoard.bitboards.getPieceBitboard(BITBOARD_BR))
 
         assertEquals(board.mover, seeBoard.mover)
     }

@@ -37,7 +37,7 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
             seeBoard.makeMove(move)
 
             val kingBitboard = if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK
-            if (seeBoard.bitboardMap[kingBitboard] == 0L) {
+            if (seeBoard.bitboards.getPieceBitboard(kingBitboard) == 0L) {
                 seeBoard.unMakeMove()
                 return bestScore + pieceValue(Piece.KING)
             }
