@@ -5,7 +5,6 @@ import com.netsensia.rivalchess.engine.core.eval.blackPawnAttacks
 import com.netsensia.rivalchess.engine.core.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
-import java.lang.Long.bitCount
 
 tailrec fun southFill(bitboard: Long, shiftBy: Int = 8): Long =
     if (shiftBy == 32) bitboard or (bitboard ushr shiftBy)
@@ -45,24 +44,24 @@ fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long) =
             MagicBitboards.magicNumberRook[pieceSquare] ushr
             MagicBitboards.magicNumberShiftsRook[pieceSquare]).toInt()
 
-fun squareSequence(bitboard: Long) = sequence {
-    var bitboardCopy = bitboard
-    while (bitboardCopy != 0L) yield(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
-}
-
-fun squareSeqRec(bitboard: Long): Sequence<Int> = sequence {
-    val square = numberOfTrailingZeros(bitboard)
-    if (bitboard != 0L) {
-        yield(square)
-        yieldAll(squareSeqRec(bitboard xor (1L shl square)))
-    }
-}
-
 fun squareList(bitboard: Long): List<Int> {
     val squares = mutableListOf<Int>()
     var bitboardCopy = bitboard
-    while (bitboardCopy != 0L) squares.add(numberOfTrailingZeros(bitboardCopy).also {bitboardCopy = bitboardCopy xor (1L shl it)})
+    while (bitboardCopy != 0L) {
+        val square = numberOfTrailingZeros(bitboardCopy)
+        squares.add(square)
+        bitboardCopy = bitboardCopy xor (1L shl square)
+    }
     return squares
+}
+
+inline fun applyToSquares(bitboard: Long, fn: (Int) -> Unit) {
+    var bitboardCopy = bitboard
+    while (bitboardCopy != 0L) {
+        val square = numberOfTrailingZeros(bitboardCopy)
+        fn(square)
+        bitboardCopy = bitboardCopy xor (1L shl square)
+    }
 }
 
 fun squareListNew(bitboard: Long) = squareList(bitboard).parallelStream()

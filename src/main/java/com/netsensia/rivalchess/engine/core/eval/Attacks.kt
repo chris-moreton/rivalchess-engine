@@ -6,17 +6,17 @@ import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
 
-class Attacks(bitboardData: BitboardData, pieceSquareLists: PieceSquareLists) {
+class Attacks(bitboardData: BitboardData) {
     val whitePawns = whitePawnAttacks(bitboardData.whitePawns)
     val blackPawns = blackPawnAttacks(bitboardData.blackPawns)
-    val whiteRookPair = attackList(bitboardData, pieceSquareLists.whiteRooks, ::rookAttacks)
-    val whiteBishopPair = attackList(bitboardData, pieceSquareLists.whiteBishops, ::bishopAttacks)
-    val whiteQueenPair = attackList(bitboardData, pieceSquareLists.whiteQueens, ::queenAttacks)
-    val whiteKnightPair = knightAttackList(pieceSquareLists.whiteKnights)
-    val blackRookPair = attackList(bitboardData, pieceSquareLists.blackRooks, ::rookAttacks)
-    val blackBishopPair = attackList(bitboardData, pieceSquareLists.blackBishops, ::bishopAttacks)
-    val blackQueenPair = attackList(bitboardData, pieceSquareLists.blackQueens, ::queenAttacks)
-    val blackKnightPair = knightAttackList(pieceSquareLists.blackKnights)
+    val whiteRookPair = attackList(bitboardData, squareList(bitboardData.whiteRooks), ::rookAttacks)
+    val whiteBishopPair = attackList(bitboardData, squareList(bitboardData.whiteBishops), ::bishopAttacks)
+    val whiteQueenPair = attackList(bitboardData, squareList(bitboardData.whiteQueens), ::queenAttacks)
+    val whiteKnightPair = knightAttackList(squareList(bitboardData.whiteKnights))
+    val blackRookPair = attackList(bitboardData, squareList(bitboardData.blackRooks), ::rookAttacks)
+    val blackBishopPair = attackList(bitboardData, squareList(bitboardData.blackBishops), ::bishopAttacks)
+    val blackQueenPair = attackList(bitboardData, squareList(bitboardData.blackQueens), ::queenAttacks)
+    val blackKnightPair = knightAttackList(squareList(bitboardData.blackKnights))
 }
 
 fun whitePawnAttacks(whitePawns: Long) = whitePawns and FILE_A.inv() shl 9 or (whitePawns and FILE_H.inv() shl 7)
@@ -56,12 +56,10 @@ fun blackPieceAttacks(attacks: Attacks) =
         attacks.blackKnightPair.second
 
 fun whiteAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
-        (whitePieceAttacks(attacks) or attacks.whitePawns) and
-                blackPieceBitboard(bitboards)
+        (whitePieceAttacks(attacks) or attacks.whitePawns) and blackPieceBitboard(bitboards)
 
 fun blackAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
-        (blackPieceAttacks(attacks) or attacks.blackPawns) and
-                whitePieceBitboard(bitboards)
+        (blackPieceAttacks(attacks) or attacks.blackPawns) and whitePieceBitboard(bitboards)
 
 fun threatEval(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>) =
     (adjustedAttackScore(whiteAttackScore(bitboards, attacks, squareOccupants)) -

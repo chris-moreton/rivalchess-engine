@@ -108,11 +108,8 @@ fun bishopScore(bitboards: BitboardData, materialDifference: Int, materialValues
                 oppositeColourBishopsEval(bitboards, materialDifference) + trappedBishopEval(bitboards)
 
 fun whiteLightBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and LIGHT_SQUARES != 0L
-
 fun whiteDarkBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and DARK_SQUARES != 0L
-
 fun blackLightBishopExists(bitboards: BitboardData) = bitboards.blackBishops and LIGHT_SQUARES != 0L
-
 fun blackDarkBishopExists(bitboards: BitboardData) = bitboards.blackBishops and DARK_SQUARES != 0L
 
 fun whiteBishopColourCount(bitboards: BitboardData) =
@@ -539,38 +536,43 @@ fun blockedKnightPenaltyEval(square: Int, enemyPawnAttacks: Long, friendlyPawns:
 fun blockedKnightLandingSquares(square: Int, enemyPawnAttacks: Long, friendlyPawns: Long) =
         knightMoves[square] and (enemyPawnAttacks or friendlyPawns)
 
-fun whitePawnsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData): Int {
-    return pieceSquareLists.whitePawns.map {
-        linearScale(
+fun whitePawnsEval(bitboards: BitboardData): Int {
+    var acc = 0
+    applyToSquares(bitboards.whitePawns) {
+        acc += linearScale(
                 blackPieceValues(bitboards),
                 Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
                 Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
                 PieceSquareTables.pawnEndGame[it],
                 PieceSquareTables.pawn[it]
         )
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
-fun blackPawnsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData): Int {
-    return pieceSquareLists.blackPawns.map {
-        linearScale(
+fun blackPawnsEval(bitboards: BitboardData): Int {
+    var acc = 0
+    applyToSquares(bitboards.blackPawns) {
+        acc += linearScale(
                 whitePieceValues(bitboards),
                 Evaluation.PAWN_STAGE_MATERIAL_LOW.value,
                 Evaluation.PAWN_STAGE_MATERIAL_HIGH.value,
                 PieceSquareTables.pawnEndGame[bitFlippedHorizontalAxis[it]],
                 PieceSquareTables.pawn[bitFlippedHorizontalAxis[it]]
         )
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
 fun blackKnightsEval(
-        pieceSquareLists: PieceSquareLists,
         bitboards: BitboardData,
         attacks: Attacks,
         materialValues: MaterialValues)
         : Int {
-    return pieceSquareLists.blackKnights.map {
-        linearScale(
+
+    var acc = 0
+    applyToSquares(bitboards.blackKnights) {
+        acc += linearScale(
                 materialValues.whitePieces + materialValues.whitePawns,
                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
                 Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
@@ -578,69 +580,82 @@ fun blackKnightsEval(
                 PieceSquareTables.knight[bitFlippedHorizontalAxis[it]]
         ) -
         blockedKnightPenaltyEval(it, attacks.whitePawns, bitboards.blackPawns)
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
 fun whiteKnightsEval(
-        pieceSquareLists: PieceSquareLists,
         bitboards: BitboardData,
         attacks: Attacks,
         materialValues: MaterialValues)
         : Int {
 
-    return pieceSquareLists.whiteKnights.map {
-        linearScale(materialValues.blackPieces + materialValues.blackPawns,
+    var acc = 0
+    applyToSquares(bitboards.whiteKnights) {
+        acc += linearScale(materialValues.blackPieces + materialValues.blackPawns,
                 Evaluation.KNIGHT_STAGE_MATERIAL_LOW.value,
                 Evaluation.KNIGHT_STAGE_MATERIAL_HIGH.value,
                 PieceSquareTables.knightEndGame[it],
                 PieceSquareTables.knight[it]
-        ) -
-        blockedKnightPenaltyEval(it, attacks.blackPawns, bitboards.whitePawns)
-    }.fold(0) { acc, i -> acc + i }
+        ) - blockedKnightPenaltyEval(it, attacks.blackPawns, bitboards.whitePawns)
+    }
+    return acc
 }
 
-fun blackBishopsEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, blackPieces: Long): Int {
-    return pieceSquareLists.blackBishops.map {
-        Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and blackPieces.inv())) +
+fun blackBishopsEval(bitboards: BitboardData, blackPieces: Long): Int {
+    var acc = 0
+    applyToSquares(bitboards.blackBishops) {
+        acc += Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and blackPieces.inv())) +
                 flippedSquareTableScore(PieceSquareTables.bishop, it)
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
-fun whiteBishopEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, whitePieces: Long): Int {
-    return pieceSquareLists.whiteBishops.map {
-        Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and whitePieces.inv())) +
+fun whiteBishopEval(bitboards: BitboardData, whitePieces: Long): Int {
+    var acc = 0
+    applyToSquares(bitboards.whiteBishops) {
+        acc += Evaluation.getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and whitePieces.inv())) +
                 PieceSquareTables.bishop[it]
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
-private fun blackQueensEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, blackPieces: Long): Int {
-    return pieceSquareLists.blackQueens.map {
-        Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and blackPieces.inv())) +
+private fun blackQueensEval(bitboards: BitboardData, blackPieces: Long): Int {
+    var acc = 0
+    applyToSquares(bitboards.blackQueens) {
+        acc += Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and blackPieces.inv())) +
                 flippedSquareTableScore(PieceSquareTables.queen, it)
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
-private fun whiteQueensEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, whitePieces: Long): Int {
-    return pieceSquareLists.whiteQueens.map {
-        Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and whitePieces.inv())) +
+private fun whiteQueensEval(bitboards: BitboardData, whitePieces: Long): Int {
+    var acc = 0
+    applyToSquares(bitboards.whiteQueens) {
+        acc += Evaluation.getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and whitePieces.inv())) +
                 PieceSquareTables.queen[it]
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
-private fun blackRooksEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, blackPieces: Long): Int {
-    return pieceSquareLists.blackRooks.map {
-        blackRookOpenFilesEval(bitboards, it % 8) +
+private fun blackRooksEval(bitboards: BitboardData, blackPieces: Long): Int {
+    var acc = 0
+    applyToSquares(bitboards.blackRooks) {
+        acc += blackRookOpenFilesEval(bitboards, it % 8) +
                 Evaluation.getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and blackPieces.inv())) +
                 flippedSquareTableScore(PieceSquareTables.rook, it) * rookEnemyPawnMultiplier(whitePawnValues(bitboards)) / 6
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
-fun whiteRooksEval(pieceSquareLists: PieceSquareLists, bitboards: BitboardData, whitePieces: Long): Int {
-    return pieceSquareLists.whiteRooks.map {
-        whiteRookOpenFilesEval(bitboards, it % 8) +
+fun whiteRooksEval(bitboards: BitboardData, whitePieces: Long): Int {
+    var acc = 0
+    applyToSquares(bitboards.whiteRooks) {
+        acc += whiteRookOpenFilesEval(bitboards, it % 8) +
                 Evaluation.getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and whitePieces.inv())) +
                 PieceSquareTables.rook[it] * rookEnemyPawnMultiplier(blackPawnValues(bitboards)) / 6
-    }.fold(0) { acc, i -> acc + i }
+    }
+    return acc
 }
 
 fun pawnScore(whitePawnBitboard: Long,
@@ -785,8 +800,7 @@ fun evaluate(board: EngineBoard): Int {
 
     if (onlyKingsRemain(bitboards)) return 0
 
-    val pieceSquareLists = PieceSquareLists(bitboards)
-    val attacks = Attacks(bitboards, pieceSquareLists)
+    val attacks = Attacks(bitboards)
     val materialValues = MaterialValues(bitboards)
     val kingSquares = KingSquares(bitboards)
 
@@ -797,23 +811,23 @@ fun evaluate(board: EngineBoard): Int {
 
     val eval =  materialDifference +
                 (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
-                (doubledRooksEval(pieceSquareLists.whiteRooks.toList()) - doubledRooksEval(pieceSquareLists.blackRooks.toList())) +
+                (doubledRooksEval(squareList(bitboards.whiteRooks)) - doubledRooksEval(squareList(bitboards.blackRooks))) +
                 pawnScore(bitboards.whitePawns,
                         bitboards.blackPawns,
                         attacks, materialValues,
                         board.getWhiteKingSquare(),
                         board.getBlackKingSquare(),
                         board.mover) +
-                (whiteBishopEval(pieceSquareLists, bitboards, whitePieces) -
-                        blackBishopsEval(pieceSquareLists, bitboards, blackPieces)) +
-                (whiteKnightsEval(pieceSquareLists, bitboards, attacks, materialValues) -
-                        blackKnightsEval(pieceSquareLists, bitboards, attacks, materialValues)) +
+                (whiteBishopEval(bitboards, whitePieces) -
+                        blackBishopsEval(bitboards, blackPieces)) +
+                (whiteKnightsEval(bitboards, attacks, materialValues) -
+                        blackKnightsEval(bitboards, attacks, materialValues)) +
                 tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
                 tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
                 (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares)) +
-                (whitePawnsEval(pieceSquareLists, bitboards) - blackPawnsEval(pieceSquareLists, bitboards)) +
-                (whiteRooksEval(pieceSquareLists, bitboards, whitePieces) - blackRooksEval(pieceSquareLists, bitboards, blackPieces)) +
-                (whiteQueensEval(pieceSquareLists, bitboards, whitePieces) - blackQueensEval(pieceSquareLists, bitboards, blackPieces)) +
+                (whitePawnsEval(bitboards) - blackPawnsEval(bitboards)) +
+                (whiteRooksEval(bitboards, whitePieces) - blackRooksEval(bitboards, blackPieces)) +
+                (whiteQueensEval(bitboards, whitePieces) - blackQueensEval(bitboards, blackPieces)) +
                 castlingEval(bitboards, board.castlePrivileges) +
                 bishopScore(bitboards, materialDifference, materialValues) +
                 threatEval(bitboards, attacks, board.squareOccupants) +

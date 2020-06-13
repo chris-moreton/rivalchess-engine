@@ -1,9 +1,6 @@
 package com.netsensia.rivalchess.bitboards
 
-import com.netsensia.rivalchess.bitboards.util.getPawnMovesCaptureOfColour
-import com.netsensia.rivalchess.bitboards.util.isBishopAttackingSquare
-import com.netsensia.rivalchess.bitboards.util.isRookAttackingSquare
-import com.netsensia.rivalchess.bitboards.util.squareList
+import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.SquareOccupant
@@ -41,7 +38,22 @@ class EngineBitboards() {
     }
 
     fun getPieceBitboard(type: Int) = pieceBitboards[type]
-    
+
+    fun getWhitePieces() = pieceBitboards[BITBOARD_WK] or
+            pieceBitboards[BITBOARD_WN] or
+            pieceBitboards[BITBOARD_WQ] or
+            pieceBitboards[BITBOARD_WB] or
+            pieceBitboards[BITBOARD_WR] or
+            pieceBitboards[BITBOARD_WP]
+
+    fun getBlackPieces() = pieceBitboards[BITBOARD_BK] or
+            pieceBitboards[BITBOARD_BN] or
+            pieceBitboards[BITBOARD_BQ] or
+            pieceBitboards[BITBOARD_BB] or
+            pieceBitboards[BITBOARD_BB] or
+            pieceBitboards[BITBOARD_BR] or
+            pieceBitboards[BITBOARD_BP]
+
     fun getPieceBitboard(type: SquareOccupant) = getPieceBitboard(type.index)
 
     fun movePiece(piece: SquareOccupant, compactMove: Int) {
@@ -64,11 +76,11 @@ class EngineBitboards() {
                 (pieceBitboards[SquareOccupant.WP.ofColour(attacker).index]
                         and getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L) return true
 
-        squareList(getBishopMovePiecesBitboard(attacker)).forEach {
+        applyToSquares(getBishopMovePiecesBitboard(attacker)) {
             if (isBishopAttackingSquare(attackedSquare, it, pieceBitboards[BITBOARD_ALL])) return true
         }
 
-        squareList(getRookMovePiecesBitboard(attacker)).forEach {
+        applyToSquares(getRookMovePiecesBitboard(attacker)) {
             if (isRookAttackingSquare(attackedSquare, it, pieceBitboards[BITBOARD_ALL])) return true
         }
 

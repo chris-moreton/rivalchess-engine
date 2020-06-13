@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.*
-import com.netsensia.rivalchess.bitboards.util.squareList
+import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.Limit
 import com.netsensia.rivalchess.engine.core.*
@@ -57,21 +57,15 @@ class MoveGenerator(
     private fun knightBitboardForMover() = if (mover == Colour.WHITE) bitboards[BITBOARD_WN] else bitboards[BITBOARD_BN]
 
     private fun generateKnightMoves(knightBitboard: Long) {
-        squareList(knightBitboard).forEach {
+        applyToSquares(knightBitboard) {
             addMoves(it shl 16, knightMoves[it] and
                     bitboards[BITBOARD_FRIENDLY].inv()) }
     }
 
     private fun addMoves(fromSquareMask: Int, bitboard: Long) {
-        addMoves(fromSquareMask, squareList(bitboard))
-    }
-
-    private fun addMoves(fromSquareMask: Int, squares: Sequence<Int>) {
-        squares.forEach {moves[moveCount++] = (fromSquareMask or it) }
-    }
-
-    private fun addMoves(fromSquareMask: Int, squares: List<Int>) {
-        squares.forEach {moves[moveCount++] = (fromSquareMask or it) }
+        applyToSquares(bitboard) {
+            moves[moveCount++] = (fromSquareMask or it)
+        }
     }
 
     private fun generateKingMoves(kingSquare: Int) {
@@ -120,7 +114,7 @@ class MoveGenerator(
             bitboards[whitePiece.index] or bitboards[BITBOARD_WQ] else
             bitboards[blackPiece.index] or bitboards[BITBOARD_BQ]
 
-        squareList(bitboard).forEach {
+        applyToSquares(bitboard) {
             addMoves(
                     it shl 16,
                     magicVars.moves[it][((bitboards[BITBOARD_ALL] and magicVars.mask[it]) *
@@ -153,7 +147,7 @@ class MoveGenerator(
     }
 
     private fun generateQuiesceKnightMoves(generateChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long) {
-        squareList(knightBitboard).forEach {
+        applyToSquares(knightBitboard) {
             addMoves(it shl 16, knightMoves[it] and if (generateChecks)
                 bitboards[BITBOARD_ENEMY] or
                         (knightMoves[enemyKingSquare] and bitboards[BITBOARD_FRIENDLY].inv())
@@ -164,7 +158,7 @@ class MoveGenerator(
 
     private fun generateQuiescePawnMoves(generateChecks: Boolean, bitboardMaskForwardPawnMoves: List<Long>, bitboardMaskCapturePawnMoves: List<Long>, enemyKingSquare: Int, pawnBitboard: Long) {
         var bitboardPawnMoves: Long
-        squareList(pawnBitboard).forEach {
+        applyToSquares(pawnBitboard) {
             bitboardPawnMoves = 0
             if (generateChecks) {
                 bitboardPawnMoves = pawnForwardMovesBitboard(bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard())
@@ -184,7 +178,7 @@ class MoveGenerator(
         val pieceBitboard = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(whiteSliderConstant) or
                 bitboards[BITBOARD_WQ] else engineBitboards.getPieceBitboard(blackSliderConstant) or bitboards[BITBOARD_BQ]
 
-        squareList(pieceBitboard).forEach {
+        applyToSquares(pieceBitboard) {
             val pieceMoves = magicVars.moves[it][((bitboards[BITBOARD_ALL] and magicVars.mask[it]) *
                     magicVars.number[it] ushr magicVars.shift[it]).toInt()] and bitboards[BITBOARD_FRIENDLY].inv()
             addMoves(it shl 16, pieceMoves and
@@ -194,7 +188,7 @@ class MoveGenerator(
     }
 
     private fun addPawnMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean) {
-        squareList(bitboard).forEach {
+        applyToSquares(bitboard) {
             if (it >= 56 || it <= 7) {
                 moves[moveCount++] = (fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
                 if (!queenCapturesOnly) {
@@ -216,7 +210,7 @@ class MoveGenerator(
             bitboardMaskCapturePawnMoves: List<Long>
     ) {
 
-        squareList(pawnBitboard).forEach {
+        applyToSquares(pawnBitboard) {
             addPawnMoves(it shl 16, pawnForwardAndCaptureMovesBitboard(
                     it,
                     bitboardMaskCapturePawnMoves,

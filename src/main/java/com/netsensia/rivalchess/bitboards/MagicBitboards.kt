@@ -59,7 +59,7 @@ object MagicBitboards {
         bitRef = 0
         while (bitRef <= 63) {
             mask = if (isRook) occupancyMaskRook[bitRef] else occupancyMaskBishop[bitRef]
-            setBitsInMask = squareList(mask).toList()
+            setBitsInMask = squareList(mask)
             bitCount = java.lang.Long.bitCount(mask)
             calculateOccupancyAttackSets(isRook, bitRef, setBitsInMask, bitCount)
             setMagicMoves(isRook, bitRef, bitCount)
@@ -196,7 +196,7 @@ object MagicBitboards {
         while (i < variationCount) {
             occupancyVariation!![i] = 0
             // find bits set in index "i" and map them to bits in the 64 bit "occupancyVariation"
-            setBitsInIndex = squareList(i.toLong()).toList()
+            setBitsInIndex = squareList(i.toLong())
             for (setBitInIndex in setBitsInIndex) {
                 occupancyVariation!![i] = occupancyVariation!![i] or (1L shl setBitsInMask[setBitInIndex])
                 // e.g. if setBitsInIndex[0] == 3 then the third bit (position 4) is set in counter "i"
