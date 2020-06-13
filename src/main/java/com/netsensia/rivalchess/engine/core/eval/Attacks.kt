@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.core.eval
 
 import com.netsensia.rivalchess.bitboards.*
+import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.Evaluation
 import com.netsensia.rivalchess.model.Piece
@@ -9,39 +10,57 @@ import com.netsensia.rivalchess.model.SquareOccupant
 class Attacks(bitboardData: BitboardData) {
     val whitePawns = whitePawnAttacks(bitboardData.whitePawns)
     val blackPawns = blackPawnAttacks(bitboardData.blackPawns)
-    val whiteRookPair = attackList(bitboardData, squareList(bitboardData.whiteRooks), ::rookAttacks)
-    val whiteBishopPair = attackList(bitboardData, squareList(bitboardData.whiteBishops), ::bishopAttacks)
-    val whiteQueenPair = attackList(bitboardData, squareList(bitboardData.whiteQueens), ::queenAttacks)
-    val whiteKnightPair = knightAttackList(squareList(bitboardData.whiteKnights))
-    val blackRookPair = attackList(bitboardData, squareList(bitboardData.blackRooks), ::rookAttacks)
-    val blackBishopPair = attackList(bitboardData, squareList(bitboardData.blackBishops), ::bishopAttacks)
-    val blackQueenPair = attackList(bitboardData, squareList(bitboardData.blackQueens), ::queenAttacks)
-    val blackKnightPair = knightAttackList(squareList(bitboardData.blackKnights))
+    val whiteRookPair = attackList(bitboardData, bitboardData.whiteRooks, ::rookAttacks)
+    val whiteBishopPair = attackList(bitboardData, bitboardData.whiteBishops, ::bishopAttacks)
+    val whiteQueenPair = attackList(bitboardData, bitboardData.whiteQueens, ::queenAttacks)
+    val whiteKnightPair = knightAttackList(bitboardData.whiteKnights)
+    val blackRookPair = attackList(bitboardData, bitboardData.blackRooks, ::rookAttacks)
+    val blackBishopPair = attackList(bitboardData, bitboardData.blackBishops, ::bishopAttacks)
+    val blackQueenPair = attackList(bitboardData, bitboardData.blackQueens, ::queenAttacks)
+    val blackKnightPair = knightAttackList(bitboardData.blackKnights)
 }
 
 fun whitePawnAttacks(whitePawns: Long) = whitePawns and FILE_A.inv() shl 9 or (whitePawns and FILE_H.inv() shl 7)
 
 fun blackPawnAttacks(blackPawns: Long) = blackPawns and FILE_A.inv() ushr 7 or (blackPawns and FILE_H.inv() ushr 9)
 
-inline fun attackList(bitboards: BitboardData, squares: List<Int>, fn: (BitboardData, Int) -> Long): Pair<List<Long>, Long> {
+inline fun attackList(bitboards: BitboardData, squaresBitboard: Long, fn: (BitboardData, Int) -> Long): Pair<List<Long>, Long> {
     var orred = 0L
-    return Pair(squares.map { it -> (fn(bitboards, it).also {orred = orred or it}) }.toList(), orred)
+    val list = mutableListOf<Long>()
+    applyToSquares(squaresBitboard) {
+        val attacksForSquare = fn(bitboards, it)
+        list.add(attacksForSquare)
+        orred = orred or attacksForSquare
+    }
+    return Pair(list, orred)
 }
 
-fun knightAttackList(squares: List<Int>): Pair<List<Long>, Long> {
+fun knightAttackList(squaresBitboard: Long): Pair<List<Long>, Long> {
     var orred = 0L
-    return Pair(squares.map { it -> (knightMoves[it].also {orred = orred or it}) }.toList(), orred)
+    val list = mutableListOf<Long>()
+    applyToSquares(squaresBitboard) {
+        val attacksForSquare = knightMoves[it]
+        list.add(attacksForSquare)
+        orred = orred or attacksForSquare
+    }
+    return Pair(list, orred)
 }
 
-fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>) =
-    squareList(whiteAttacksBitboard(bitboards, attacks))
-            .map { pieceValue(squareOccupants[it].piece) }
-            .fold(0) { acc, i -> acc + i }
+fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
+    var acc = 0
+    applyToSquares(whiteAttacksBitboard(bitboards, attacks)) {
+        acc += pieceValue(squareOccupants[it].piece)
+    }
+    return acc
+}
 
-fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>) =
-    squareList(blackAttacksBitboard(bitboards, attacks))
-            .map { pieceValue(squareOccupants[it].piece) }
-            .fold(0) { acc, i -> acc + i }
+fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
+    var acc = 0
+    applyToSquares(blackAttacksBitboard(bitboards, attacks)) {
+        acc += pieceValue(squareOccupants[it].piece)
+    }
+    return acc
+}
 
 fun whitePieceAttacks(attacks: Attacks) =
         attacks.whiteRookPair.second or
