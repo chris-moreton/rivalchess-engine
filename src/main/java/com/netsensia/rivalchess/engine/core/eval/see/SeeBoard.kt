@@ -18,7 +18,7 @@ class SeeBoard(board: EngineBoard) {
 
     var deltas: MutableList<Pair<Int, Long>> = mutableListOf()
     var enpassantHistory: MutableList<Long> = ArrayList()
-    var moveHistory: MutableList<MutableList<Pair<Int, Long>>> = ArrayList()
+    var moveHistory: MutableList<List<Pair<Int, Long>>> = ArrayList()
 
     var mover: Colour
 
@@ -30,13 +30,20 @@ class SeeBoard(board: EngineBoard) {
         deltas.clear()
         enpassantHistory.add(bitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE))
 
-
         val fromBit = 1L shl move.from()
         val toBit = 1L shl move.to()
 
         val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackList else whiteList)
         val capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteList else blackList)
-        var materialGain = if (capturedPieceBitboardType == BITBOARD_NONE) pieceValue(Piece.PAWN) else pieceValue(capturedPieceBitboardType)
+
+        var materialGain = if (capturedPieceBitboardType == BITBOARD_NONE) {
+            if (movedPieceBitboardType == BITBOARD_WP && (move.to() - move.from()) % 2 != 0) {
+                togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
+            } else if (movedPieceBitboardType == BITBOARD_BP && (move.to() - move.from()) % 2 != 0) {
+                togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
+            }
+            pieceValue(Piece.PAWN)
+        } else pieceValue(capturedPieceBitboardType)
 
         togglePiece(toBit, movedPieceBitboardType)
 
@@ -58,17 +65,9 @@ class SeeBoard(board: EngineBoard) {
             }
         }
 
-        if (capturedPieceBitboardType == BITBOARD_NONE) {
-            if (movedPieceBitboardType == BITBOARD_WP && (move.to() - move.from()) % 2 != 0) {
-                togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
-            } else if (movedPieceBitboardType == BITBOARD_BP && (move.to() - move.from()) % 2 != 0) {
-                togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
-            }
-        }
-
         mover = mover.opponent()
 
-        moveHistory.add(deltas.toMutableList())
+        moveHistory.add(deltas.toList())
 
         return materialGain
     }
@@ -87,7 +86,7 @@ class SeeBoard(board: EngineBoard) {
         return BITBOARD_NONE
     }
 
-    private fun togglePiece(squareBit: Long, bitboardType: Int) {
+    private inline fun togglePiece(squareBit: Long, bitboardType: Int) {
         bitboards.xorPieceBitboard(bitboardType, squareBit)
         deltas.add(Pair(bitboardType, squareBit))
     }

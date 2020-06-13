@@ -25,7 +25,7 @@ class EngineBitboards() {
         Arrays.fill(pieceBitboards, 0)
     }
 
-    fun xorPieceBitboard(i: Int, xorBy: Long) {
+    inline fun xorPieceBitboard(i: Int, xorBy: Long) {
         pieceBitboards[i] = pieceBitboards[i] xor xorBy
     }
 

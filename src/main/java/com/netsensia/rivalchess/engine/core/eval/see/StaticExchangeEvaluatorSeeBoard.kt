@@ -8,7 +8,6 @@ import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
-import java.lang.Long.numberOfTrailingZeros
 
 class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 

@@ -82,8 +82,7 @@ fun doubledRooksEval(squares: List<Int>) =
 
 fun flippedSquareTableScore(table: List<Int>, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
 
-fun kingAttackCount(dangerZone: Long, attacks: List<Long>) =
-    attacks.map { bitCount(it and dangerZone) }.fold(0) { acc, i -> acc + i }
+fun kingAttackCount(dangerZone: Long, attacks: List<Long>) = attacks.map { bitCount(it and dangerZone) }.fold(0) { acc, i -> acc + i }
 
 fun tradePieceBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int) =
     linearScale(
@@ -186,11 +185,9 @@ fun whiteA7TrappedBishopEval(bitboards: BitboardData) =
             Evaluation.VALUE_TRAPPED_BISHOP_PENALTY.value
         else 0
 
-fun blackPieceBitboard(bitboards: BitboardData) =
-        (bitboards.blackKnights or bitboards.blackRooks or bitboards.blackQueens or bitboards.blackBishops)
+fun blackPieceBitboard(bitboards: BitboardData) = (bitboards.blackKnights or bitboards.blackRooks or bitboards.blackQueens or bitboards.blackBishops)
 
-fun whitePieceBitboard(bitboards: BitboardData) =
-        (bitboards.whiteKnights or bitboards.whiteRooks or bitboards.whiteQueens or bitboards.whiteBishops)
+fun whitePieceBitboard(bitboards: BitboardData) = (bitboards.whiteKnights or bitboards.whiteRooks or bitboards.whiteQueens or bitboards.whiteBishops)
 
 fun isEndGame(bitboards: BitboardData) =
         (whitePieceValues(bitboards) +
