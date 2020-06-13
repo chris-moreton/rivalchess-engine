@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.eval.see
 
 import com.netsensia.rivalchess.bitboards.*
-import com.netsensia.rivalchess.bitboards.util.squareList
+import com.netsensia.rivalchess.bitboards.util.squareSequence
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
@@ -114,13 +114,10 @@ class SeeBoard(board: EngineBoard) {
                 bitCount(bitboards.getPieceBitboard(BITBOARD_BQ)) * pieceValue(Piece.QUEEN) +
                 bitCount(bitboards.getPieceBitboard(BITBOARD_BP)) * pieceValue(Piece.PAWN)
 
-    fun generateCaptureMovesOnSquare(square: Int): List<EngineMove> {
-
-        val moves = mutableListOf<EngineMove>()
-
-        knightCaptures(square, moves)
-        kingCaptures(square, moves)
-        pawnCaptures(square, moves)
+    fun generateCaptureMovesOnSquare(square: Int) = sequence {
+        yieldAll(pawnCaptures(square))
+        yieldAll(knightCaptures(square))
+        yieldAll(kingCaptures(square))
 
         val whiteBitboard = bitboards.getPieceBitboard(BITBOARD_WK) or
                 bitboards.getPieceBitboard(BITBOARD_WN) or
@@ -136,55 +133,53 @@ class SeeBoard(board: EngineBoard) {
                 bitboards.getPieceBitboard(BITBOARD_BR) or
                 bitboards.getPieceBitboard(BITBOARD_BP)
 
-        rookCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
-        bishopCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
+        val moverBitboard = if (mover == Colour.WHITE) whiteBitboard else blackBitboard
 
-        return moves
+        yieldAll(rookCaptures(square, whiteBitboard or blackBitboard, moverBitboard))
+        yieldAll(bishopCaptures(square, whiteBitboard or blackBitboard, moverBitboard))
     }
 
-    private fun pawnCaptures(square: Int, moves: MutableList<EngineMove>) {
+    private fun pawnCaptures(square: Int) = sequence {
         val pawnLocations = bitboards.getPieceBitboard(if (mover == Colour.WHITE) BITBOARD_WP else BITBOARD_BP)
         val pawnCaptureMoves = if (mover == Colour.WHITE) blackPawnMovesCapture[square] else whitePawnMovesCapture[square]
-        squareList(pawnCaptureMoves and pawnLocations).forEach {
+        squareSequence(pawnCaptureMoves and pawnLocations).forEach {
             if (square >= 56 || square <= 7)
-                moves.add(EngineMove(((it shl 16) or square) or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value))
+                yield(EngineMove(((it shl 16) or square) or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value))
             else
-                moves.add(EngineMove((it shl 16) or square))
+                yield(EngineMove((it shl 16) or square))
         }
     }
 
-    private fun kingCaptures(square: Int, moves: MutableList<EngineMove>) {
+    private fun kingCaptures(square: Int) = sequence {
         val kingLocations = bitboards.getPieceBitboard(if (mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK)
-        squareList(kingMoves[square] and kingLocations).forEach { moves.add(EngineMove((it shl 16) or square)) }
+        squareSequence(kingMoves[square] and kingLocations).forEach { yield(EngineMove((it shl 16) or square)) }
     }
 
-    private fun knightCaptures(square: Int, moves: MutableList<EngineMove>) {
+    private fun knightCaptures(square: Int) = sequence {
         val knightLocations = bitboards.getPieceBitboard(if (mover == Colour.WHITE) BITBOARD_WN else BITBOARD_BN)
-        squareList(knightMoves[square] and knightLocations).forEach { moves.add(EngineMove((it shl 16) or square)) }
+        squareSequence(knightMoves[square] and knightLocations).forEach { yield(EngineMove((it shl 16) or square)) }
     }
 
-    private fun bishopCaptures(square: Int, moves: MutableList<EngineMove>, allBitboard: Long, friendlyBitboard: Long) {
-        generateSliderMoves(
+    private fun bishopCaptures(square: Int, allBitboard: Long, friendlyBitboard: Long) = sequence {
+        yieldAll(generateSliderMoves(
                 SquareOccupant.WB,
                 SquareOccupant.BB,
                 MagicBitboards.bishopVars,
                 allBitboard,
                 friendlyBitboard,
-                square,
-                moves
+                square)
         )
     }
 
-    private fun rookCaptures(square: Int, moves: MutableList<EngineMove>, allBitboard: Long, friendlyBitboard: Long) {
-        generateSliderMoves(
+    private fun rookCaptures(square: Int, allBitboard: Long, friendlyBitboard: Long) = sequence {
+        yieldAll(generateSliderMoves(
                 SquareOccupant.WR,
                 SquareOccupant.BR,
                 MagicBitboards.rookVars,
                 allBitboard,
                 friendlyBitboard,
-                square,
-                moves
-        )
+                square
+        ))
     }
 
     private fun generateSliderMoves(
@@ -193,22 +188,21 @@ class SeeBoard(board: EngineBoard) {
             magicVars: MagicVars,
             allBitboard: Long,
             friendlyBitboard: Long,
-            toSquare: Int,
-            moves: MutableList<EngineMove>
-    ) {
+            toSquare: Int
+    ) = sequence {
 
         val bitboard: Long = if (mover == Colour.WHITE)
             bitboards.getPieceBitboard(whitePiece.index) or bitboards.getPieceBitboard(BITBOARD_WQ) else
             bitboards.getPieceBitboard(blackPiece.index) or bitboards.getPieceBitboard(BITBOARD_BQ)
 
-        squareList(bitboard).forEach {
+        squareSequence(bitboard).forEach {
             val moveToBitboard =
                     magicVars.moves[it][((allBitboard and magicVars.mask[it]) *
                             magicVars.number[it] ushr magicVars.shift[it]).toInt()] and
                             friendlyBitboard.inv()
 
             if (moveToBitboard and (1L shl toSquare) != 0L) {
-                moves.add(EngineMove((it shl 16) or toSquare))
+                yield(EngineMove((it shl 16) or toSquare))
             }
         }
     }
