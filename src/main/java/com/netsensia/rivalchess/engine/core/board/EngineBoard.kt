@@ -17,7 +17,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val engineBitboards = EngineBitboards()
     
     val squareContents = Array(64){SquareOccupant.NONE}
-    val squareOccupants: List<SquareOccupant> get() = squareContents.toList()
     val boardHashObject = BoardHash()
 
     var moveHistory: MutableList<MoveDetail> = ArrayList()

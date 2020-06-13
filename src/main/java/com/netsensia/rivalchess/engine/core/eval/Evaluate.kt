@@ -71,7 +71,6 @@ fun blackRookOpenFilesEval(bitboards: BitboardData, file: Int) =
         else 0
 
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) = (enemyPawnValues / pieceValue(Piece.PAWN)).coerceAtMost(6)
-
 fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 
 fun doubledRooksEval(squares: List<Int>) =
@@ -81,7 +80,6 @@ fun doubledRooksEval(squares: List<Int>) =
                 Evaluation.VALUE_ROOKS_ON_SAME_FILE.value else 0
 
 fun flippedSquareTableScore(table: List<Int>, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
-
 fun kingAttackCount(dangerZone: Long, attacks: List<Long>) = attacks.map { bitCount(it and dangerZone) }.fold(0) { acc, i -> acc + i }
 
 fun tradePieceBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int) =
@@ -110,12 +108,8 @@ fun whiteLightBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and
 fun whiteDarkBishopExists(bitboards: BitboardData) = bitboards.whiteBishops and DARK_SQUARES != 0L
 fun blackLightBishopExists(bitboards: BitboardData) = bitboards.blackBishops and LIGHT_SQUARES != 0L
 fun blackDarkBishopExists(bitboards: BitboardData) = bitboards.blackBishops and DARK_SQUARES != 0L
-
-fun whiteBishopColourCount(bitboards: BitboardData) =
-        (if (whiteLightBishopExists(bitboards)) 1 else 0) + if (whiteDarkBishopExists(bitboards)) 1 else 0
-
-fun blackBishopColourCount(bitboards: BitboardData) =
-        (if (blackLightBishopExists(bitboards)) 1 else 0) + if (blackDarkBishopExists(bitboards)) 1 else 0
+fun whiteBishopColourCount(bitboards: BitboardData) = (if (whiteLightBishopExists(bitboards)) 1 else 0) + if (whiteDarkBishopExists(bitboards)) 1 else 0
+fun blackBishopColourCount(bitboards: BitboardData) = (if (blackLightBishopExists(bitboards)) 1 else 0) + if (blackDarkBishopExists(bitboards)) 1 else 0
 
 fun oppositeColourBishopsEval(bitboards: BitboardData, materialDifference: Int): Int {
 
@@ -827,7 +821,7 @@ fun evaluate(board: EngineBoard): Int {
                 (whiteQueensEval(bitboards, whitePieces) - blackQueensEval(bitboards, blackPieces)) +
                 castlingEval(bitboards, board.castlePrivileges) +
                 bishopScore(bitboards, materialDifference, materialValues) +
-                threatEval(bitboards, attacks, board.squareOccupants) +
+                threatEval(bitboards, attacks, board.squareContents) +
                 kingSafetyEval(bitboards, attacks, board, kingSquares)
 
     val endGameAdjustedScore = if (isEndGame(bitboards)) endGameAdjustment(bitboards, eval, kingSquares) else eval

@@ -16,15 +16,15 @@ class ZobristHashTracker {
         private set
     private val switchMoverHashValue = whiteMoverHashValue xor blackMoverHashValue
 
-    fun initHash(engineBoard: EngineBoard?) {
-        trackedBoardHashValue = calculateHash(engineBoard!!)
+    fun initHash(engineBoard: EngineBoard) {
+        trackedBoardHashValue = calculateHash(engineBoard)
     }
 
-    private fun removeOrPlacePieceOnEmptySquare(squareOccupant: SquareOccupant, bitRef: Int) {
+    private inline fun removeOrPlacePieceOnEmptySquare(squareOccupant: SquareOccupant, bitRef: Int) {
         trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[squareOccupant.index][bitRef]
     }
 
-    private fun replaceWithAnotherPiece(movedPiece: SquareOccupant, capturedPiece: SquareOccupant, bitRef: Int) {
+    private inline fun replaceWithAnotherPiece(movedPiece: SquareOccupant, capturedPiece: SquareOccupant, bitRef: Int) {
         trackedBoardHashValue = trackedBoardHashValue xor
                 ZorbristHashCalculator.pieceHashValues[capturedPiece.index][bitRef] xor
                 ZorbristHashCalculator.pieceHashValues[movedPiece.index][bitRef]
@@ -80,7 +80,7 @@ class ZobristHashTracker {
         }
     }
 
-    private fun switchMover() {
+    private inline fun switchMover() {
         trackedBoardHashValue = trackedBoardHashValue xor switchMoverHashValue
     }
 

@@ -46,7 +46,7 @@ fun knightAttackList(squaresBitboard: Long): Pair<List<Long>, Long> {
     return Pair(list, orred)
 }
 
-fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
+fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: Array<SquareOccupant>): Int {
     var acc = 0
     applyToSquares(whiteAttacksBitboard(bitboards, attacks)) {
         acc += pieceValue(squareOccupants[it].piece)
@@ -54,7 +54,7 @@ fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants:
     return acc
 }
 
-fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>): Int {
+fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: Array<SquareOccupant>): Int {
     var acc = 0
     applyToSquares(blackAttacksBitboard(bitboards, attacks)) {
         acc += pieceValue(squareOccupants[it].piece)
@@ -80,7 +80,7 @@ fun whiteAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
 fun blackAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
         (blackPieceAttacks(attacks) or attacks.blackPawns) and whitePieceBitboard(bitboards)
 
-fun threatEval(bitboards: BitboardData, attacks: Attacks, squareOccupants: List<SquareOccupant>) =
+fun threatEval(bitboards: BitboardData, attacks: Attacks, squareOccupants: Array<SquareOccupant>) =
     (adjustedAttackScore(whiteAttackScore(bitboards, attacks, squareOccupants)) -
             adjustedAttackScore(blackAttackScore(bitboards, attacks, squareOccupants))) /
             Evaluation.THREAT_SCORE_DIVISOR.value

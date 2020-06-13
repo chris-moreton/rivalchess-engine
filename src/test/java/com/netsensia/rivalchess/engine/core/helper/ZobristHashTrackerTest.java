@@ -174,7 +174,6 @@ public class ZobristHashTrackerTest {
         final long trackedCode = ecb.trackedBoardHashCode();
         final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(calculatedHashCode, trackedCode);
-
     }
 
     @Test
@@ -187,8 +186,8 @@ public class ZobristHashTrackerTest {
             r.setSeed(i);
 
             MoveGenerator mg = ecb.moveGenerator();
-            int legalMoves[] = mg.generateLegalMoves().getMoveArray();
-            int numLegalMoves = mg.getNumLegalMoves();
+            int legalMoves[] = mg.generateLegalMoves().getMoves();
+            int numLegalMoves = mg.getMoveCount();
 
             while (!BoardExtensionsKt.isGameOver(ecb) && ecb.getHalfMoveCount() < 100) {
                 int move = legalMoves[r.nextInt(numLegalMoves)];
@@ -199,8 +198,8 @@ public class ZobristHashTrackerTest {
                 assertEquals(calculatedHashCode, trackedCode);
 
                 mg = ecb.moveGenerator();
-                legalMoves = mg.generateLegalMoves().getMoveArray();
-                numLegalMoves = mg.getNumLegalMoves();
+                legalMoves = mg.generateLegalMoves().getMoves();
+                numLegalMoves = mg.getMoveCount();
 
             }
         }

@@ -15,9 +15,9 @@ import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 
-fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef.xFile
+inline fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef.xFile
 
-fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
+inline fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
 
 fun getMoveRefFromEngineMove(move: Int): Move {
     val from = move shr 16 and 63
@@ -70,7 +70,7 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
         else -> throw InvalidMoveException("No piece found on source square")
     }
     var qualifier = ' '
-    val legalMoves = board.moveGenerator().generateLegalMoves().getMoveArray()
+    val legalMoves = board.moveGenerator().generateLegalMoves().moves
     var moveCount = 0
     var legalMove = legalMoves[moveCount] and 0x00FFFFFF
     while (legalMove != 0) {

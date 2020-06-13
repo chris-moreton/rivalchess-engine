@@ -17,7 +17,7 @@ class SeeBoard(board: EngineBoard) {
     private val blackList = listOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
 
     var deltas: MutableList<Pair<Int, Long>> = mutableListOf()
-    var enpassantHistory: MutableList<Long> = ArrayList()
+    var enPassantHistory: MutableList<Long> = ArrayList()
     var moveHistory: MutableList<List<Pair<Int, Long>>> = ArrayList()
 
     var mover: Colour
@@ -28,7 +28,7 @@ class SeeBoard(board: EngineBoard) {
 
     fun makeMove(move: EngineMove): Int {
         deltas.clear()
-        enpassantHistory.add(bitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE))
+        enPassantHistory.add(bitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE))
 
         val fromBit = 1L shl move.from()
         val toBit = 1L shl move.to()
@@ -72,6 +72,16 @@ class SeeBoard(board: EngineBoard) {
         return materialGain
     }
 
+    @ExperimentalStdlibApi
+    fun unMakeMove() {
+        val lastIndex = moveHistory.size-1
+        moveHistory[lastIndex].forEach { bitboards.xorPieceBitboard(it.first, it.second) }
+        bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, enPassantHistory[enPassantHistory.size-1])
+        mover = mover.opponent()
+        moveHistory.removeAt(lastIndex)
+        enPassantHistory.removeAt(lastIndex)
+    }
+
     private fun removePieceIfExistsInBitboard(squareBit: Long, bitboardType: Int): Boolean {
         val pieceBitboard = bitboards.getPieceBitboard(bitboardType)
         if (pieceBitboard or squareBit == pieceBitboard) {
@@ -89,15 +99,6 @@ class SeeBoard(board: EngineBoard) {
     private inline fun togglePiece(squareBit: Long, bitboardType: Int) {
         bitboards.xorPieceBitboard(bitboardType, squareBit)
         deltas.add(Pair(bitboardType, squareBit))
-    }
-
-    @ExperimentalStdlibApi
-    fun unMakeMove() {
-        moveHistory[moveHistory.size-1].forEach {bitboards.xorPieceBitboard(it.first, it.second)}
-        bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, enpassantHistory[enpassantHistory.size-1])
-        mover = mover.opponent()
-        moveHistory.removeLast()
-        enpassantHistory.removeLast()
     }
 
     val whitePieceValues: Int

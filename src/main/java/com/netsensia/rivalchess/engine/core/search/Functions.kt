@@ -4,7 +4,7 @@ import com.netsensia.rivalchess.config.Extensions
 import com.netsensia.rivalchess.config.FeatureFlag
 import com.netsensia.rivalchess.config.SearchConfig
 
-fun moveNoScore(move: Int) = move and 0x00FFFFFF
+inline fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
 fun moveSequence(moves: IntArray) = sequence {
     var i = -1;

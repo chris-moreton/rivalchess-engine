@@ -215,7 +215,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     else threatExtend = threatExtensions(it, extensions)
             }
 
-        orderedMoves[ply] = board.moveGenerator().generateLegalMoves().getMoveArray()
+        orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         val startNodes = nodes
         highScoreMoveSequence(board, ply, highRankingMove).forEach {
@@ -499,7 +499,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return orderedMoves[ply]
     }
 
-    private fun boardMoves() = engineBoard.moveGenerator().generateLegalMoves().getMoveArray()
+    private fun boardMoves() = engineBoard.moveGenerator().generateLegalMoves().moves
 
     private fun isBookMoveAvailable(): Boolean {
         if (useOpeningBook) {
@@ -644,14 +644,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun setOrderedMovesArrayForQuiesce(isCheck: Boolean, ply: Int, board: EngineBoard, quiescePly: Int) {
         if (isCheck) {
-            orderedMoves[ply] = board.moveGenerator()
-                    .generateLegalMoves()
-                    .getMoveArray()
+            orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
             scoreFullWidthMoves(board, ply)
         } else {
             orderedMoves[ply] = board.moveGenerator()
                     .generateLegalQuiesceMoves(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
-                    .getMoveArray()
+                    .moves
             scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
         }
     }

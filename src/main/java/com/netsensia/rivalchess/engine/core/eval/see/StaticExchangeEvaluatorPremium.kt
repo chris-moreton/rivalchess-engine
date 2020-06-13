@@ -44,7 +44,7 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
                 (board.blackPawnValues + board.blackPieceValues - (board.whitePawnValues + board.whitePieceValues))
 
     private fun getCaptureMovesOnSquare(board: EngineBoard, captureSquare: Int) = sequence {
-        for (move in board.moveGenerator().generateLegalQuiesceMoves(false).getMoveArray()) {
+        for (move in board.moveGenerator().generateLegalQuiesceMoves(false).moves) {
             if (move == 0) break
             if (move and 63 == captureSquare) yield(EngineMove(move))
         }

@@ -118,7 +118,7 @@ class BoardHash {
         setHashTable()
     }
 
-    fun initialiseHashCode(engineBoard: EngineBoard?) {
+    fun initialiseHashCode(engineBoard: EngineBoard) {
         hashTracker.initHash(engineBoard)
     }
 

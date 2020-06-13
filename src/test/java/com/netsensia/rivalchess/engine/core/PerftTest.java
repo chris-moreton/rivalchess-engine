@@ -27,7 +27,7 @@ public class PerftTest {
         long nodes = 0;
         int moveNum = 0;
 
-        int[] legalMoves = board.moveGenerator().generateLegalMoves().getMoveArray();
+        int[] legalMoves = board.moveGenerator().generateLegalMoves().getMoves();
 
         while (legalMoves[moveNum] != 0) {
             if (makeMove(board, new EngineMove(legalMoves[moveNum]))) {
