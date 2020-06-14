@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 class SearchPath {
     @JvmField
 	val move: IntArray
-
     @JvmField
     var score = 0
     @JvmField
@@ -16,11 +15,6 @@ class SearchPath {
         height = 0
         score = -Int.MAX_VALUE
         return this
-    }
-
-    fun setPath(move: Int) {
-        height = 1
-        this.move[0] = move
     }
 
     fun setPath(path: SearchPath) {

@@ -12,8 +12,9 @@ import com.netsensia.rivalchess.util.getBitRefFromBoardRef
 import com.netsensia.rivalchess.util.getMoveRefFromEngineMove
 
 class ZobristHashTracker {
+    @JvmField
     var trackedBoardHashValue: Long = 0
-        private set
+
     private val switchMoverHashValue = whiteMoverHashValue xor blackMoverHashValue
 
     fun initHash(engineBoard: EngineBoard) {
@@ -30,14 +31,14 @@ class ZobristHashTracker {
                 ZorbristHashCalculator.pieceHashValues[movedPiece.index][bitRef]
     }
 
-    private fun processPossibleWhiteKingSideCastle(bitRefTo: Int) {
+    private inline fun processPossibleWhiteKingSideCastle(bitRefTo: Int) {
         if (bitRefTo == 1) {
             removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 0)
             removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 2)
         }
     }
 
-    private fun processPossibleWhiteQueenSideCastle(bitRefTo: Int) {
+    private inline fun processPossibleWhiteQueenSideCastle(bitRefTo: Int) {
         if (bitRefTo == 5) {
             removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 7)
             removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 4)
@@ -99,9 +100,7 @@ class ZobristHashTracker {
         if (movedPiece == SquareOccupant.WP) {
             processPossibleWhitePawnEnPassantCapture(move, capturedPiece)
             val promotionPiece = move.promotedPiece
-            if (promotionPiece != SquareOccupant.NONE) {
-                replaceWithAnotherPiece(promotionPiece, SquareOccupant.WP, bitRefTo)
-            }
+            if (promotionPiece != SquareOccupant.NONE) replaceWithAnotherPiece(promotionPiece, SquareOccupant.WP, bitRefTo)
         }
         if (movedPiece == SquareOccupant.BP) {
             processPossibleBlackPawnEnPassantCapture(move, capturedPiece)

@@ -15,11 +15,10 @@ class SeeBoard(board: EngineBoard) {
     @JvmField
     val bitboards = EngineBitboards(board.engineBitboards)
 
-    private val whiteList = listOf(BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR)
-    private val blackList = listOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
+    private val whiteBitboardIndexes = listOf(BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR)
+    private val blackBitboardIndexes = listOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
 
     private val deltas: MutableList<Pair<Int, Long>> = mutableListOf()
-
     private val enPassantHistory: MutableList<Long> = ArrayList()
     private val moveHistory: MutableList<List<Pair<Int, Long>>> = ArrayList()
 
@@ -38,8 +37,8 @@ class SeeBoard(board: EngineBoard) {
         val fromBit = 1L shl move.from()
         val toBit = 1L shl move.to()
 
-        val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackList else whiteList)
-        capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteList else blackList)
+        val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackBitboardIndexes else whiteBitboardIndexes)
+        capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteBitboardIndexes else blackBitboardIndexes)
 
         var materialGain = if (capturedPieceBitboardType == BITBOARD_NONE) {
             if ((move.to() - move.from()) % 2 != 0) {

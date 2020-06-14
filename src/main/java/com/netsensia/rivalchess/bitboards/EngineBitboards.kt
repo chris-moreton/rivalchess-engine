@@ -26,7 +26,7 @@ class EngineBitboards() {
         Arrays.fill(pieceBitboards, 0)
     }
 
-    inline fun xorPieceBitboard(i: Int, xorBy: Long) {
+    fun xorPieceBitboard(i: Int, xorBy: Long) {
         pieceBitboards[i] = pieceBitboards[i] xor xorBy
     }
 
@@ -51,7 +51,6 @@ class EngineBitboards() {
             pieceBitboards[BITBOARD_BN] or
             pieceBitboards[BITBOARD_BQ] or
             pieceBitboards[BITBOARD_BB] or
-            pieceBitboards[BITBOARD_BB] or
             pieceBitboards[BITBOARD_BR] or
             pieceBitboards[BITBOARD_BP]
 
@@ -63,11 +62,11 @@ class EngineBitboards() {
         pieceBitboards[piece.index] = pieceBitboards[piece.index] xor (fromMask or toMask)
     }
 
-    private fun getRookMovePiecesBitboard(colour: Colour) =
+    fun getRookMovePiecesBitboard(colour: Colour) =
         if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WR) or getPieceBitboard(BITBOARD_WQ) else
             getPieceBitboard(BITBOARD_BR) or getPieceBitboard(BITBOARD_BQ)
 
-    private fun getBishopMovePiecesBitboard(colour: Colour) =
+    fun getBishopMovePiecesBitboard(colour: Colour) =
         if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WB) or getPieceBitboard(BITBOARD_WQ) else
             getPieceBitboard(BITBOARD_BB) or getPieceBitboard(BITBOARD_BQ)
 

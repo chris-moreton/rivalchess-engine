@@ -4,7 +4,7 @@ import com.netsensia.rivalchess.config.Extensions
 import com.netsensia.rivalchess.config.FeatureFlag
 import com.netsensia.rivalchess.config.SearchConfig
 
-inline fun moveNoScore(move: Int) = move and 0x00FFFFFF
+fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
 fun moveSequence(moves: IntArray) = sequence {
     var i = -1;
@@ -13,12 +13,17 @@ fun moveSequence(moves: IntArray) = sequence {
     }
 }
 
+fun applyToMoves(moves: IntArray, fn: (Int) -> SearchPath) {
+    var i = -1;
+    while (moveNoScore(moves[++i]) != 0) {
+        fn (moves[i])
+    }
+}
+
 fun moveCount(moves: IntArray) = moves.indexOfFirst { it == 0 }
 
 fun swapElements(a: IntArray, i1: Int, i2: Int) {
-    val tempScore: Int = a[i1]
-    a[i1] = a[i2]
-    a[i2] = tempScore
+    a[i1] = a[i2].also{ a[i2] = a[i1] }
 }
 
 fun nullMoveReduceDepth(depthRemaining: Int) =

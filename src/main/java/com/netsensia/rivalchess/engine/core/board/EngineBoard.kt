@@ -167,7 +167,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val allPiecesBitboard: Long
         get() = engineBitboards.getPieceBitboard(BITBOARD_ALL)
 
-    inline fun getBitboard(bitboardType: Int) = engineBitboards.getPieceBitboard(bitboardType)
+    fun getBitboard(bitboardType: Int) = engineBitboards.getPieceBitboard(bitboardType)
 
     fun previousOccurrencesOfThisPosition(): Int {
         val boardHashCode = boardHashObject.trackedHashValue
