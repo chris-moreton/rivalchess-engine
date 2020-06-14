@@ -36,8 +36,7 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
         for (move in seeBoard.generateCaptureMovesOnSquare(captureSquare)) {
             val materialGain = seeBoard.makeMove(move)
 
-            val kingBitboard = if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK
-            if (seeBoard.bitboards.getPieceBitboard(kingBitboard) == 0L) {
+            if (seeBoard.capturedPieceBitboardType == if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK) {
                 seeBoard.unMakeMove()
                 return bestScore + pieceValue(Piece.KING)
             }

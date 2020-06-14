@@ -26,8 +26,8 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     var castlePrivileges = 0
     lateinit var mover: Colour
-    var whiteKingSquare: Byte = 0
-    var blackKingSquare: Byte = 0
+    var whiteKingSquare = 0
+    var blackKingSquare = 0
 
     var isOnNullMove = false
 
@@ -89,7 +89,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         Arrays.fill(squareContents, SquareOccupant.NONE)
         for (y in 0..7) {
             for (x in 0..7) {
-                val bitNum = (63 - 8 * y - x).toByte()
+                val bitNum = (63 - 8 * y - x)
                 val squareOccupant = board.getSquareOccupant(Square.fromCoords(x, y))
                 squareContents[bitNum.toInt()] = squareOccupant
                 if (squareOccupant != SquareOccupant.NONE) {
@@ -167,17 +167,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val allPiecesBitboard: Long
         get() = engineBitboards.getPieceBitboard(BITBOARD_ALL)
 
-    fun getWhiteKingSquare() = whiteKingSquare.toInt()
-
-    fun getBlackKingSquare() = blackKingSquare.toInt()
-
-    fun getBitboardType(index: Int): Long {
-        return engineBitboards.getPieceBitboard(index)
-    }
-
-    fun getBitboard(bitboardType: Int): Long {
-        return engineBitboards.getPieceBitboard(bitboardType)
-    }
+    inline fun getBitboard(bitboardType: Int) = engineBitboards.getPieceBitboard(bitboardType)
 
     fun previousOccurrencesOfThisPosition(): Int {
         val boardHashCode = boardHashObject.trackedHashValue

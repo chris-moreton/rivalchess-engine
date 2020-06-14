@@ -43,9 +43,9 @@ fun EngineBoard.getPiece(bitRef: Int) = when (squareContents.get(bitRef)) {
 
 fun EngineBoard.isCheck(colour: Colour) =
     if (colour == Colour.WHITE)
-        this.engineBitboards.isSquareAttackedBy(getWhiteKingSquare(), Colour.BLACK)
+        this.engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK)
     else
-        this.engineBitboards.isSquareAttackedBy(getBlackKingSquare(), Colour.WHITE)
+        this.engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE)
 
 @Throws(InvalidMoveException::class)
 fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {

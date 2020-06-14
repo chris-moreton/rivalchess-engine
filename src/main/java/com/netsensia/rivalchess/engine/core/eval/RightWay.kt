@@ -117,7 +117,7 @@ fun checkForPositionD(
 }
 
 fun getWhiteKingRightWayScore(engineBoard: EngineBoard): Int {
-    return if (engineBoard.getWhiteKingSquare() == 1 || engineBoard.getWhiteKingSquare() == 8) {
+    return if (engineBoard.whiteKingSquare == 1 || engineBoard.whiteKingSquare == 8) {
         scoreRightWayPositions(engineBoard,
                 RightWaySquares(0, 8, 16, 9, 17, 2, 10, 18, 26), true,
                 Colour.WHITE)
@@ -125,7 +125,7 @@ fun getWhiteKingRightWayScore(engineBoard: EngineBoard): Int {
 }
 
 fun getBlackKingRightWayScore(engineBoard: EngineBoard): Int {
-    return if (engineBoard.getBlackKingSquare() == 57 || engineBoard.getBlackKingSquare() == 48) {
+    return if (engineBoard.blackKingSquare == 57 || engineBoard.blackKingSquare == 48) {
         scoreRightWayPositions(engineBoard,
                 RightWaySquares(56, 48, 40, 49, 41, 58, 50, 42, 34), false,
                 Colour.BLACK)

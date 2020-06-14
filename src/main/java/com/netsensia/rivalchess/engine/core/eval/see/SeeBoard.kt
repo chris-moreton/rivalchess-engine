@@ -12,15 +12,20 @@ import java.lang.Long.bitCount
 import java.lang.Long.numberOfTrailingZeros
 
 class SeeBoard(board: EngineBoard) {
+    @JvmField
     val bitboards = EngineBitboards(board.engineBitboards)
+
     private val whiteList = listOf(BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR)
     private val blackList = listOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
 
-    var deltas: MutableList<Pair<Int, Long>> = mutableListOf()
-    var enPassantHistory: MutableList<Long> = ArrayList()
-    var moveHistory: MutableList<List<Pair<Int, Long>>> = ArrayList()
+    private val deltas: MutableList<Pair<Int, Long>> = mutableListOf()
+
+    private val enPassantHistory: MutableList<Long> = ArrayList()
+    private val moveHistory: MutableList<List<Pair<Int, Long>>> = ArrayList()
 
     var mover: Colour
+
+    var capturedPieceBitboardType: Int = BITBOARD_NONE
 
     init {
         mover = board.mover
@@ -34,13 +39,12 @@ class SeeBoard(board: EngineBoard) {
         val toBit = 1L shl move.to()
 
         val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackList else whiteList)
-        val capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteList else blackList)
+        capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteList else blackList)
 
         var materialGain = if (capturedPieceBitboardType == BITBOARD_NONE) {
-            if (movedPieceBitboardType == BITBOARD_WP && (move.to() - move.from()) % 2 != 0) {
-                togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
-            } else if (movedPieceBitboardType == BITBOARD_BP && (move.to() - move.from()) % 2 != 0) {
-                togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
+            if ((move.to() - move.from()) % 2 != 0) {
+                if (movedPieceBitboardType == BITBOARD_WP) togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
+                else if (movedPieceBitboardType == BITBOARD_BP) togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
             }
             pieceValue(Piece.PAWN)
         } else pieceValue(capturedPieceBitboardType)

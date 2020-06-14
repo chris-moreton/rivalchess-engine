@@ -11,6 +11,51 @@ import com.netsensia.rivalchess.model.Square
 import java.lang.Long.bitCount
 import kotlin.math.abs
 
+fun evaluate(board: EngineBoard): Int {
+
+    val bitboards = BitboardData(board)
+
+    if (onlyKingsRemain(bitboards)) return 0
+
+    val attacks = Attacks(bitboards)
+    val materialValues = MaterialValues(bitboards)
+    val kingSquares = KingSquares(bitboards)
+
+    val whitePieces = if (board.mover == Colour.WHITE) bitboards.friendly else bitboards.enemy
+    val blackPieces = if (board.mover == Colour.WHITE) bitboards.enemy else bitboards.friendly
+
+    val materialDifference = materialDifferenceEval(materialValues)
+
+    val eval =  materialDifference +
+            (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
+            (doubledRooksEval(squareList(bitboards.whiteRooks)) - doubledRooksEval(squareList(bitboards.blackRooks))) +
+            pawnScore(bitboards.whitePawns,
+                    bitboards.blackPawns,
+                    attacks, materialValues,
+                    board.whiteKingSquare,
+                    board.blackKingSquare,
+                    board.mover) +
+            (whiteBishopEval(bitboards, whitePieces) -
+                    blackBishopsEval(bitboards, blackPieces)) +
+            (whiteKnightsEval(bitboards, attacks, materialValues) -
+                    blackKnightsEval(bitboards, attacks, materialValues)) +
+            tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
+            tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
+            (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares)) +
+            (whitePawnsEval(bitboards) - blackPawnsEval(bitboards)) +
+            (whiteRooksEval(bitboards, whitePieces) - blackRooksEval(bitboards, blackPieces)) +
+            (whiteQueensEval(bitboards, whitePieces) - blackQueensEval(bitboards, blackPieces)) +
+            castlingEval(bitboards, board.castlePrivileges) +
+            bishopScore(bitboards, materialDifference, materialValues) +
+            threatEval(bitboards, attacks, board.squareContents) +
+            kingSafetyEval(bitboards, attacks, board, kingSquares)
+
+    val endGameAdjustedScore = if (isEndGame(bitboards)) endGameAdjustment(bitboards, eval, kingSquares) else eval
+
+    return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
+
+}
+
 fun materialDifferenceEval(materialValues: MaterialValues) =
         materialValues.whitePieces - materialValues.blackPieces +
                 materialValues.whitePawns - materialValues.blackPawns
@@ -785,47 +830,3 @@ private fun xCoordOfSquare(it: Int) = it % 8
 
 private fun yCoordOfSquare(kingSquare: Int) = kingSquare / 8
 
-fun evaluate(board: EngineBoard): Int {
-
-    val bitboards = BitboardData(board)
-
-    if (onlyKingsRemain(bitboards)) return 0
-
-    val attacks = Attacks(bitboards)
-    val materialValues = MaterialValues(bitboards)
-    val kingSquares = KingSquares(bitboards)
-
-    val whitePieces = if (board.mover == Colour.WHITE) bitboards.friendly else bitboards.enemy
-    val blackPieces = if (board.mover == Colour.WHITE) bitboards.enemy else bitboards.friendly
-
-    val materialDifference = materialDifferenceEval(materialValues)
-
-    val eval =  materialDifference +
-                (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
-                (doubledRooksEval(squareList(bitboards.whiteRooks)) - doubledRooksEval(squareList(bitboards.blackRooks))) +
-                pawnScore(bitboards.whitePawns,
-                        bitboards.blackPawns,
-                        attacks, materialValues,
-                        board.getWhiteKingSquare(),
-                        board.getBlackKingSquare(),
-                        board.mover) +
-                (whiteBishopEval(bitboards, whitePieces) -
-                        blackBishopsEval(bitboards, blackPieces)) +
-                (whiteKnightsEval(bitboards, attacks, materialValues) -
-                        blackKnightsEval(bitboards, attacks, materialValues)) +
-                tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
-                tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
-                (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares)) +
-                (whitePawnsEval(bitboards) - blackPawnsEval(bitboards)) +
-                (whiteRooksEval(bitboards, whitePieces) - blackRooksEval(bitboards, blackPieces)) +
-                (whiteQueensEval(bitboards, whitePieces) - blackQueensEval(bitboards, blackPieces)) +
-                castlingEval(bitboards, board.castlePrivileges) +
-                bishopScore(bitboards, materialDifference, materialValues) +
-                threatEval(bitboards, attacks, board.squareContents) +
-                kingSafetyEval(bitboards, attacks, board, kingSquares)
-
-    val endGameAdjustedScore = if (isEndGame(bitboards)) endGameAdjustment(bitboards, eval, kingSquares) else eval
-
-    return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
-
-}

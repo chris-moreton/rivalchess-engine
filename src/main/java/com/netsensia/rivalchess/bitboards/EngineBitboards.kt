@@ -8,7 +8,8 @@ import java.lang.Long.numberOfTrailingZeros
 import java.util.*
 
 class EngineBitboards() {
-    lateinit var pieceBitboards: LongArray
+    @JvmField
+    var pieceBitboards = LongArray(BITBOARD_COUNT)
 
     init {
         reset()

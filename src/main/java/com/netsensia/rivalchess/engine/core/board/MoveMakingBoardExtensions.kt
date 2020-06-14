@@ -190,9 +190,9 @@ private fun EngineBoard.replaceMovedPiece(fromSquare: Int, fromMask: Long, toMas
     val movePiece = moveHistory[numMovesMade].movePiece
     this.engineBitboards.xorPieceBitboard(movePiece.index, toMask or fromMask)
     if (movePiece == SquareOccupant.WK) {
-        whiteKingSquare = fromSquare.toByte()
+        whiteKingSquare = fromSquare
     } else if (movePiece == SquareOccupant.BK) {
-        blackKingSquare = fromSquare.toByte()
+        blackKingSquare = fromSquare
     }
     return movePiece
 }
@@ -228,8 +228,8 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece
 }
 
 private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
-    val moveFrom = (compactMove ushr 16).toByte()
-    val moveTo = (compactMove and 63).toByte()
+    val moveFrom = (compactMove ushr 16)
+    val moveTo = (compactMove and 63)
     val fromMask = 1L shl moveFrom.toInt()
     val toMask = 1L shl moveTo.toInt()
     castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_BNONE.value
@@ -302,10 +302,10 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece
 }
 
 private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
-    val moveFrom = (compactMove ushr 16).toByte()
-    val moveTo = (compactMove and 63).toByte()
-    val fromMask = 1L shl moveFrom.toInt()
-    val toMask = 1L shl moveTo.toInt()
+    val moveFrom = (compactMove ushr 16)
+    val moveTo = (compactMove and 63)
+    val fromMask = 1L shl moveFrom
+    val toMask = 1L shl moveTo
     whiteKingSquare = moveTo
     castlePrivileges = castlePrivileges and CastleBitMask.CASTLEPRIV_WNONE.value
     if (toMask or fromMask == WHITEKINGSIDECASTLEMOVEMASK) {
