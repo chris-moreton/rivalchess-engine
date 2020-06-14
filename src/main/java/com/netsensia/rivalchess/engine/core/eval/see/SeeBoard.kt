@@ -198,14 +198,11 @@ class SeeBoard(board: EngineBoard) {
             bitboards.getPieceBitboard(blackPiece.index) or bitboards.getPieceBitboard(BITBOARD_BQ)
 
         applyToSquares(bitboard) {
-            val moveToBitboard =
-                    magicVars.moves[it][((allBitboard and magicVars.mask[it]) *
+            val moveToBitboard = magicVars.moves[it][((allBitboard and magicVars.mask[it]) *
                             magicVars.number[it] ushr magicVars.shift[it]).toInt()] and
                             friendlyBitboard.inv()
 
-            if (moveToBitboard and (1L shl toSquare) != 0L) {
-                moves.add(EngineMove((it shl 16) or toSquare))
-            }
+            if (moveToBitboard and (1L shl toSquare) != 0L) moves.add(EngineMove((it shl 16) or toSquare))
         }
     }
 }

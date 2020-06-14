@@ -719,13 +719,25 @@ fun pawnScore(whitePawnBitboard: Long,
     val whiteOccupiedFileMask = southFill(whitePawnBitboard, 8) and RANK_1
     val blackOccupiedFileMask = southFill(blackPawnBitboard, 8) and RANK_1
 
-    val whitePassedPawnScore = bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value +
-            squareList(whitePassedPawnsBitboard)
-                    .map { Evaluation.getPassedPawnBonus(yCoordOfSquare(it)) }.fold(0) { acc, i -> acc + i }
+    fun whitePassedPawnScore(): Int {
+        var acc = 0
 
-    val blackPassedPawnScore = bitCount(blackGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value +
-            squareList(blackPassedPawnsBitboard)
-                    .map { Evaluation.getPassedPawnBonus(7 - yCoordOfSquare(it)) }.fold(0) { acc, i -> acc + i }
+        applyToSquares(whitePassedPawnsBitboard) {
+            acc += Evaluation.getPassedPawnBonus(yCoordOfSquare(it))
+        }
+
+        return bitCount(whiteGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value + acc
+    }
+
+    fun blackPassedPawnScore(): Int {
+        var acc = 0
+
+        applyToSquares(blackPassedPawnsBitboard) {
+            acc += Evaluation.getPassedPawnBonus(7 - yCoordOfSquare(it))
+        }
+
+        return bitCount(blackGuardedPassedPawns) * Evaluation.VALUE_GUARDED_PASSED_PAWN.value + acc
+    }
 
     return bitCount(blackIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.value -
             bitCount(whiteIsolatedPawns) * Evaluation.VALUE_ISOLATED_PAWN_PENALTY.value -
@@ -755,8 +767,8 @@ fun pawnScore(whitePawnBitboard: Long,
             bitCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.value +
             Evaluation.VALUE_DOUBLED_PAWN_PENALTY.value * (materialValues.blackPawns / 100 - bitCount(blackOccupiedFileMask)) +
             bitCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * Evaluation.VALUE_PAWN_ISLAND_PENALTY.value +
-            (linearScale(materialValues.blackPieces, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, whitePassedPawnScore * 2, whitePassedPawnScore)) -
-            (linearScale(materialValues.whitePieces, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, blackPassedPawnScore * 2, blackPassedPawnScore)) +
+            (linearScale(materialValues.blackPieces, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, whitePassedPawnScore() * 2, whitePassedPawnScore())) -
+            (linearScale(materialValues.whitePieces, 0, Evaluation.PAWN_ADJUST_MAX_MATERIAL.value, blackPassedPawnScore() * 2, blackPassedPawnScore())) +
             (if (materialValues.blackPieces < Evaluation.PAWN_ADJUST_MAX_MATERIAL.value)
                 calculateLowMaterialPawnBonus(
                         Colour.BLACK,

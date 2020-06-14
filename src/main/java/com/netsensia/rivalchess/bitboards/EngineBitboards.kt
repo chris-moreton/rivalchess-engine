@@ -62,11 +62,11 @@ class EngineBitboards() {
         pieceBitboards[piece.index] = pieceBitboards[piece.index] xor (fromMask or toMask)
     }
 
-    fun getRookMovePiecesBitboard(colour: Colour) =
+    private fun getRookMovePiecesBitboard(colour: Colour) =
         if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WR) or getPieceBitboard(BITBOARD_WQ) else
             getPieceBitboard(BITBOARD_BR) or getPieceBitboard(BITBOARD_BQ)
 
-    fun getBishopMovePiecesBitboard(colour: Colour) =
+    private fun getBishopMovePiecesBitboard(colour: Colour) =
         if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WB) or getPieceBitboard(BITBOARD_WQ) else
             getPieceBitboard(BITBOARD_BB) or getPieceBitboard(BITBOARD_BQ)
 

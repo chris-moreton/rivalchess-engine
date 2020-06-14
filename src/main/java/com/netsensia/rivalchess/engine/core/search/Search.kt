@@ -50,8 +50,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private var millisToThink = 0
     private var nodesToSearch = Int.MAX_VALUE
+    @JvmField
     var abortingSearch = true
-        private set
     private var searchStartTime: Long = -1
     private var searchTargetEndTime: Long = 0
     private var searchEndTime: Long = 0
@@ -143,10 +143,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 newPath.score = -newPath.score
                 if (newPath.score >= window.high) {
                     board.unMakeMove()
-                    bestPath.setPath(move, newPath)
                     engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, HashValueType.LOWER.index.toByte(), depth)
                     depthZeroMoveScores[numMoves] = newPath.score
-                    return bestPath
+                    return bestPath.withPath(move, newPath)
                 }
 
                 if (newPath.score > bestPath.score) bestPath.setPath(move, newPath)
@@ -167,15 +166,17 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         if (abortingSearch) return SearchPath()
 
-        if (numLegalMoves == 1 && millisToThink < Limit.MAX_SEARCH_MILLIS.value) {
+        if (onlyOneMoveAndNotOnFixedTime(numLegalMoves)) {
             abortingSearch = true
             currentPath.setPath(bestPath) // otherwise we will crash!
-        } else {
-            engineBoard.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashEntryType.toByte(), depth)
+            return bestPath
         }
 
+        engineBoard.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashEntryType.toByte(), depth)
         return bestPath
     }
+
+    private fun onlyOneMoveAndNotOnFixedTime(numLegalMoves: Int) = numLegalMoves == 1 && millisToThink < Limit.MAX_SEARCH_MILLIS.value
 
     @Throws(InvalidMoveException::class)
     fun search(board: EngineBoard, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath {
@@ -438,14 +439,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.value &&
                     (if (board.mover == Colour.WHITE) board.whitePawnValues else board.blackPawnValues) > 0))
 
-    private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, window: Window, extensions: Int): SearchPath? {
+    private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, window: Window, extensions: Int): SearchPath {
         board.makeNullMove()
         val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply + 1, Window(-window.high, -window.low), extensions, -1, false)
         board.unMakeNullMove()
         return newPath
     }
 
-    private fun threatExtensions(newPath: SearchPath?, extensions: Int) =
+    private fun threatExtensions(newPath: SearchPath, extensions: Int) =
         if (Extensions.FRACTIONAL_EXTENSION_THREAT.value > 0 && -newPath!!.score < -Evaluation.MATE_SCORE_START.value && extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value)
             1 else 0
 
@@ -453,12 +454,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value && Extensions.FRACTIONAL_EXTENSION_CHECK.value > 0 && isCheck)
             1 else 0
 
-    private fun adjustScoreForMateDepth(newPath: SearchPath?) {
-        if (newPath != null) {
-            newPath.score += if (newPath.score > Evaluation.MATE_SCORE_START.value) -1
-            else if (newPath.score < -Evaluation.MATE_SCORE_START.value) 1
-            else 0
-        }
+    private fun adjustScoreForMateDepth(newPath: SearchPath) {
+        newPath.score += if (newPath.score > Evaluation.MATE_SCORE_START.value) -1
+        else if (newPath.score < -Evaluation.MATE_SCORE_START.value) 1
+        else 0
     }
 
     private fun reorderDepthZeroMoves() {

@@ -28,11 +28,10 @@ fun getPawnMovesCaptureOfColour(colour: Colour): List<Long> =
 fun isBishopAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long) =
     (MagicBitboards.magicMovesBishop[pieceSquare][getMagicIndexForBishop(pieceSquare, allPieceBitboard)] and (1L shl attackedSquare)) != 0L
 
-fun getMagicIndexForBishop(pieceSquare: Int, allPieceBitboard: Long): Int {
-    return ((allPieceBitboard and MagicBitboards.occupancyMaskBishop[pieceSquare]) *
+fun getMagicIndexForBishop(pieceSquare: Int, allPieceBitboard: Long) =
+    ((allPieceBitboard and MagicBitboards.occupancyMaskBishop[pieceSquare]) *
             MagicBitboards.magicNumberBishop[pieceSquare] ushr
             MagicBitboards.magicNumberShiftsBishop[pieceSquare]).toInt()
-}
 
 fun isRookAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long) =
     (MagicBitboards.magicMovesRook[pieceSquare][getMagicIndexForRook(pieceSquare, allPieceBitboard)] and (1L shl attackedSquare)) != 0L

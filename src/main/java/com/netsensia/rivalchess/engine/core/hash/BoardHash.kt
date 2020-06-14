@@ -145,7 +145,7 @@ class BoardHash {
     val trackedHashValue: Long
         get() = hashTracker.trackedBoardHashValue
 
-    fun setMaxHashEntries(maxHashEntries: Int) {
+    private fun setMaxHashEntries(maxHashEntries: Int) {
         this.maxHashEntries = maxHashEntries
     }
 
