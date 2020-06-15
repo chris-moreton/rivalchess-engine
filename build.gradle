@@ -15,7 +15,7 @@ plugins {
 def arrow_version = "0.10.4"
 
 group = "com.netsensia.rivalchess"
-version = '11.0.0'
+version = '12.0.0'
 
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin'
