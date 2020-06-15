@@ -15,7 +15,8 @@ import kotlin.collections.ArrayList
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     val engineBitboards = EngineBitboards()
-    
+
+    @JvmField
     val squareContents = Array(64){SquareOccupant.NONE}
     val boardHashObject = BoardHash()
 
@@ -65,8 +66,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         boardHashObject.setHashSizeMB(Hash.DEFAULT_HASHTABLE_SIZE_MB.value)
         boardHashObject.initialiseHashCode(this)
     }
-
-    fun getSquareOccupant(bitRef: Int) = squareContents[bitRef]
 
     fun moveGenerator() =
         MoveGenerator(

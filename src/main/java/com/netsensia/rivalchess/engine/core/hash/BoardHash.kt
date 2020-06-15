@@ -139,7 +139,7 @@ class BoardHash {
     }
 
     fun makeNullMove() {
-        hashTracker.nullMove()
+        hashTracker.switchMover()
     }
 
     val trackedHashValue: Long

@@ -109,12 +109,12 @@ public class EngineBoardTest {
     public void getSquareOccupant() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
-        assertEquals(SquareOccupant.WK, engineBoard.getSquareOccupant(3));
-        assertEquals(SquareOccupant.WQ, engineBoard.getSquareOccupant(4));
-        assertEquals(SquareOccupant.BQ, engineBoard.getSquareOccupant(60));
-        assertEquals(SquareOccupant.BK, engineBoard.getSquareOccupant(59));
+        assertEquals(SquareOccupant.WK, engineBoard.squareContents[3]);
+        assertEquals(SquareOccupant.WQ, engineBoard.squareContents[4]);
+        assertEquals(SquareOccupant.BQ, engineBoard.squareContents[60]);
+        assertEquals(SquareOccupant.BK, engineBoard.squareContents[59]);
 
-        assertEquals(SquareOccupant.NONE, engineBoard.getSquareOccupant(32));
+        assertEquals(SquareOccupant.NONE, engineBoard.squareContents[32]);
 
     }
 
@@ -126,7 +126,6 @@ public class EngineBoardTest {
         assertEquals(Piece.QUEEN, BoardExtensionsKt.getPiece(engineBoard, 4));
         assertEquals(Piece.KING, BoardExtensionsKt.getPiece(engineBoard, 59));
         assertEquals(Piece.QUEEN, BoardExtensionsKt.getPiece(engineBoard, 60));
-
         assertEquals(Piece.NONE, BoardExtensionsKt.getPiece(engineBoard, 32));
     }
 

@@ -15,9 +15,9 @@ import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 
-inline fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef.xFile
+fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef.xFile
 
-inline fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
+fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
 
 fun getMoveRefFromEngineMove(move: Int): Move {
     val from = move shr 16 and 63
@@ -59,7 +59,7 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
     val to = move and 63
     val from = move ushr 16 and 63
     val promotionPiece = move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
-    when (board.getSquareOccupant(from).piece) {
+    when (board.squareContents[from].piece) {
         Piece.KNIGHT -> pgnMove = "N"
         Piece.KING -> pgnMove = "K"
         Piece.QUEEN -> pgnMove = "Q"
@@ -77,7 +77,7 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
         val legalMoveTo = legalMove and 63
         val legalMoveFrom = legalMove ushr 16 and 63
         if (legalMoveTo == to) {
-            if (board.getSquareOccupant(legalMoveFrom).index == board.getSquareOccupant(from).index) {
+            if (board.squareContents[legalMoveFrom].index == board.squareContents[from].index) {
                 if (legalMoveFrom != from) {
                     qualifier = if (legalMoveFrom % 8 == from % 8) ('1'.toInt() + from / 8).toChar()
                     else ('a'.toInt() + (7 - from % 8)).toChar()
@@ -88,8 +88,8 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
         legalMove = legalMoves[moveCount] and 0x00FFFFFF
     }
     if (qualifier != ' ') pgnMove += qualifier
-    if (board.getSquareOccupant(to).index != -1) {
-        if (board.getSquareOccupant(from).piece == Piece.PAWN) {
+    if (board.squareContents[to].index != -1) {
+        if (board.squareContents[from].piece == Piece.PAWN) {
             pgnMove += ('a'.toInt() + (7 - from % 8)).toChar()
         }
         pgnMove += "x"

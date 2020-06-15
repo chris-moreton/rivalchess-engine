@@ -207,7 +207,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply, Window(localLow, localHigh), extensions).also {
                 if (abortingSearch) return SearchPath()
                 adjustScoreForMateDepth(it)
-                if (-it!!.score >= localHigh) return searchPathPly.withScore(-it.score)
+                if (-it.score >= localHigh) return searchPathPly.withScore(-it.score)
                     else threatExtend = threatExtensions(it, extensions)
             }
 
@@ -218,8 +218,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             val move = it
             val recaptureExtensionResponse =
                     recaptureExtensions(extensions,
-                            board.getSquareOccupant(moveTo(move)).index,
-                            board.getSquareOccupant(moveFrom(move)).index, board, move, recaptureSquare)
+                            board.squareContents[moveTo(move)].index,
+                            board.squareContents[moveFrom(move)].index, board, move, recaptureSquare)
 
             if (board.makeMove((move))) {
 
@@ -294,7 +294,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             if (moveTo(move) == recaptureSquare) {
                 if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, (move))
-                if (abs(currentSEEValue) > Evaluation.getPieceValue(board.getSquareOccupant(recaptureSquare))
+                if (abs(currentSEEValue) > Evaluation.getPieceValue(board.squareContents[recaptureSquare])
                         - Extensions.RECAPTURE_EXTENSION_MARGIN.value) {
                     recaptureExtend = 1
                 }
@@ -311,7 +311,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     if (it.score < -Evaluation.MATE_SCORE_START.value) it.score++
             }
 
-            if (!abortingSearch && -scoutPath!!.score > window.low) {
+            if (!abortingSearch && -scoutPath.score > window.low) {
                 search(engineBoard, (depth - 1), ply + 1, Window(-window.high, -window.low), newExtensions, newRecaptureSquare, localIsCheck).also {
                     if (it.score > Evaluation.MATE_SCORE_START.value) it.score-- else
                         if (it.score < -Evaluation.MATE_SCORE_START.value) it.score++
@@ -443,7 +443,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun threatExtensions(newPath: SearchPath, extensions: Int) =
-        if (Extensions.FRACTIONAL_EXTENSION_THREAT.value > 0 && -newPath!!.score < -Evaluation.MATE_SCORE_START.value && extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value)
+        if (Extensions.FRACTIONAL_EXTENSION_THREAT.value > 0 && -newPath.score < -Evaluation.MATE_SCORE_START.value && extensions / Extensions.FRACTIONAL_EXTENSION_FULL.value < Limit.MAX_EXTENSION_DEPTH.value)
             1 else 0
 
     private fun checkExtension(extensions: Int, isCheck: Boolean) =
@@ -667,9 +667,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun scoreMove(ply: Int, i: Int, board: EngineBoard): Int {
         var score = 0
         val toSquare = moveTo(orderedMoves[ply][i])
-        val isCapture = board.getSquareOccupant(toSquare) != SquareOccupant.NONE ||
+        val isCapture = board.squareContents[toSquare] != SquareOccupant.NONE ||
                 (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
-                        board.getSquareOccupant(moveFrom(orderedMoves[ply][i])).piece == Piece.PAWN)
+                        board.squareContents[moveFrom(orderedMoves[ply][i])].piece == Piece.PAWN)
 
         orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
         if (orderedMoves[ply][i] == mateKiller[ply]) {
@@ -729,7 +729,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val historyScore = scoreHistoryHeuristic(board, killerScore, fromSquare, toSquare)
 
                 val finalScore = if (historyScore == 0)
-                    (if (board.getSquareOccupant(toSquare) != SquareOccupant.NONE) 1 // losing capture
+                    (if (board.squareContents[toSquare] != SquareOccupant.NONE) 1 // losing capture
                     else 50 + scorePieceSquareValues(
                             board,
                             if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare],
@@ -743,7 +743,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int) =
-            when (board.getSquareOccupant(fromSquare).piece) {
+            when (board.squareContents[fromSquare].piece) {
                 Piece.PAWN -> linearScale(
                         if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
                         Evaluation.PAWN_STAGE_MATERIAL_LOW.value,

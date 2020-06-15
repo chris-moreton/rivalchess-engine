@@ -146,8 +146,7 @@ class MoveGenerator(
     private fun generateQuiesceKnightMoves(generateChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long) {
         applyToSquares(knightBitboard) {
             addMoves(it shl 16, knightMoves[it] and if (generateChecks)
-                bitboards[BITBOARD_ENEMY] or
-                        (knightMoves[enemyKingSquare] and bitboards[BITBOARD_FRIENDLY].inv())
+                bitboards[BITBOARD_ENEMY] or (knightMoves[enemyKingSquare] and bitboards[BITBOARD_FRIENDLY].inv())
                     else bitboards[BITBOARD_ENEMY]
             )
         }

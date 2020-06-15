@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PerftTest {
+public class    PerftTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PerftTest.class);
 
