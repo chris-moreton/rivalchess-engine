@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2020-06-15T13:59:12" hostname="pop-os" time="0.001">
+  <properties/>
+  <testcase name="testFromMoveWithWhiteRookPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <testcase name="testFromMoveWithBlackKnightPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <testcase name="testFromMoveWithWhiteKnightPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <testcase name="testFromMoveWithBlackQueenPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <testcase name="testFromMoveWithBlackBishopPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <testcase name="testFromMoveWithWhiteBishopPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <testcase name="testFromMoveWithWhiteQueenPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <testcase name="testFromMoveWithBlackRookPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <testcase name="testFromMoveWithoutPromotion" classname="com.netsensia.rivalchess.engine.core.type.EngineMoveTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

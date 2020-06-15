@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.engine.core.bitboards.EngineBitboardsTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2020-06-15T13:59:12" hostname="pop-os" time="0.004">
+  <properties/>
+  <testcase name="testGetAndSetPieceBitboardsByIndex" classname="com.netsensia.rivalchess.engine.core.bitboards.EngineBitboardsTest" time="0.0"/>
+  <testcase name="testXorPieceBitboard" classname="com.netsensia.rivalchess.engine.core.bitboards.EngineBitboardsTest" time="0.0"/>
+  <testcase name="isSquareAttacked" classname="com.netsensia.rivalchess.engine.core.bitboards.EngineBitboardsTest" time="0.004"/>
+  <testcase name="testMovePiece" classname="com.netsensia.rivalchess.engine.core.bitboards.EngineBitboardsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

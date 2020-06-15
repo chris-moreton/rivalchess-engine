@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.engine.core.EngineBoardTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2020-06-15T14:00:51" hostname="pop-os" time="0.033">
+  <properties/>
+  <testcase name="getWhitePieceValues" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.003"/>
+  <testcase name="getFen" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.004"/>
+  <testcase name="canRecognisePreviousPositions" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.004"/>
+  <testcase name="getBlackPieceValues" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.004"/>
+  <testcase name="isCapture" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.004"/>
+  <testcase name="getSquareOccupant" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.003"/>
+  <testcase name="isGameOver" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.004"/>
+  <testcase name="getPiece" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.003"/>
+  <testcase name="isCheck" classname="com.netsensia.rivalchess.engine.core.EngineBoardTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

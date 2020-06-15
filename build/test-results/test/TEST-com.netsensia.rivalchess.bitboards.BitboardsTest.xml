@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.bitboards.BitboardsTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2020-06-15T13:59:11" hostname="pop-os" time="0.002">
+  <properties/>
+  <testcase name="getPawnFiles" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.0"/>
+  <testcase name="southFill" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.0"/>
+  <testcase name="getWhitePawnAttacks" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.0"/>
+  <testcase name="getWhitePassedPawns" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.0"/>
+  <testcase name="getSetBits" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.001"/>
+  <testcase name="getBlackPawnAttacks" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.0"/>
+  <testcase name="getBlackPassedPawns" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.0"/>
+  <testcase name="northFill" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.0"/>
+  <testcase name="getPawnMovesOfCaptureColour" classname="com.netsensia.rivalchess.bitboards.BitboardsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

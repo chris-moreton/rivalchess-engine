@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.epd.EpdTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2020-06-15T13:54:25" hostname="pop-os" time="285.959">
+  <properties/>
+  <testcase name="winAtChessFails" classname="com.netsensia.rivalchess.epd.EpdTest" time="33.342"/>
+  <testcase name="winAtChess" classname="com.netsensia.rivalchess.epd.EpdTest" time="252.617"/>
+  <system-out><![CDATA[WAC.002 2020/06/15 14:54:25
+Looking for Rb7 in [Rxb2]
+WAC.041 2020/06/15 14:54:29
+Looking for Rf8+ in [Ka5, Kc5, b7]
+WAC.071 2020/06/15 14:54:30
+Looking for Qf3 in [Nxa7+]
+WAC.092 2020/06/15 14:54:32
+Looking for Qb4 in [Bxg4]
+WAC.100 2020/06/15 14:54:33
+Looking for Kb3 in [Be3, b6+]
+WAC.131 2020/06/15 14:54:34
+Looking for Bf6 in [Re8]
+WAC.141 2020/06/15 14:54:35
+Looking for Kf1 in [Qxf4]
+WAC.145 2020/06/15 14:54:37
+Looking for Rf3 in [Re8]
+WAC.152 2020/06/15 14:54:38
+Looking for Nd5 in [Ne4]
+WAC.155 2020/06/15 14:54:40
+Looking for Qc8 in [d6]
+WAC.157 2020/06/15 14:54:41
+Looking for Qf3 in [Ne7+]
+WAC.163 2020/06/15 14:54:43
+Looking for cxd5 in [Qg2+]
+WAC.178 2020/06/15 14:54:44
+Looking for Qxh7+ in [Nxe6]
+WAC.213 2020/06/15 14:54:45
+Looking for Qb2 in [Rxh7+]
+WAC.229 2020/06/15 14:54:47
+Looking for Rh7 in [Rxh4, b4]
+WAC.230 2020/06/15 14:54:48
+Looking for Rh7 in [Rb4]
+WAC.237 2020/06/15 14:54:48
+Looking for Rc5+ in [Rc1+]
+WAC.238 2020/06/15 14:54:50
+Looking for Rcb5 in [Bxb7]
+WAC.247 2020/06/15 14:54:51
+Looking for Qc5+ in [Rxb5]
+WAC.261 2020/06/15 14:54:52
+Looking for Qxg2+ in [Nd4]
+WAC.265 2020/06/15 14:54:53
+Looking for Qxe4 in [exf6]
+WAC.274 2020/06/15 14:54:54
+Looking for Rb6 in [Rd6]
+WAC.277 2020/06/15 14:54:55
+Looking for h5 in [Rg3, Rxg2]
+WAC.291 2020/06/15 14:54:56
+Looking for Kh1 in [h3]
+WAC.297 2020/06/15 14:54:58
+Looking for Rfe8 in [Bxg2, Bxh2+]
+WAC.001 2020/06/15 14:54:59
+Looking for Qg6 in [Qg6]
+WAC.003 2020/06/15 14:54:59
+Looking for Rg3 in [Rg3]
+WAC.004 2020/06/15 14:55:00
+Looking for Qxh7+ in [Qxh7+]
+WAC.005 2020/06/15 14:55:00
+Looking for Qc4+ in [Qc4+]
+WAC.006 2020/06/15 14:55:01
+Looking for Rb7 in [Rb7]
+WAC.007 2020/06/15 14:55:01
+Looking for Ne3 in [Ne3]
+WAC.008 2020/06/15 14:55:02
+Looking for Rf7 in [Rf7]
+WAC.009 2020/06/15 14:55:03
+Looking for Bh2+ in [Bh2+]
+WAC.010 2020/06/15 14:55:03
+Looking for Rxh7 in [Rxh7]
+WAC.011 2020/06/15 14:55:05
+Looking for Bxc6 in [Bxc6]
+WAC.012 2020/06/15 14:55:06
+Looking for Qxf3+ in [Qxf3+]
+WAC.013 2020/06/15 14:55:06
+Looking for Qxf8+ in [Qxf8+]
+WAC.014 2020/06/15 14:55:07
+Looking for Qxh7+ in [Qxh7+]
+WAC.015 2020/06/15 14:55:07
+Looking for Rxb7 in [Rxb7]
+WAC.016 2020/06/15 14:55:08
+Looking for Nc3 in [Nc3]
+WAC.017 2020/06/15 14:55:09
+Looking for Ne5 in [Ne5]
+WAC.018 2020/06/15 14:55:10
+Looking for Rh8 in [Rh8]
+WAC.019 2020/06/15 14:55:10
+Looking for c6 in [c6]
+WAC.020 2020/06/15 14:55:11
+Looking for Bb5 in [Bb5]
+WAC.021 2020/06/15 14:55:12
+Looking for Qh6 in [Qh6]
+WAC.022 2020/06/15 14:55:13
+Looking for Nxf7 in [Ba2, Nxf7]
+WAC.023 2020/06/15 14:55:15
+Looking for g4 in [g4]
+WAC.024 2020/06/15 14:55:16
+Looking for Bd4 in [Bd4]
+WAC.025 2020/06/15 14:55:17
+Looking for Qh4+ in [Qh4+]
+WAC.026 2020/06/15 14:55:18
+Looking for Bf5 in [Bf5]
+WAC.027 2020/06/15 14:55:19
+Looking for Qf8+ in [Qf8+]
+WAC.028 2020/06/15 14:55:19
+Looking for Qe1+ in [Qe1+]
+WAC.029 2020/06/15 14:55:20
+Looking for c6 in [c6]
+WAC.030 2020/06/15 14:55:21
+Looking for Nxd6 in [Nxd6]
+WAC.031 2020/06/15 14:55:22
+Looking for d6 in [Qxa8, d6, dxe6, g3]
+WAC.032 2020/06/15 14:55:23
+Looking for Qd8+ in [Qd8+]
+WAC.033 2020/06/15 14:55:24
+Looking for Qe5+ in [Qe5+, Qf4]
+WAC.034 2020/06/15 14:55:25
+Looking for Bg1 in [Bg1]
+WAC.035 2020/06/15 14:55:26
+Looking for Rxh7+ in [Rxh7+]
+WAC.036 2020/06/15 14:55:27
+Looking for Re1+ in [Re1+]
+WAC.037 2020/06/15 14:55:28
+Looking for Nxd4+ in [Nxd4+]
+WAC.038 2020/06/15 14:55:29
+Looking for Rd8+ in [Qd3, Rd8+]
+WAC.039 2020/06/15 14:55:30
+Looking for Na4 in [Na4]
+WAC.040 2020/06/15 14:55:31
+Looking for Rc8 in [Rc8]
+WAC.042 2020/06/15 14:55:32
+Looking for Ba5 in [Ba5]
+WAC.043 2020/06/15 14:55:33
+Looking for Be7 in [Be7, Qxa8]
+WAC.044 2020/06/15 14:55:34
+Looking for dxc4 in [dxc4]
+WAC.045 2020/06/15 14:55:35
+Looking for Qxa1 in [Qxa1]
+WAC.046 2020/06/15 14:55:36
+Looking for Nb5 in [Nb5]
+WAC.047 2020/06/15 14:55:38
+Looking for Nxd4 in [Nxd4]
+WAC.048 2020/06/15 14:55:39
+Looking for Rb4 in [Rb4]
+WAC.049 2020/06/15 14:55:41
+Looking for Qxh7+ in [Qxh7+]
+WAC.050 2020/06/15 14:55:41
+Looking for Rxb6+ in [Rxb6+]
+WAC.051 2020/06/15 14:55:41
+Looking for Rg4+ in [Rg4+]
+WAC.052 2020/06/15 14:55:42
+Looking for Re7 in [Re7, c4]
+WAC.053 2020/06/15 14:55:43
+Looking for Re1 in [Re1]
+WAC.054 2020/06/15 14:55:44
+Looking for Qh1+ in [Qh1+]
+WAC.055 2020/06/15 14:55:44
+Looking for Qxg7+ in [Qxg7+]
+WAC.056 2020/06/15 14:55:44
+Looking for Bxf2+ in [Bxf2+]
+WAC.057 2020/06/15 14:55:46
+Looking for Rf8+ in [Rf8+]
+WAC.058 2020/06/15 14:55:46
+Looking for Qd1+ in [Qd1+]
+WAC.059 2020/06/15 14:55:47
+Looking for Nd5 in [Nd5]
+WAC.060 2020/06/15 14:55:48
+Looking for Qh8+ in [Qh8+]
+WAC.061 2020/06/15 14:55:49
+Looking for Qf7+ in [Qf7+]
+WAC.062 2020/06/15 14:55:49
+Looking for Rxg3+ in [Rxg3+]
+WAC.063 2020/06/15 14:55:50
+Looking for Nxf7 in [Nxf7]
+WAC.064 2020/06/15 14:55:51
+Looking for g4+ in [g4+]
+WAC.065 2020/06/15 14:55:52
+Looking for Ne7+ in [Ne7+]
+WAC.066 2020/06/15 14:55:53
+Looking for Qxe5 in [Qxe5]
+WAC.067 2020/06/15 14:55:54
+Looking for Rxd5 in [Rxd5]
+WAC.068 2020/06/15 14:55:55
+Looking for Qxe3 in [Qxe3]
+WAC.069 2020/06/15 14:55:56
+Looking for f3 in [f3, h3]
+WAC.070 2020/06/15 14:55:57
+Looking for Na2+ in [Na2+]
+WAC.072 2020/06/15 14:55:58
+Looking for e6 in [e6]
+WAC.073 2020/06/15 14:55:59
+Looking for Qd2 in [Qd2]
+WAC.074 2020/06/15 14:56:00
+Looking for Qf1+ in [Qf1+]
+WAC.075 2020/06/15 14:56:01
+Looking for Qd6 in [Qd6]
+WAC.076 2020/06/15 14:56:02
+Looking for Bxf6 in [Bxf6]
+WAC.077 2020/06/15 14:56:04
+Looking for Ng3 in [Ng3]
+WAC.078 2020/06/15 14:56:05
+Looking for Ng5+ in [Ng5+]
+WAC.079 2020/06/15 14:56:06
+Looking for Qxh2+ in [Qxh2+]
+WAC.080 2020/06/15 14:56:06
+Looking for Ra1 in [Ra1]
+WAC.081 2020/06/15 14:56:07
+Looking for Bd6 in [Bd6]
+WAC.082 2020/06/15 14:56:09
+Looking for Bh7+ in [Bh7+]
+WAC.083 2020/06/15 14:56:10
+Looking for Qxd7 in [Qxd7]
+WAC.084 2020/06/15 14:56:11
+Looking for Qg8+ in [Qg8+]
+WAC.085 2020/06/15 14:56:11
+Looking for Na6 in [Na6]
+WAC.086 2020/06/15 14:56:12
+Looking for Ng4+ in [Ng4+]
+WAC.087 2020/06/15 14:56:13
+Looking for Rxe5 in [Rxe5]
+WAC.088 2020/06/15 14:56:13
+Looking for Rxg2+ in [Rxg2+]
+WAC.089 2020/06/15 14:56:14
+Looking for g5 in [g5]
+WAC.090 2020/06/15 14:56:15
+Looking for Nxg7 in [Nxg7]
+WAC.091 2020/06/15 14:56:16
+Looking for Be6 in [Be6]
+WAC.093 2020/06/15 14:56:17
+Looking for Bh6 in [Bh6]
+WAC.094 2020/06/15 14:56:18
+Looking for e4+ in [e4+]
+WAC.095 2020/06/15 14:56:19
+Looking for Ng4+ in [Ng4+]
+WAC.096 2020/06/15 14:56:20
+Looking for Qd8+ in [Qd8+, b3]
+WAC.097 2020/06/15 14:56:22
+Looking for Qa8+ in [Qa8+]
+WAC.098 2020/06/15 14:56:22
+Looking for Nxe4 in [Nxe4]
+WAC.099 2020/06/15 14:56:23
+Looking for Rh5 in [Rh5]
+WAC.101 2020/06/15 14:56:23
+Looking for Bc3 in [Bc3]
+WAC.102 2020/06/15 14:56:24
+Looking for Qxf8+ in [Qxf8+]
+WAC.103 2020/06/15 14:56:24
+Looking for Qxg6+ in [Qxg6+]
+WAC.104 2020/06/15 14:56:25
+Looking for Qxh5 in [Qxh5]
+WAC.105 2020/06/15 14:56:25
+Looking for Qxh4 in [Bxg3, Qxh4]
+WAC.106 2020/06/15 14:56:25
+Looking for Nf2+ in [Nf2+]
+WAC.107 2020/06/15 14:56:26
+Looking for Nb5 in [Nb5]
+WAC.108 2020/06/15 14:56:27
+Looking for Qe5 in [Qe5]
+WAC.109 2020/06/15 14:56:28
+Looking for c3 in [c3]
+WAC.110 2020/06/15 14:56:29
+Looking for Be3 in [Be3]
+WAC.111 2020/06/15 14:56:30
+Looking for Qf1+ in [Qf1+]
+WAC.112 2020/06/15 14:56:31
+Looking for Rxe6 in [Rxe6]
+WAC.113 2020/06/15 14:56:32
+Looking for Qxf6 in [Qxf6]
+WAC.114 2020/06/15 14:56:34
+Looking for Bxh7+ in [Bxh7+]
+WAC.115 2020/06/15 14:56:35
+Looking for Nd6 in [Nd6]
+WAC.116 2020/06/15 14:56:36
+Looking for Rd2 in [Rd2]
+WAC.117 2020/06/15 14:56:37
+Looking for Ne4 in [Ne4]
+WAC.118 2020/06/15 14:56:38
+Looking for Rh4 in [Rh4]
+WAC.119 2020/06/15 14:56:40
+Looking for Qxd3 in [Qxd3]
+WAC.120 2020/06/15 14:56:41
+Looking for g6 in [Rhg1, g6]
+WAC.121 2020/06/15 14:56:42
+Looking for Bxf3+ in [Bxf3+]
+WAC.122 2020/06/15 14:56:43
+Looking for Rxf1+ in [Rxf1+]
+WAC.123 2020/06/15 14:56:44
+Looking for Bxd5 in [Bxd5, Rc7, Re6]
+WAC.124 2020/06/15 14:56:45
+Looking for g3 in [g3]
+WAC.125 2020/06/15 14:56:46
+Looking for Bxd4+ in [Bxd4+]
+WAC.126 2020/06/15 14:56:47
+Looking for Rxc6+ in [Rxc6+]
+WAC.127 2020/06/15 14:56:48
+Looking for Rxb7 in [Rxb7]
+WAC.128 2020/06/15 14:56:50
+Looking for Qg6 in [Qg6]
+WAC.129 2020/06/15 14:56:51
+Looking for Bf3 in [Bf3]
+WAC.130 2020/06/15 14:56:52
+Looking for Qh6 in [Qh6, Qh8]
+WAC.132 2020/06/15 14:56:53
+Looking for Re1 in [Re1]
+WAC.133 2020/06/15 14:56:54
+Looking for Bh4 in [Bh4]
+WAC.134 2020/06/15 14:56:55
+Looking for Rd1+ in [Rd1+]
+WAC.135 2020/06/15 14:56:55
+Looking for Nd4 in [Nd4]
+WAC.136 2020/06/15 14:56:56
+Looking for Rc8+ in [Rc8+]
+WAC.137 2020/06/15 14:56:56
+Looking for Rd7 in [Rd7]
+WAC.138 2020/06/15 14:56:57
+Looking for h5 in [h5]
+WAC.139 2020/06/15 14:56:58
+Looking for Nf6+ in [Nf6+]
+WAC.140 2020/06/15 14:56:59
+Looking for Rc7 in [Bc7, Rc7]
+WAC.142 2020/06/15 14:57:00
+Looking for f6+ in [Re8, f6+]
+WAC.143 2020/06/15 14:57:01
+Looking for Rxh6+ in [Rxh6+]
+WAC.144 2020/06/15 14:57:01
+Looking for d3 in [d3]
+WAC.146 2020/06/15 14:57:03
+Looking for Bc8 in [Bc8, Bd3, Bh3]
+WAC.147 2020/06/15 14:57:03
+Looking for Nxg4 in [Nxg4]
+WAC.148 2020/06/15 14:57:04
+Looking for Rxg7 in [Rxg7]
+WAC.149 2020/06/15 14:57:06
+Looking for Bxg2 in [Bxg2]
+WAC.150 2020/06/15 14:57:07
+Looking for Ba3 in [Ba3, Be5, Bf8, e3]
+WAC.151 2020/06/15 14:57:08
+Looking for Nc3 in [Nc3]
+WAC.153 2020/06/15 14:57:09
+Looking for Nxd4 in [Nxd4]
+WAC.154 2020/06/15 14:57:10
+Looking for Qxf7+ in [Qxf7+]
+WAC.156 2020/06/15 14:57:10
+Looking for Qxh6+ in [Qxh6+]
+WAC.158 2020/06/15 14:57:10
+Looking for Rxg7+ in [Rxg7+]
+WAC.159 2020/06/15 14:57:11
+Looking for Ne6+ in [Ne6+]
+WAC.160 2020/06/15 14:57:12
+Looking for Qxd7+ in [Qxd7+]
+WAC.161 2020/06/15 14:57:12
+Looking for Qxd8+ in [Qxd8+]
+WAC.162 2020/06/15 14:57:12
+Looking for Bd5 in [Bd5]
+WAC.164 2020/06/15 14:57:14
+Looking for Rxc4+ in [Rxc4+]
+WAC.165 2020/06/15 14:57:15
+Looking for Re2 in [Re2]
+WAC.166 2020/06/15 14:57:16
+Looking for d4 in [d4]
+WAC.167 2020/06/15 14:57:17
+Looking for Rxg2+ in [Rxg2+]
+WAC.168 2020/06/15 14:57:17
+Looking for Qd2+ in [Qd2+]
+WAC.169 2020/06/15 14:57:18
+Looking for Bh6 in [Bh6]
+WAC.170 2020/06/15 14:57:20
+Looking for Qxc4 in [Qxc4]
+WAC.171 2020/06/15 14:57:20
+Looking for Bh6+ in [Bh6+]
+WAC.172 2020/06/15 14:57:22
+Looking for Qe1+ in [Qe1+]
+WAC.173 2020/06/15 14:57:22
+Looking for Qh6+ in [Qh6+]
+WAC.174 2020/06/15 14:57:22
+Looking for Nxg2 in [Nxg2]
+WAC.175 2020/06/15 14:57:23
+Looking for Nh5 in [Nh5]
+WAC.176 2020/06/15 14:57:24
+Looking for Rxh2+ in [Rxh2+]
+WAC.177 2020/06/15 14:57:25
+Looking for Qa3+ in [Qa3+]
+WAC.179 2020/06/15 14:57:26
+Looking for Qg1+ in [Qg1+]
+WAC.180 2020/06/15 14:57:26
+Looking for Nxd5 in [Nxd5]
+WAC.181 2020/06/15 14:57:27
+Looking for Ng4 in [Ng4]
+WAC.182 2020/06/15 14:57:28
+Looking for Qh5 in [Qh5]
+WAC.183 2020/06/15 14:57:30
+Looking for Bf6 in [Bf6]
+WAC.184 2020/06/15 14:57:31
+Looking for Qe7+ in [Qe7+]
+WAC.185 2020/06/15 14:57:32
+Looking for Qxh7+ in [Qxh7+]
+WAC.186 2020/06/15 14:57:33
+Looking for Bf8+ in [Bf8+]
+WAC.187 2020/06/15 14:57:33
+Looking for Nh3+ in [Nh3+]
+WAC.188 2020/06/15 14:57:34
+Looking for Qg7+ in [Qg7+]
+WAC.189 2020/06/15 14:57:34
+Looking for Re8+ in [Re8+]
+WAC.190 2020/06/15 14:57:35
+Looking for Bh3 in [Bh3]
+WAC.191 2020/06/15 14:57:36
+Looking for Qc4 in [Qc4]
+WAC.192 2020/06/15 14:57:36
+Looking for Nd3+ in [Nd3+]
+WAC.193 2020/06/15 14:57:38
+Looking for Qxe3 in [Qxe3]
+WAC.194 2020/06/15 14:57:39
+Looking for Nh6+ in [Nh6+]
+WAC.195 2020/06/15 14:57:40
+Looking for g3 in [g3]
+WAC.196 2020/06/15 14:57:41
+Looking for Nb4 in [Nb4]
+WAC.197 2020/06/15 14:57:43
+Looking for Qf1+ in [Qf1+]
+WAC.198 2020/06/15 14:57:43
+Looking for Rd3 in [Rd3]
+WAC.199 2020/06/15 14:57:44
+Looking for Rfd1 in [Bxc6, Rcd1, Rfd1]
+WAC.200 2020/06/15 14:57:46
+Looking for Bxf6 in [Bxf6]
+WAC.201 2020/06/15 14:57:47
+Looking for Ra7 in [Ra7]
+WAC.202 2020/06/15 14:57:48
+Looking for Rxa2 in [Rxa2]
+WAC.203 2020/06/15 14:57:49
+Looking for Qh6 in [Qh6]
+WAC.204 2020/06/15 14:57:49
+Looking for Rxe5 in [Rxe5]
+WAC.205 2020/06/15 14:57:50
+Looking for Qxg5 in [Qxg5]
+WAC.206 2020/06/15 14:57:52
+Looking for Rc6 in [Rc6]
+WAC.207 2020/06/15 14:57:53
+Looking for Qxg7+ in [Qxg7+]
+WAC.208 2020/06/15 14:57:54
+Looking for Bf7+ in [Bf7+]
+WAC.209 2020/06/15 14:57:55
+Looking for Rxe5+ in [Rxe5+]
+WAC.210 2020/06/15 14:57:56
+Looking for Rh1 in [Rh1]
+WAC.211 2020/06/15 14:57:58
+Looking for Qxf7+ in [Qxf7+]
+WAC.212 2020/06/15 14:57:58
+Looking for Qxg7+ in [Qxg7+]
+WAC.214 2020/06/15 14:57:58
+Looking for Ng5 in [Ng5]
+WAC.215 2020/06/15 14:58:00
+Looking for Qh7+ in [Qh7+]
+WAC.216 2020/06/15 14:58:00
+Looking for Nxf7 in [Nxf7, a4]
+WAC.217 2020/06/15 14:58:01
+Looking for Qd7+ in [Qd7+]
+WAC.218 2020/06/15 14:58:02
+Looking for Bh6 in [Bh6]
+WAC.219 2020/06/15 14:58:03
+Looking for Qf1+ in [Qf1+]
+WAC.220 2020/06/15 14:58:03
+Looking for Qxf1+ in [Qxf1+]
+WAC.221 2020/06/15 14:58:04
+Looking for Rd8+ in [Rd8+]
+WAC.222 2020/06/15 14:58:05
+Looking for Bf6 in [Bf6]
+WAC.223 2020/06/15 14:58:06
+Looking for Nxe4 in [Nxe4]
+WAC.224 2020/06/15 14:58:07
+Looking for e4 in [Rh6, e4]
+WAC.225 2020/06/15 14:58:09
+Looking for Qh4+ in [Qh4+]
+WAC.226 2020/06/15 14:58:09
+Looking for Nf7 in [Nf7]
+WAC.227 2020/06/15 14:58:10
+Looking for d5 in [d5]
+WAC.228 2020/06/15 14:58:12
+Looking for Bxe4 in [Bxe4]
+WAC.231 2020/06/15 14:58:13
+Looking for Bg5 in [Bg5]
+WAC.232 2020/06/15 14:58:14
+Looking for Rxe8 in [Qb5, Rxe8]
+WAC.233 2020/06/15 14:58:15
+Looking for Nb3 in [Nb3]
+WAC.234 2020/06/15 14:58:16
+Looking for Rb3 in [Rb3]
+WAC.235 2020/06/15 14:58:17
+Looking for Qe4 in [Qe4, Qxf7+, Rxf7+]
+WAC.236 2020/06/15 14:58:18
+Looking for Rc1 in [Rc1]
+WAC.239 2020/06/15 14:58:19
+Looking for Qf1+ in [Qf1+]
+WAC.240 2020/06/15 14:58:20
+Looking for Qxc6 in [Qxc6]
+WAC.241 2020/06/15 14:58:21
+Looking for Qxh7+ in [Qxh7+]
+WAC.242 2020/06/15 14:58:22
+Looking for Rxd7 in [Rxd7]
+WAC.243 2020/06/15 14:58:23
+Looking for Qe2 in [Qe2]
+WAC.244 2020/06/15 14:58:24
+Looking for Qxc5+ in [Qxc5+]
+WAC.245 2020/06/15 14:58:24
+Looking for Qxg6+ in [Qxg6+]
+WAC.246 2020/06/15 14:58:26
+Looking for Qh5+ in [Qh5+]
+WAC.248 2020/06/15 14:58:26
+Looking for Qc5+ in [Qc5+]
+WAC.249 2020/06/15 14:58:27
+Looking for d5 in [c5, d5]
+WAC.250 2020/06/15 14:58:28
+Looking for Re8+ in [Re8+]
+WAC.251 2020/06/15 14:58:29
+Looking for Qf4 in [Qe5, Qf4]
+WAC.252 2020/06/15 14:58:30
+Looking for Re2 in [Bg4, Re2]
+WAC.253 2020/06/15 14:58:31
+Looking for Qe8+ in [Qe8+]
+WAC.254 2020/06/15 14:58:31
+Looking for Nxh3 in [Nxh3]
+WAC.255 2020/06/15 14:58:32
+Looking for Rfxg6+ in [Rfxg6+]
+WAC.256 2020/06/15 14:58:33
+Looking for Nf5 in [Nf5]
+WAC.257 2020/06/15 14:58:35
+Looking for Rxd4 in [Rxd4]
+WAC.258 2020/06/15 14:58:36
+Looking for Bxg6 in [Bxg6]
+WAC.259 2020/06/15 14:58:38
+Looking for Qh5 in [Qh5]
+WAC.260 2020/06/15 14:58:39
+Looking for Qe6+ in [Qe6+]
+WAC.262 2020/06/15 14:58:40
+Looking for Rh6 in [Rh6]
+WAC.263 2020/06/15 14:58:41
+Looking for Qg8+ in [Qg8+]
+WAC.264 2020/06/15 14:58:41
+Looking for Qe5 in [Qe5, Rab8]
+WAC.266 2020/06/15 14:58:42
+Looking for Rxh2+ in [Rxh2+]
+WAC.267 2020/06/15 14:58:43
+Looking for Nc7+ in [Nc7+]
+WAC.268 2020/06/15 14:58:43
+Looking for Re8+ in [Re8+]
+WAC.269 2020/06/15 14:58:44
+Looking for axb4 in [axb4]
+WAC.270 2020/06/15 14:58:45
+Looking for Qg4 in [Qg4]
+WAC.271 2020/06/15 14:58:47
+Looking for Rd6 in [Rd6]
+WAC.272 2020/06/15 14:58:48
+Looking for Bxc5 in [Bxc5]
+WAC.273 2020/06/15 14:58:49
+Looking for Ng3+ in [Ng3+, g3]
+WAC.275 2020/06/15 14:58:51
+Looking for b5 in [Nc5, Nxg2, b5]
+WAC.276 2020/06/15 14:58:53
+Looking for Qd5+ in [Qd5+]
+WAC.278 2020/06/15 14:58:54
+Looking for Bf7+ in [Bf7+]
+WAC.279 2020/06/15 14:58:54
+Looking for Nxf5 in [Nxf5, Rc3]
+WAC.280 2020/06/15 14:58:56
+Looking for Bxa3 in [Bxa3]
+WAC.281 2020/06/15 14:58:57
+Looking for Rxh7+ in [Rxh7+]
+WAC.282 2020/06/15 14:58:58
+Looking for Rh8+ in [Rh8+]
+WAC.283 2020/06/15 14:58:58
+Looking for Ng5 in [Ng5]
+WAC.284 2020/06/15 14:58:58
+Looking for Nf5 in [Nf5]
+WAC.285 2020/06/15 14:59:00
+Looking for Qxg7+ in [Qxg7+]
+WAC.286 2020/06/15 14:59:00
+Looking for Rxd5+ in [Rxd5+]
+WAC.287 2020/06/15 14:59:01
+Looking for Qg4 in [Qg4, Qh5]
+WAC.288 2020/06/15 14:59:03
+Looking for Nf6+ in [Nf6+]
+WAC.289 2020/06/15 14:59:04
+Looking for Qe5 in [Qe5]
+WAC.290 2020/06/15 14:59:05
+Looking for Ne2+ in [Ne2+]
+WAC.292 2020/06/15 14:59:05
+Looking for d6+ in [d6+]
+WAC.293 2020/06/15 14:59:06
+Looking for Nfg5 in [Nfg5]
+WAC.294 2020/06/15 14:59:07
+Looking for Qf4 in [Bf8, Nf5, Qf4]
+WAC.295 2020/06/15 14:59:08
+Looking for Rxd5+ in [Rxd5+]
+WAC.296 2020/06/15 14:59:08
+Looking for Rd4+ in [Rd4+, Rf8]
+WAC.298 2020/06/15 14:59:09
+Looking for Qh8+ in [Qh8+]
+WAC.299 2020/06/15 14:59:09
+Looking for Nca4 in [Nca4]
+WAC.300 2020/06/15 14:59:10
+Looking for g6 in [g6]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

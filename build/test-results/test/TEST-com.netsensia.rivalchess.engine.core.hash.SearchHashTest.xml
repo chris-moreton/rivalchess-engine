@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.engine.core.hash.SearchHashTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2020-06-15T14:00:51" hostname="pop-os" time="0.026">
+  <properties/>
+  <testcase name="testIsAlwaysReplaceHashTableEntryValid" classname="com.netsensia.rivalchess.engine.core.hash.SearchHashTest" time="0.0"/>
+  <testcase name="testIsHeightHashTableEntryValid" classname="com.netsensia.rivalchess.engine.core.hash.SearchHashTest" time="0.025"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

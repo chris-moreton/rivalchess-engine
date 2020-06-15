@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.engine.core.PerftTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2020-06-15T13:59:12" hostname="pop-os" time="99.405">
+  <properties/>
+  <testcase name="testPerftScoreShort" classname="com.netsensia.rivalchess.engine.core.PerftTest" time="1.471"/>
+  <testcase name="testPerftScoreLong" classname="com.netsensia.rivalchess.engine.core.PerftTest" time="97.922"/>
+  <testcase name="testPerftScoreSuperShort" classname="com.netsensia.rivalchess.engine.core.PerftTest" time="0.011"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Jun 15, 2020 2:59:12 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 20,541
+Jun 15, 2020 2:59:13 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 3,518,155.459
+Jun 15, 2020 2:59:13 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 279
+Jun 15, 2020 2:59:14 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 182,838
+Jun 15, 2020 2:59:23 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 4,011,347.004
+Jun 15, 2020 2:59:26 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 4,643,502.293
+Jun 15, 2020 3:00:05 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 4,472,662.335
+Jun 15, 2020 3:00:51 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 4,216,441.866
+Jun 15, 2020 3:00:51 PM com.netsensia.rivalchess.engine.core.PerftTest assertPerftScore
+INFO: Nodes per second = 169
+]]></system-err>
+</testsuite>

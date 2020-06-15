@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.engine.core.SearchTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2020-06-15T14:00:52" hostname="pop-os" time="32.462">
+  <properties/>
+  <testcase name="testEvaluationScores" classname="com.netsensia.rivalchess.engine.core.SearchTest" time="0.094"/>
+  <testcase name="testNodeCount" classname="com.netsensia.rivalchess.engine.core.SearchTest" time="23.446"/>
+  <testcase name="testBestMoves" classname="com.netsensia.rivalchess.engine.core.SearchTest" time="8.921"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

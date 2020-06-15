@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.netsensia.rivalchess.util.ChessBoardConversionTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2020-06-15T13:54:25" hostname="pop-os" time="0.363">
+  <properties/>
+  <testcase name="getCompactMoveFromSimpleAlgebraic" classname="com.netsensia.rivalchess.util.ChessBoardConversionTest" time="0.025"/>
+  <testcase name="getBoardRefFromBitRef" classname="com.netsensia.rivalchess.util.ChessBoardConversionTest" time="0.001"/>
+  <testcase name="getPgnMoveFromCompactMove" classname="com.netsensia.rivalchess.util.ChessBoardConversionTest" time="0.324"/>
+  <testcase name="getSimpleAlgebraicFromBitRef" classname="com.netsensia.rivalchess.util.ChessBoardConversionTest" time="0.0"/>
+  <testcase name="getSimpleAlgebraicMoveFromCompactMove" classname="com.netsensia.rivalchess.util.ChessBoardConversionTest" time="0.0"/>
+  <testcase name="getMoveRefFromEngineMove" classname="com.netsensia.rivalchess.util.ChessBoardConversionTest" time="0.0"/>
+  <testcase name="getPgnMoveFromCompactMoveIllegalMoveException" classname="com.netsensia.rivalchess.util.ChessBoardConversionTest" time="0.011"/>
+  <testcase name="getBitRefFromBoardRef" classname="com.netsensia.rivalchess.util.ChessBoardConversionTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
