@@ -34,7 +34,7 @@ public class EngineBoardTest {
         board.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         for (String move : moves) {
-            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false);
+            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact);
         }
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
@@ -53,7 +53,7 @@ public class EngineBoardTest {
         moves.add("b8a6");
 
         for (String move : moves) {
-            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false);
+            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact);
         }
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
@@ -64,7 +64,7 @@ public class EngineBoardTest {
         moves.add("a6b8");
 
         for (String move : moves) {
-            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false);
+            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact);
         }
 
         assertEquals(3, board.previousOccurrencesOfThisPosition());
@@ -80,7 +80,7 @@ public class EngineBoardTest {
         board.setBoard(FenUtils.getBoardModel(ConstantsKt.FEN_START_POS));
 
         for (String move : moves) {
-            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false);
+            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact);
         }
     }
 
@@ -170,12 +170,12 @@ public class EngineBoardTest {
                 + pieceValue(Piece.ROOK) * 2,
                 engineBoard.getWhitePieceValues());
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6").compact, false);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("g1f3").compact, false);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e7e5").compact, false);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5").compact, false);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5").compact, false);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6").compact);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("g1f3").compact);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e7e5").compact);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5").compact);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5").compact);
 
         assertEquals(
                 pieceValue(Piece.QUEEN)

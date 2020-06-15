@@ -130,6 +130,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
 
             if (engineBoard.makeMove((move))) {
+
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
                 val isCheck = board.isCheck(mover)

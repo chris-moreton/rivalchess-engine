@@ -32,7 +32,7 @@ public class    PerftTest {
         while (legalMoves[moveNum] != 0) {
             if (makeMove(board, new EngineMove(legalMoves[moveNum]).compact)) {
                 nodes += getPerft(board, depth - 1);
-                unMakeMove(board);
+                unMakeMove(board, true);
             }
             moveNum++;
         }

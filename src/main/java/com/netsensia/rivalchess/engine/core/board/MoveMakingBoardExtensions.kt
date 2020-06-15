@@ -27,11 +27,6 @@ fun EngineBoard.unMakeNullMove() {
 
 @Throws(InvalidMoveException::class)
 fun EngineBoard.makeMove(engineMove: Int): Boolean {
-    return makeMove(engineMove, false)
-}
-
-@Throws(InvalidMoveException::class)
-fun EngineBoard.makeMove(engineMove: Int, ignoreCheck: Boolean = false): Boolean {
     val compactMove = engineMove
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
@@ -66,7 +61,7 @@ fun EngineBoard.makeMove(engineMove: Int, ignoreCheck: Boolean = false): Boolean
 
     calculateSupplementaryBitboards()
 
-    if (!ignoreCheck && isCheck(mover.opponent())) {
+    if (isCheck(mover.opponent())) {
         unMakeMove()
         return false
     }
@@ -75,7 +70,7 @@ fun EngineBoard.makeMove(engineMove: Int, ignoreCheck: Boolean = false): Boolean
 }
 
 @Throws(InvalidMoveException::class)
-fun EngineBoard.unMakeMove() {
+fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     numMovesMade--
     halfMoveCount = moveHistory[numMovesMade].halfMoveCount.toInt()
     mover = mover.opponent()
