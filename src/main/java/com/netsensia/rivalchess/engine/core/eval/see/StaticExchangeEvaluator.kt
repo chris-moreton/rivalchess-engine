@@ -6,5 +6,5 @@ import com.netsensia.rivalchess.exception.InvalidMoveException
 
 interface StaticExchangeEvaluator {
     @Throws(InvalidMoveException::class)
-    fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int
+    fun staticExchangeEvaluation(board: EngineBoard, move: Int): Int
 }

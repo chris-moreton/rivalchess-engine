@@ -130,7 +130,7 @@ class BoardHash {
         return (hashValue % maxHashEntries).toInt() * HashIndex.numHashFields
     }
 
-    fun move(engineBoard: EngineBoard, move: EngineMove) {
+    fun move(engineBoard: EngineBoard, move: Int) {
         hashTracker.makeMove(engineBoard, move)
     }
 

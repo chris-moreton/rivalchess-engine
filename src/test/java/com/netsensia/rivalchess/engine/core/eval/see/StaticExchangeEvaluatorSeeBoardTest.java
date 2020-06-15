@@ -19,7 +19,7 @@ public class StaticExchangeEvaluatorSeeBoardTest extends TestCase {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(fen));
         assertEquals(expectedScore, staticExchangeEvaluator.staticExchangeEvaluation(
                 engineBoard,
-                getEngineMoveFromSimpleAlgebraic(move)));
+                getEngineMoveFromSimpleAlgebraic(move).compact));
     }
 
     @Test

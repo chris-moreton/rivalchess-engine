@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.engine.core.BITBOARD_FRIENDLY
 import com.netsensia.rivalchess.engine.core.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.core.eval.onlyOneBitSet
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
+import com.netsensia.rivalchess.engine.core.search.moveNoScore
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.enums.PromotionPieceMask
@@ -52,7 +53,7 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
     var score = 0
     val promotionMask = move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
     if (isCapture) {
-        val see = staticExchangeEvaluator.staticExchangeEvaluation(this, EngineMove(move))
+        val see = staticExchangeEvaluator.staticExchangeEvaluation(this, move)
         if (see > 0) score = 100 + (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt()
         if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) score += 9
     } else if (promotionMask == PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
@@ -66,8 +67,7 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
 
     try {
-        val engineMove = EngineMove(moveToVerify and 0x00FFFFFF)
-        if (makeMove(engineMove)) {
+        if (makeMove(moveNoScore(moveToVerify))) {
             unMakeMove()
             return true
         }

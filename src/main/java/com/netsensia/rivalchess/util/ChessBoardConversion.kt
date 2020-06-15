@@ -103,7 +103,7 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
             PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> pgnMove += "=R"
         }
     }
-    if (board.makeMove(EngineMove(move))) {
+    if (board.makeMove((move))) {
         if (board.isCheck(board.mover)) pgnMove += "+"
         board.unMakeMove()
     }

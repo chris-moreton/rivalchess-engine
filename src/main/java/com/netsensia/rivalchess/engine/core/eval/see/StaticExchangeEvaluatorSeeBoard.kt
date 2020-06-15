@@ -13,12 +13,12 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 
     @ExperimentalStdlibApi
     @Throws(InvalidMoveException::class)
-    override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
+    override fun staticExchangeEvaluation(board: EngineBoard, move: Int): Int {
         val seeBoard = SeeBoard(board)
 
         if (board.makeMove(move)) {
             val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
-            val captureSquare = move.compact and 63
+            val captureSquare = move and 63
             val materialGain = seeBoard.makeMove(move)
             val seeValue = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain)) - materialBalance
             board.unMakeMove()

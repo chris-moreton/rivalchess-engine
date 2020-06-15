@@ -26,13 +26,13 @@ fun EngineBoard.unMakeNullMove() {
 }
 
 @Throws(InvalidMoveException::class)
-fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
+fun EngineBoard.makeMove(engineMove: Int): Boolean {
     return makeMove(engineMove, false)
 }
 
 @Throws(InvalidMoveException::class)
-fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false): Boolean {
-    val compactMove = engineMove.compact
+fun EngineBoard.makeMove(engineMove: Int, ignoreCheck: Boolean = false): Boolean {
+    val compactMove = engineMove
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
     val capturePiece = squareContents[moveTo]

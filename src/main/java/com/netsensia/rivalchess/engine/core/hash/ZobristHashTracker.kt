@@ -179,8 +179,8 @@ class ZobristHashTracker {
 
     fun nullMove() = switchMover()
 
-    fun makeMove(board: EngineBoard, engineMove: EngineMove) {
-        val move = getMoveRefFromEngineMove(engineMove.compact)
+    fun makeMove(board: EngineBoard, engineMove: Int) {
+        val move = getMoveRefFromEngineMove(engineMove)
         val bitRefFrom = getBitRefFromBoardRef(move.srcBoardRef)
         val movedPiece = board.getSquareOccupant(bitRefFrom)
         val bitRefTo = getBitRefFromBoardRef(move.tgtBoardRef)

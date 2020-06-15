@@ -10,8 +10,8 @@ import com.netsensia.rivalchess.model.Colour
 class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
 
     @Throws(InvalidMoveException::class)
-    override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
-        val captureSquare = move.compact and 63
+    override fun staticExchangeEvaluation(board: EngineBoard, move: Int): Int {
+        val captureSquare = move and 63
         val materialBalance = materialBalanceFromMoverPerspective(board)
 
         if (board.makeMove(move)) {
@@ -46,7 +46,7 @@ class StaticExchangeEvaluatorPremium : StaticExchangeEvaluator {
     private fun getCaptureMovesOnSquare(board: EngineBoard, captureSquare: Int) = sequence {
         for (move in board.moveGenerator().generateLegalQuiesceMoves(false).moves) {
             if (move == 0) break
-            if (move and 63 == captureSquare) yield(EngineMove(move))
+            if (move and 63 == captureSquare) yield(move)
         }
     }
 }

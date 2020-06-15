@@ -129,7 +129,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
 
-            if (engineBoard.makeMove(EngineMove(move))) {
+            if (engineBoard.makeMove((move))) {
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
                 val isCheck = board.isCheck(mover)
@@ -221,7 +221,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             board.getSquareOccupant(toSquare(move)).index,
                             board.getSquareOccupant(fromSquare(move)).index, board, move, recaptureSquare)
 
-            if (board.makeMove(EngineMove(move))) {
+            if (board.makeMove((move))) {
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
 
@@ -289,11 +289,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             var recaptureExtend = 0
             var newRecaptureSquare = -1
             if (targetPiece != -1 && Evaluation.pieceValues[movePiece] == Evaluation.pieceValues[targetPiece]) {
-                currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
+                currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, (move))
                 if (abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.value) newRecaptureSquare = toSquare(move)
             }
             if (toSquare(move) == recaptureSquare) {
-                if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
+                if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, (move))
                 if (abs(currentSEEValue) > Evaluation.getPieceValue(board.getSquareOccupant(recaptureSquare))
                         - Extensions.RECAPTURE_EXTENSION_MARGIN.value) {
                     recaptureExtend = 1
@@ -470,13 +470,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun determineDrawnPositionsAndGenerateDepthZeroMoves() {
         moveSequence(setPlyMoves(0)).forEach {
-            if (engineBoard.makeMove(EngineMove(it))) {
+            if (engineBoard.makeMove((it))) {
                 val plyDraw = mutableListOf(false, false)
 
                 if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[0] = true
 
                 moveSequence(boardMoves()).forEach {
-                    if (engineBoard.makeMove(EngineMove(moveNoScore(it)))) {
+                    if (engineBoard.makeMove((moveNoScore(it)))) {
                         if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[1] = true
                         engineBoard.unMakeMove()
                     }
@@ -608,7 +608,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
-            if (board.makeMove(EngineMove(move))) {
+            if (board.makeMove((move))) {
                 legalMoveCount++
                 newPath = quiesce(
                         board,
@@ -676,7 +676,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             score = 126
         } else if (isCapture) {
 
-            val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(orderedMoves[ply][i])))
+            val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, (orderedMoves[ply][i])))
 
             score = if (see > 0) {
                 110 + see
@@ -791,7 +791,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         get() = engineBoard.mover
 
     @Throws(InvalidMoveException::class)
-    fun makeMove(engineMove: EngineMove) {
+    fun makeMove(engineMove: Int) {
         engineBoard.makeMove(engineMove)
     }
 

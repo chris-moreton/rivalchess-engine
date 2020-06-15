@@ -4,6 +4,9 @@ import com.netsensia.rivalchess.config.Extensions
 import com.netsensia.rivalchess.config.FeatureFlag
 import com.netsensia.rivalchess.config.SearchConfig
 
+fun moveFrom(compact: Int) = compact shr 16 and 63
+fun moveTo(compact: Int) = compact and 63
+
 fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
 fun moveSequence(moves: IntArray) = sequence {
