@@ -79,7 +79,7 @@ fun EngineBoard.unMakeMove() {
     numMovesMade--
     halfMoveCount = moveHistory[numMovesMade].halfMoveCount.toInt()
     mover = mover.opponent()
-    this.engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveHistory[numMovesMade].enPassantBitboard)
+    engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveHistory[numMovesMade].enPassantBitboard)
     castlePrivileges = moveHistory[numMovesMade].castlePrivileges.toInt()
     isOnNullMove = moveHistory[numMovesMade].isOnNullMove
     val fromSquare = moveHistory[numMovesMade].move ushr 16 and 63
@@ -188,12 +188,9 @@ private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Bool
 
 private fun EngineBoard.replaceMovedPiece(fromSquare: Int, fromMask: Long, toMask: Long): SquareOccupant {
     val movePiece = moveHistory[numMovesMade].movePiece
-    this.engineBitboards.xorPieceBitboard(movePiece.index, toMask or fromMask)
-    if (movePiece == SquareOccupant.WK) {
-        whiteKingSquare = fromSquare
-    } else if (movePiece == SquareOccupant.BK) {
-        blackKingSquare = fromSquare
-    }
+    engineBitboards.xorPieceBitboard(movePiece.index, toMask or fromMask)
+    if (movePiece == SquareOccupant.WK) whiteKingSquare = fromSquare else
+        if (movePiece == SquareOccupant.BK) blackKingSquare = fromSquare
     return movePiece
 }
 
