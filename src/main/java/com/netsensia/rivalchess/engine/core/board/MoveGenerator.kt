@@ -47,7 +47,7 @@ class MoveGenerator(
         return this
     }
 
-    private inline fun kingSquareForMover() = if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare
+    private fun kingSquareForMover() = if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare
 
     private fun knightBitboardForMover() = if (mover == Colour.WHITE) bitboards[BITBOARD_WN] else bitboards[BITBOARD_BN]
 
@@ -57,7 +57,7 @@ class MoveGenerator(
         }
     }
 
-    private inline fun addMoves(fromSquareMask: Int, bitboard: Long) {
+    private fun addMoves(fromSquareMask: Int, bitboard: Long) {
         applyToSquares(bitboard) {
             moves[moveCount++] = (fromSquareMask or it)
         }

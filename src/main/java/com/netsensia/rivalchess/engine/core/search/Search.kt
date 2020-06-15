@@ -218,8 +218,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             val move = it
             val recaptureExtensionResponse =
                     recaptureExtensions(extensions,
-                            board.getSquareOccupant(toSquare(move)).index,
-                            board.getSquareOccupant(fromSquare(move)).index, board, move, recaptureSquare)
+                            board.getSquareOccupant(moveTo(move)).index,
+                            board.getSquareOccupant(moveFrom(move)).index, board, move, recaptureSquare)
 
             if (board.makeMove((move))) {
 
@@ -276,7 +276,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         Extensions.maxNewExtensionsTreePart[(ply / iterativeDeepeningDepth).coerceAtMost(Extensions.LAST_EXTENSION_LAYER.value)]
 
     private fun updateKillerMoves(enemyBitboard: Long, move: Int, ply: Int, newPath: SearchPath) {
-        if (enemyBitboard and toSquare(move).toLong() == 0L || move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value == 0) {
+        if (enemyBitboard and moveTo(move).toLong() == 0L || move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value == 0) {
             killerMoves[ply][1] = killerMoves[ply][0]
             killerMoves[ply][0] = move
             if (FeatureFlag.USE_MATE_HISTORY_KILLERS.isActive && newPath.score > Evaluation.MATE_SCORE_START.value) mateKiller[ply] = move
@@ -290,9 +290,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             var newRecaptureSquare = -1
             if (targetPiece != -1 && Evaluation.pieceValues[movePiece] == Evaluation.pieceValues[targetPiece]) {
                 currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, (move))
-                if (abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.value) newRecaptureSquare = toSquare(move)
+                if (abs(currentSEEValue) <= Extensions.RECAPTURE_EXTENSION_MARGIN.value) newRecaptureSquare = moveTo(move)
             }
-            if (toSquare(move) == recaptureSquare) {
+            if (moveTo(move) == recaptureSquare) {
                 if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, (move))
                 if (abs(currentSEEValue) > Evaluation.getPieceValue(board.getSquareOccupant(recaptureSquare))
                         - Extensions.RECAPTURE_EXTENSION_MARGIN.value) {
@@ -343,8 +343,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun updateHistoryMoves(mover: Colour, move: Int, depthRemaining: Int, success: Boolean) {
         val historyMovesArray = if (success) historyMovesSuccess else historyMovesFail
         val moverIndex = if (mover == Colour.WHITE) 1 else 0
-        val fromSquare = fromSquare(move)
-        val toSquare = toSquare(move)
+        val fromSquare = moveFrom(move)
+        val toSquare = moveTo(move)
         if (FeatureFlag.USE_HISTORY_HEURISTIC.isActive) {
             historyMovesArray[moverIndex][fromSquare][toSquare] += depthRemaining
             if (historyMovesArray[moverIndex][fromSquare][toSquare] > SearchConfig.HISTORY_MAX_VALUE.value) {
@@ -666,10 +666,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun scoreMove(ply: Int, i: Int, board: EngineBoard): Int {
         var score = 0
-        val toSquare = toSquare(orderedMoves[ply][i])
+        val toSquare = moveTo(orderedMoves[ply][i])
         val isCapture = board.getSquareOccupant(toSquare) != SquareOccupant.NONE ||
                 (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
-                        board.getSquareOccupant(fromSquare(orderedMoves[ply][i])).piece == Piece.PAWN)
+                        board.getSquareOccupant(moveFrom(orderedMoves[ply][i])).piece == Piece.PAWN)
 
         orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
         if (orderedMoves[ply][i] == mateKiller[ply]) {
@@ -697,7 +697,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, i: Int, score: Int, movesForSorting: IntArray, toSquare: Int): Int {
-        val historyScore = historyScore(board.mover == Colour.WHITE, fromSquare(movesForSorting[i]), toSquare)
+        val historyScore = historyScore(board.mover == Colour.WHITE, moveFrom(movesForSorting[i]), toSquare)
         if (historyScore > 5) {
             return historyScore
         } else {
@@ -721,8 +721,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var i = 0
         while (orderedMoves[ply][i] != 0) {
             if (orderedMoves[ply][i] != -1) {
-                val fromSquare = fromSquare(orderedMoves[ply][i])
-                val toSquare = toSquare(orderedMoves[ply][i])
+                val fromSquare = moveFrom(orderedMoves[ply][i])
+                val toSquare = moveTo(orderedMoves[ply][i])
                 orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
 
                 val killerScore = scoreKillerMoves(ply, i, orderedMoves[ply])
@@ -741,10 +741,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             i++
         }
     }
-
-    private fun fromSquare(move: Int) = (move ushr 16) and 63
-
-    private fun toSquare(move: Int) = move and 63
 
     private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int) =
             when (board.getSquareOccupant(fromSquare).piece) {
