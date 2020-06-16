@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.engine.core.search
 
-import com.netsensia.rivalchess.config.Extensions
+import com.netsensia.rivalchess.config.FRACTIONAL_EXTENSION_FULL
 import com.netsensia.rivalchess.config.FeatureFlag
 import com.netsensia.rivalchess.config.SearchConfig
 
@@ -31,5 +31,5 @@ fun nullMoveReduceDepth(depthRemaining: Int) =
         else SearchConfig.NULLMOVE_REDUCE_DEPTH.value
 
 fun useScoutSearch(depth: Int, newExtensions: Int) =
-        FeatureFlag.USE_PV_SEARCH.isActive && depth + (newExtensions / Extensions.FRACTIONAL_EXTENSION_FULL.value) >=
+        FeatureFlag.USE_PV_SEARCH.isActive && depth + (newExtensions / FRACTIONAL_EXTENSION_FULL) >=
                 SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.value
