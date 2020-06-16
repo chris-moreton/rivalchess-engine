@@ -1,16 +1,12 @@
 package com.netsensia.rivalchess.config
 
-import com.netsensia.rivalchess.engine.core.eval.pieceValue
-import com.netsensia.rivalchess.model.Piece
-import java.util.*
+import com.netsensia.rivalchess.engine.core.eval.VALUE_KNIGHT
 
-enum class SearchConfig(val value: Int) {
-    HISTORY_MAX_VALUE(20000),
-    ASPIRATION_RADIUS(40),
-    MAXIMUM_HASH_AGE(3),
-    NULLMOVE_REDUCE_DEPTH(2),
-    NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE(6),
-    NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES(pieceValue(Piece.KNIGHT)),
-    GENERATE_CHECKS_UNTIL_QUIESCE_PLY(0),
-    PV_MINIMUM_DISTANCE_FROM_LEAF(2);
-}
+const val HISTORY_MAX_VALUE = 20000
+const val ASPIRATION_RADIUS = 40
+const val MAXIMUM_HASH_AGE = 3
+const val NULLMOVE_REDUCE_DEPTH = 2
+const val NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE = 6
+const val NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES = VALUE_KNIGHT
+const val GENERATE_CHECKS_UNTIL_QUIESCE_PLY = 0
+const val PV_MINIMUM_DISTANCE_FROM_LEAF = 2

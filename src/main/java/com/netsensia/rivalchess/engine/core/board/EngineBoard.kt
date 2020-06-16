@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.*
-import com.netsensia.rivalchess.config.Hash
+import com.netsensia.rivalchess.config.DEFAULT_HASHTABLE_SIZE_MB
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
 import com.netsensia.rivalchess.engine.core.hash.BoardHash
@@ -62,7 +62,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         halfMoveCount = board.halfMoveCount
         setEngineBoardVars(board)
         boardHashObject.hashTableVersion = 0
-        boardHashObject.setHashSizeMB(Hash.DEFAULT_HASHTABLE_SIZE_MB.value)
+        boardHashObject.setHashSizeMB(DEFAULT_HASHTABLE_SIZE_MB)
         boardHashObject.initialiseHashCode(this)
     }
 

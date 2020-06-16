@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash
 
 import com.netsensia.rivalchess.bitboards.LOW32
-import com.netsensia.rivalchess.config.Hash
+import com.netsensia.rivalchess.config.DEFAULT_SEARCH_HASH_HEIGHT
 import com.netsensia.rivalchess.config.USE_SUPER_VERIFY_ON_HASH
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.engine.core.type.EngineMove
@@ -30,9 +30,9 @@ class BoardHash {
     fun clearHash() {
         for (i in 0 until maxHashEntries) {
             hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.FLAG.index] = HashValueType.EMPTY.index
-            hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
+            hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = DEFAULT_SEARCH_HASH_HEIGHT
             hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.FLAG.index] = HashValueType.EMPTY.index
-            hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
+            hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = DEFAULT_SEARCH_HASH_HEIGHT
         }
     }
 
@@ -43,10 +43,10 @@ class BoardHash {
             lastHashSizeCreated = maxHashEntries
             for (i in 0 until maxHashEntries) {
                 hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.FLAG.index] = HashValueType.EMPTY.index
-                hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
+                hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = DEFAULT_SEARCH_HASH_HEIGHT
                 hashTableUseHeight[i * HashIndex.numHashFields + HashIndex.VERSION.index] = 1
                 hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.FLAG.index] = HashValueType.EMPTY.index
-                hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = Hash.DEFAULT_SEARCH_HASH_HEIGHT.value
+                hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.HASHENTRY_HEIGHT.index] = DEFAULT_SEARCH_HASH_HEIGHT
                 hashTableIgnoreHeight[i * HashIndex.numHashFields + HashIndex.VERSION.index] = 1
             }
         }

@@ -1,6 +1,4 @@
 package com.netsensia.rivalchess.config
 
-enum class IterativeDeepening(val value: Int) {
-    IID_MIN_DEPTH(5),
-    IID_REDUCE_DEPTH(3);
-}
+const val IID_MIN_DEPTH = 5
+const val IID_REDUCE_DEPTH = 3

@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.hash;
 
-import com.netsensia.rivalchess.config.SearchConfig;
 import com.netsensia.rivalchess.engine.core.ConstantsKt;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.enums.HashIndex;
@@ -10,6 +9,7 @@ import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversionKt;
 import junit.framework.TestCase;
 
+import static com.netsensia.rivalchess.config.SearchConfigKt.MAXIMUM_HASH_AGE;
 import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.makeMove;
 import static com.netsensia.rivalchess.engine.core.board.MoveMakingBoardExtensionsKt.unMakeMove;
 
@@ -88,7 +88,7 @@ public class SearchHashTest extends TestCase {
                 boardHash.ignoreHeight(
                         boardHash.getHashIndex(engineBoard) + HashIndex.MOVE.getIndex()));
 
-        for (int i = 0; i < SearchConfig.MAXIMUM_HASH_AGE.getValue(); i++) {
+        for (int i = 0; i < MAXIMUM_HASH_AGE; i++) {
             boardHash.incVersion();
             assertTrue(SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
         }

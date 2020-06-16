@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.engine.core.hash
 
 import com.netsensia.rivalchess.bitboards.LOW32
-import com.netsensia.rivalchess.config.SearchConfig
+import com.netsensia.rivalchess.config.MAXIMUM_HASH_AGE
 import com.netsensia.rivalchess.config.USE_SUPER_VERIFY_ON_HASH
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.enums.HashIndex
@@ -13,7 +13,7 @@ fun isHeightHashTableEntryValid(depthRemaining: Int, boardHash: BoardHash, hashI
         if (boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_HEIGHT.index) >= depthRemaining && boardHash.useHeight(hashIndex + HashIndex.FLAG.index) !=
                 HashValueType.EMPTY.index && boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_64BIT1.index) == (boardHash.trackedHashValue ushr 32).toInt() &&
                 boardHash.useHeight(hashIndex + HashIndex.HASHENTRY_64BIT2.index) == (boardHash.trackedHashValue and LOW32).toInt()) {
-            (boardHash.hashTableVersion - boardHash.useHeight(hashIndex + HashIndex.VERSION.index) <= SearchConfig.MAXIMUM_HASH_AGE.value)
+            (boardHash.hashTableVersion - boardHash.useHeight(hashIndex + HashIndex.VERSION.index) <= MAXIMUM_HASH_AGE)
         } else false
 
 
@@ -21,7 +21,7 @@ fun isAlwaysReplaceHashTableEntryValid(depthRemaining: Int, boardHash: BoardHash
         if (boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_HEIGHT.index) >= depthRemaining && boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index) !=
                 HashValueType.EMPTY.index && boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_64BIT1.index) == (boardHash.trackedHashValue ushr 32).toInt() &&
                 boardHash.ignoreHeight(hashIndex + HashIndex.HASHENTRY_64BIT2.index) == (boardHash.trackedHashValue and LOW32).toInt()) {
-            boardHash.hashTableVersion - boardHash.useHeight(hashIndex + HashIndex.VERSION.index) <= SearchConfig.MAXIMUM_HASH_AGE.value
+            boardHash.hashTableVersion - boardHash.useHeight(hashIndex + HashIndex.VERSION.index) <= MAXIMUM_HASH_AGE
         } else false
 
 

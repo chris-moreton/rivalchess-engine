@@ -1,8 +1,6 @@
 package com.netsensia.rivalchess.engine.core.search
 
-import com.netsensia.rivalchess.config.FRACTIONAL_EXTENSION_FULL
-import com.netsensia.rivalchess.config.SearchConfig
-import com.netsensia.rivalchess.config.USE_PV_SEARCH
+import com.netsensia.rivalchess.config.*
 
 fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
@@ -27,9 +25,7 @@ fun swapElements(a: IntArray, i1: Int, i2: Int) {
 }
 
 fun nullMoveReduceDepth(depthRemaining: Int) =
-        if (depthRemaining > SearchConfig.NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE.value) SearchConfig.NULLMOVE_REDUCE_DEPTH.value + 1
-        else SearchConfig.NULLMOVE_REDUCE_DEPTH.value
+        if (depthRemaining > NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE) NULLMOVE_REDUCE_DEPTH + 1 else NULLMOVE_REDUCE_DEPTH
 
 fun useScoutSearch(depth: Int, newExtensions: Int) =
-        USE_PV_SEARCH && depth + (newExtensions / FRACTIONAL_EXTENSION_FULL) >=
-                SearchConfig.PV_MINIMUM_DISTANCE_FROM_LEAF.value
+        USE_PV_SEARCH && depth + (newExtensions / FRACTIONAL_EXTENSION_FULL) >= PV_MINIMUM_DISTANCE_FROM_LEAF

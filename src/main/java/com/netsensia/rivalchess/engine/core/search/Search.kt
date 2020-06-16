@@ -106,8 +106,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         if (!abortingSearch) {
             currentPath.setPath(path)
-            low = path.score - SearchConfig.ASPIRATION_RADIUS.value
-            high = path.score + SearchConfig.ASPIRATION_RADIUS.value
+            low = path.score - ASPIRATION_RADIUS
+            high = path.score + ASPIRATION_RADIUS
         }
         return AspirationSearchResult(path, Window(low, high))
     }
@@ -324,8 +324,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
 
     private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): Int {
-        if (USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IterativeDeepening.IID_MIN_DEPTH.value && hashMove == 0 && !board.isOnNullMove) {
-            val iidDepth = depth - IterativeDeepening.IID_REDUCE_DEPTH.value
+        if (hashMove == 0 && !board.isOnNullMove && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
+            val iidDepth = depth - IID_REDUCE_DEPTH
             if (iidDepth > 0) search(board, iidDepth, ply, window, extensions, recaptureSquare, isCheck).also {
                 if (it.height > 0) return it.move[0]
             }
@@ -346,7 +346,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val toSquare = toSquare(move)
         if (USE_HISTORY_HEURISTIC) {
             historyMovesArray[moverIndex][fromSquare][toSquare] += depthRemaining
-            if (historyMovesArray[moverIndex][fromSquare][toSquare] > SearchConfig.HISTORY_MAX_VALUE.value) {
+            if (historyMovesArray[moverIndex][fromSquare][toSquare] > HISTORY_MAX_VALUE) {
                 for (i in 0..1) for (j in 0..63) for (k in 0..63) {
                     if (historyMovesSuccess[i][j][k] > 0) historyMovesSuccess[i][j][k] /= 2
                     if (historyMovesFail[i][j][k] > 0) historyMovesFail[i][j][k] /= 2
@@ -431,7 +431,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun performNullMove(board: EngineBoard, depthRemaining: Int, isCheck: Boolean) =
             ((USE_NULL_MOVE_PRUNING && !isCheck && !board.isOnNullMove && depthRemaining > 1) &&
-                    ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= SearchConfig.NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES.value &&
+                    ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES &&
                             (if (board.mover == Colour.WHITE) board.whitePawnValues else board.blackPawnValues) > 0))
 
     private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, window: Window, extensions: Int): SearchPath {
@@ -532,12 +532,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             var move = orderedMoves[ply][i]
             val isCapture = board.isCapture(move)
 
-            // clear out additional info stored with the move
             move = moveNoScore(move)
             val score = board.getScore(move, includeChecks, isCapture, staticExchangeEvaluator)
-            if (score > 0) {
-                orderedMoves[ply][moveCount++] = move or (127 - score shl 24)
-            }
+            if (score > 0) orderedMoves[ply][moveCount++] = move or (127 - score shl 24)
             i++
         }
         orderedMoves[ply][moveCount] = 0
@@ -615,7 +612,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         quiescePly + 1,
                         -high,
                         -newLow,
-                        quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value && board.isCheck(mover))
+                        quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover))
                 board.unMakeMove()
                 newPath.score = -newPath.score
                 if (newPath.score > searchPath[ply].score) {
@@ -641,23 +638,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             scoreFullWidthMoves(board, ply)
         } else {
             orderedMoves[ply] = board.moveGenerator()
-                    .generateLegalQuiesceMoves(quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
+                    .generateLegalQuiesceMoves(quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
                     .moves
-            scoreQuiesceMoves(board, ply, quiescePly <= SearchConfig.GENERATE_CHECKS_UNTIL_QUIESCE_PLY.value)
+            scoreQuiesceMoves(board, ply, quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
         }
     }
 
-    private fun adjustedSee(see: Int) =
-            if (see > -Int.MAX_VALUE) (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt() else see
+    private fun adjustedSee(see: Int) = if (see > -Int.MAX_VALUE) (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt() else see
 
     @Throws(InvalidMoveException::class)
     private fun scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
         var movesScored = 0
         var i = -1
         while (orderedMoves[ply][++i] != 0) {
-            if (orderedMoves[ply][i] != -1 && scoreMove(ply, i, board) > 0) {
-                movesScored++
-            }
+            if (orderedMoves[ply][i] != -1 && scoreMove(ply, i, board) > 0) movesScored++
         }
         return movesScored
     }
