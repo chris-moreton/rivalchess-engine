@@ -4,7 +4,7 @@ import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
-import com.netsensia.rivalchess.engine.core.eval.pieceValue
+import com.netsensia.rivalchess.engine.core.eval.*
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.enums.PromotionPieceMask
 import com.netsensia.rivalchess.model.*
@@ -45,7 +45,7 @@ class SeeBoard(board: EngineBoard) {
                 if (movedPieceBitboardType == BITBOARD_WP) togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
                 else if (movedPieceBitboardType == BITBOARD_BP) togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
             }
-            pieceValue(Piece.PAWN)
+            VALUE_PAWN
         } else pieceValue(capturedPieceBitboardType)
 
         togglePiece(toBit, movedPieceBitboardType)
@@ -57,14 +57,14 @@ class SeeBoard(board: EngineBoard) {
             if (move.to() >= 56) {
                 togglePiece(1L shl move.to(), BITBOARD_WP)
                 togglePiece(1L shl move.to(), BITBOARD_WQ)
-                materialGain += pieceValue(Piece.QUEEN) - pieceValue(Piece.PAWN)
+                materialGain += VALUE_QUEEN - VALUE_PAWN
             }
         } else if (movedPieceBitboardType == BITBOARD_BP) {
             if (move.from() - move.to() == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shl 8)
             if (move.to() <= 7) {
                 togglePiece(1L shl move.to(), BITBOARD_BP)
                 togglePiece(1L shl move.to(), BITBOARD_BQ)
-                materialGain += pieceValue(Piece.QUEEN) - pieceValue(Piece.PAWN)
+                materialGain += VALUE_QUEEN - VALUE_PAWN
             }
         }
 
@@ -105,18 +105,18 @@ class SeeBoard(board: EngineBoard) {
     }
 
     val whitePieceValues: Int
-        get() = bitCount(bitboards.getPieceBitboard(BITBOARD_WN)) * pieceValue(Piece.KNIGHT) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_WR)) * pieceValue(Piece.ROOK) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_WB)) * pieceValue(Piece.BISHOP) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_WQ)) * pieceValue(Piece.QUEEN) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_WP)) * pieceValue(Piece.PAWN)
+        get() = bitCount(bitboards.getPieceBitboard(BITBOARD_WN)) * VALUE_KNIGHT +
+                bitCount(bitboards.getPieceBitboard(BITBOARD_WR)) * VALUE_ROOK +
+                bitCount(bitboards.getPieceBitboard(BITBOARD_WB)) * VALUE_BISHOP +
+                bitCount(bitboards.getPieceBitboard(BITBOARD_WQ)) * VALUE_QUEEN +
+                bitCount(bitboards.getPieceBitboard(BITBOARD_WP)) * VALUE_PAWN
 
     val blackPieceValues: Int
-        get() = bitCount(bitboards.getPieceBitboard(BITBOARD_BN)) * pieceValue(Piece.KNIGHT) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_BR)) * pieceValue(Piece.ROOK) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_BB)) * pieceValue(Piece.BISHOP) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_BQ)) * pieceValue(Piece.QUEEN) +
-                bitCount(bitboards.getPieceBitboard(BITBOARD_BP)) * pieceValue(Piece.PAWN)
+        get() = bitCount(bitboards.getPieceBitboard(BITBOARD_BN)) * VALUE_KNIGHT +
+                bitCount(bitboards.getPieceBitboard(BITBOARD_BR)) * VALUE_ROOK +
+                bitCount(bitboards.getPieceBitboard(BITBOARD_BB)) * VALUE_BISHOP +
+                bitCount(bitboards.getPieceBitboard(BITBOARD_BQ)) * VALUE_QUEEN +
+                bitCount(bitboards.getPieceBitboard(BITBOARD_BP)) * VALUE_PAWN
 
     fun generateCaptureMovesOnSquare(square: Int): List<EngineMove> {
 

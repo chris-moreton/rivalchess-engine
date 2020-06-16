@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.engine.core.board
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.config.DEFAULT_HASHTABLE_SIZE_MB
 import com.netsensia.rivalchess.engine.core.*
-import com.netsensia.rivalchess.engine.core.eval.pieceValue
+import com.netsensia.rivalchess.engine.core.eval.*
 import com.netsensia.rivalchess.engine.core.hash.BoardHash
 import com.netsensia.rivalchess.engine.core.type.MoveDetail
 import com.netsensia.rivalchess.enums.CastleBitMask
@@ -35,22 +35,22 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         get() = moveHistory[numMovesMade]
 
     val whitePieceValues: Int
-        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_WN)) * pieceValue(Piece.KNIGHT) +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WR)) * pieceValue(Piece.ROOK) +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WB)) * pieceValue(Piece.BISHOP) +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WQ)) * pieceValue(Piece.QUEEN)
+        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_WN)) * VALUE_KNIGHT +
+                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WR)) * VALUE_ROOK +
+                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WB)) * VALUE_BISHOP +
+                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WQ)) * VALUE_QUEEN
 
     val blackPieceValues: Int
-        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_BN)) * pieceValue(Piece.KNIGHT) +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BR)) * pieceValue(Piece.ROOK) +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BB)) * pieceValue(Piece.BISHOP) +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BQ)) * pieceValue(Piece.QUEEN)
+        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_BN)) * VALUE_KNIGHT +
+                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BR)) * VALUE_ROOK +
+                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BB)) * VALUE_BISHOP +
+                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BQ)) * VALUE_QUEEN
 
     val whitePawnValues: Int
-        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_WP)) * pieceValue(Piece.PAWN)
+        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_WP)) * VALUE_PAWN
 
     val blackPawnValues: Int
-        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_BP)) * pieceValue(Piece.PAWN)
+        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_BP)) * VALUE_PAWN
 
     init {
         setBoard(board)

@@ -3,6 +3,7 @@ package com.netsensia.rivalchess.engine.core.eval.see
 import com.netsensia.rivalchess.engine.core.BITBOARD_BK
 import com.netsensia.rivalchess.engine.core.BITBOARD_WK
 import com.netsensia.rivalchess.engine.core.board.*
+import com.netsensia.rivalchess.engine.core.eval.VALUE_KING
 import com.netsensia.rivalchess.engine.core.eval.pieceValue
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
@@ -38,7 +39,7 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 
             if (seeBoard.capturedPieceBitboardType == if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK) {
                 seeBoard.unMakeMove()
-                return bestScore + pieceValue(Piece.KING)
+                return bestScore + VALUE_KING
             }
 
             val seeScore = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain))

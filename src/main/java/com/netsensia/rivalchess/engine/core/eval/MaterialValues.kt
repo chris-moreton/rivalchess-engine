@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core.eval
 
-import com.netsensia.rivalchess.model.Piece
 import java.lang.Long
 
 data class MaterialValues(val bitboardData: BitboardData) {
@@ -11,19 +10,17 @@ data class MaterialValues(val bitboardData: BitboardData) {
 }
 
 fun whitePieceValues(bitboards: BitboardData) =
-        Long.bitCount(bitboards.whiteKnights) * pieceValue(Piece.KNIGHT) +
-        Long.bitCount(bitboards.whiteRooks) * pieceValue(Piece.ROOK) +
-        Long.bitCount(bitboards.whiteBishops) * pieceValue(Piece.BISHOP) +
-        Long.bitCount(bitboards.whiteQueens) * pieceValue(Piece.QUEEN)
+        Long.bitCount(bitboards.whiteKnights) * VALUE_KNIGHT +
+        Long.bitCount(bitboards.whiteRooks) * VALUE_ROOK +
+        Long.bitCount(bitboards.whiteBishops) * VALUE_BISHOP +
+        Long.bitCount(bitboards.whiteQueens) * VALUE_QUEEN
 
 fun blackPieceValues(bitboards: BitboardData) =
-        Long.bitCount(bitboards.blackKnights) * pieceValue(Piece.KNIGHT) +
-        Long.bitCount(bitboards.blackRooks) * pieceValue(Piece.ROOK) +
-        Long.bitCount(bitboards.blackBishops) * pieceValue(Piece.BISHOP) +
-        Long.bitCount(bitboards.blackQueens) * pieceValue(Piece.QUEEN)
+        Long.bitCount(bitboards.blackKnights) * VALUE_KNIGHT +
+        Long.bitCount(bitboards.blackRooks) * VALUE_ROOK +
+        Long.bitCount(bitboards.blackBishops) * VALUE_BISHOP +
+        Long.bitCount(bitboards.blackQueens) * VALUE_QUEEN
 
-fun whitePawnValues(bitboards: BitboardData) =
-        Long.bitCount(bitboards.whitePawns) * pieceValue(Piece.PAWN)
+fun whitePawnValues(bitboards: BitboardData) = Long.bitCount(bitboards.whitePawns) * VALUE_PAWN
 
-fun blackPawnValues(bitboards: BitboardData) =
-        Long.bitCount(bitboards.blackPawns) * pieceValue(Piece.PAWN)
+fun blackPawnValues(bitboards: BitboardData) = Long.bitCount(bitboards.blackPawns) * VALUE_PAWN
