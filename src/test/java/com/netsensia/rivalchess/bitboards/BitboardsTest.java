@@ -51,7 +51,7 @@ public class BitboardsTest {
         long bitboard = new BigInteger(bitboardString, 2).longValue();
         long expected = new BigInteger(expectedString, 2).longValue();
 
-        assertEquals(expected, BitboardUtilsKt.southFill(bitboard, 8));
+        assertEquals(expected, BitboardUtilsKt.southFill(bitboard));
     }
 
     @Test
@@ -81,7 +81,7 @@ public class BitboardsTest {
         long bitboard = new BigInteger(bitboardString, 2).longValue();
         long expected = new BigInteger(expectedString, 2).longValue();
 
-        assertEquals(expected, BitboardUtilsKt.northFill(bitboard, 8));
+        assertEquals(expected, BitboardUtilsKt.northFill(bitboard));
 
     }
 

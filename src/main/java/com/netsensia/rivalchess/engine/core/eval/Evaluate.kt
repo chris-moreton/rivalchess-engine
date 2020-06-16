@@ -29,6 +29,7 @@ fun evaluate(board: EngineBoard): Int {
     val eval =  materialDifference +
             (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
             (doubledRooksEval(squareList(bitboards.whiteRooks)) - doubledRooksEval(squareList(bitboards.blackRooks))) +
+            (whiteRooksEval(bitboards, whitePieces) - blackRooksEval(bitboards, blackPieces)) +
             pawnScore(bitboards.whitePawns, bitboards.blackPawns, attacks, materialValues, board.whiteKingSquare, board.blackKingSquare, board.mover) +
             (whiteBishopEval(bitboards, whitePieces) - blackBishopsEval(bitboards, blackPieces)) +
             (whiteKnightsEval(bitboards, attacks, materialValues) - blackKnightsEval(bitboards, attacks, materialValues)) +
@@ -36,7 +37,6 @@ fun evaluate(board: EngineBoard): Int {
             tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
             (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares)) +
             (whitePawnsEval(bitboards) - blackPawnsEval(bitboards)) +
-            (whiteRooksEval(bitboards, whitePieces) - blackRooksEval(bitboards, blackPieces)) +
             (whiteQueensEval(bitboards, whitePieces) - blackQueensEval(bitboards, blackPieces)) +
             castlingEval(bitboards, board.castlePrivileges) +
             bishopScore(bitboards, materialDifference, materialValues) +
@@ -305,7 +305,7 @@ fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
         else 0)
 
 fun openFiles(kingShield: Long, pawnBitboard: Long) =
-        southFill(kingShield, 8) and southFill(pawnBitboard, 8).inv() and RANK_1
+        southFill(kingShield) and southFill(pawnBitboard).inv() and RANK_1
 
 fun whiteKingShieldEval(bitboards: BitboardData, kingSquares: KingSquares) =
         if (whiteKingOnFirstTwoRanks(kingSquares)) {
@@ -709,8 +709,8 @@ fun pawnScore(whitePawnBitboard: Long,
 
     val whiteIsolatedPawns = whitePawnFiles and (whitePawnFiles shl 1).inv() and (whitePawnFiles ushr 1).inv()
     val blackIsolatedPawns = blackPawnFiles and (blackPawnFiles shl 1).inv() and (blackPawnFiles ushr 1).inv()
-    val whiteOccupiedFileMask = southFill(whitePawnBitboard, 8) and RANK_1
-    val blackOccupiedFileMask = southFill(blackPawnBitboard, 8) and RANK_1
+    val whiteOccupiedFileMask = southFill(whitePawnBitboard) and RANK_1
+    val blackOccupiedFileMask = southFill(blackPawnBitboard) and RANK_1
 
     fun whitePassedPawnScore(): Int {
         var acc = 0
@@ -731,16 +731,16 @@ fun pawnScore(whitePawnBitboard: Long,
             (bitCount(whitePawnBitboard and
                             (whitePawnBitboard or blackPawnBitboard ushr 8).inv() and
                             (blackPawnAttacks ushr 8) and
-                            northFill(whitePawnAttacks, 8).inv() and
+                            northFill(whitePawnAttacks).inv() and
                             blackPawnAttacks(whitePawnBitboard) and
-                            northFill(blackPawnFiles, 8).inv()
+                            northFill(blackPawnFiles).inv()
             ) * VALUE_BACKWARD_PAWN_PENALTY) +
             (bitCount(blackPawnBitboard and
                             (blackPawnBitboard or whitePawnBitboard shl 8).inv() and
                             (whitePawnAttacks shl 8) and
-                            southFill(blackPawnAttacks, 8).inv() and
+                            southFill(blackPawnAttacks).inv() and
                             whitePawnAttacks(blackPawnBitboard) and
-                            northFill(whitePawnFiles, 8).inv()
+                            northFill(whitePawnFiles).inv()
             ) * VALUE_BACKWARD_PAWN_PENALTY) -
             ((bitCount(whitePawnBitboard and FILE_A) + bitCount(whitePawnBitboard and FILE_H))
                     * VALUE_SIDE_PAWN_PENALTY) +

@@ -6,13 +6,17 @@ import com.netsensia.rivalchess.engine.core.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
 
-tailrec fun southFill(bitboard: Long, shiftBy: Int = 8): Long =
-    if (shiftBy == 32) bitboard or (bitboard ushr shiftBy)
-    else southFill(bitboard or (bitboard ushr shiftBy), shiftBy + shiftBy)
+fun southFill(bitboard: Long): Long {
+    val a = bitboard or (bitboard ushr 8)
+    val b = a or (a ushr 16)
+    return b or (b ushr 32)
+}
 
-tailrec fun northFill(bitboard: Long, shiftBy: Int = 8): Long =
-    if (shiftBy == 32) bitboard or (bitboard shl shiftBy)
-    else northFill(bitboard or (bitboard shl shiftBy), shiftBy + shiftBy)
+fun northFill(bitboard: Long): Long {
+    val a = bitboard or (bitboard shl 8)
+    val b = a or (a shl 16)
+    return b or (b shl 32)
+}
 
 fun getBlackPassedPawns(whitePawns: Long, blackPawns: Long) =
     blackPawns and northFill(whitePawns or whitePawnAttacks(whitePawns) or (blackPawns shl 8)).inv()

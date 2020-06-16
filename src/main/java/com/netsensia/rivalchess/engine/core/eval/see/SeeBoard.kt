@@ -99,7 +99,7 @@ class SeeBoard(board: EngineBoard) {
         return BITBOARD_NONE
     }
 
-    private inline fun togglePiece(squareBit: Long, bitboardType: Int) {
+    private fun togglePiece(squareBit: Long, bitboardType: Int) {
         bitboards.xorPieceBitboard(bitboardType, squareBit)
         deltas.add(Pair(bitboardType, squareBit))
     }
