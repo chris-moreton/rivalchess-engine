@@ -25,14 +25,14 @@ public class EngineBitboardsTest {
     @Test
     public void testGetAndSetPieceBitboardsByIndex() {
         bitboards.setPieceBitboard(BITBOARD_WQ, 829282L);
-        assertEquals(829282L, bitboards.getPieceBitboard(BITBOARD_WQ));
+        assertEquals(829282L, bitboards.pieceBitboards[BITBOARD_WQ]);
     }
 
     @Test
     public void testXorPieceBitboard() {
         bitboards.setPieceBitboard(BITBOARD_WQ, 829282L);
         bitboards.xorPieceBitboard(BITBOARD_WQ, 817222323L);
-        assertEquals(829282L ^ 817222323L, bitboards.getPieceBitboard(BITBOARD_WQ));
+        assertEquals(829282L ^ 817222323L, bitboards.pieceBitboards[BITBOARD_WQ]);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class EngineBitboardsTest {
         bitboards.setPieceBitboard(BITBOARD_WB, bitboard);
         bitboards.movePiece(SquareOccupant.WB, engineMove.compact);
 
-        assertEquals(bitboardExpected, bitboards.getPieceBitboard(BITBOARD_WB));
+        assertEquals(bitboardExpected, bitboards.pieceBitboards[BITBOARD_WB]);
     }
 
     @Test

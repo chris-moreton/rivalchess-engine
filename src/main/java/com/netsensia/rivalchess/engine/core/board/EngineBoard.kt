@@ -35,22 +35,22 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         get() = moveHistory[numMovesMade]
 
     val whitePieceValues: Int
-        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_WN)) * VALUE_KNIGHT +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WR)) * VALUE_ROOK +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WB)) * VALUE_BISHOP +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_WQ)) * VALUE_QUEEN
+        get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +
+                bitCount(engineBitboards.pieceBitboards[BITBOARD_WR]) * VALUE_ROOK +
+                bitCount(engineBitboards.pieceBitboards[BITBOARD_WB]) * VALUE_BISHOP +
+                bitCount(engineBitboards.pieceBitboards[BITBOARD_WQ]) * VALUE_QUEEN
 
     val blackPieceValues: Int
-        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_BN)) * VALUE_KNIGHT +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BR)) * VALUE_ROOK +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BB)) * VALUE_BISHOP +
-                bitCount(engineBitboards.getPieceBitboard(BITBOARD_BQ)) * VALUE_QUEEN
+        get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_BN]) * VALUE_KNIGHT +
+                bitCount(engineBitboards.pieceBitboards[BITBOARD_BR]) * VALUE_ROOK +
+                bitCount(engineBitboards.pieceBitboards[BITBOARD_BB]) * VALUE_BISHOP +
+                bitCount(engineBitboards.pieceBitboards[BITBOARD_BQ]) * VALUE_QUEEN
 
     val whitePawnValues: Int
-        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_WP)) * VALUE_PAWN
+        get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_WP]) * VALUE_PAWN
 
     val blackPawnValues: Int
-        get() = bitCount(engineBitboards.getPieceBitboard(BITBOARD_BP)) * VALUE_PAWN
+        get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_BP]) * VALUE_PAWN
 
     init {
         setBoard(board)
@@ -122,13 +122,13 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     fun calculateSupplementaryBitboards() {
-        val white = engineBitboards.getPieceBitboard(BITBOARD_WP) or engineBitboards.getPieceBitboard(BITBOARD_WN) or
-                engineBitboards.getPieceBitboard(BITBOARD_WB) or engineBitboards.getPieceBitboard(BITBOARD_WQ) or
-                engineBitboards.getPieceBitboard(BITBOARD_WK) or engineBitboards.getPieceBitboard(BITBOARD_WR)
+        val white = engineBitboards.pieceBitboards[BITBOARD_WP] or engineBitboards.pieceBitboards[BITBOARD_WN] or
+                engineBitboards.pieceBitboards[BITBOARD_WB] or engineBitboards.pieceBitboards[BITBOARD_WQ] or
+                engineBitboards.pieceBitboards[BITBOARD_WK] or engineBitboards.pieceBitboards[BITBOARD_WR]
 
-        val black = engineBitboards.getPieceBitboard(BITBOARD_BP) or engineBitboards.getPieceBitboard(BITBOARD_BN) or
-                engineBitboards.getPieceBitboard(BITBOARD_BB) or engineBitboards.getPieceBitboard(BITBOARD_BQ) or
-                engineBitboards.getPieceBitboard(BITBOARD_BK) or engineBitboards.getPieceBitboard(BITBOARD_BR)
+        val black = engineBitboards.pieceBitboards[BITBOARD_BP] or engineBitboards.pieceBitboards[BITBOARD_BN] or
+                engineBitboards.pieceBitboards[BITBOARD_BB] or engineBitboards.pieceBitboards[BITBOARD_BQ] or
+                engineBitboards.pieceBitboards[BITBOARD_BK] or engineBitboards.pieceBitboards[BITBOARD_BR]
 
         if (mover == Colour.WHITE) {
             engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY, white)
@@ -156,18 +156,18 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         if (mover == Colour.BLACK) // white made the last move
         {
             if (toSquare >= 40) return bitCount(whitePassedPawnMask[toSquare] and
-                    engineBitboards.getPieceBitboard(BITBOARD_BP)) == 0
+                    engineBitboards.pieceBitboards[BITBOARD_BP]) == 0
         } else {
             if (toSquare <= 23) return bitCount(blackPassedPawnMask[toSquare] and
-                    engineBitboards.getPieceBitboard(BITBOARD_WP)) == 0
+                    engineBitboards.pieceBitboards[BITBOARD_WP]) == 0
         }
         return false
     }
 
     val allPiecesBitboard: Long
-        get() = engineBitboards.getPieceBitboard(BITBOARD_ALL)
+        get() = engineBitboards.pieceBitboards[BITBOARD_ALL]
 
-    fun getBitboard(bitboardType: Int) = engineBitboards.getPieceBitboard(bitboardType)
+    fun getBitboard(bitboardType: Int) = engineBitboards.pieceBitboards[bitboardType]
 
     fun previousOccurrencesOfThisPosition(): Int {
         val boardHashCode = boardHashObject.trackedHashValue

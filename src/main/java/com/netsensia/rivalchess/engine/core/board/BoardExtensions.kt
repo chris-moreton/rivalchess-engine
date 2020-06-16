@@ -17,15 +17,15 @@ import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
 
 fun EngineBoard.onlyKingsRemain() =
-    onlyOneBitSet(this.engineBitboards.getPieceBitboard(BITBOARD_ENEMY)) &&
-            onlyOneBitSet(this.engineBitboards.getPieceBitboard(BITBOARD_FRIENDLY))
+    onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_ENEMY]) &&
+            onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_FRIENDLY])
 
 fun EngineBoard.isSquareEmpty(bitRef: Int) = squareContents.get(bitRef) == SquareOccupant.NONE
 
 fun EngineBoard.isCapture(move: Int): Boolean {
     val toSquare = move and 63
     var isCapture: Boolean = !isSquareEmpty(toSquare)
-    if (!isCapture && 1L shl toSquare and this.engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
+    if (!isCapture && 1L shl toSquare and this.engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE] != 0L &&
             squareContents.get(move ushr 16 and 63).piece == Piece.PAWN) {
         isCapture = true
     }
@@ -65,7 +65,6 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
 }
 
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
-
     try {
         val engineMove = EngineMove(moveToVerify and 0x00FFFFFF)
         if (makeMove(engineMove)) {
@@ -82,7 +81,7 @@ fun EngineBoard.getCharBoard(): CharArray {
         val board = CharArray(64){'0'}
         val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
         for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
-            val bitsSet = squareList(this.engineBitboards.getPieceBitboard(i))
+            val bitsSet = squareList(this.engineBitboards.pieceBitboards[i])
             for (bitSet in bitsSet) {
                 board[bitSet] = pieces[i]
             }
@@ -141,7 +140,7 @@ fun EngineBoard.getFen(): String {
         }
         if (noPrivs) fen.append('-')
         fen.append(' ')
-        val bitboard = this.engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE)
+        val bitboard = this.engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
         if (java.lang.Long.bitCount(bitboard) > 0) {
             val epSquare = java.lang.Long.numberOfTrailingZeros(bitboard)
             val file = (7 - epSquare % 8).toChar()

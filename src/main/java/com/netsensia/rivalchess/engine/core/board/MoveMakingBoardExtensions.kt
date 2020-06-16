@@ -14,8 +14,8 @@ import com.netsensia.rivalchess.model.SquareOccupant
 fun EngineBoard.makeNullMove() {
     boardHashObject.makeNullMove()
     mover = mover.opponent()
-    val t = this.engineBitboards.getPieceBitboard(BITBOARD_FRIENDLY)
-    this.engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY, this.engineBitboards.getPieceBitboard(BITBOARD_ENEMY))
+    val t = this.engineBitboards.pieceBitboards[BITBOARD_FRIENDLY]
+    this.engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY, this.engineBitboards.pieceBitboards[BITBOARD_ENEMY])
     this.engineBitboards.setPieceBitboard(BITBOARD_ENEMY, t)
     isOnNullMove = true
 }
@@ -39,7 +39,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
     moveDetail.hashValue = boardHashObject.trackedHashValue
     moveDetail.isOnNullMove = isOnNullMove
     moveDetail.halfMoveCount = halfMoveCount.toByte()
-    moveDetail.enPassantBitboard = engineBitboards.getPieceBitboard(BITBOARD_ENPASSANTSQUARE)
+    moveDetail.enPassantBitboard = engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
     moveDetail.castlePrivileges = castlePrivileges.toByte()
     moveDetail.movePiece = movePiece
 

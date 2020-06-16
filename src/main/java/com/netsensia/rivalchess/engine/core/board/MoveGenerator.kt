@@ -171,8 +171,8 @@ class MoveGenerator(
     private fun generateQuiesceSliderMoves(generateChecks: Boolean, enemyKingSquare: Int, magicVars: MagicVars, whiteSliderConstant: Int, blackSliderConstant: Int) {
         val checkSquares = magicVars.moves[enemyKingSquare][((bitboards[BITBOARD_ALL] and magicVars.mask[enemyKingSquare]) *
                 magicVars.number[enemyKingSquare] ushr magicVars.shift[enemyKingSquare]).toInt()]
-        val pieceBitboard = if (mover == Colour.WHITE) engineBitboards.getPieceBitboard(whiteSliderConstant) or
-                bitboards[BITBOARD_WQ] else engineBitboards.getPieceBitboard(blackSliderConstant) or bitboards[BITBOARD_BQ]
+        val pieceBitboard = if (mover == Colour.WHITE) engineBitboards.pieceBitboards[whiteSliderConstant] or
+                bitboards[BITBOARD_WQ] else engineBitboards.pieceBitboards[blackSliderConstant] or bitboards[BITBOARD_BQ]
 
         applyToSquares(pieceBitboard) {
             val pieceMoves = magicVars.moves[it][((bitboards[BITBOARD_ALL] and magicVars.mask[it]) *

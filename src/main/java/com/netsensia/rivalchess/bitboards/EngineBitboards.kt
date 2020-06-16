@@ -17,7 +17,7 @@ class EngineBitboards() {
 
     constructor(thoseBitboards: EngineBitboards) : this() {
         for (i in BITBOARD_WP..BITBOARD_ENPASSANTSQUARE) {
-            pieceBitboards[i] = thoseBitboards.getPieceBitboard(i)
+            pieceBitboards[i] = thoseBitboards.pieceBitboards[i]
         }
     }
 
@@ -38,8 +38,6 @@ class EngineBitboards() {
         pieceBitboards[type] = bitboard
     }
 
-    fun getPieceBitboard(type: Int) = pieceBitboards[type]
-
     fun getWhitePieces() = pieceBitboards[BITBOARD_WK] or
             pieceBitboards[BITBOARD_WN] or
             pieceBitboards[BITBOARD_WQ] or
@@ -54,8 +52,6 @@ class EngineBitboards() {
             pieceBitboards[BITBOARD_BR] or
             pieceBitboards[BITBOARD_BP]
 
-    fun getPieceBitboard(type: SquareOccupant) = getPieceBitboard(type.index)
-
     fun movePiece(piece: SquareOccupant, compactMove: Int) {
         val fromMask = (1L shl (compactMove ushr 16))
         val toMask = (1L shl (compactMove and 63))
@@ -63,12 +59,12 @@ class EngineBitboards() {
     }
 
     private fun getRookMovePiecesBitboard(colour: Colour) =
-        if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WR) or getPieceBitboard(BITBOARD_WQ) else
-            getPieceBitboard(BITBOARD_BR) or getPieceBitboard(BITBOARD_BQ)
+        if (colour == Colour.WHITE) pieceBitboards[BITBOARD_WR] or pieceBitboards[BITBOARD_WQ] else
+            pieceBitboards[BITBOARD_BR] or pieceBitboards[BITBOARD_BQ]
 
     private fun getBishopMovePiecesBitboard(colour: Colour) =
-        if (colour == Colour.WHITE) getPieceBitboard(BITBOARD_WB) or getPieceBitboard(BITBOARD_WQ) else
-            getPieceBitboard(BITBOARD_BB) or getPieceBitboard(BITBOARD_BQ)
+        if (colour == Colour.WHITE) pieceBitboards[BITBOARD_WB] or pieceBitboards[BITBOARD_WQ] else
+            pieceBitboards[BITBOARD_BB] or pieceBitboards[BITBOARD_BQ]
 
     fun isSquareAttackedBy(attackedSquare: Int, attacker: Colour): Boolean {
         if (pieceBitboards[SquareOccupant.WN.ofColour(attacker).index] and knightMoves[attackedSquare] != 0L ||

@@ -115,24 +115,24 @@ public class BitboardsTest {
     @Test
     public void getBlackPawnAttacks() {
         final long bitboard = new BigInteger(
-                 "00000000" +
-                    "00000000" +
-                    "11100000" +
-                    "00000000" +
-                    "01000001" +
-                    "11000010" +
-                    "00000000" +
-                    "00000000", 2).longValue();
+                "00000000" +
+                "00000000" +
+                "11100000" +
+                "00000000" +
+                "01000001" +
+                "11000010" +
+                "00000000" +
+                "00000000", 2).longValue();
 
         final long expected = new BigInteger(
                 "00000000" +
-                    "00000000" +
-                    "00000000" +
-                    "11110000" +
-                    "00000000" +
-                    "10100010" +
-                    "11100101" +
-                    "00000000", 2).longValue();
+                "00000000" +
+                "00000000" +
+                "11110000" +
+                "00000000" +
+                "10100010" +
+                "11100101" +
+                "00000000", 2).longValue();
 
         assertEquals(expected, blackPawnAttacks(bitboard));
     }
@@ -140,14 +140,14 @@ public class BitboardsTest {
     @Test
     public void getWhitePawnAttacks() {
         final long bitboard = new BigInteger(
-                 "00000000" +
-                    "00000000" +
-                    "11100000" +
-                    "00000000" +
-                    "01000001" +
-                    "11000010" +
-                    "00000000" +
-                    "00000000", 2).longValue();
+                "00000000" +
+                "00000000" +
+                "11100000" +
+                "00000000" +
+                "01000001" +
+                "11000010" +
+                "00000000" +
+                "00000000", 2).longValue();
 
         final long expected = new BigInteger(
                  "00000000" +
