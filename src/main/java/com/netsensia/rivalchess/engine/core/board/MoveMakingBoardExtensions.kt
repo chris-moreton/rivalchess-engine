@@ -50,7 +50,6 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false): 
 
     if (moveHistory.size <= numMovesMade) moveHistory.add(moveDetail) else moveHistory[numMovesMade] = moveDetail
 
-    boardHashObject.move(engineMove, movePiece, capturePiece)
     isOnNullMove = false
     halfMoveCount++
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
@@ -67,9 +66,10 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false): 
     calculateSupplementaryBitboards()
 
     if (!ignoreCheck && isCheck(mover.opponent())) {
-        unMakeMove()
+        unMakeMove(false)
         return false
     }
+    boardHashObject.move(engineMove, movePiece, capturePiece)
 
     return true
 }
