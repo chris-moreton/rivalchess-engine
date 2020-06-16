@@ -26,12 +26,7 @@ fun EngineBoard.unMakeNullMove() {
 }
 
 @Throws(InvalidMoveException::class)
-fun EngineBoard.makeMove(engineMove: EngineMove): Boolean {
-    return makeMove(engineMove, false)
-}
-
-@Throws(InvalidMoveException::class)
-fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false): Boolean {
+fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, updateHash: Boolean = true): Boolean {
     val compactMove = engineMove.compact
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
@@ -69,7 +64,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false): 
         unMakeMove(false)
         return false
     }
-    boardHashObject.move(engineMove, movePiece, capturePiece)
+    if (updateHash) boardHashObject.move(engineMove, movePiece, capturePiece)
 
     return true
 }
