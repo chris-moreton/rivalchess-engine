@@ -30,10 +30,10 @@ public class SearchHashTest extends TestCase {
                 ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
                 engineBoard, 2, (byte)HashValueType.EXACT.getIndex(), 4);
 
-        unMakeMove(engineBoard);
-        unMakeMove(engineBoard);
-        unMakeMove(engineBoard);
-        unMakeMove(engineBoard);
+        unMakeMove(engineBoard, true);
+        unMakeMove(engineBoard, true);
+        unMakeMove(engineBoard, true);
+        unMakeMove(engineBoard, true);
 
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b1c3"));
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b8c6"));

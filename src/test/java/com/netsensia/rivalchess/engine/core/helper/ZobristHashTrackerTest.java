@@ -62,7 +62,7 @@ public class ZobristHashTrackerTest {
         final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
-        unMakeMove(ecb);
+        unMakeMove(ecb, true);
         final long unmadeTrackedHashCode = ecb.trackedBoardHashCode();
         final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);

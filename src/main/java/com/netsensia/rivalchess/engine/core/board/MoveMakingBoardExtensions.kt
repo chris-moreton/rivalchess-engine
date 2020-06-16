@@ -50,7 +50,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false): 
 
     if (moveHistory.size <= numMovesMade) moveHistory.add(moveDetail) else moveHistory[numMovesMade] = moveDetail
 
-    boardHashObject.move(this, engineMove)
+    boardHashObject.move(engineMove, movePiece, capturePiece)
     isOnNullMove = false
     halfMoveCount++
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
@@ -75,7 +75,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false): 
 }
 
 @Throws(InvalidMoveException::class)
-fun EngineBoard.unMakeMove() {
+fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     numMovesMade--
     halfMoveCount = moveHistory[numMovesMade].halfMoveCount.toInt()
     mover = mover.opponent()
@@ -86,7 +86,7 @@ fun EngineBoard.unMakeMove() {
     val toSquare = moveHistory[numMovesMade].move and 63
     val fromMask = 1L shl fromSquare
     val toMask = 1L shl toSquare
-    boardHashObject.unMove(this)
+    if (updateHash) boardHashObject.unMove(this)
     squareContents[fromSquare] = moveHistory[numMovesMade].movePiece
     squareContents[toSquare] = SquareOccupant.NONE
 

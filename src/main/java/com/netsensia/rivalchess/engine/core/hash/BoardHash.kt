@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.enums.HashIndex
 import com.netsensia.rivalchess.enums.HashValueType
+import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 
 class BoardHash {
@@ -130,8 +131,8 @@ class BoardHash {
         return (hashValue % maxHashEntries).toInt() * HashIndex.numHashFields
     }
 
-    fun move(engineBoard: EngineBoard, move: EngineMove) {
-        hashTracker.makeMove(engineBoard, move)
+    fun move(move: EngineMove, movePiece: SquareOccupant, capturePiece: SquareOccupant) {
+        hashTracker.makeMove(move, movePiece, capturePiece)
     }
 
     fun unMove(engineBoard: EngineBoard) {

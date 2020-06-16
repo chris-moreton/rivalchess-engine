@@ -15,48 +15,29 @@ class ZobristHashTracker {
     @JvmField
     var trackedBoardHashValue: Long = 0
 
+    val whiteKingSideCastle = ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][0] xor
+            ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][2]
+    val whiteQueenSideCastle = ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][7] xor
+            ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][4]
+    val blackKingSideCastle = ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][56] xor
+            ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][58]
+    val blackQueenSideCastle = ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][63] xor
+            ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][60]
+
     private val switchMoverHashValue = whiteMoverHashValue xor blackMoverHashValue
 
     fun initHash(engineBoard: EngineBoard) {
         trackedBoardHashValue = calculateHash(engineBoard)
     }
 
-    private inline fun removeOrPlacePieceOnEmptySquare(squareOccupant: SquareOccupant, bitRef: Int) {
+    private fun removeOrPlacePieceOnEmptySquare(squareOccupant: SquareOccupant, bitRef: Int) {
         trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[squareOccupant.index][bitRef]
     }
 
-    private inline fun replaceWithAnotherPiece(movedPiece: SquareOccupant, capturedPiece: SquareOccupant, bitRef: Int) {
+    private fun replaceWithAnotherPiece(movedPiece: SquareOccupant, capturedPiece: SquareOccupant, bitRef: Int) {
         trackedBoardHashValue = trackedBoardHashValue xor
                 ZorbristHashCalculator.pieceHashValues[capturedPiece.index][bitRef] xor
                 ZorbristHashCalculator.pieceHashValues[movedPiece.index][bitRef]
-    }
-
-    private inline fun processPossibleWhiteKingSideCastle(bitRefTo: Int) {
-        if (bitRefTo == 1) {
-            removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 0)
-            removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 2)
-        }
-    }
-
-    private inline fun processPossibleWhiteQueenSideCastle(bitRefTo: Int) {
-        if (bitRefTo == 5) {
-            removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 7)
-            removeOrPlacePieceOnEmptySquare(SquareOccupant.WR, 4)
-        }
-    }
-
-    private fun processPossibleBlackQueenSideCastle(bitRefTo: Int) {
-        if (bitRefTo == 61) {
-            removeOrPlacePieceOnEmptySquare(SquareOccupant.BR, 63)
-            removeOrPlacePieceOnEmptySquare(SquareOccupant.BR, 60)
-        }
-    }
-
-    private fun processPossibleBlackKingSideCastle(bitRefTo: Int) {
-        if (bitRefTo == 57) {
-            removeOrPlacePieceOnEmptySquare(SquareOccupant.BR, 56)
-            removeOrPlacePieceOnEmptySquare(SquareOccupant.BR, 58)
-        }
     }
 
     private fun processPossibleWhitePawnEnPassantCapture(move: Move, capturedPiece: SquareOccupant) {
@@ -74,11 +55,8 @@ class ZobristHashTracker {
     }
 
     private fun processCapture(movedPiece: SquareOccupant, capturedPiece: SquareOccupant, bitRefTo: Int) {
-        if (capturedPiece == SquareOccupant.NONE) {
-            removeOrPlacePieceOnEmptySquare(movedPiece, bitRefTo)
-        } else {
-            replaceWithAnotherPiece(movedPiece, capturedPiece, bitRefTo)
-        }
+        if (capturedPiece == SquareOccupant.NONE) removeOrPlacePieceOnEmptySquare(movedPiece, bitRefTo)
+        else replaceWithAnotherPiece(movedPiece, capturedPiece, bitRefTo)
     }
 
     private inline fun switchMover() {
@@ -87,12 +65,12 @@ class ZobristHashTracker {
 
     private fun processCastling(bitRefFrom: Int, movedPiece: SquareOccupant, bitRefTo: Int) {
         if (movedPiece == SquareOccupant.WK && bitRefFrom == 3) {
-            processPossibleWhiteKingSideCastle(bitRefTo)
-            processPossibleWhiteQueenSideCastle(bitRefTo)
+            if (bitRefTo == 1) trackedBoardHashValue = trackedBoardHashValue xor whiteKingSideCastle
+            if (bitRefTo == 5) trackedBoardHashValue = trackedBoardHashValue xor whiteQueenSideCastle
         }
         if (movedPiece == SquareOccupant.BK && bitRefFrom == 59) {
-            processPossibleBlackKingSideCastle(bitRefTo)
-            processPossibleBlackQueenSideCastle(bitRefTo)
+            if (bitRefTo == 57) trackedBoardHashValue = trackedBoardHashValue xor blackKingSideCastle
+            if (bitRefTo == 61) trackedBoardHashValue = trackedBoardHashValue xor blackQueenSideCastle
         }
     }
 
@@ -179,12 +157,10 @@ class ZobristHashTracker {
 
     fun nullMove() = switchMover()
 
-    fun makeMove(board: EngineBoard, engineMove: EngineMove) {
+    fun makeMove(engineMove: EngineMove, movedPiece: SquareOccupant, capturedPiece: SquareOccupant) {
         val move = getMoveRefFromEngineMove(engineMove.compact)
         val bitRefFrom = getBitRefFromBoardRef(move.srcBoardRef)
-        val movedPiece = board.getSquareOccupant(bitRefFrom)
         val bitRefTo = getBitRefFromBoardRef(move.tgtBoardRef)
-        val capturedPiece = board.getSquareOccupant(bitRefTo)
         removeOrPlacePieceOnEmptySquare(movedPiece, bitRefFrom)
         processCapture(movedPiece, capturedPiece, bitRefTo)
         processSpecialPawnMoves(move, movedPiece, bitRefTo, capturedPiece)
