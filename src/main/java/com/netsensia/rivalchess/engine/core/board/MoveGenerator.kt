@@ -158,8 +158,7 @@ class MoveGenerator(
             bitboardPawnMoves = 0
             if (generateChecks) {
                 bitboardPawnMoves = pawnForwardMovesBitboard(bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard())
-                bitboardPawnMoves = bitboardPawnMoves and
-                        if (mover == Colour.WHITE) blackPawnMovesCapture[enemyKingSquare] else whitePawnMovesCapture[enemyKingSquare]
+                bitboardPawnMoves = bitboardPawnMoves and if (mover == Colour.WHITE) blackPawnMovesCapture[enemyKingSquare] else whitePawnMovesCapture[enemyKingSquare]
             }
 
             bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard() and (RANK_1 or RANK_8))

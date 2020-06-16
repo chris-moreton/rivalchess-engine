@@ -12,7 +12,6 @@ import com.netsensia.rivalchess.model.Piece
 
 class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 
-    @ExperimentalStdlibApi
     @Throws(InvalidMoveException::class)
     override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
         val seeBoard = SeeBoard(board)
@@ -28,7 +27,6 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
         return -Int.MAX_VALUE
     }
 
-    @ExperimentalStdlibApi
     @Throws(InvalidMoveException::class)
     fun seeSearch(seeBoard: SeeBoard, captureSquare: Int, materialBalance: Int): Int {
 

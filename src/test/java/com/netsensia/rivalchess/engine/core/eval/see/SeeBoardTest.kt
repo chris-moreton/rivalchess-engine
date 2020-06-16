@@ -17,7 +17,6 @@ import org.junit.Test
 
 internal class SeeBoardTest {
 
-    @ExperimentalStdlibApi
     @Test
     @Throws(IllegalFenException::class, InvalidMoveException::class)
     fun makeMove() {
@@ -67,7 +66,6 @@ internal class SeeBoardTest {
         makeMove(engineBoard, seeBoard, "f4g3")
     }
 
-    @ExperimentalStdlibApi
     private fun makeMove(board: EngineBoard, seeBoard: SeeBoard, moveString: String) {
         var move: EngineMove
 
@@ -86,7 +84,6 @@ internal class SeeBoardTest {
         assertEquals(board.mover, seeBoard.mover)
     }
 
-    @ExperimentalStdlibApi
     private fun unMakeMove(board: EngineBoard, seeBoard: SeeBoard) {
 
         board.unMakeMove()
@@ -114,7 +111,6 @@ internal class SeeBoardTest {
         assertTrue(moves.contains(EngineMove(Move(Square.E5, Square.C4))))
     }
 
-    @ExperimentalStdlibApi
     @Test
     fun moveGenerationFromComplexPosition2() {
         val engineBoard = EngineBoard(getBoardModel("2rr3k/pp3pN1/1nn1b2p/3pq3/2pP4/2P3Q1/PPB4P/R4RK1 b - - 1 6"))
