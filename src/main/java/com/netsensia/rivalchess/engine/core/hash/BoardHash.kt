@@ -1,13 +1,12 @@
 package com.netsensia.rivalchess.engine.core.hash
 
 import com.netsensia.rivalchess.bitboards.LOW32
-import com.netsensia.rivalchess.config.FeatureFlag
 import com.netsensia.rivalchess.config.Hash
+import com.netsensia.rivalchess.config.USE_SUPER_VERIFY_ON_HASH
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.enums.HashIndex
 import com.netsensia.rivalchess.enums.HashValueType
-import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 
 class BoardHash {
@@ -88,7 +87,7 @@ class BoardHash {
     }
 
     private fun storeSuperVerifyAlwaysReplaceInformation(board: EngineBoard, hashIndex: Int) {
-        if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive) {
+        if (USE_SUPER_VERIFY_ON_HASH) {
             for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
                 hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = (board.getBitboard(i) ushr 32).toInt()
                 hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i + 12] = (board.getBitboard(i) and LOW32).toInt()
@@ -97,7 +96,7 @@ class BoardHash {
     }
 
     private fun storeSuperVerifyUseHeightInformation(board: EngineBoard, hashIndex: Int) {
-        if (FeatureFlag.USE_SUPER_VERIFY_ON_HASH.isActive) {
+        if (USE_SUPER_VERIFY_ON_HASH) {
             for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
                 if (hashTableVersion == hashTableUseHeight[hashIndex + HashIndex.VERSION.index]) {
                     hashTableIgnoreHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i] = hashTableUseHeight[hashIndex + HashIndex.HASHENTRY_LOCK1.index + i]

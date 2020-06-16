@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.engine.core.search
 
-import com.netsensia.rivalchess.config.Limit
+import com.netsensia.rivalchess.config.MAX_TREE_DEPTH
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 
 class SearchPath {
@@ -62,6 +62,6 @@ class SearchPath {
     }
 
     init {
-        move = IntArray(Limit.MAX_TREE_DEPTH.value)
+        move = IntArray(MAX_TREE_DEPTH)
     }
 }

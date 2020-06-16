@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.core;
 
-import com.netsensia.rivalchess.config.Limit;
 import com.netsensia.rivalchess.engine.core.board.EngineBoard;
 import com.netsensia.rivalchess.engine.core.eval.EvaluateKt;
 import com.netsensia.rivalchess.engine.core.search.Search;
@@ -8,6 +7,7 @@ import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.util.FenUtils;
 
+import static com.netsensia.rivalchess.config.LimitKt.MAX_SEARCH_MILLIS;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -92,7 +92,7 @@ public class SearchTest {
 
         search.setBoard(board);
         search.setSearchDepth(4);
-        search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
+        search.setMillisToThink(MAX_SEARCH_MILLIS);
         search.startSearch();
 
         SECONDS.sleep(1);
@@ -114,7 +114,7 @@ public class SearchTest {
 
         search.setBoard(board);
         search.setSearchDepth(6);
-        search.setMillisToThink(Limit.MAX_SEARCH_MILLIS.getValue());
+        search.setMillisToThink(MAX_SEARCH_MILLIS);
         search.startSearch();
 
         SECONDS.sleep(1);

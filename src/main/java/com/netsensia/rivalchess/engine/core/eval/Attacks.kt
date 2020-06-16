@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.engine.core.eval
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.bitboards.util.squareList
-import com.netsensia.rivalchess.config.Evaluation
+import com.netsensia.rivalchess.config.THREAT_SCORE_DIVISOR
 import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
 
@@ -83,7 +83,7 @@ fun blackAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
 fun threatEval(bitboards: BitboardData, attacks: Attacks, squareOccupants: Array<SquareOccupant>) =
     (adjustedAttackScore(whiteAttackScore(bitboards, attacks, squareOccupants)) -
             adjustedAttackScore(blackAttackScore(bitboards, attacks, squareOccupants))) /
-            Evaluation.THREAT_SCORE_DIVISOR.value
+            THREAT_SCORE_DIVISOR
 
 fun adjustedAttackScore(attackScore: Int) = attackScore + attackScore * (attackScore / pieceValue(Piece.QUEEN))
 

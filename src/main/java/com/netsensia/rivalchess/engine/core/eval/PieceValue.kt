@@ -3,14 +3,21 @@ package com.netsensia.rivalchess.engine.core.eval
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.model.Piece
 
+const val VALUE_PAWN = 100
+const val VALUE_KNIGHT = 390
+const val VALUE_BISHOP = 390
+const val VALUE_ROOK = 595
+const val VALUE_KING = 30000
+const val VALUE_QUEEN = 1175
+
 fun pieceValue(piece: Piece): Int {
     return when (piece) {
-        Piece.PAWN -> 100
-        Piece.KNIGHT -> 390
-        Piece.BISHOP -> 390
-        Piece.ROOK -> 595
-        Piece.KING -> 30000
-        Piece.QUEEN -> 1175
+        Piece.PAWN -> VALUE_PAWN
+        Piece.KNIGHT -> VALUE_KNIGHT
+        Piece.BISHOP -> VALUE_BISHOP
+        Piece.ROOK -> VALUE_ROOK
+        Piece.KING -> VALUE_KING
+        Piece.QUEEN -> VALUE_QUEEN
         Piece.NONE -> 0
     }
 }

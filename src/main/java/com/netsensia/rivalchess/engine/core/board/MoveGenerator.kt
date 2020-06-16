@@ -2,8 +2,7 @@ package com.netsensia.rivalchess.engine.core.board
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
-import com.netsensia.rivalchess.bitboards.util.squareList
-import com.netsensia.rivalchess.config.Limit
+import com.netsensia.rivalchess.config.MAX_LEGAL_MOVES
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.enums.PromotionPieceMask
@@ -18,7 +17,7 @@ class MoveGenerator(
         private val castlePrivileges: Int
 ) {
 
-    var moves = IntArray(Limit.MAX_LEGAL_MOVES.value)
+    var moves = IntArray(MAX_LEGAL_MOVES)
     val bitboards = engineBitboards.pieceBitboards
     var moveCount = 0
 
@@ -47,7 +46,7 @@ class MoveGenerator(
         return this
     }
 
-    private inline fun kingSquareForMover() = if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare
+    private fun kingSquareForMover() = if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare
 
     private fun knightBitboardForMover() = if (mover == Colour.WHITE) bitboards[BITBOARD_WN] else bitboards[BITBOARD_BN]
 
@@ -57,7 +56,7 @@ class MoveGenerator(
         }
     }
 
-    private inline fun addMoves(fromSquareMask: Int, bitboard: Long) {
+    private fun addMoves(fromSquareMask: Int, bitboard: Long) {
         applyToSquares(bitboard) {
             moves[moveCount++] = (fromSquareMask or it)
         }
@@ -119,7 +118,7 @@ class MoveGenerator(
     }
 
     fun generateLegalQuiesceMoves(generateChecks: Boolean): MoveGenerator {
-        moves = IntArray(Limit.MAX_LEGAL_MOVES.value)
+        moves = IntArray(MAX_LEGAL_MOVES)
         moveCount = 0
         
         val kingSquare: Int = (if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare).toInt()
