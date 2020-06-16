@@ -771,11 +771,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             } else score
 
     private fun scoreKillerMoves(ply: Int, i: Int, movesForSorting: IntArray): Int {
-        for (j in 0 until 2) {
-            if (movesForSorting[i] == killerMoves[ply][j]) {
-                return 106 - j
-            }
-        }
+        if (movesForSorting[i] == killerMoves[ply][0]) return 106
+        if (movesForSorting[i] == killerMoves[ply][1]) return 105
         return 0
     }
 
@@ -798,9 +795,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun setupMateAndKillerMoveTables() {
         for (i in 0 until MAX_TREE_DEPTH) {
             mateKiller.add(-1)
-            for (j in 0 until 2) {
-                killerMoves[i][j] = -1
-            }
+            killerMoves[i][0] = -1
+            killerMoves[i][1] = -1
         }
     }
 
@@ -814,10 +810,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     fun setMillisToThink(millisToThink: Int) {
-        this.millisToThink = millisToThink
-        if (this.millisToThink < MIN_SEARCH_MILLIS) {
-            this.millisToThink = MIN_SEARCH_MILLIS
-        }
+        this.millisToThink = if (millisToThink < MIN_SEARCH_MILLIS) MIN_SEARCH_MILLIS else millisToThink
     }
 
     fun setNodesToSearch(nodesToSearch: Int) {

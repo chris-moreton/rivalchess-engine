@@ -29,16 +29,9 @@ fun evaluate(board: EngineBoard): Int {
     val eval =  materialDifference +
             (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
             (doubledRooksEval(squareList(bitboards.whiteRooks)) - doubledRooksEval(squareList(bitboards.blackRooks))) +
-            pawnScore(bitboards.whitePawns,
-                    bitboards.blackPawns,
-                    attacks, materialValues,
-                    board.whiteKingSquare,
-                    board.blackKingSquare,
-                    board.mover) +
-            (whiteBishopEval(bitboards, whitePieces) -
-                    blackBishopsEval(bitboards, blackPieces)) +
-            (whiteKnightsEval(bitboards, attacks, materialValues) -
-                    blackKnightsEval(bitboards, attacks, materialValues)) +
+            pawnScore(bitboards.whitePawns, bitboards.blackPawns, attacks, materialValues, board.whiteKingSquare, board.blackKingSquare, board.mover) +
+            (whiteBishopEval(bitboards, whitePieces) - blackBishopsEval(bitboards, blackPieces)) +
+            (whiteKnightsEval(bitboards, attacks, materialValues) - blackKnightsEval(bitboards, attacks, materialValues)) +
             tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
             tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
             (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares)) +
@@ -721,21 +714,13 @@ fun pawnScore(whitePawnBitboard: Long,
 
     fun whitePassedPawnScore(): Int {
         var acc = 0
-
-        applyToSquares(whitePassedPawnsBitboard) {
-            acc += getPassedPawnBonus(yCoordOfSquare(it))
-        }
-
+        applyToSquares(whitePassedPawnsBitboard) {acc += getPassedPawnBonus(yCoordOfSquare(it)) }
         return bitCount(whiteGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
     }
 
     fun blackPassedPawnScore(): Int {
         var acc = 0
-
-        applyToSquares(blackPassedPawnsBitboard) {
-            acc += getPassedPawnBonus(7 - yCoordOfSquare(it))
-        }
-
+        applyToSquares(blackPassedPawnsBitboard) { acc += getPassedPawnBonus(7 - yCoordOfSquare(it)) }
         return bitCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
     }
 
@@ -743,16 +728,14 @@ fun pawnScore(whitePawnBitboard: Long,
             bitCount(whiteIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
             (if (whiteIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) +
             (if (blackIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) -
-            (bitCount(
-                    whitePawnBitboard and
+            (bitCount(whitePawnBitboard and
                             (whitePawnBitboard or blackPawnBitboard ushr 8).inv() and
                             (blackPawnAttacks ushr 8) and
                             northFill(whitePawnAttacks, 8).inv() and
                             blackPawnAttacks(whitePawnBitboard) and
                             northFill(blackPawnFiles, 8).inv()
             ) * VALUE_BACKWARD_PAWN_PENALTY) +
-            (bitCount(
-                    blackPawnBitboard and
+            (bitCount(blackPawnBitboard and
                             (blackPawnBitboard or whitePawnBitboard shl 8).inv() and
                             (whitePawnAttacks shl 8) and
                             southFill(blackPawnAttacks, 8).inv() and
@@ -830,13 +813,11 @@ fun calculateLowMaterialPawnBonus(
 
 }
 
-private fun colourAdjustedYRank(colour: Colour, yRank: Int) =
-        if (colour == Colour.WHITE) yRank else abs(yRank - 7)
+private fun colourAdjustedYRank(colour: Colour, yRank: Int) = if (colour == Colour.WHITE) yRank else abs(yRank - 7)
 
 private fun difference(kingX: Int, it: Int) = abs(kingX - xCoordOfSquare(it))
 
-private fun pawnDistanceFromPromotion(colour: Colour, square: Int) =
-        if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
+private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
 
 private fun xCoordOfSquare(it: Int) = it % 8
 
