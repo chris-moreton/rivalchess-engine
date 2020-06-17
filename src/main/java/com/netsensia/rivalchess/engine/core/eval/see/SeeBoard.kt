@@ -11,6 +11,8 @@ import com.netsensia.rivalchess.model.*
 import java.lang.Long.bitCount
 import java.lang.Long.numberOfTrailingZeros
 
+const val VALUE_PAWN_PROMOTION_TO_QUEEN = VALUE_QUEEN - VALUE_PAWN
+
 class SeeBoard(board: EngineBoard) {
     @JvmField
     val bitboards = EngineBitboards(board.engineBitboards)
@@ -18,7 +20,6 @@ class SeeBoard(board: EngineBoard) {
     private val whiteBitboardIndexes = listOf(BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR)
     private val blackBitboardIndexes = listOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
 
-    private val deltas: MutableList<Pair<Int, Long>> = mutableListOf()
     private val enPassantHistory: MutableList<Long> = ArrayList()
     private val moveHistory: MutableList<List<Pair<Int, Long>>> = ArrayList()
 
@@ -31,47 +32,48 @@ class SeeBoard(board: EngineBoard) {
     }
 
     fun makeMove(move: EngineMove): Int {
-        deltas.clear()
+        val deltas: MutableList<Pair<Int, Long>> = mutableListOf()
+
         enPassantHistory.add(bitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE])
 
-        val fromBit = 1L shl move.from()
-        val toBit = 1L shl move.to()
+        val moveFrom = move.from()
+        val moveTo = move.to()
+        val fromBit = 1L shl moveFrom
+        val toBit = 1L shl moveTo
 
-        val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackBitboardIndexes else whiteBitboardIndexes)
-        capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteBitboardIndexes else blackBitboardIndexes)
+        val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackBitboardIndexes else whiteBitboardIndexes, deltas)
+        capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteBitboardIndexes else blackBitboardIndexes, deltas)
 
         var materialGain = if (capturedPieceBitboardType == BITBOARD_NONE) {
-            if ((move.to() - move.from()) % 2 != 0) {
-                if (movedPieceBitboardType == BITBOARD_WP) togglePiece(1L shl (move.to() - 8), BITBOARD_BP)
-                else if (movedPieceBitboardType == BITBOARD_BP) togglePiece(1L shl (move.to() + 8), BITBOARD_WP)
+            if ((moveTo - moveFrom) % 2 != 0) {
+                if (movedPieceBitboardType == BITBOARD_WP) togglePiece(1L shl (moveTo - 8), BITBOARD_BP, deltas)
+                else if (movedPieceBitboardType == BITBOARD_BP) togglePiece(1L shl (moveTo + 8), BITBOARD_WP, deltas)
             }
             VALUE_PAWN
         } else pieceValue(capturedPieceBitboardType)
 
-        togglePiece(toBit, movedPieceBitboardType)
+        togglePiece(toBit, movedPieceBitboardType, deltas)
 
         bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
 
         if (movedPieceBitboardType == BITBOARD_WP) {
-            if (move.to() - move.from() == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shr 8)
-            if (move.to() >= 56) {
-                togglePiece(1L shl move.to(), BITBOARD_WP)
-                togglePiece(1L shl move.to(), BITBOARD_WQ)
-                materialGain += VALUE_QUEEN - VALUE_PAWN
+            if (moveTo - moveFrom == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shr 8)
+            if (moveTo >= 56) {
+                togglePiece(1L shl moveTo, BITBOARD_WP, deltas)
+                togglePiece(1L shl moveTo, BITBOARD_WQ, deltas)
+                materialGain += VALUE_PAWN_PROMOTION_TO_QUEEN
             }
         } else if (movedPieceBitboardType == BITBOARD_BP) {
-            if (move.from() - move.to() == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shl 8)
-            if (move.to() <= 7) {
-                togglePiece(1L shl move.to(), BITBOARD_BP)
-                togglePiece(1L shl move.to(), BITBOARD_BQ)
-                materialGain += VALUE_QUEEN - VALUE_PAWN
+            if (moveFrom - moveTo == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shl 8)
+            if (moveTo <= 7) {
+                togglePiece(1L shl moveTo, BITBOARD_BP, deltas)
+                togglePiece(1L shl moveTo, BITBOARD_BQ, deltas)
+                materialGain += VALUE_PAWN_PROMOTION_TO_QUEEN
             }
         }
 
         mover = mover.opponent()
-
-        moveHistory.add(deltas.toList())
-
+        moveHistory.add(deltas)
         return materialGain
     }
 
@@ -84,21 +86,15 @@ class SeeBoard(board: EngineBoard) {
         enPassantHistory.removeAt(lastIndex)
     }
 
-    private fun removePieceIfExistsInBitboard(squareBit: Long, bitboardType: Int): Boolean {
-        val pieceBitboard = bitboards.pieceBitboards[bitboardType]
-        if (pieceBitboard or squareBit == pieceBitboard) {
-            togglePiece(squareBit, bitboardType)
-            return true
-        }
-        return false
-    }
-
-    private fun removeFromRelevantBitboard(squareBit: Long, bitboardList: List<Int>): Int {
-        bitboardList.forEach { if (removePieceIfExistsInBitboard(squareBit, it)) return it }
+    private fun removeFromRelevantBitboard(squareBit: Long, bitboardList: List<Int>, deltas: MutableList<Pair<Int, Long>>): Int {
+        bitboardList.forEach { if (bitboards.pieceBitboards[it] and squareBit == squareBit) {
+            togglePiece(squareBit, it, deltas)
+            return it
+        } }
         return BITBOARD_NONE
     }
 
-    private fun togglePiece(squareBit: Long, bitboardType: Int) {
+    private fun togglePiece(squareBit: Long, bitboardType: Int, deltas: MutableList<Pair<Int, Long>>) {
         bitboards.xorPieceBitboard(bitboardType, squareBit)
         deltas.add(Pair(bitboardType, squareBit))
     }
@@ -155,13 +151,16 @@ class SeeBoard(board: EngineBoard) {
 
     private fun knightCaptures(square: Int, moves: MutableList<EngineMove>) {
         val knightLocations = bitboards.pieceBitboards[if (mover == Colour.WHITE) BITBOARD_WN else BITBOARD_BN]
-        applyToSquares(knightMoves[square] and knightLocations) { moves.add(EngineMove((it shl 16) or square)) }
+        applyToSquares(knightMoves[square] and knightLocations) {
+            moves.add(EngineMove((it shl 16) or square))
+        }
     }
 
     private fun bishopCaptures(square: Int, moves: MutableList<EngineMove>, allBitboard: Long, friendlyBitboard: Long) {
         generateSliderMoves(
-                SquareOccupant.WB,
-                SquareOccupant.BB,
+                if (mover == Colour.WHITE)
+                    bitboards.pieceBitboards[SquareOccupant.WB.index] or bitboards.pieceBitboards[BITBOARD_WQ] else
+                    bitboards.pieceBitboards[SquareOccupant.BB.index] or bitboards.pieceBitboards[BITBOARD_BQ],
                 MagicBitboards.bishopVars,
                 allBitboard,
                 friendlyBitboard,
@@ -172,8 +171,9 @@ class SeeBoard(board: EngineBoard) {
 
     private fun rookCaptures(square: Int, moves: MutableList<EngineMove>, allBitboard: Long, friendlyBitboard: Long) {
         generateSliderMoves(
-                SquareOccupant.WR,
-                SquareOccupant.BR,
+                if (mover == Colour.WHITE)
+                    bitboards.pieceBitboards[SquareOccupant.WR.index] or bitboards.pieceBitboards[BITBOARD_WQ] else
+                    bitboards.pieceBitboards[SquareOccupant.BR.index] or bitboards.pieceBitboards[BITBOARD_BQ],
                 MagicBitboards.rookVars,
                 allBitboard,
                 friendlyBitboard,
@@ -183,19 +183,13 @@ class SeeBoard(board: EngineBoard) {
     }
 
     private fun generateSliderMoves(
-            whitePiece: SquareOccupant,
-            blackPiece: SquareOccupant,
+            bitboard: Long,
             magicVars: MagicVars,
             allBitboard: Long,
             friendlyBitboard: Long,
             toSquare: Int,
             moves: MutableList<EngineMove>
     ) {
-
-        val bitboard: Long = if (mover == Colour.WHITE)
-            bitboards.pieceBitboards[whitePiece.index] or bitboards.pieceBitboards[BITBOARD_WQ] else
-            bitboards.pieceBitboards[blackPiece.index] or bitboards.pieceBitboards[BITBOARD_BQ]
-
         applyToSquares(bitboard) {
             val moveToBitboard = magicVars.moves[it][((allBitboard and magicVars.mask[it]) *
                             magicVars.number[it] ushr magicVars.shift[it]).toInt()] and
