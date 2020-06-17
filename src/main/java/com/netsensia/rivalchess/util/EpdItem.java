@@ -11,7 +11,7 @@ public class EpdItem {
 
     private final String fen;
     private final List<String> bestMoves;
-    private String id;
+    private final String id;
     private int maxNodesToSearch = 500000;
 
     public EpdItem(String line) throws IllegalEpdItemException {

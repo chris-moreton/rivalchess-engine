@@ -7,8 +7,7 @@ import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.engine.core.eval.*
 import com.netsensia.rivalchess.engine.core.search.fromSquare
 import com.netsensia.rivalchess.engine.core.search.toSquare
-import com.netsensia.rivalchess.engine.core.type.EngineMove
-import com.netsensia.rivalchess.enums.PromotionPieceMask
+import com.netsensia.rivalchess.enums.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN
 import com.netsensia.rivalchess.model.*
 import java.lang.Long.bitCount
 import java.lang.Long.numberOfTrailingZeros
@@ -138,7 +137,7 @@ class SeeBoard(board: EngineBoard) {
 
         applyToSquares(pawnCaptureMoves and pawnLocations) {
             if (square >= 56 || square <= 7)
-                moves.add((((it shl 16) or square) or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value))
+                moves.add((((it shl 16) or square) or PROMOTION_PIECE_TOSQUARE_MASK_QUEEN))
             else
                 moves.add(((it shl 16) or square))
         }

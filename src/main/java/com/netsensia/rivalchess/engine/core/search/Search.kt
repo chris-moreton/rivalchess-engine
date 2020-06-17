@@ -276,7 +276,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             maxNewExtensionsTreePart[(ply / iterativeDeepeningDepth).coerceAtMost(LAST_EXTENSION_LAYER)]
 
     private fun updateKillerMoves(enemyBitboard: Long, move: Int, ply: Int, newPath: SearchPath) {
-        if (enemyBitboard and toSquare(move).toLong() == 0L || move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value == 0) {
+        if (enemyBitboard and toSquare(move).toLong() == 0L || move and PROMOTION_PIECE_TOSQUARE_MASK_FULL == 0) {
             killerMoves[ply][1] = killerMoves[ply][0]
             killerMoves[ply][0] = move
             if (USE_MATE_HISTORY_KILLERS && newPath.score > MATE_SCORE_START) mateKiller[ply] = move
@@ -672,16 +672,15 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
             score = if (see > 0) {
                 110 + see
-            } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value ==
-                    PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
+            } else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL ==
+                    PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
                 109
             } else if (see == 0) {
                 107
             } else {
                 scoreLosingCapturesWithWinningHistory(board, ply, i, score, orderedMoves[ply], toSquare)
             }
-        } else if (orderedMoves[ply][i] and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value ==
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value) {
+        } else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
             score = 108
         }
         orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)

@@ -4,8 +4,7 @@ import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.engine.core.*
 import com.netsensia.rivalchess.engine.core.type.EngineMove
 import com.netsensia.rivalchess.engine.core.type.MoveDetail
-import com.netsensia.rivalchess.enums.CastleBitMask
-import com.netsensia.rivalchess.enums.PromotionPieceMask
+import com.netsensia.rivalchess.enums.*
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
@@ -155,24 +154,24 @@ private fun EngineBoard.replaceCapturedPiece(toSquare: Int, toMask: Long) {
 
 @Throws(InvalidMoveException::class)
 private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Boolean {
-    val promotionPiece = moveHistory[numMovesMade].move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
+    val promotionPiece = moveHistory[numMovesMade].move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     if (promotionPiece != 0) {
         if (mover == Colour.WHITE) {
             this.engineBitboards.xorPieceBitboard(BITBOARD_WP, fromMask)
-            when (PromotionPieceMask.fromValue(promotionPiece)) {
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> this.engineBitboards.xorPieceBitboard(BITBOARD_WQ, toMask)
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> this.engineBitboards.xorPieceBitboard(BITBOARD_WB, toMask)
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> this.engineBitboards.xorPieceBitboard(BITBOARD_WN, toMask)
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> this.engineBitboards.xorPieceBitboard(BITBOARD_WR, toMask)
+            when (promotionPiece) {
+                PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> this.engineBitboards.xorPieceBitboard(BITBOARD_WQ, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> this.engineBitboards.xorPieceBitboard(BITBOARD_WB, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> this.engineBitboards.xorPieceBitboard(BITBOARD_WN, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> this.engineBitboards.xorPieceBitboard(BITBOARD_WR, toMask)
                 else -> throw InvalidMoveException("Illegal promotion piece $promotionPiece")
             }
         } else {
             this.engineBitboards.xorPieceBitboard(BITBOARD_BP, fromMask)
-            when (PromotionPieceMask.fromValue(promotionPiece)) {
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> this.engineBitboards.xorPieceBitboard(BITBOARD_BQ, toMask)
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> this.engineBitboards.xorPieceBitboard(BITBOARD_BB, toMask)
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> this.engineBitboards.xorPieceBitboard(BITBOARD_BN, toMask)
-                PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> this.engineBitboards.xorPieceBitboard(BITBOARD_BR, toMask)
+            when (promotionPiece) {
+                PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> this.engineBitboards.xorPieceBitboard(BITBOARD_BQ, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> this.engineBitboards.xorPieceBitboard(BITBOARD_BB, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> this.engineBitboards.xorPieceBitboard(BITBOARD_BN, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> this.engineBitboards.xorPieceBitboard(BITBOARD_BR, toMask)
                 else -> throw InvalidMoveException("Invalid promotionPiece $promotionPiece")
             }
         }
@@ -255,22 +254,22 @@ private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
         this.engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask shl 8)
         moveHistory[numMovesMade].capturePiece = SquareOccupant.WP
         squareContents[moveTo + 8] = SquareOccupant.NONE
-    } else if (compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value != 0) {
-        val promotionPieceMask = compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
-        when (PromotionPieceMask.fromValue(promotionPieceMask)) {
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
+    } else if (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL != 0) {
+        val promotionPieceMask = compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL
+        when (promotionPieceMask) {
+            PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_BQ, toMask)
                 squareContents[moveTo] = SquareOccupant.BQ
             }
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
+            PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_BR, toMask)
                 squareContents[moveTo] = SquareOccupant.BR
             }
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
+            PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_BN, toMask)
                 squareContents[moveTo] = SquareOccupant.BN
             }
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
+            PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_BB, toMask)
                 squareContents[moveTo] = SquareOccupant.BB
             }
@@ -333,21 +332,21 @@ private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
         this.engineBitboards.xorPieceBitboard(SquareOccupant.BP.index, toMask ushr 8)
         moveHistory[numMovesMade].capturePiece = SquareOccupant.BP
         squareContents[moveTo - 8] = SquareOccupant.NONE
-    } else if (compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value != 0) {
-        when (PromotionPieceMask.fromValue(compactMove and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value)) {
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
+    } else if (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL != 0) {
+        when (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
+            PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_WQ, toMask)
                 squareContents[moveTo.toInt()] = SquareOccupant.WQ
             }
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
+            PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_WR, toMask)
                 squareContents[moveTo.toInt()] = SquareOccupant.WR
             }
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
+            PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_WN, toMask)
                 squareContents[moveTo.toInt()] = SquareOccupant.WN
             }
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
+            PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_WB, toMask)
                 squareContents[moveTo.toInt()] = SquareOccupant.WB
             }

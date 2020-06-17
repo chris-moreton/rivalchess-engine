@@ -4,8 +4,7 @@ import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.config.MAX_LEGAL_MOVES
 import com.netsensia.rivalchess.engine.core.*
-import com.netsensia.rivalchess.enums.CastleBitMask
-import com.netsensia.rivalchess.enums.PromotionPieceMask
+import com.netsensia.rivalchess.enums.*
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.SquareOccupant
 
@@ -185,11 +184,11 @@ class MoveGenerator(
     private fun addPawnMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean) {
         applyToSquares(bitboard) {
             if (it >= 56 || it <= 7) {
-                moves[moveCount++] = (fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value)
+                moves[moveCount++] = (fromSquareMoveMask or it or PROMOTION_PIECE_TOSQUARE_MASK_QUEEN)
                 if (!queenCapturesOnly) {
-                    moves[moveCount++] = (fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.value)
-                    moves[moveCount++] = (fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.value)
-                    moves[moveCount++] = (fromSquareMoveMask or it or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.value)
+                    moves[moveCount++] = (fromSquareMoveMask or it or PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT)
+                    moves[moveCount++] = (fromSquareMoveMask or it or PROMOTION_PIECE_TOSQUARE_MASK_ROOK)
+                    moves[moveCount++] = (fromSquareMoveMask or it or PROMOTION_PIECE_TOSQUARE_MASK_BISHOP)
                 }
             } else {
                 moves[moveCount++] = (fromSquareMoveMask or it)
