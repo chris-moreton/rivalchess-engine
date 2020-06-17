@@ -1,7 +1,7 @@
 package com.netsensia.rivalchess.epd;
 
 import com.netsensia.rivalchess.enums.SearchState;
-import com.netsensia.rivalchess.engine.core.search.Search;
+import com.netsensia.rivalchess.engine.search.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;

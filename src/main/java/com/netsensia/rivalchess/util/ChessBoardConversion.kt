@@ -1,12 +1,11 @@
 package com.netsensia.rivalchess.util
 
-import com.netsensia.rivalchess.engine.core.board.EngineBoard
-import com.netsensia.rivalchess.engine.core.board.isCheck
-import com.netsensia.rivalchess.engine.core.board.makeMove
-import com.netsensia.rivalchess.engine.core.board.unMakeMove
-import com.netsensia.rivalchess.engine.core.type.EngineMove
-import com.netsensia.rivalchess.enums.PromotionPieceMask
-import com.netsensia.rivalchess.enums.PromotionPieceMask.Companion.fromValue
+import com.netsensia.rivalchess.consts.*
+import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.engine.board.isCheck
+import com.netsensia.rivalchess.engine.board.makeMove
+import com.netsensia.rivalchess.engine.board.unMakeMove
+import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Move
@@ -15,22 +14,22 @@ import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 
-inline fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef.xFile
+fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef.xFile
 
-inline fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
+fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
 
 fun getMoveRefFromEngineMove(move: Int): Move {
     val from = move shr 16 and 63
     val to = move and 63
     val boardRefFrom = Square.fromBitRef(from)
     val boardRefTo = Square.fromBitRef(to)
-    val promotionPieceCode = move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
+    val promotionPieceCode = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     return if (promotionPieceCode != 0) {
-        when (fromValue(promotionPieceCode)) {
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> Move(boardRefFrom, boardRefTo, if (to >= 56) SquareOccupant.WQ else SquareOccupant.BQ)
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> Move(boardRefFrom, boardRefTo, if (to >= 56) SquareOccupant.WR else SquareOccupant.BR)
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> Move(boardRefFrom, boardRefTo, if (to >= 56) SquareOccupant.WN else SquareOccupant.BN)
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> Move(boardRefFrom, boardRefTo, if (to >= 56) SquareOccupant.WB else SquareOccupant.BB)
+        when (promotionPieceCode) {
+            PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> Move(boardRefFrom, boardRefTo, if (to >= 56) SquareOccupant.WQ else SquareOccupant.BQ)
+            PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> Move(boardRefFrom, boardRefTo, if (to >= 56) SquareOccupant.WR else SquareOccupant.BR)
+            PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> Move(boardRefFrom, boardRefTo, if (to >= 56) SquareOccupant.WN else SquareOccupant.BN)
+            PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> Move(boardRefFrom, boardRefTo, if (to >= 56) SquareOccupant.WB else SquareOccupant.BB)
             else -> throw RuntimeException("Unexpected error")
         }
     } else Move(boardRefFrom, boardRefTo, SquareOccupant.NONE)
@@ -58,7 +57,7 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
     var pgnMove = ""
     val to = move and 63
     val from = move ushr 16 and 63
-    val promotionPiece = move and PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_FULL.value
+    val promotionPiece = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     when (board.getSquareOccupant(from).piece) {
         Piece.KNIGHT -> pgnMove = "N"
         Piece.KING -> pgnMove = "K"
@@ -96,11 +95,11 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
     }
     pgnMove += getSimpleAlgebraicFromBitRef(to)
     if (promotionPiece != 0) {
-        when (fromValue(promotionPiece)) {
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> pgnMove += "=Q"
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> pgnMove += "=N"
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> pgnMove += "=B"
-            PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> pgnMove += "=R"
+        when (promotionPiece) {
+            PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> pgnMove += "=Q"
+            PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> pgnMove += "=N"
+            PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> pgnMove += "=B"
+            PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> pgnMove += "=R"
         }
     }
     if (board.makeMove(EngineMove(move))) {
@@ -120,10 +119,10 @@ fun getEngineMoveFromSimpleAlgebraic(s: String): EngineMove {
     val l = s.length
     if (l == 5) {
         when (s.toUpperCase()[4]) {
-            'Q' -> toBitRef = toBitRef or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_QUEEN.value
-            'R' -> toBitRef = toBitRef or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_ROOK.value
-            'N' -> toBitRef = toBitRef or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT.value
-            'B' -> toBitRef = toBitRef or PromotionPieceMask.PROMOTION_PIECE_TOSQUARE_MASK_BISHOP.value
+            'Q' -> toBitRef = toBitRef or PROMOTION_PIECE_TOSQUARE_MASK_QUEEN
+            'R' -> toBitRef = toBitRef or PROMOTION_PIECE_TOSQUARE_MASK_ROOK
+            'N' -> toBitRef = toBitRef or PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT
+            'B' -> toBitRef = toBitRef or PROMOTION_PIECE_TOSQUARE_MASK_BISHOP
         }
     }
     return EngineMove(fromBitRef shl 16 or toBitRef)

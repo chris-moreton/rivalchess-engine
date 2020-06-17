@@ -8,8 +8,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static com.netsensia.rivalchess.engine.core.eval.AttacksKt.blackPawnAttacks;
-import static com.netsensia.rivalchess.engine.core.eval.AttacksKt.whitePawnAttacks;
+import static com.netsensia.rivalchess.engine.eval.AttacksKt.blackPawnAttacks;
+import static com.netsensia.rivalchess.engine.eval.AttacksKt.whitePawnAttacks;
 import static org.junit.Assert.assertEquals;
 
 public class BitboardsTest {

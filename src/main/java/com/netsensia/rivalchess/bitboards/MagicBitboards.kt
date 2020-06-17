@@ -110,23 +110,21 @@ object MagicBitboards {
     }
 
     private fun setMagicMovesForNorthEastDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMoves = validMoves
-        var j: Int
-        j = bitRef + 7
+        var validMovesShadow = validMoves
+        var j: Int = bitRef + 7
         while (j % 8 != 7 && j <= 63) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) {
                 break
             }
             j += 7
         }
-        return validMoves
+        return validMovesShadow
     }
 
     private fun setMagicMovesForSouthEastDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
         var validMovesShadow = validMoves
-        var j: Int
-        j = bitRef - 9
+        var j: Int = bitRef - 9
         while (j % 8 != 7 && j >= 0) {
             validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) {
@@ -139,8 +137,7 @@ object MagicBitboards {
 
     private fun setMagicMovesForNorthWestDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
         var validMovesShadow = validMoves
-        var j: Int
-        j = bitRef + 9
+        var j: Int = bitRef + 9
         while (j % 8 != 0 && j <= 63) {
             validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) {
@@ -153,10 +150,8 @@ object MagicBitboards {
 
     private fun setMagicMovesForRooks(bitRef: Int, i: Int, validMoves: Long) {
         var validMovesShadow = validMoves
-        val magicIndex: Int
-        var j: Int
-        magicIndex = (occupancyVariation!![i] * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()
-        j = bitRef + 8
+        val magicIndex: Int = (occupancyVariation!![i] * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()
+        var j: Int = bitRef + 8
         while (j <= 63) {
             validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) break
@@ -184,15 +179,13 @@ object MagicBitboards {
     }
 
     private fun calculateOccupancyAttackSets(isRook: Boolean, bitRef: Int, setBitsInMask: List<Int>, bitCount: Int) {
-        val variationCount: Int
-        var i: Int
         var setBitsInIndex: List<Int>
 
         // How many possibilities are there for occupancy patterns for this piece on this square
         // e.g. For a bishop on a8, there are 7 squares to move to, 7^2 = 64 possible variations of
         // how those squares could be occupied.
-        variationCount = (1L shl bitCount).toInt()
-        i = 0
+        val variationCount: Int = (1L shl bitCount).toInt()
+        var i = 0
         while (i < variationCount) {
             occupancyVariation!![i] = 0
             // find bits set in index "i" and map them to bits in the 64 bit "occupancyVariation"
@@ -207,7 +200,7 @@ object MagicBitboards {
             // multiple variations can share the same attack set (possible moves),
             // so find this here because we can use it to allow clashes for hash keys
             val j = if (isRook) calculateOccupancyAttackSetsRook(bitRef, i) else calculateOccupancyAttackSetsBishop(bitRef, i)
-            if (j >= 0 && j <= 63) {
+            if (j in 0..63) {
                 occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
             }
             i++
@@ -215,22 +208,21 @@ object MagicBitboards {
     }
 
     private fun calculateOccupancyAttackSetsBishop(bitRef: Int, i: Int): Int {
-        var j: Int
-        j = bitRef + 9
+        var j: Int = bitRef + 9
         while (j % 8 != 7 && j % 8 != 0 && j <= 55 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j += 9
         }
-        if (j >= 0 && j <= 63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
+        if (j in 0..63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
         j = bitRef - 9
         while (j % 8 != 7 && j % 8 != 0 && j >= 8 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j -= 9
         }
-        if (j >= 0 && j <= 63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
+        if (j in 0..63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
         j = bitRef + 7
         while (j % 8 != 7 && j % 8 != 0 && j <= 55 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j += 7
         }
-        if (j >= 0 && j <= 63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
+        if (j in 0..63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
         j = bitRef - 7
         while (j % 8 != 7 && j % 8 != 0 && j >= 8 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j -= 7
@@ -239,22 +231,21 @@ object MagicBitboards {
     }
 
     private fun calculateOccupancyAttackSetsRook(bitRef: Int, i: Int): Int {
-        var j: Int
-        j = bitRef + 8
+        var j: Int = bitRef + 8
         while (j <= 55 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j += 8
         }
-        if (j >= 0 && j <= 63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
+        if (j in 0..63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
         j = bitRef - 8
         while (j >= 8 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j -= 8
         }
-        if (j >= 0 && j <= 63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
+        if (j in 0..63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
         j = bitRef + 1
         while (j % 8 != 7 && j % 8 != 0 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j++
         }
-        if (j >= 0 && j <= 63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
+        if (j in 0..63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
         j = bitRef - 1
         while (j % 8 != 7 && j % 8 != 0 && j >= 0 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j--

@@ -1,10 +1,9 @@
 package com.netsensia.rivalchess.bitboards
 
 import com.netsensia.rivalchess.bitboards.util.*
-import com.netsensia.rivalchess.engine.core.*
+import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.SquareOccupant
-import java.lang.Long.numberOfTrailingZeros
 import java.util.*
 
 class EngineBitboards() {

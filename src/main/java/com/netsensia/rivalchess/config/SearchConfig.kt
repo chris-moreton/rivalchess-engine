@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.config
 
-import com.netsensia.rivalchess.engine.core.eval.VALUE_KNIGHT
+import com.netsensia.rivalchess.engine.eval.VALUE_KNIGHT
 
 const val HISTORY_MAX_VALUE = 20000
 const val ASPIRATION_RADIUS = 40
