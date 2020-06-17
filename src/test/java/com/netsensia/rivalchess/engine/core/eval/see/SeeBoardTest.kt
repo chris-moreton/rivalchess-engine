@@ -70,7 +70,7 @@ internal class SeeBoardTest {
         var move: EngineMove
 
         board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
-        seeBoard.makeMove(move)
+        seeBoard.makeMove(move.compact)
         assertPieceBitboardsMatch(board, seeBoard)
         assertEquals(board.mover, seeBoard.mover)
 
@@ -80,7 +80,7 @@ internal class SeeBoardTest {
         assertEquals(board.mover, seeBoard.mover)
 
         board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
-        seeBoard.makeMove(move)
+        seeBoard.makeMove(move.compact)
         assertEquals(board.mover, seeBoard.mover)
     }
 
@@ -106,9 +106,9 @@ internal class SeeBoardTest {
         val seeBoard = SeeBoard(engineBoard)
         val moves = seeBoard.generateCaptureMovesOnSquare(29).toList()
         assertEquals(3, moves.size)
-        assertTrue(moves.contains(EngineMove(Move(Square.B3, Square.C4))))
-        assertTrue(moves.contains(EngineMove(Move(Square.D3, Square.C4))))
-        assertTrue(moves.contains(EngineMove(Move(Square.E5, Square.C4))))
+        assertTrue(moves.contains(EngineMove(Move(Square.B3, Square.C4)).compact))
+        assertTrue(moves.contains(EngineMove(Move(Square.D3, Square.C4)).compact))
+        assertTrue(moves.contains(EngineMove(Move(Square.E5, Square.C4)).compact))
     }
 
     @Test
@@ -117,11 +117,11 @@ internal class SeeBoardTest {
         val seeBoard = SeeBoard(engineBoard)
         val moves = seeBoard.generateCaptureMovesOnSquare(49).toList()
         assertEquals(2, moves.size)
-        assertTrue(moves.contains(EngineMove(Move(Square.E5, Square.G7))))
-        assertTrue(moves.contains(EngineMove(Move(Square.H8, Square.G7))))
-        seeBoard.makeMove(EngineMove(Move(Square.E5, Square.G7)))
+        assertTrue(moves.contains(EngineMove(Move(Square.E5, Square.G7)).compact))
+        assertTrue(moves.contains(EngineMove(Move(Square.H8, Square.G7)).compact))
+        seeBoard.makeMove(EngineMove(Move(Square.E5, Square.G7)).compact)
         seeBoard.unMakeMove()
-        seeBoard.makeMove(EngineMove(Move(Square.H8, Square.G7)))
+        seeBoard.makeMove(EngineMove(Move(Square.H8, Square.G7)).compact)
     }
 
     @Test
@@ -138,19 +138,19 @@ internal class SeeBoardTest {
         val seeBoard = SeeBoard(engineBoard)
         var moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
         assertEquals(3, moves.size)
-        (seeBoard.makeMove(EngineMove(Move(Square.E5, Square.F7))))
+        (seeBoard.makeMove(EngineMove(Move(Square.E5, Square.F7)).compact))
         moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
         assertEquals(2, moves.size)
-        (seeBoard.makeMove(EngineMove(Move(Square.E6, Square.F7))))
+        (seeBoard.makeMove(EngineMove(Move(Square.E6, Square.F7)).compact))
         moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
         assertEquals(2, moves.size)
-        (seeBoard.makeMove(EngineMove(Move(Square.F1, Square.F7))))
+        (seeBoard.makeMove(EngineMove(Move(Square.F1, Square.F7)).compact))
         moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
         assertEquals(1, moves.size)
-        (seeBoard.makeMove(EngineMove(Move(Square.E8, Square.F7))))
+        (seeBoard.makeMove(EngineMove(Move(Square.E8, Square.F7)).compact))
         moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
         assertEquals(1, moves.size)
-        (seeBoard.makeMove(EngineMove(Move(Square.G6, Square.F7))))
+        (seeBoard.makeMove(EngineMove(Move(Square.G6, Square.F7)).compact))
         moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
         assertEquals(0, moves.size)
     }
