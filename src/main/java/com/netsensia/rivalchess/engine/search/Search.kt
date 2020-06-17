@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.search
 
+import UCI_TIMER_INTERVAL_MILLIS
 import com.netsensia.rivalchess.bitboards.bitFlippedHorizontalAxis
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
@@ -369,7 +370,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             else 0
 
     private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, window: Window, extensions: Int, isCheck: Boolean) =
-            if (isDrawnAtRoot(0)) SearchPath().withScore(0).withPath(move) else
+            if (isDrawnAtRoot()) SearchPath().withScore(0).withPath(move) else
                 if (scoutSearch) {
                     val scoutPath = search(engineBoard, (depth - 1), ply + 1, Window(-window.low - 1, -window.low), extensions, -1, isCheck).also {
                         adjustScoreForMateDepth(it)
@@ -469,7 +470,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun determineDrawnPositionsAndGenerateDepthZeroMoves() {
-        moveSequence(setPlyMoves(0)).forEach {
+        moveSequence(setDepthZeroMoves()).forEach {
             if (engineBoard.makeMove(EngineMove(it))) {
                 val plyDraw = mutableListOf(false, false)
 
@@ -489,9 +490,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         scoreFullWidthMoves(engineBoard, 0)
     }
 
-    private fun setPlyMoves(ply: Int): IntArray {
-        orderedMoves[ply] = boardMoves()
-        return orderedMoves[ply]
+    private fun setDepthZeroMoves(): IntArray {
+        orderedMoves[0] = boardMoves()
+        return orderedMoves[0]
     }
 
     private fun boardMoves() = engineBoard.moveGenerator().generateLegalMoves().moves
@@ -783,7 +784,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         boardHash.incVersion()
         searchStartTime = System.currentTimeMillis()
         searchEndTime = 0
-        searchTargetEndTime = searchStartTime + millisToThink - Uci.UCI_TIMER_INTERVAL_MILLIS.value
+        searchTargetEndTime = searchStartTime + millisToThink - UCI_TIMER_INTERVAL_MILLIS
         nodes = 0
         setupMateAndKillerMoveTables()
         setupHistoryMoveTable()
@@ -851,11 +852,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             return if (timePassed == 0L) 0 else (nodes.toDouble() / timePassed.toDouble() * 1000.0).toInt()
         }
 
-    private fun isDrawnAtRoot(ply: Int): Boolean {
+    private fun isDrawnAtRoot(): Boolean {
         val boardHash = engineBoard.boardHashObject
         var i = 0
-        while (i < drawnPositionsAtRootCount[ply]) {
-            if (drawnPositionsAtRoot[ply][i] == boardHash.trackedHashValue) {
+        while (i < drawnPositionsAtRootCount[0]) {
+            if (drawnPositionsAtRoot[0][i] == boardHash.trackedHashValue) {
                 return true
             }
             i++

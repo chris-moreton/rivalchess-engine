@@ -62,6 +62,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
         unMakeMove(false)
         return false
     }
+
     if (updateHash) boardHashObject.move(engineMove, movePiece, capturePiece)
 
     return true
