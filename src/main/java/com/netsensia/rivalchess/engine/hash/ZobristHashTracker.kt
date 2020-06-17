@@ -63,11 +63,11 @@ class ZobristHashTracker {
     private fun processCastling(bitRefFrom: Int, movedPiece: SquareOccupant, bitRefTo: Int) {
         if (movedPiece == SquareOccupant.WK && bitRefFrom == 3) {
             if (bitRefTo == 1) trackedBoardHashValue = trackedBoardHashValue xor whiteKingSideCastle
-            if (bitRefTo == 5) trackedBoardHashValue = trackedBoardHashValue xor whiteQueenSideCastle
+            else if (bitRefTo == 5) trackedBoardHashValue = trackedBoardHashValue xor whiteQueenSideCastle
         }
         if (movedPiece == SquareOccupant.BK && bitRefFrom == 59) {
             if (bitRefTo == 57) trackedBoardHashValue = trackedBoardHashValue xor blackKingSideCastle
-            if (bitRefTo == 61) trackedBoardHashValue = trackedBoardHashValue xor blackQueenSideCastle
+            else if (bitRefTo == 61) trackedBoardHashValue = trackedBoardHashValue xor blackQueenSideCastle
         }
     }
 

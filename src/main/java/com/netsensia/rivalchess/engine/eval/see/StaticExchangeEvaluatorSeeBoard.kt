@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.board.makeMove
 import com.netsensia.rivalchess.engine.board.unMakeMove
 import com.netsensia.rivalchess.engine.eval.VALUE_KING
+import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
@@ -18,7 +19,7 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 
         if (board.makeMove(move, false, false)) {
             val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
-            val captureSquare = move.compact and 63
+            val captureSquare = toSquare(move.compact)
             val materialGain = seeBoard.makeMove(move.compact)
             val seeValue = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain)) - materialBalance
             board.unMakeMove(false)
