@@ -110,17 +110,16 @@ object MagicBitboards {
     }
 
     private fun setMagicMovesForNorthEastDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMoves = validMoves
-        var j: Int
-        j = bitRef + 7
+        var validMovesShadow = validMoves
+        var j: Int = bitRef + 7
         while (j % 8 != 7 && j <= 63) {
-            validMoves = validMoves or (1L shl j)
+            validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) {
                 break
             }
             j += 7
         }
-        return validMoves
+        return validMovesShadow
     }
 
     private fun setMagicMovesForSouthEastDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {

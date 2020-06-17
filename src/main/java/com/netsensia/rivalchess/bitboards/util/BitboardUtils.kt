@@ -1,8 +1,8 @@
 package com.netsensia.rivalchess.bitboards.util
 
 import com.netsensia.rivalchess.bitboards.*
-import com.netsensia.rivalchess.engine.core.eval.blackPawnAttacks
-import com.netsensia.rivalchess.engine.core.eval.whitePawnAttacks
+import com.netsensia.rivalchess.engine.eval.blackPawnAttacks
+import com.netsensia.rivalchess.engine.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
 

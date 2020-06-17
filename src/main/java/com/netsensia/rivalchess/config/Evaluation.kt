@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.config
 
-import com.netsensia.rivalchess.engine.core.eval.*
+import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.model.SquareOccupant
 import java.util.*
 

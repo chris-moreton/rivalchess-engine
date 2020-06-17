@@ -1,11 +1,11 @@
 package com.netsensia.rivalchess.util
 
-import com.netsensia.rivalchess.engine.core.board.EngineBoard
-import com.netsensia.rivalchess.engine.core.board.isCheck
-import com.netsensia.rivalchess.engine.core.board.makeMove
-import com.netsensia.rivalchess.engine.core.board.unMakeMove
-import com.netsensia.rivalchess.engine.core.type.EngineMove
-import com.netsensia.rivalchess.enums.*
+import com.netsensia.rivalchess.consts.*
+import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.engine.board.isCheck
+import com.netsensia.rivalchess.engine.board.makeMove
+import com.netsensia.rivalchess.engine.board.unMakeMove
+import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Move
@@ -14,9 +14,9 @@ import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 
-inline fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef.xFile
+fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef.xFile
 
-inline fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
+fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
 
 fun getMoveRefFromEngineMove(move: Int): Move {
     val from = move shr 16 and 63
