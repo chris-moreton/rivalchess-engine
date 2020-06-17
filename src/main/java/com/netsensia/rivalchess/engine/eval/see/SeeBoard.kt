@@ -20,9 +20,10 @@ class SeeBoard(board: EngineBoard) {
     private val whiteBitboardIndexes = intArrayOf(BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR)
     private val blackBitboardIndexes = intArrayOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
 
-    private val enPassantHistory: Array<Long> = arrayOf(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-    private val moveHistory: MutableList<List<IntArray>> = ArrayList()
+    private val enPassantHistory = LongArray(20)
+    private val moveHistory = arrayOfNulls<Array<IntArray>>(20)
     private var movesMade = 0
+    private var deltaCount = 0
 
     var mover: Colour
 
@@ -33,7 +34,8 @@ class SeeBoard(board: EngineBoard) {
     }
 
     fun makeMove(move: Int): Int {
-        val deltas: MutableList<IntArray> = mutableListOf()
+        val deltas = arrayOf(intArrayOf(-1,-1), intArrayOf(-1,-1), intArrayOf(-1,-1), intArrayOf(-1,-1), intArrayOf(-1,-1))
+        deltaCount = 0
 
         enPassantHistory[movesMade] = bitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
 
@@ -74,21 +76,22 @@ class SeeBoard(board: EngineBoard) {
         }
 
         mover = mover.opponent()
-        movesMade ++
-        moveHistory.add(deltas)
+        moveHistory[movesMade++] = deltas
         return materialGain
     }
 
     fun unMakeMove() {
         val lastIndex = movesMade - 1
-        moveHistory[lastIndex].forEach { bitboards.xorPieceBitboard(it[0], (1L shl it[1])) }
+        moveHistory[lastIndex]!!.forEach {
+            if (it[0] == -1) return@forEach
+            bitboards.xorPieceBitboard(it[0], (1L shl it[1]))
+        }
         bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, enPassantHistory[lastIndex])
         mover = mover.opponent()
-        moveHistory.removeAt(lastIndex)
         movesMade--
     }
 
-    private fun removeFromRelevantBitboard(squareBit: Long, bitboardList: IntArray, deltas: MutableList<IntArray>): Int {
+    private fun removeFromRelevantBitboard(squareBit: Long, bitboardList: IntArray, deltas: Array<IntArray>): Int {
         bitboardList.forEach { if (bitboards.pieceBitboards[it] and squareBit == squareBit) {
             togglePiece(squareBit, it, deltas)
             return it
@@ -96,9 +99,9 @@ class SeeBoard(board: EngineBoard) {
         return BITBOARD_NONE
     }
 
-    private inline fun togglePiece(squareBit: Long, bitboardType: Int, deltas: MutableList<IntArray>) {
+    private inline fun togglePiece(squareBit: Long, bitboardType: Int, deltas: Array<IntArray>) {
         bitboards.xorPieceBitboard(bitboardType, squareBit)
-        deltas.add(intArrayOf(bitboardType, numberOfTrailingZeros(squareBit)))
+        deltas[deltaCount++] = intArrayOf(bitboardType, numberOfTrailingZeros(squareBit))
     }
 
     val whitePieceValues: Int

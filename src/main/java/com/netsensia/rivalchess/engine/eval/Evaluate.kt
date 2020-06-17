@@ -571,8 +571,7 @@ fun blackPawnsEval(bitboards: BitboardData): Int {
 fun blackKnightsEval(
         bitboards: BitboardData,
         attacks: Attacks,
-        materialValues: MaterialValues)
-        : Int {
+        materialValues: MaterialValues) : Int {
 
     var acc = 0
     applyToSquares(bitboards.blackKnights) {

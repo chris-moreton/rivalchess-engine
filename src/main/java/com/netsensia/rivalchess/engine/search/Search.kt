@@ -177,7 +177,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun onlyOneMoveAndNotOnFixedTime(numLegalMoves: Int) = numLegalMoves == 1 && millisToThink < MAX_SEARCH_MILLIS
 
-    @Throws(InvalidMoveException::class)
     fun search(board: EngineBoard, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath {
 
         nodes++
