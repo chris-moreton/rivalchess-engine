@@ -35,17 +35,15 @@ fun scoreRightWayPositions(
         return 0
     }
     return  if (friendlyPawns and (1L shl rightWaySquares.f2) != 0L) {
-        if (friendlyPawns and (1L shl rightWaySquares.g2) != 0L) {
+        if (friendlyPawns and (1L shl rightWaySquares.g2) != 0L)
             checkForPositionsAOrD(friendlyPawns, friendlyKnights, friendlyBishops, rightWaySquares, cornerColour)
-        } else {
+        else
             checkForPositionsBOrC(friendlyPawns, friendlyBishops, rightWaySquares)
-        }
     } else {
-        if (friendlyPawns and (1L shl rightWaySquares.f4) != 0L) {
+        if (friendlyPawns and (1L shl rightWaySquares.f4) != 0L)
             checkForPositionE(friendlyPawns, friendlyKnights, rightWaySquares)
-        } else {
+        else
             checkForPositionFOrH(friendlyPawns, rightWaySquares)
-        }
     } / 4
 }
 

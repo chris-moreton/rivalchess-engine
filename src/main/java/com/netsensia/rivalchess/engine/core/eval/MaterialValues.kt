@@ -3,9 +3,13 @@ package com.netsensia.rivalchess.engine.core.eval
 import java.lang.Long
 
 data class MaterialValues(val bitboardData: BitboardData) {
+        @JvmField
         val whitePieces = whitePieceValues(bitboardData)
+        @JvmField
         val blackPieces = blackPieceValues(bitboardData)
+        @JvmField
         val whitePawns = whitePawnValues(bitboardData)
+        @JvmField
         val blackPawns = blackPawnValues(bitboardData)
 }
 

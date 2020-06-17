@@ -4,6 +4,10 @@ import com.netsensia.rivalchess.config.*
 
 fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
+fun fromSquare(move: Int) = (move ushr 16) and 63
+
+fun toSquare(move: Int) = move and 63
+
 fun moveSequence(moves: IntArray) = sequence {
     var i = -1;
     while (moveNoScore(moves[++i]) != 0) {

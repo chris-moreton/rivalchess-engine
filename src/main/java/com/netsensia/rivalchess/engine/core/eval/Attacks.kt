@@ -8,15 +8,25 @@ import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.SquareOccupant
 
 class Attacks(bitboardData: BitboardData) {
+    @JvmField
     val whitePawns = whitePawnAttacks(bitboardData.whitePawns)
+    @JvmField
     val blackPawns = blackPawnAttacks(bitboardData.blackPawns)
+    @JvmField
     val whiteRookPair = attackList(bitboardData, bitboardData.whiteRooks, ::rookAttacks)
+    @JvmField
     val whiteBishopPair = attackList(bitboardData, bitboardData.whiteBishops, ::bishopAttacks)
+    @JvmField
     val whiteQueenPair = attackList(bitboardData, bitboardData.whiteQueens, ::queenAttacks)
+    @JvmField
     val whiteKnightPair = knightAttackList(bitboardData.whiteKnights)
+    @JvmField
     val blackRookPair = attackList(bitboardData, bitboardData.blackRooks, ::rookAttacks)
+    @JvmField
     val blackBishopPair = attackList(bitboardData, bitboardData.blackBishops, ::bishopAttacks)
+    @JvmField
     val blackQueenPair = attackList(bitboardData, bitboardData.blackQueens, ::queenAttacks)
+    @JvmField
     val blackKnightPair = knightAttackList(bitboardData.blackKnights)
 }
 

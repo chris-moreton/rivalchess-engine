@@ -389,16 +389,16 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         if (USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
-            hashMove = boardHash.useHeight(hashIndex + HashIndex.MOVE.index)
-            val flag = boardHash.useHeight(hashIndex + HashIndex.FLAG.index)
-            val score = boardHash.useHeight(hashIndex + HashIndex.SCORE.index)
+            hashMove = boardHash.useHeight(hashIndex + HASHENTRY_MOVE)
+            val flag = boardHash.useHeight(hashIndex + HASHENTRY_FLAG)
+            val score = boardHash.useHeight(hashIndex + HASHENTRY_SCORE)
             if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
         }
 
         if (USE_ALWAYS_REPLACE_HASH && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
-            hashMove = boardHash.ignoreHeight(hashIndex + HashIndex.MOVE.index)
-            val flag = boardHash.ignoreHeight(hashIndex + HashIndex.FLAG.index)
-            val score = boardHash.ignoreHeight(hashIndex + HashIndex.SCORE.index)
+            hashMove = boardHash.ignoreHeight(hashIndex + HASHENTRY_MOVE)
+            val flag = boardHash.ignoreHeight(hashIndex + HASHENTRY_FLAG)
+            val score = boardHash.ignoreHeight(hashIndex + HASHENTRY_SCORE)
             if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
         }
 
@@ -733,10 +733,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             i++
         }
     }
-
-    private fun fromSquare(move: Int) = (move ushr 16) and 63
-
-    private fun toSquare(move: Int) = move and 63
 
     private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int) =
             when (board.getSquareOccupant(fromSquare).piece) {

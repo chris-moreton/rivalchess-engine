@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.engine.core.board.EngineBoard
 import com.netsensia.rivalchess.enums.CastleBitMask
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.Square
 import java.lang.Long.bitCount
 import kotlin.math.abs
@@ -32,11 +31,11 @@ fun evaluate(board: EngineBoard): Int {
             (whiteRooksEval(bitboards, whitePieces) - blackRooksEval(bitboards, blackPieces)) +
             pawnScore(bitboards.whitePawns, bitboards.blackPawns, attacks, materialValues, board.whiteKingSquare, board.blackKingSquare, board.mover) +
             tradePawnBonusWhenMoreMaterial(bitboards, materialDifference) +
-            tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
             (whitePawnsEval(bitboards) - blackPawnsEval(bitboards)) +
             (whiteBishopEval(bitboards, whitePieces) - blackBishopsEval(bitboards, blackPieces)) +
             (whiteKnightsEval(bitboards, attacks, materialValues) - blackKnightsEval(bitboards, attacks, materialValues)) +
             (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares)) +
+            tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
             castlingEval(bitboards, board.castlePrivileges) +
             threatEval(bitboards, attacks, board.squareContents) +
             kingSafetyEval(bitboards, attacks, board, kingSquares) +
@@ -282,8 +281,7 @@ fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
             KINGSAFETY_UNCASTLED_TRAPPED_ROOK
         else 0)
 
-fun openFiles(kingShield: Long, pawnBitboard: Long) =
-        southFill(kingShield) and southFill(pawnBitboard).inv() and RANK_1
+fun openFiles(kingShield: Long, pawnBitboard: Long) = southFill(kingShield) and southFill(pawnBitboard).inv() and RANK_1
 
 fun whiteKingShieldEval(bitboards: BitboardData, kingSquares: KingSquares) =
         if (whiteKingOnFirstTwoRanks(kingSquares)) {
@@ -315,17 +313,13 @@ fun combineBlackKingShieldEval(bitboards: BitboardData, kingShield: Long) =
                 openFilesKingShieldEval(openFiles(kingShield, bitboards.whitePawns)) -
                 openFilesKingShieldEval(openFiles(kingShield, bitboards.blackPawns))
 
-fun whiteKingOnFirstTwoRanks(kingSquares: KingSquares) =
-        yCoordOfSquare(kingSquares.white) < 2
+fun whiteKingOnFirstTwoRanks(kingSquares: KingSquares) = yCoordOfSquare(kingSquares.white) < 2
 
-fun blackKingOnFirstTwoRanks(kingSquares: KingSquares) =
-        yCoordOfSquare(kingSquares.black) >= 6
+fun blackKingOnFirstTwoRanks(kingSquares: KingSquares) = yCoordOfSquare(kingSquares.black) >= 6
 
-fun blackKingShield(kingSquares: KingSquares) =
-        whiteKingShieldMask[kingSquares.black % 8] shl 40
+fun blackKingShield(kingSquares: KingSquares) = whiteKingShieldMask[kingSquares.black % 8] shl 40
 
-fun whiteKingShield(kingSquares: KingSquares): Long =
-        whiteKingShieldMask[kingSquares.white % 8]
+fun whiteKingShield(kingSquares: KingSquares): Long = whiteKingShieldMask[kingSquares.white % 8]
 
 fun whiteCastlingEval(bitboards: BitboardData, castlePrivileges: Int) : Int {
 

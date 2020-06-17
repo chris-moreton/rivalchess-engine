@@ -1,18 +1,11 @@
 package com.netsensia.rivalchess.enums
 
-import com.netsensia.rivalchess.config.USE_SUPER_VERIFY_ON_HASH
-
-enum class HashIndex(val index: Int) {
-    MOVE(0), SCORE(1), HASHENTRY_HEIGHT(2), FLAG(3), VERSION(4), HASHENTRY_64BIT1(5), HASHENTRY_64BIT2(6), HASHENTRY_LOCK1(7);
-
-    companion object {
-        const val numIndexes = 6
-        val numHashFields: Int
-            get() = if (USE_SUPER_VERIFY_ON_HASH) 31 else 7
-
-        /* pointer to array */
-        val hashPositionSizeBytes: Int
-            get() = 8 +  /* pointer to array */numHashFields * 4
-    }
-
-}
+const val HASHENTRY_MOVE = 0
+const val HASHENTRY_SCORE = 1
+const val HASHENTRY_HEIGHT = 2
+const val HASHENTRY_FLAG = 3
+const val HASHENTRY_VERSION = 4
+const val HASHENTRY_64BIT1 = 5
+const val HASHENTRY_64BIT2 = 6
+const val NUM_HASH_FIELDS = 7
+const val HASH_POSITION_SIZE_BYTES = 8 + NUM_HASH_FIELDS * 4
