@@ -58,27 +58,11 @@ const val ENDGAME_PROBABLE_DRAW_DIVISOR = 6
 const val ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE = 10
 const val DRAW_CONTEMPT = 0;
 
-private val VALUE_BISHOP_MOBILITY = intArrayOf(-15, -10, -6, -2, 2, 6, 10, 13, 16, 18, 20, 22, 23, 24)
-private val VALUE_ROOK_MOBILITY = intArrayOf(-10, -7, -4, -1, 2, 5, 7, 9, 11, 12, 13, 14, 14, 14, 14)
-private val VALUE_QUEEN_MOBILITY = intArrayOf(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
-private val VALUE_PASSED_PAWN_BONUS = intArrayOf(-1, 24, 26, 30, 36, 44, 56, -1)
+val VALUE_BISHOP_MOBILITY = intArrayOf(-15, -10, -6, -2, 2, 6, 10, 13, 16, 18, 20, 22, 23, 24)
+val VALUE_ROOK_MOBILITY = intArrayOf(-10, -7, -4, -1, 2, 5, 7, 9, 11, 12, 13, 14, 14, 14, 14)
+val VALUE_QUEEN_MOBILITY = intArrayOf(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
+val VALUE_PASSED_PAWN_BONUS = intArrayOf(-1, 24, 26, 30, 36, 44, 56, -1)
 const val endgameSubtractInsufficientMaterialMultiplier = 0.9
-
-fun getBishopMobilityValue(i: Int): Int {
-    return VALUE_BISHOP_MOBILITY[i]
-}
-
-fun getRookMobilityValue(i: Int): Int {
-    return VALUE_ROOK_MOBILITY[i]
-}
-
-fun getQueenMobilityValue(i: Int): Int {
-    return VALUE_QUEEN_MOBILITY[i]
-}
-
-fun getPassedPawnBonus(i: Int): Int {
-    return VALUE_PASSED_PAWN_BONUS[i]
-}
 
 val pieceValues: List<Int>
     get() = Collections.unmodifiableList(Arrays.asList(

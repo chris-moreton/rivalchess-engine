@@ -606,7 +606,7 @@ fun whiteKnightsEval(
 fun blackBishopsEval(bitboards: BitboardData, blackPieces: Long): Int {
     var acc = 0
     applyToSquares(bitboards.blackBishops) {
-        acc += getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and blackPieces.inv())) +
+        acc += VALUE_BISHOP_MOBILITY[bitCount(bishopAttacks(bitboards, it) and blackPieces.inv())] +
                 flippedSquareTableScore(PieceSquareTables.bishop, it)
     }
     return acc
@@ -615,7 +615,7 @@ fun blackBishopsEval(bitboards: BitboardData, blackPieces: Long): Int {
 fun whiteBishopEval(bitboards: BitboardData, whitePieces: Long): Int {
     var acc = 0
     applyToSquares(bitboards.whiteBishops) {
-        acc += getBishopMobilityValue(bitCount(bishopAttacks(bitboards, it) and whitePieces.inv())) +
+        acc += VALUE_BISHOP_MOBILITY[bitCount(bishopAttacks(bitboards, it) and whitePieces.inv())] +
                 PieceSquareTables.bishop[it]
     }
     return acc
@@ -624,7 +624,7 @@ fun whiteBishopEval(bitboards: BitboardData, whitePieces: Long): Int {
 private fun blackQueensEval(bitboards: BitboardData, blackPieces: Long): Int {
     var acc = 0
     applyToSquares(bitboards.blackQueens) {
-        acc += getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and blackPieces.inv())) +
+        acc += VALUE_QUEEN_MOBILITY[bitCount(queenAttacks(bitboards, it) and blackPieces.inv())] +
                 flippedSquareTableScore(PieceSquareTables.queen, it)
     }
     return acc
@@ -633,7 +633,7 @@ private fun blackQueensEval(bitboards: BitboardData, blackPieces: Long): Int {
 private fun whiteQueensEval(bitboards: BitboardData, whitePieces: Long): Int {
     var acc = 0
     applyToSquares(bitboards.whiteQueens) {
-        acc += getQueenMobilityValue(bitCount(queenAttacks(bitboards, it) and whitePieces.inv())) +
+        acc += VALUE_QUEEN_MOBILITY[bitCount(queenAttacks(bitboards, it) and whitePieces.inv())] +
                 PieceSquareTables.queen[it]
     }
     return acc
@@ -643,7 +643,7 @@ private fun blackRooksEval(bitboards: BitboardData, blackPieces: Long): Int {
     var acc = 0
     applyToSquares(bitboards.blackRooks) {
         acc += blackRookOpenFilesEval(bitboards, it % 8) +
-                getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and blackPieces.inv())) +
+                VALUE_ROOK_MOBILITY[bitCount(rookAttacks(bitboards, it) and blackPieces.inv())] +
                 flippedSquareTableScore(PieceSquareTables.rook, it) * rookEnemyPawnMultiplier(whitePawnValues(bitboards)) / 6
     }
     return acc
@@ -653,7 +653,7 @@ fun whiteRooksEval(bitboards: BitboardData, whitePieces: Long): Int {
     var acc = 0
     applyToSquares(bitboards.whiteRooks) {
         acc += whiteRookOpenFilesEval(bitboards, it % 8) +
-                getRookMobilityValue(bitCount(rookAttacks(bitboards, it) and whitePieces.inv())) +
+                VALUE_ROOK_MOBILITY[bitCount(rookAttacks(bitboards, it) and whitePieces.inv())] +
                 PieceSquareTables.rook[it] * rookEnemyPawnMultiplier(blackPawnValues(bitboards)) / 6
     }
     return acc
@@ -686,13 +686,13 @@ fun pawnScore(whitePawnBitboard: Long,
 
     fun whitePassedPawnScore(): Int {
         var acc = 0
-        applyToSquares(whitePassedPawnsBitboard) {acc += getPassedPawnBonus(yCoordOfSquare(it)) }
+        applyToSquares(whitePassedPawnsBitboard) {acc += VALUE_PASSED_PAWN_BONUS[yCoordOfSquare(it)] }
         return bitCount(whiteGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
     }
 
     fun blackPassedPawnScore(): Int {
         var acc = 0
-        applyToSquares(blackPassedPawnsBitboard) { acc += getPassedPawnBonus(7 - yCoordOfSquare(it)) }
+        applyToSquares(blackPassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[7 - yCoordOfSquare(it)] }
         return bitCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
     }
 
