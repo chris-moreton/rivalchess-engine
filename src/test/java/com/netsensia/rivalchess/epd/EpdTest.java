@@ -99,8 +99,6 @@ public class EpdTest {
         search.clearHash();
         search.startSearch();
 
-        MILLISECONDS.sleep(100);
-
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
 

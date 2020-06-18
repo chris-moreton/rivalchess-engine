@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "com.netsensia.rivalchess"
-version = '12.0.3'
+version = '12.0.4'
 
 apply plugin: 'kotlin'
 
@@ -25,7 +25,6 @@ repositories {
     mavenLocal()
     mavenCentral()
     jcenter()
-    maven { url "https://dl.bintray.com/arrow-kt/arrow-kt/" }
 }
 
 dependencies {
