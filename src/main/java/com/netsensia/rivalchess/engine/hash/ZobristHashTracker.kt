@@ -8,10 +8,7 @@ import com.netsensia.rivalchess.engine.hash.ZorbristHashCalculator.whiteMoverHas
 import com.netsensia.rivalchess.engine.search.*
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.engine.type.MoveDetail
-import com.netsensia.rivalchess.model.Move
 import com.netsensia.rivalchess.model.SquareOccupant
-import com.netsensia.rivalchess.util.getBitRefFromBoardRef
-import com.netsensia.rivalchess.util.getMoveRefFromEngineMove
 
 class ZobristHashTracker {
     @JvmField
@@ -150,13 +147,12 @@ class ZobristHashTracker {
     }
 
     private fun unMakePromotion(bitRefFrom: Int, bitRefTo: Int, moveDetail: MoveDetail): Boolean {
-        val move = getMoveRefFromEngineMove(moveDetail.move)
         val movedPiece = moveDetail.movePiece
-        val promotedPiece = move.promotedPiece
-        if (promotedPiece != SquareOccupant.NONE) {
+        val promotedPiece = promotionPiece(moveDetail.move)
+        if (promotedPiece != BITBOARD_NONE) {
             trackedBoardHashValue = trackedBoardHashValue xor
                     ZorbristHashCalculator.pieceHashValues[movedPiece][bitRefFrom] xor
-                    ZorbristHashCalculator.pieceHashValues[promotedPiece.index][bitRefTo]
+                    ZorbristHashCalculator.pieceHashValues[promotedPiece][bitRefTo]
             unMakeCapture(bitRefTo, moveDetail)
             return true
         }
@@ -176,9 +172,8 @@ class ZobristHashTracker {
     }
 
     fun unMakeMove(moveDetail: MoveDetail) {
-        val move = getMoveRefFromEngineMove(moveDetail.move)
-        val bitRefFrom = getBitRefFromBoardRef(move.srcBoardRef)
-        val bitRefTo = getBitRefFromBoardRef(move.tgtBoardRef)
+        val bitRefFrom = fromSquare(moveDetail.move)
+        val bitRefTo = toSquare(moveDetail.move)gpush ""
         if (!unMakePromotion(bitRefFrom, bitRefTo, moveDetail)) {
             trackedBoardHashValue = trackedBoardHashValue xor
                     ZorbristHashCalculator.pieceHashValues[moveDetail.movePiece][bitRefFrom] xor
