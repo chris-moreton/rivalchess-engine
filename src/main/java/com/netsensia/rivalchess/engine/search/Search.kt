@@ -222,8 +222,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             val move = it
             val recaptureExtensionResponse =
                     recaptureExtensions(extensions,
-                            board.getSquareOccupant(toSquare(move), board.mover.opponent()).index,
-                            board.getSquareOccupant(fromSquare(move), board.mover).index, board, move, recaptureSquare)
+                            board.getBitboardTypeOfSquareOccupant(toSquare(move), board.mover.opponent()),
+                            board.getBitboardTypeOfSquareOccupant(fromSquare(move), board.mover), board, move, recaptureSquare)
 
             if (board.makeMove(EngineMove(move))) {
 
@@ -662,9 +662,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun scoreMove(ply: Int, i: Int, board: EngineBoard): Int {
         var score = 0
         val toSquare = toSquare(orderedMoves[ply][i])
-        val isCapture = board.getSquareOccupant(toSquare) != SquareOccupant.NONE ||
+        val isCapture = board.getSquareOccupant(toSquare, mover.opponent()) != SquareOccupant.NONE ||
                 (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
-                        board.getSquareOccupant(fromSquare(orderedMoves[ply][i])).piece == Piece.PAWN)
+                        board.getSquareOccupant(fromSquare(orderedMoves[ply][i]), mover).piece == Piece.PAWN)
 
         orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
         if (orderedMoves[ply][i] == mateKiller[ply]) {

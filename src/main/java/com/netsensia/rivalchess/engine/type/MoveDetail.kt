@@ -1,13 +1,13 @@
 package com.netsensia.rivalchess.engine.type
 
-import com.netsensia.rivalchess.model.SquareOccupant
+import com.netsensia.rivalchess.consts.BITBOARD_NONE
 
 class MoveDetail {
 	@JvmField
-	var movePiece: SquareOccupant = SquareOccupant.NONE
+	var movePiece = BITBOARD_NONE
 
 	@JvmField
-	var capturePiece: SquareOccupant = SquareOccupant.NONE
+	var capturePiece = BITBOARD_NONE
 
 	@JvmField
 	var move = 0

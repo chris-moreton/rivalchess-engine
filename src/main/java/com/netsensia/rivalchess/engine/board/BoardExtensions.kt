@@ -12,6 +12,7 @@ import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
+import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 
 fun EngineBoard.onlyKingsRemain() =
@@ -24,7 +25,7 @@ fun EngineBoard.isCapture(move: Int): Boolean {
     val toSquare = move and 63
     return !isSquareEmpty(toSquare) ||
             (1L shl toSquare and this.engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE] != 0L &&
-            getSquareOccupant(move ushr 16 and 63, mover).piece == Piece.PAWN)
+            getBitboardTypeOfSquareOccupant(move ushr 16 and 63, mover) in intArrayOf(BITBOARD_WP, BITBOARD_BP))
 }
 
 fun EngineBoard.getPiece(bitRef: Int) = when (getSquareOccupant(bitRef)) {

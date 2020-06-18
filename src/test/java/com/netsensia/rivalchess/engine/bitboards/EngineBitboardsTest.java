@@ -65,7 +65,7 @@ public class EngineBitboardsTest {
         final EngineMove engineMove = getEngineMoveFromSimpleAlgebraic("h4d8");
 
         bitboards.setPieceBitboard(BITBOARD_WB, bitboard);
-        bitboards.movePiece(SquareOccupant.WB, engineMove.compact);
+        bitboards.movePiece(BITBOARD_WB, engineMove.compact);
 
         assertEquals(bitboardExpected, bitboards.pieceBitboards[BITBOARD_WB]);
     }
