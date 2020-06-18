@@ -18,13 +18,13 @@ fun EngineBoard.onlyKingsRemain() =
     onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_ENEMY]) &&
             onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_FRIENDLY])
 
-fun EngineBoard.isSquareEmpty(bitRef: Int) = getSquareOccupant(bitRef) == SquareOccupant.NONE
+fun EngineBoard.isSquareEmpty(bitRef: Int) = engineBitboards.pieceBitboards[BITBOARD_ALL] and (1L shl bitRef) == 0L
 
 fun EngineBoard.isCapture(move: Int): Boolean {
     val toSquare = move and 63
     return !isSquareEmpty(toSquare) ||
             (1L shl toSquare and this.engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE] != 0L &&
-            getSquareOccupant(move ushr 16 and 63).piece == Piece.PAWN)
+            getSquareOccupant(move ushr 16 and 63, mover).piece == Piece.PAWN)
 }
 
 fun EngineBoard.getPiece(bitRef: Int) = when (getSquareOccupant(bitRef)) {
@@ -39,8 +39,7 @@ fun EngineBoard.getPiece(bitRef: Int) = when (getSquareOccupant(bitRef)) {
 
 fun EngineBoard.isCheck(colour: Colour) =
     if (colour == Colour.WHITE)
-        this.engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK)
-    else
+        this.engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK) else
         this.engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE)
 
 @Throws(InvalidMoveException::class)

@@ -22,7 +22,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     var halfMoveCount = 0
 
     var castlePrivileges = 0
-    lateinit var mover: Colour
     var whiteKingSquare = 0
     var blackKingSquare = 0
 
@@ -30,6 +29,8 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     val lastMoveMade: MoveDetail
         get() = moveHistory[numMovesMade]
+
+    lateinit var mover: Colour
 
     val whitePieceValues: Int
         get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +

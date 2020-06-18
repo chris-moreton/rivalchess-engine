@@ -222,8 +222,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             val move = it
             val recaptureExtensionResponse =
                     recaptureExtensions(extensions,
-                            board.getSquareOccupant(toSquare(move)).index,
-                            board.getSquareOccupant(fromSquare(move)).index, board, move, recaptureSquare)
+                            board.getSquareOccupant(toSquare(move), board.mover.opponent()).index,
+                            board.getSquareOccupant(fromSquare(move), board.mover).index, board, move, recaptureSquare)
 
             if (board.makeMove(EngineMove(move))) {
 

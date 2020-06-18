@@ -28,7 +28,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
     val compactMove = engineMove.compact
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
-    val capturePiece = getSquareOccupant(moveTo)
+    val capturePiece = getSquareOccupant(moveTo, mover.opponent())
     val movePiece = getSquareOccupant(moveFrom, mover)
 
     val moveDetail = MoveDetail()
