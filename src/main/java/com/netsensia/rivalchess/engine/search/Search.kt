@@ -911,6 +911,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     fun getFen() = engineBoard.getFen()
 
+    fun makeMove(engineMove: EngineMove) {
+        engineBoard.makeMove(engineMove)
+    }
+
     init {
         engineBoard.setBoard(board)
         drawnPositionsAtRoot = ArrayList()
