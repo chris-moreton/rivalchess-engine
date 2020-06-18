@@ -2,10 +2,9 @@ package com.netsensia.rivalchess.engine.eval
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
-import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.config.THREAT_SCORE_DIVISOR
+import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Piece
-import com.netsensia.rivalchess.model.SquareOccupant
 
 class Attacks(bitboardData: BitboardData) {
     @JvmField
@@ -56,18 +55,18 @@ fun knightAttackList(squaresBitboard: Long): Pair<List<Long>, Long> {
     return Pair(list, orred)
 }
 
-fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: Array<SquareOccupant>): Int {
+fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(whiteAttacksBitboard(bitboards, attacks)) {
-        acc += pieceValue(squareOccupants[it].piece)
+        acc += pieceValue(board.getSquareOccupant(it).piece)
     }
     return acc
 }
 
-fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, squareOccupants: Array<SquareOccupant>): Int {
+fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(blackAttacksBitboard(bitboards, attacks)) {
-        acc += pieceValue(squareOccupants[it].piece)
+        acc += pieceValue(board.getSquareOccupant(it).piece)
     }
     return acc
 }
@@ -90,9 +89,9 @@ fun whiteAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
 fun blackAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
         (blackPieceAttacks(attacks) or attacks.blackPawns) and whitePieceBitboard(bitboards)
 
-fun threatEval(bitboards: BitboardData, attacks: Attacks, squareOccupants: Array<SquareOccupant>) =
-    (adjustedAttackScore(whiteAttackScore(bitboards, attacks, squareOccupants)) -
-            adjustedAttackScore(blackAttackScore(bitboards, attacks, squareOccupants))) /
+fun threatEval(bitboards: BitboardData, attacks: Attacks, board: EngineBoard) =
+    (adjustedAttackScore(whiteAttackScore(bitboards, attacks, board)) -
+            adjustedAttackScore(blackAttackScore(bitboards, attacks, board))) /
             THREAT_SCORE_DIVISOR
 
 fun adjustedAttackScore(attackScore: Int) = attackScore + attackScore * (attackScore / pieceValue(Piece.QUEEN))

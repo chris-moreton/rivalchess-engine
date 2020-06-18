@@ -18,19 +18,19 @@ fun EngineBoard.onlyKingsRemain() =
     onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_ENEMY]) &&
             onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_FRIENDLY])
 
-fun EngineBoard.isSquareEmpty(bitRef: Int) = squareContents.get(bitRef) == SquareOccupant.NONE
+fun EngineBoard.isSquareEmpty(bitRef: Int) = getSquareOccupant(bitRef) == SquareOccupant.NONE
 
 fun EngineBoard.isCapture(move: Int): Boolean {
     val toSquare = move and 63
     var isCapture: Boolean = !isSquareEmpty(toSquare)
     if (!isCapture && 1L shl toSquare and this.engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE] != 0L &&
-            squareContents.get(move ushr 16 and 63).piece == Piece.PAWN) {
+            getSquareOccupant(move ushr 16 and 63).piece == Piece.PAWN) {
         isCapture = true
     }
     return isCapture
 }
 
-fun EngineBoard.getPiece(bitRef: Int) = when (squareContents.get(bitRef)) {
+fun EngineBoard.getPiece(bitRef: Int) = when (getSquareOccupant(bitRef)) {
         SquareOccupant.WP, SquareOccupant.BP -> Piece.PAWN
         SquareOccupant.WB, SquareOccupant.BB -> Piece.BISHOP
         SquareOccupant.WN, SquareOccupant.BN -> Piece.KNIGHT

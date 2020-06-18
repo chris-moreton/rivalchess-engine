@@ -9,13 +9,11 @@ import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import java.lang.Long.bitCount
-import java.util.*
 import kotlin.collections.ArrayList
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     val engineBitboards = EngineBitboards()
-    
-    val squareContents = Array(64){SquareOccupant.NONE}
+
     val boardHashObject = BoardHash()
 
     var moveHistory: MutableList<MoveDetail> = ArrayList()
@@ -65,7 +63,19 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         boardHashObject.initialiseHashCode(this)
     }
 
-    fun getSquareOccupant(bitRef: Int) = squareContents[bitRef]
+    fun getSquareOccupant(bitRef: Int): SquareOccupant {
+        whiteBitboardTypes.forEach {
+            if (engineBitboards.pieceBitboards[it] and (1L shl bitRef) != 0L) {
+                return squareOccupantFromBitboardType(it)
+            }
+        }
+        blackBitboardTypes.forEach {
+            if (engineBitboards.pieceBitboards[it] and (1L shl bitRef) != 0L) {
+                return squareOccupantFromBitboardType(it)
+            }
+        }
+        return SquareOccupant.NONE
+    }
 
     fun moveGenerator() =
             MoveGenerator(
@@ -85,12 +95,10 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun setSquareContents(board: Board) {
-        Arrays.fill(squareContents, SquareOccupant.NONE)
         for (y in 0..7) {
             for (x in 0..7) {
                 val bitNum = (63 - 8 * y - x)
                 val squareOccupant = board.getSquareOccupant(Square.fromCoords(x, y))
-                squareContents[bitNum] = squareOccupant
                 if (squareOccupant != SquareOccupant.NONE) {
                     engineBitboards.orPieceBitboard(squareOccupant.index, 1L shl bitNum)
                     if (squareOccupant == SquareOccupant.WK) whiteKingSquare = bitNum
