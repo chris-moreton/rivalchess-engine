@@ -40,7 +40,7 @@ fun evaluate(board: EngineBoard): Int {
             (whiteKingSquareEval(bitboards, kingSquares) - blackKingSquareEval(bitboards, kingSquares)) +
             tradePieceBonusWhenMoreMaterial(bitboards, materialDifference) +
             castlingEval(bitboards, board.castlePrivileges) +
-            threatEval(bitboards, attacks, board.squareContents) +
+            threatEval(bitboards, attacks, board) +
             kingSafetyEval(bitboards, attacks, board, kingSquares) +
             (whiteQueensEval(bitboards, whitePieces) - blackQueensEval(bitboards, blackPieces)) +
             bishopScore(bitboards, materialDifference, materialValues)
