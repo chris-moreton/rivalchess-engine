@@ -1,12 +1,27 @@
 package com.netsensia.rivalchess.engine.search
 
 import com.netsensia.rivalchess.config.*
+import com.netsensia.rivalchess.consts.*
+import com.netsensia.rivalchess.model.Move
+import com.netsensia.rivalchess.model.SquareOccupant
 
 fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
 fun fromSquare(move: Int) = (move ushr 16) and 63
-
 fun toSquare(move: Int) = move and 63
+fun promotionPiece(move: Int): Int {
+    val to = move and 63
+    return when (move and PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
+        PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> if (to >= 56) BITBOARD_WQ else BITBOARD_BQ
+        PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> if (to >= 56) BITBOARD_WR else BITBOARD_BR
+        PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> if (to >= 56) BITBOARD_WN else BITBOARD_BN
+        PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> if (to >= 56) BITBOARD_WB else BITBOARD_BB
+        else -> BITBOARD_NONE
+    }
+}
+
+fun xFile(move: Int) = move % 8
+fun yRank(move: Int) = move / 8
 
 fun moveSequence(moves: IntArray) = sequence {
     var i = -1;

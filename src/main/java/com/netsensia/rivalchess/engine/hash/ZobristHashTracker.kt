@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.hash.ZorbristHashCalculator.blackMoverHashValue
 import com.netsensia.rivalchess.engine.hash.ZorbristHashCalculator.calculateHash
 import com.netsensia.rivalchess.engine.hash.ZorbristHashCalculator.whiteMoverHashValue
+import com.netsensia.rivalchess.engine.search.*
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Move
@@ -37,16 +38,20 @@ class ZobristHashTracker {
                 ZorbristHashCalculator.pieceHashValues[movedPiece][bitRef]
     }
 
-    private fun processPossibleWhitePawnEnPassantCapture(move: Move, capturedPiece: Int) {
-        if (move.srcBoardRef.xFile != move.tgtBoardRef.xFile && capturedPiece == BITBOARD_NONE) {
-            val capturedPawnBitRef = getBitRefFromBoardRef(move.tgtBoardRef.xFile, move.tgtBoardRef.yRank + 1)
+    private fun processPossibleWhitePawnEnPassantCapture(move: EngineMove, capturedPiece: Int) {
+        val from = fromSquare(move.compact)
+        val to = toSquare(move.compact)
+        if (xFile(from) != xFile(to) && capturedPiece == BITBOARD_NONE) {
+            val capturedPawnBitRef = to - 8
             trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[SquareOccupant.BP.index][capturedPawnBitRef]
         }
     }
 
-    private fun processPossibleBlackPawnEnPassantCapture(move: Move, capturedPiece: Int) {
-        if (move.srcBoardRef.xFile != move.tgtBoardRef.xFile && capturedPiece == BITBOARD_NONE) {
-            val capturedPawnBitRef = getBitRefFromBoardRef(move.tgtBoardRef.xFile, move.tgtBoardRef.yRank - 1)
+    private fun processPossibleBlackPawnEnPassantCapture(move: EngineMove, capturedPiece: Int) {
+        val from = fromSquare(move.compact)
+        val to = toSquare(move.compact)
+        if (xFile(from) != xFile(to) && capturedPiece == BITBOARD_NONE) {
+            val capturedPawnBitRef = to + 8
             trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[SquareOccupant.WP.index][capturedPawnBitRef]
         }
     }
@@ -72,17 +77,17 @@ class ZobristHashTracker {
         }
     }
 
-    private fun processSpecialPawnMoves(move: Move, movedPiece: Int, bitRefTo: Int, capturedPiece: Int) {
+    private fun processSpecialPawnMoves(move: EngineMove, movedPiece: Int, bitRefTo: Int, capturedPiece: Int) {
         if (movedPiece == BITBOARD_WP) {
             processPossibleWhitePawnEnPassantCapture(move, capturedPiece)
-            val promotionPiece = move.promotedPiece
-            if (promotionPiece != SquareOccupant.NONE) replaceWithAnotherPiece(promotionPiece.index, BITBOARD_WP, bitRefTo)
+            val promotionPiece = promotionPiece(move.compact)
+            if (promotionPiece != BITBOARD_NONE) replaceWithAnotherPiece(promotionPiece, BITBOARD_WP, bitRefTo)
         }
         if (movedPiece == BITBOARD_BP) {
             processPossibleBlackPawnEnPassantCapture(move, capturedPiece)
-            val promotionPiece = move.promotedPiece
-            if (promotionPiece != SquareOccupant.NONE) {
-                replaceWithAnotherPiece(promotionPiece.index, BITBOARD_BP, bitRefTo)
+            val promotionPiece = promotionPiece(move.compact)
+            if (promotionPiece != BITBOARD_NONE) {
+                replaceWithAnotherPiece(promotionPiece, BITBOARD_BP, bitRefTo)
             }
         }
     }
@@ -161,12 +166,11 @@ class ZobristHashTracker {
     fun nullMove() = switchMover()
 
     fun makeMove(engineMove: EngineMove, movedPiece: Int, capturedPiece: Int) {
-        val move = getMoveRefFromEngineMove(engineMove.compact)
-        val bitRefFrom = getBitRefFromBoardRef(move.srcBoardRef)
-        val bitRefTo = getBitRefFromBoardRef(move.tgtBoardRef)
+        val bitRefFrom = fromSquare(engineMove.compact)
+        val bitRefTo = toSquare(engineMove.compact)
         trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[movedPiece][bitRefFrom]
         processCapture(movedPiece, capturedPiece, bitRefTo)
-        processSpecialPawnMoves(move, movedPiece, bitRefTo, capturedPiece)
+        processSpecialPawnMoves(engineMove, movedPiece, bitRefTo, capturedPiece)
         processCastling(bitRefFrom, movedPiece, bitRefTo)
         switchMover()
     }
