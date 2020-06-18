@@ -63,14 +63,25 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         boardHashObject.initialiseHashCode(this)
     }
 
+    fun getSquareOccupant(bitRef: Int, colour: Colour): SquareOccupant {
+        val bitMask = 1L shl bitRef
+        (if (colour == Colour.WHITE) whiteBitboardTypes else blackBitboardTypes).forEach {
+            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
+                return squareOccupantFromBitboardType(it)
+            }
+        }
+        return SquareOccupant.NONE
+    }
+
     fun getSquareOccupant(bitRef: Int): SquareOccupant {
+        val bitMask = 1L shl bitRef
         whiteBitboardTypes.forEach {
-            if (engineBitboards.pieceBitboards[it] and (1L shl bitRef) != 0L) {
+            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
                 return squareOccupantFromBitboardType(it)
             }
         }
         blackBitboardTypes.forEach {
-            if (engineBitboards.pieceBitboards[it] and (1L shl bitRef) != 0L) {
+            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
                 return squareOccupantFromBitboardType(it)
             }
         }

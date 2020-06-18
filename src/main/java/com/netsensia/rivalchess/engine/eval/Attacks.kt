@@ -4,6 +4,7 @@ import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.config.THREAT_SCORE_DIVISOR
 import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 
 class Attacks(bitboardData: BitboardData) {
@@ -58,7 +59,7 @@ fun knightAttackList(squaresBitboard: Long): Pair<List<Long>, Long> {
 fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(whiteAttacksBitboard(bitboards, attacks)) {
-        acc += pieceValue(board.getSquareOccupant(it).piece)
+        acc += pieceValue(board.getSquareOccupant(it, Colour.BLACK).piece)
     }
     return acc
 }
@@ -66,7 +67,7 @@ fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoa
 fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(blackAttacksBitboard(bitboards, attacks)) {
-        acc += pieceValue(board.getSquareOccupant(it).piece)
+        acc += pieceValue(board.getSquareOccupant(it, Colour.WHITE).piece)
     }
     return acc
 }
