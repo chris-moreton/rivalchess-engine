@@ -173,7 +173,7 @@ class ZobristHashTracker {
 
     fun unMakeMove(moveDetail: MoveDetail) {
         val bitRefFrom = fromSquare(moveDetail.move)
-        val bitRefTo = toSquare(moveDetail.move)gpush ""
+        val bitRefTo = toSquare(moveDetail.move)
         if (!unMakePromotion(bitRefFrom, bitRefTo, moveDetail)) {
             trackedBoardHashValue = trackedBoardHashValue xor
                     ZorbristHashCalculator.pieceHashValues[moveDetail.movePiece][bitRefFrom] xor
