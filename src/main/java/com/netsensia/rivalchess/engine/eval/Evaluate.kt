@@ -114,7 +114,15 @@ fun doubledRooksEval(squares: List<Int>) =
                 VALUE_ROOKS_ON_SAME_FILE else 0
 
 fun flippedSquareTableScore(table: IntArray, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
-fun kingAttackCount(dangerZone: Long, attacks: List<Long>) = attacks.map { bitCount(it and dangerZone) }.fold(0) { acc, i -> acc + i }
+
+fun kingAttackCount(dangerZone: Long, attacks: LongArray): Int {
+    var acc = 0
+    attacks.forEach {
+        if (it == -1L) return@forEach
+        acc += bitCount(it and dangerZone)
+    }
+    return acc
+}
 
 fun tradePieceBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int) =
         linearScale(
