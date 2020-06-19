@@ -11,6 +11,7 @@ import com.netsensia.rivalchess.util.EpdReader;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -70,6 +71,12 @@ public class EpdTest {
             "WAC.291", // Fail 24
             "WAC.297" // Fail 25
     ));
+
+    @Test
+    @Ignore
+    public void customPositions() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
+        runEpdSuite("custom.epd", "RIVAL.001", true);
+    }
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
