@@ -26,7 +26,4 @@ class MoveDetail {
 
 	@JvmField
 	var isOnNullMove = false
-
-	@JvmField
-	var pawnHashValue: Long = 0
 }

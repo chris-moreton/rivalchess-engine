@@ -10,9 +10,8 @@ const val FRACTIONAL_EXTENSION_PAWN = 8
 const val RECAPTURE_EXTENSION_MARGIN = 50
 const val LAST_EXTENSION_LAYER = 4
 
-val maxNewExtensionsTreePart: List<Int> =
-            Collections.unmodifiableList(listOf(
+val maxNewExtensionsTreePart = intArrayOf(
                     FRACTIONAL_EXTENSION_FULL,
                     FRACTIONAL_EXTENSION_FULL / 4 * 3,
                     FRACTIONAL_EXTENSION_FULL / 2,
-                    FRACTIONAL_EXTENSION_FULL / 8, 0))
+                    FRACTIONAL_EXTENSION_FULL / 8, 0)

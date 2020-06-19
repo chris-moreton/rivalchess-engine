@@ -21,23 +21,29 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     @JvmField
     var moveHistory = arrayOfNulls<MoveDetail>(MAX_SEARCH_DEPTH)
 
+    @JvmField
     var numMovesMade = 0
+
+    @JvmField
     var halfMoveCount = 0
 
+    @JvmField
     var castlePrivileges = 0
 
     @JvmField
     var whiteKingSquare = 0
+
     @JvmField
     var blackKingSquare = 0
 
+    @JvmField
     var isOnNullMove = false
-
-    val lastMoveMade: MoveDetail?
-        get() = moveHistory[numMovesMade]
 
     @JvmField
     var mover = Colour.WHITE
+
+    val lastMoveMade: MoveDetail?
+        get() = moveHistory[numMovesMade]
 
     val whitePieceValues: Int
         get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +

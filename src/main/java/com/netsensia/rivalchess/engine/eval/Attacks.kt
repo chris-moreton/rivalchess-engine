@@ -17,7 +17,7 @@ class Attacks(bitboardData: BitboardData) {
     @JvmField
     val whiteQueenPair = attackList(bitboardData, bitboardData.whiteQueens, ::queenAttacks)
     @JvmField
-    val whiteKnightPair = knightAttackList(bitboardData.whiteKnights)
+    val allWhiteKnightAttacks = knightAttackList(bitboardData.whiteKnights)
     @JvmField
     val blackRookPair = attackList(bitboardData, bitboardData.blackRooks, ::rookAttacks)
     @JvmField
@@ -25,7 +25,7 @@ class Attacks(bitboardData: BitboardData) {
     @JvmField
     val blackQueenPair = attackList(bitboardData, bitboardData.blackQueens, ::queenAttacks)
     @JvmField
-    val blackKnightPair = knightAttackList(bitboardData.blackKnights)
+    val allBlackKnightAttacks = knightAttackList(bitboardData.blackKnights)
 }
 
 fun whitePawnAttacks(whitePawns: Long) = whitePawns and FILE_A.inv() shl 9 or (whitePawns and FILE_H.inv() shl 7)
@@ -43,15 +43,12 @@ inline fun attackList(bitboards: BitboardData, squaresBitboard: Long, fn: (Bitbo
     return Pair(list, orred)
 }
 
-fun knightAttackList(squaresBitboard: Long): Pair<List<Long>, Long> {
+fun knightAttackList(squaresBitboard: Long): Long {
     var orred = 0L
-    val list = mutableListOf<Long>()
     applyToSquares(squaresBitboard) {
-        val attacksForSquare = knightMoves[it]
-        list.add(attacksForSquare)
-        orred = orred or attacksForSquare
+        orred = orred or knightMoves[it]
     }
-    return Pair(list, orred)
+    return orred
 }
 
 fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
@@ -74,13 +71,13 @@ fun whitePieceAttacks(attacks: Attacks) =
         attacks.whiteRookPair.second or
         attacks.whiteQueenPair.second or
         attacks.whiteBishopPair.second or
-        attacks.whiteKnightPair.second
+        attacks.allWhiteKnightAttacks
 
 fun blackPieceAttacks(attacks: Attacks) =
         attacks.blackRookPair.second or
         attacks.blackQueenPair.second or
         attacks.blackBishopPair.second or
-        attacks.blackKnightPair.second
+        attacks.allBlackKnightAttacks
 
 fun whiteAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
         (whitePieceAttacks(attacks) or attacks.whitePawns) and blackPieceBitboard(bitboards)

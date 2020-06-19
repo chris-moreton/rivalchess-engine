@@ -149,7 +149,11 @@ class MoveGenerator(
         }
     }
 
-    private fun generateQuiescePawnMoves(generateChecks: Boolean, bitboardMaskForwardPawnMoves: List<Long>, bitboardMaskCapturePawnMoves: List<Long>, enemyKingSquare: Int, pawnBitboard: Long) {
+    private fun generateQuiescePawnMoves(generateChecks: Boolean,
+                                         bitboardMaskForwardPawnMoves: LongArray,
+                                         bitboardMaskCapturePawnMoves: LongArray,
+                                         enemyKingSquare: Int,
+                                         pawnBitboard: Long) {
         var bitboardPawnMoves: Long
         applyToSquares(pawnBitboard) {
             bitboardPawnMoves = 0
@@ -198,8 +202,8 @@ class MoveGenerator(
 
     private fun generatePawnMoves(
             pawnBitboard: Long,
-            bitboardMaskForwardPawnMoves: List<Long>,
-            bitboardMaskCapturePawnMoves: List<Long>
+            bitboardMaskForwardPawnMoves: LongArray,
+            bitboardMaskCapturePawnMoves: LongArray
     ) {
         applyToSquares(pawnBitboard) {
             addPawnMoves(it shl 16, pawnForwardAndCaptureMovesBitboard(
@@ -216,17 +220,17 @@ class MoveGenerator(
     private fun potentialPawnJumpMoves(bitboardPawnMoves: Long) =
             if (mover == Colour.WHITE) (bitboardPawnMoves shl 8) and RANK_4 else (bitboardPawnMoves shr 8) and RANK_5
 
-    private fun pawnForwardAndCaptureMovesBitboard(bitRef: Int, bitboardMaskCapturePawnMoves: List<Long>, bitboardPawnMoves: Long) =
+    private fun pawnForwardAndCaptureMovesBitboard(bitRef: Int, bitboardMaskCapturePawnMoves: LongArray, bitboardPawnMoves: Long) =
             bitboardPawnMoves or if (bitboards[BITBOARD_ENPASSANTSQUARE] and enPassantCaptureRank(mover) != 0L)
                 pawnCapturesPlusEnPassantSquare(bitboardMaskCapturePawnMoves, bitRef)
             else
                 pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY)
 
-    private fun pawnCapturesPlusEnPassantSquare(bitboardMaskCapturePawnMoves: List<Long>, bitRef: Int) =
+    private fun pawnCapturesPlusEnPassantSquare(bitboardMaskCapturePawnMoves: LongArray, bitRef: Int) =
             pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY) or
                     pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENPASSANTSQUARE)
 
-    private fun pawnCaptures(bitboardMaskCapturePawnMoves: List<Long>, bitRef: Int, bitboardType: Int) =
+    private fun pawnCaptures(bitboardMaskCapturePawnMoves: LongArray, bitRef: Int, bitboardType: Int) =
             (bitboardMaskCapturePawnMoves[bitRef] and bitboards[bitboardType])
 
     private fun pawnBitboardForMover() = if (mover == Colour.WHITE) bitboards[BITBOARD_WP] else bitboards[BITBOARD_BP]

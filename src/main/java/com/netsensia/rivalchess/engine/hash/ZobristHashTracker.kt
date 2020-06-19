@@ -34,21 +34,21 @@ class ZobristHashTracker {
                 ZorbristHashCalculator.pieceHashValues[movedPiece][bitRef]
     }
 
+    private fun differentFiles(sq1: Int, sq2: Int) = sq1 % 8 != sq2 % 8
+
     private fun processPossibleWhitePawnEnPassantCapture(move: EngineMove, capturedPiece: Int) {
         val from = fromSquare(move.compact)
         val to = toSquare(move.compact)
-        if (xFile(from) != xFile(to) && capturedPiece == BITBOARD_NONE) {
-            val capturedPawnBitRef = to - 8
-            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][capturedPawnBitRef]
+        if (differentFiles(from, to) && capturedPiece == BITBOARD_NONE) {
+            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][to - 8]
         }
     }
 
     private fun processPossibleBlackPawnEnPassantCapture(move: EngineMove, capturedPiece: Int) {
         val from = fromSquare(move.compact)
         val to = toSquare(move.compact)
-        if (xFile(from) != xFile(to) && capturedPiece == BITBOARD_NONE) {
-            val capturedPawnBitRef = to + 8
-            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][capturedPawnBitRef]
+        if (differentFiles(from, to) && capturedPiece == BITBOARD_NONE) {
+            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][to + 8]
         }
     }
 

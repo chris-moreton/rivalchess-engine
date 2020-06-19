@@ -1,11 +1,9 @@
 package com.netsensia.rivalchess.engine.eval
 
-import java.util.*
-
 object PieceSquareTables {
 
     @JvmField
-    val pawn: List<Int> = Collections.unmodifiableList(listOf(
+    val pawn = intArrayOf(
             0, 0, 0, 0, 0, 0, 0, 0,
             -6, 4, 4, -15, -15, 4, 4, -6,
             -6, 4, 2, 5, 5, 2, 4, -6,
@@ -13,10 +11,10 @@ object PieceSquareTables {
             -5, 4, 10, 20, 20, 10, 4, -5,
             3, 12, 20, 28, 28, 20, 12, 3,
             8, 16, 24, 32, 32, 24, 16, 8,
-            0, 0, 0, 0, 0, 0, 0, 0))
+            0, 0, 0, 0, 0, 0, 0, 0)
 
     @JvmField
-    val pawnEndGame: List<Int> = Collections.unmodifiableList(listOf(
+    val pawnEndGame = intArrayOf(
             0, 0, 0, 0, 0, 0, 0, 0,
             -20, 0, 0, 0, 0, 0, 0, -20,
             -15, 5, 5, 5, 5, 5, 5, -15,
@@ -25,10 +23,10 @@ object PieceSquareTables {
             20, 30, 35, 35, 35, 35, 30, 20,
             25, 40, 45, 45, 45, 45, 40, 25,
             0, 0, 0, 0, 0, 0, 0, 0
-    ))
+    )
 
     @JvmField
-    val knight: List<Int> = Collections.unmodifiableList(listOf(
+    val knight = intArrayOf(
             -50, -40, -30, -20, -20, -30, -40, -50,
             -40, -30, -10, 0, 0, -10, -30, -40,
             -20, -10, 0, 0, 0, 0, -10, -20,
@@ -37,10 +35,10 @@ object PieceSquareTables {
             -20, 5, 7, 15, 15, 7, 5, -20,
             -40, -30, -10, 0, 0, -10, -30, -40,
             -50, -40, -30, -20, -20, -30, -40, -50
-    ))
+    )
 
     @JvmField
-    val knightEndGame: List<Int> = Collections.unmodifiableList(listOf(
+    val knightEndGame = intArrayOf(
             -50, -40, -30, -20, -20, -30, -40, -50,
             -40, -30, -10, -5, -5, -10, -30, -40,
             -30, -10, 0, 10, 10, 0, -10, -30,
@@ -49,10 +47,10 @@ object PieceSquareTables {
             -30, -10, 0, 10, 10, 0, -10, -30,
             -40, -30, -10, -5, -5, -10, -30, -40,
             -50, -40, -30, -20, -20, -30, -40, -50
-    ))
+    )
 
     @JvmField
-    val bishop: List<Int> = Collections.unmodifiableList(listOf(
+    val bishop = intArrayOf(
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 5, 2, 2, 2, 2, 5, 0,
             0, 3, 5, 5, 5, 5, 3, 0,
@@ -61,10 +59,10 @@ object PieceSquareTables {
             0, 2, 5, 5, 5, 5, 2, 0,
             0, 5, 2, 2, 2, 2, 5, 0,
             0, 0, 0, 0, 0, 0, 0, 0
-    ))
+    )
 
     @JvmField
-    val rook: List<Int> = Collections.unmodifiableList(listOf(
+    val rook = intArrayOf(
             0, 3, 5, 5, 5, 5, 3, 0,
             -3, 2, 5, 5, 5, 5, 2, -3,
             -2, 0, 0, 2, 2, 0, 0, -2,
@@ -73,10 +71,10 @@ object PieceSquareTables {
             0, 0, 0, 0, 0, 0, 0, 0,
             15, 20, 20, 20, 20, 20, 20, 15,
             0, 3, 5, 5, 5, 5, 3, 0
-    ))
+    )
 
     @JvmField
-    val queen: List<Int> = Collections.unmodifiableList(listOf(
+    val queen = intArrayOf(
             -10, -5, 0, 0, 0, 0, -5, -10,
             -5, 0, 5, 5, 5, 5, 0, -5,
             0, 5, 5, 6, 6, 5, 5, 0,
@@ -85,10 +83,10 @@ object PieceSquareTables {
             0, 5, 5, 6, 6, 5, 5, 0,
             -5, 0, 5, 5, 5, 5, 0, -5,
             -10, -5, 0, 0, 0, 0, -5, -10
-    ))
+    )
 
     @JvmField
-    val king: List<Int> = Collections.unmodifiableList(listOf(
+    val king = intArrayOf(
             24, 24, 9, 0, 0, 9, 24, 24,
             16, 14, 7, -3, -3, 7, 14, 16,
             4, -2, -5, -15, -15, -5, -2, 4,
@@ -97,10 +95,10 @@ object PieceSquareTables {
             -25, -35, -40, -45, -45, -40, -35, -25,
             -22, -35, -40, -40, -40, -40, -35, -22,
             -22, -35, -40, -40, -40, -40, -35, -22
-    ))
+    )
 
     @JvmField
-    val kingEndGame: List<Int> = Collections.unmodifiableList(listOf(
+    val kingEndGame = intArrayOf(
             0, 8, 16, 24, 24, 16, 8, 0,
             8, 16, 24, 32, 32, 24, 16, 8,
             16, 24, 32, 40, 40, 32, 24, 16,
@@ -109,5 +107,5 @@ object PieceSquareTables {
             16, 24, 32, 40, 40, 32, 24, 16,
             8, 16, 24, 32, 32, 24, 16, 8,
             0, 8, 16, 24, 24, 16, 8, 0
-    ))
+    )
 }

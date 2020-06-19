@@ -66,12 +66,12 @@ task createProperties(dependsOn: processResources) {
     }
 }
 
-compileJava {
-    // This only works when forking and passing 'javac' as an executable
-    options.compilerArgs << '-XDignore.symbol.file,XX:+UsePopCountInstruction'
-    options.fork = true
-    options.forkOptions.executable = 'javac'
-}
+//compileJava {
+//    // This only works when forking and passing 'javac' as an executable
+//    options.compilerArgs << '-XDignore.symbol.file,XX:+UsePopCountInstruction'
+//    options.fork = true
+//    options.forkOptions.executable = 'javac'
+//}
 
 compileKotlin {
     kotlinOptions {

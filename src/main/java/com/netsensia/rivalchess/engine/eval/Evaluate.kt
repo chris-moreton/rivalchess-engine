@@ -113,7 +113,7 @@ fun doubledRooksEval(squares: List<Int>) =
             if (squares.size > 2 && (sameFile(squares[0], squares[2]) || sameFile(squares[1], squares[2])))
                 VALUE_ROOKS_ON_SAME_FILE else 0
 
-fun flippedSquareTableScore(table: List<Int>, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
+fun flippedSquareTableScore(table: IntArray, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
 fun kingAttackCount(dangerZone: Long, attacks: List<Long>) = attacks.map { bitCount(it and dangerZone) }.fold(0) { acc, i -> acc + i }
 
 fun tradePieceBonusWhenMoreMaterial(bitboards: BitboardData, materialDifference: Int) =

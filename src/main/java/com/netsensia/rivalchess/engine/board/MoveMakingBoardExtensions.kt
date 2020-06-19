@@ -79,10 +79,10 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     if (updateHash) boardHashObject.unMove(this)
 
     // deal with en passants first, they are special moves and capture moves, so just get them out of the way
-    if (!unMakeEnPassants(toSquare, fromMask, toMask)) {
+    if (!unMakeEnPassants(fromMask, toMask)) {
 
         // put capture piece back on toSquare, we don't get here if an en passant has just been unmade
-        replaceCapturedPiece(toSquare, toMask)
+        replaceCapturedPiece(toMask)
 
         // for promotions, remove promotion piece from toSquare
         if (!removePromotionPiece(fromMask, toMask)) {
@@ -97,7 +97,7 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     calculateSupplementaryBitboards()
 }
 
-private fun EngineBoard.unMakeEnPassants(toSquare: Int, fromMask: Long, toMask: Long): Boolean {
+private fun EngineBoard.unMakeEnPassants(fromMask: Long, toMask: Long): Boolean {
     if (toMask == moveHistory[numMovesMade]!!.enPassantBitboard) {
         if (moveHistory[numMovesMade]!!.movePiece == BITBOARD_WP) {
             this.engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask or fromMask)
@@ -128,7 +128,7 @@ private fun EngineBoard.replaceCastledRook(fromMask: Long, toMask: Long, movePie
     }
 }
 
-private fun EngineBoard.replaceCapturedPiece(toSquare: Int, toMask: Long) {
+private fun EngineBoard.replaceCapturedPiece(toMask: Long) {
     val capturePiece = moveHistory[numMovesMade]!!.capturePiece
     if (capturePiece != BITBOARD_NONE) {
         this.engineBitboards.xorPieceBitboard(capturePiece, toMask)
