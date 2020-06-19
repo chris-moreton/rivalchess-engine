@@ -1,8 +1,7 @@
 package com.netsensia.rivalchess.engine.board
 
 import com.netsensia.rivalchess.bitboards.*
-import com.netsensia.rivalchess.config.DEFAULT_HASHTABLE_SIZE_MB
-import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
+import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.engine.hash.BoardHash
@@ -19,7 +18,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val boardHashObject = BoardHash()
 
     @JvmField
-    var moveHistory = arrayOfNulls<MoveDetail>(MAX_SEARCH_DEPTH)
+    var moveHistory = arrayOfNulls<MoveDetail>(MAX_HALFMOVES_IN_GAME)
 
     @JvmField
     var numMovesMade = 0

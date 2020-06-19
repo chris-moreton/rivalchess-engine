@@ -8,8 +8,10 @@ import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.model.util.FenUtils;
 
+import static com.netsensia.rivalchess.config.LimitKt.MAX_SEARCH_DEPTH;
 import static com.netsensia.rivalchess.config.LimitKt.MAX_SEARCH_MILLIS;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getSimpleAlgebraicMoveFromCompactMove;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
@@ -38,15 +40,15 @@ public class SearchTest {
 
     @Test
     public void testBestMoves() throws IllegalFenException, InterruptedException {
-
-        assertBestMove("k7/5RP1/1P6/1K6/6r1/8/8/8 b - -", "g4g2", -1459);
-        assertBestMove("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", "f7e6", -86);
-        assertBestMove("8/3K4/2p5/p2b2r1/5k2/8/8/1q6 b - - 1 67", "b1b7", 9996);
-        assertBestMove("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", "g2h1q", 1238);
-        assertBestMove("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", "e5d4", 185);
-        assertBestMove("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", "b1c3", 55);
-        assertBestMove("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", "b4f4", 80);
-        assertBestMove("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", "e2a6", 24);
+        assertBestMove("8/4k3/8/8/2p2P2/8/2P5/5K2 b - - 0 1", "e7e6", -1213, MAX_SEARCH_DEPTH - 2, 2000);
+        assertBestMove("k7/5RP1/1P6/1K6/6r1/8/8/8 b - -", "g4g2", -1459, 4, MAX_SEARCH_MILLIS);
+        assertBestMove("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", "f7e6", -86, 4, MAX_SEARCH_MILLIS);
+        assertBestMove("8/3K4/2p5/p2b2r1/5k2/8/8/1q6 b - - 1 67", "b1b7", 9996, 4, MAX_SEARCH_MILLIS);
+        assertBestMove("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", "g2h1q", 1238, 4, MAX_SEARCH_MILLIS);
+        assertBestMove("8/7p/p5pb/4k3/P1pPn3/8/P5PP/1rB2RK1 b - d3 0 28", "e5d4", 185, 4, MAX_SEARCH_MILLIS);
+        assertBestMove("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", "b1c3", 55, 4, MAX_SEARCH_MILLIS);
+        assertBestMove("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", "b4f4", 80, 4, MAX_SEARCH_MILLIS);
+        assertBestMove("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", "e2a6", 24, 4, MAX_SEARCH_MILLIS);
     }
 
     @Test
@@ -83,7 +85,7 @@ public class SearchTest {
 
     }
 
-    private void assertBestMove(String fen, String expectedMove, int expectedScore) throws IllegalFenException, InterruptedException {
+    private void assertBestMove(String fen, String expectedMove, int expectedScore, int searchDepth, int searchMillis) throws IllegalFenException, InterruptedException {
 
         Search search = new Search();
 
@@ -92,13 +94,14 @@ public class SearchTest {
         new Thread(search).start();
 
         search.setBoard(board);
-        search.setSearchDepth(4);
-        search.setMillisToThink(MAX_SEARCH_MILLIS);
+        search.setSearchDepth(searchDepth);
+        search.setMillisToThink(searchMillis);
+        search.setNodesToSearch(5000000);
         search.startSearch();
 
-        SECONDS.sleep(1);
+        MILLISECONDS.sleep(200);
 
-        await().atMost(30, SECONDS).until(() -> !search.isSearching());
+        await().atMost(10, SECONDS).until(() -> !search.isSearching());
 
         assertEquals(expectedMove, getSimpleAlgebraicMoveFromCompactMove(search.getCurrentMove()));
         assertEquals(expectedScore, search.getCurrentScore());
