@@ -10,12 +10,12 @@ The Rival chess Java engine libraries used in the Rival Chess Android App.
     <dependency>
         <groupId>com.netsensia.rivalchess</groupId>
         <artifactId>rivalchess-engine</artifactId>
-        <version>13.0.3</version>
+        <version>14.0.0</version>
     </dependency>
     
 #### Gradle
 
-    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '13.0.3'
+    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '14.0.0'
     
 ### Testing
     
