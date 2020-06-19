@@ -18,7 +18,7 @@ public class SearchHashTest extends TestCase {
 
     public void testIsHeightHashTableEntryValid() throws InvalidMoveException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
-        final com.netsensia.rivalchess.engine.hash.BoardHash boardHash = engineBoard.getBoardHashObject();
+        final com.netsensia.rivalchess.engine.hash.BoardHash boardHash = engineBoard.boardHashObject;
 
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("e2e4"), false, true);
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("e7e5"), false, true);
@@ -40,11 +40,11 @@ public class SearchHashTest extends TestCase {
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b8c6"), false, true);
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("g1f3"), false, true);
 
-        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
+        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
 
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("g8f6"), false, true);
 
-        assertTrue(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
+        assertTrue(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
 
         // gets correct move from use height hash table
         assertEquals(ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
@@ -57,7 +57,7 @@ public class SearchHashTest extends TestCase {
                         boardHash.getHashIndex(engineBoard) + HASHENTRY_MOVE));
 
         // entry does not have enough height
-        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(5, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
+        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(5, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
 
         // try to store another move with lower height
         boardHash.storeHashMove(
@@ -91,12 +91,12 @@ public class SearchHashTest extends TestCase {
 
         for (int i = 0; i < MAXIMUM_HASH_AGE; i++) {
             boardHash.incVersion();
-            assertTrue(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
+            assertTrue(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
         }
 
         boardHash.incVersion();
         // Hash table is too old
-        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.getBoardHashObject().getHashIndex(engineBoard)));
+        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
 
     }
 }

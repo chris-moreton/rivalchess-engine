@@ -12,17 +12,23 @@ import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import java.lang.Long.bitCount
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
+    @JvmField
     val engineBitboards = EngineBitboards()
 
+    @JvmField
     val boardHashObject = BoardHash()
 
+    @JvmField
     var moveHistory = arrayOfNulls<MoveDetail>(MAX_SEARCH_DEPTH)
 
     var numMovesMade = 0
     var halfMoveCount = 0
 
     var castlePrivileges = 0
+
+    @JvmField
     var whiteKingSquare = 0
+    @JvmField
     var blackKingSquare = 0
 
     var isOnNullMove = false
@@ -30,7 +36,8 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
-    lateinit var mover: Colour
+    @JvmField
+    var mover = Colour.WHITE
 
     val whitePieceValues: Int
         get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +

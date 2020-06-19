@@ -8,7 +8,6 @@ import com.netsensia.rivalchess.engine.hash.ZorbristHashCalculator.whiteMoverHas
 import com.netsensia.rivalchess.engine.search.*
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.engine.type.MoveDetail
-import com.netsensia.rivalchess.model.SquareOccupant
 
 class ZobristHashTracker {
     @JvmField

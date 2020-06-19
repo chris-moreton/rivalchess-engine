@@ -53,7 +53,7 @@ class EngineBitboards() {
     fun movePiece(piece: Int, compactMove: Int) {
         val fromMask = (1L shl (compactMove ushr 16))
         val toMask = (1L shl (compactMove and 63))
-        pieceBitboards[piece] = pieceBitboards[piece] xor (fromMask or toMask)
+        xorPieceBitboard(piece, (fromMask or toMask))
     }
 
     private fun getRookMovePiecesBitboard(colour: Colour) =
