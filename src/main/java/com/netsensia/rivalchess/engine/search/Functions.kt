@@ -2,8 +2,6 @@ package com.netsensia.rivalchess.engine.search
 
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
-import com.netsensia.rivalchess.model.Move
-import com.netsensia.rivalchess.model.SquareOccupant
 
 fun moveNoScore(move: Int) = move and 0x00FFFFFF
 

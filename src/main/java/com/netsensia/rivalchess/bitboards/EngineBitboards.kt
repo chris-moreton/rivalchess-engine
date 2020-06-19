@@ -3,7 +3,6 @@ package com.netsensia.rivalchess.bitboards
 import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.SquareOccupant
 import java.util.*
 
 class EngineBitboards() {
@@ -66,9 +65,13 @@ class EngineBitboards() {
             pieceBitboards[BITBOARD_BB] or pieceBitboards[BITBOARD_BQ]
 
     fun isSquareAttackedBy(attackedSquare: Int, attacker: Colour): Boolean {
-        if (pieceBitboards[SquareOccupant.WN.ofColour(attacker).index] and knightMoves[attackedSquare] != 0L ||
-                pieceBitboards[SquareOccupant.WK.ofColour(attacker).index] and kingMoves[attackedSquare] != 0L ||
-                (pieceBitboards[SquareOccupant.WP.ofColour(attacker).index]
+        val knights = if (attacker == Colour.WHITE) BITBOARD_WN else BITBOARD_BN
+        val kings = if (attacker == Colour.WHITE) BITBOARD_WK else BITBOARD_BK
+        val pawns = if (attacker == Colour.WHITE) BITBOARD_WP else BITBOARD_BP
+
+        if (pieceBitboards[knights] and knightMoves[attackedSquare] != 0L ||
+                pieceBitboards[kings] and kingMoves[attackedSquare] != 0L ||
+                (pieceBitboards[pawns]
                         and getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L) return true
 
         applyToSquares(getBishopMovePiecesBitboard(attacker)) {

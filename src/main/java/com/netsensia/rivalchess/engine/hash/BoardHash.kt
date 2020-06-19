@@ -5,7 +5,6 @@ import com.netsensia.rivalchess.config.DEFAULT_SEARCH_HASH_HEIGHT
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.type.EngineMove
-import com.netsensia.rivalchess.model.SquareOccupant
 
 class BoardHash {
 
@@ -109,7 +108,7 @@ class BoardHash {
     }
 
     fun unMove(engineBoard: EngineBoard) {
-        hashTracker.unMakeMove(engineBoard.lastMoveMade)
+        hashTracker.unMakeMove(engineBoard.lastMoveMade!!)
     }
 
     fun makeNullMove() {

@@ -12,8 +12,6 @@ import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
-import com.netsensia.rivalchess.model.Square
-import com.netsensia.rivalchess.model.SquareOccupant
 
 fun EngineBoard.onlyKingsRemain() =
     onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_ENEMY]) &&
@@ -25,16 +23,16 @@ fun EngineBoard.isCapture(move: Int): Boolean {
     val toSquare = move and 63
     return !isSquareEmpty(toSquare) ||
             (1L shl toSquare and this.engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE] != 0L &&
-            getBitboardTypeOfSquareOccupant(move ushr 16 and 63, mover) in intArrayOf(BITBOARD_WP, BITBOARD_BP))
+            getBitboardTypeOfPieceOnSquare(move ushr 16 and 63, mover) in intArrayOf(BITBOARD_WP, BITBOARD_BP))
 }
 
-fun EngineBoard.getPiece(bitRef: Int) = when (getSquareOccupant(bitRef)) {
-        SquareOccupant.WP, SquareOccupant.BP -> Piece.PAWN
-        SquareOccupant.WB, SquareOccupant.BB -> Piece.BISHOP
-        SquareOccupant.WN, SquareOccupant.BN -> Piece.KNIGHT
-        SquareOccupant.WR, SquareOccupant.BR -> Piece.ROOK
-        SquareOccupant.WQ, SquareOccupant.BQ -> Piece.QUEEN
-        SquareOccupant.WK, SquareOccupant.BK -> Piece.KING
+fun EngineBoard.getPiece(bitRef: Int) = when (getPieceIndex(bitRef)) {
+        BITBOARD_WP, BITBOARD_BP -> Piece.PAWN
+        BITBOARD_WB, BITBOARD_BB -> Piece.BISHOP
+        BITBOARD_WN, BITBOARD_BN -> Piece.KNIGHT
+        BITBOARD_WR, BITBOARD_BR -> Piece.ROOK
+        BITBOARD_WQ, BITBOARD_BQ -> Piece.QUEEN
+        BITBOARD_WK, BITBOARD_BK -> Piece.KING
         else -> Piece.NONE
     }
 
@@ -75,7 +73,7 @@ fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
 fun EngineBoard.getCharBoard(): CharArray {
         val board = CharArray(64){'0'}
         val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
-        for (i in SquareOccupant.WP.index..SquareOccupant.BR.index) {
+        for (i in BITBOARD_WP..BITBOARD_BR) {
             val bitsSet = squareList(this.engineBitboards.pieceBitboards[i])
             for (bitSet in bitsSet) {
                 board[bitSet] = pieces[i]

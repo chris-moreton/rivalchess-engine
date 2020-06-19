@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.type
 
-import com.netsensia.rivalchess.consts.PROMOTION_PIECE_TOSQUARE_MASK_FULL
 import com.netsensia.rivalchess.consts.promotionMask
 import com.netsensia.rivalchess.model.Move
 import com.netsensia.rivalchess.model.SquareOccupant

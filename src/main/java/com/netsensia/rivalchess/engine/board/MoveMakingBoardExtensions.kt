@@ -7,7 +7,6 @@ import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
-import com.netsensia.rivalchess.model.SquareOccupant
 
 fun EngineBoard.makeNullMove() {
     boardHashObject.makeNullMove()
@@ -28,8 +27,8 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
     val compactMove = engineMove.compact
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
-    val capturePiece = getBitboardTypeOfSquareOccupant(moveTo, mover.opponent())
-    val movePiece = getBitboardTypeOfSquareOccupant(moveFrom, mover)
+    val capturePiece = getBitboardTypeOfPieceOnSquare(moveTo, mover.opponent())
+    val movePiece = getBitboardTypeOfPieceOnSquare(moveFrom, mover)
 
     val moveDetail = MoveDetail()
     moveDetail.capturePiece = BITBOARD_NONE
@@ -41,7 +40,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
     moveDetail.castlePrivileges = castlePrivileges.toByte()
     moveDetail.movePiece = movePiece
 
-    if (moveHistory.size <= numMovesMade) moveHistory.add(moveDetail) else moveHistory[numMovesMade] = moveDetail
+    moveHistory[numMovesMade] = moveDetail
 
     isOnNullMove = false
     halfMoveCount++
@@ -50,9 +49,8 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
 
     makeNonTrivialMoveTypeAdjustments(moveFrom, moveTo, compactMove, capturePiece, movePiece)
 
-    mover = mover.opponent()
-
     numMovesMade++
+    mover = mover.opponent()
 
     calculateSupplementaryBitboards()
 
@@ -69,13 +67,13 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
 @Throws(InvalidMoveException::class)
 fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     numMovesMade--
-    halfMoveCount = moveHistory[numMovesMade].halfMoveCount.toInt()
+    halfMoveCount = moveHistory[numMovesMade]!!.halfMoveCount.toInt()
     mover = mover.opponent()
-    engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveHistory[numMovesMade].enPassantBitboard)
-    castlePrivileges = moveHistory[numMovesMade].castlePrivileges.toInt()
-    isOnNullMove = moveHistory[numMovesMade].isOnNullMove
-    val fromSquare = moveHistory[numMovesMade].move ushr 16 and 63
-    val toSquare = moveHistory[numMovesMade].move and 63
+    engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveHistory[numMovesMade]!!.enPassantBitboard)
+    castlePrivileges = moveHistory[numMovesMade]!!.castlePrivileges.toInt()
+    isOnNullMove = moveHistory[numMovesMade]!!.isOnNullMove
+    val fromSquare = moveHistory[numMovesMade]!!.move ushr 16 and 63
+    val toSquare = moveHistory[numMovesMade]!!.move and 63
     val fromMask = 1L shl fromSquare
     val toMask = 1L shl toSquare
     if (updateHash) boardHashObject.unMove(this)
@@ -100,12 +98,12 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
 }
 
 private fun EngineBoard.unMakeEnPassants(toSquare: Int, fromMask: Long, toMask: Long): Boolean {
-    if (toMask == moveHistory[numMovesMade].enPassantBitboard) {
-        if (moveHistory[numMovesMade].movePiece == BITBOARD_WP) {
+    if (toMask == moveHistory[numMovesMade]!!.enPassantBitboard) {
+        if (moveHistory[numMovesMade]!!.movePiece == BITBOARD_WP) {
             this.engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask or fromMask)
             this.engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask ushr 8)
             return true
-        } else if (moveHistory[numMovesMade].movePiece == BITBOARD_BP) {
+        } else if (moveHistory[numMovesMade]!!.movePiece == BITBOARD_BP) {
             this.engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask or fromMask)
             this.engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask shl 8)
             return true
@@ -131,7 +129,7 @@ private fun EngineBoard.replaceCastledRook(fromMask: Long, toMask: Long, movePie
 }
 
 private fun EngineBoard.replaceCapturedPiece(toSquare: Int, toMask: Long) {
-    val capturePiece = moveHistory[numMovesMade].capturePiece
+    val capturePiece = moveHistory[numMovesMade]!!.capturePiece
     if (capturePiece != BITBOARD_NONE) {
         this.engineBitboards.xorPieceBitboard(capturePiece, toMask)
     }
@@ -139,7 +137,7 @@ private fun EngineBoard.replaceCapturedPiece(toSquare: Int, toMask: Long) {
 
 @Throws(InvalidMoveException::class)
 private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Boolean {
-    val promotionPiece = moveHistory[numMovesMade].move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
+    val promotionPiece = moveHistory[numMovesMade]!!.move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     if (promotionPiece != 0) {
         if (mover == Colour.WHITE) {
             this.engineBitboards.xorPieceBitboard(BITBOARD_WP, fromMask)
@@ -166,7 +164,7 @@ private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Bool
 }
 
 private fun EngineBoard.replaceMovedPiece(fromSquare: Int, fromMask: Long, toMask: Long): Int {
-    val movePiece = moveHistory[numMovesMade].movePiece
+    val movePiece = moveHistory[numMovesMade]!!.movePiece
     engineBitboards.xorPieceBitboard(movePiece, toMask or fromMask)
     if (movePiece == BITBOARD_WK) whiteKingSquare = fromSquare else
         if (movePiece == BITBOARD_BK) blackKingSquare = fromSquare
@@ -191,7 +189,7 @@ private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Int, moveTo:
 private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece: Int, moveTo: Int) {
     val toMask = 1L shl moveTo
 
-    moveHistory[numMovesMade].capturePiece = capturePiece
+    moveHistory[numMovesMade]!!.capturePiece = capturePiece
     halfMoveCount = 0
     this.engineBitboards.xorPieceBitboard(capturePiece, toMask)
     if (capturePiece == BITBOARD_WR) {
@@ -231,9 +229,9 @@ private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
     halfMoveCount = 0
     if (toMask and RANK_5 != 0L && fromMask and RANK_7 != 0L) {
         this.engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toMask shl 8)
-    } else if (toMask == moveHistory[numMovesMade].enPassantBitboard) {
+    } else if (toMask == moveHistory[numMovesMade]!!.enPassantBitboard) {
         this.engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask shl 8)
-        moveHistory[numMovesMade].capturePiece = BITBOARD_WP
+        moveHistory[numMovesMade]!!.capturePiece = BITBOARD_WP
     } else if (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL != 0) {
         val promotionPieceMask = compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL
         when (promotionPieceMask) {
@@ -257,7 +255,7 @@ private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
 
 private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece: Int, moveTo: Int) {
     val toMask = 1L shl moveTo
-    moveHistory[numMovesMade].capturePiece = capturePiece
+    moveHistory[numMovesMade]!!.capturePiece = capturePiece
     halfMoveCount = 0
     this.engineBitboards.xorPieceBitboard(capturePiece, toMask)
     if (capturePiece == BITBOARD_BR) {
@@ -300,9 +298,9 @@ private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
     halfMoveCount = 0
     if (toMask and RANK_4 != 0L && fromMask and RANK_2 != 0L) {
         this.engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, fromMask shl 8)
-    } else if (toMask == moveHistory[numMovesMade].enPassantBitboard) {
-        this.engineBitboards.xorPieceBitboard(SquareOccupant.BP.index, toMask ushr 8)
-        moveHistory[numMovesMade].capturePiece = BITBOARD_BP
+    } else if (toMask == moveHistory[numMovesMade]!!.enPassantBitboard) {
+        this.engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask ushr 8)
+        moveHistory[numMovesMade]!!.capturePiece = BITBOARD_BP
     } else if (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL != 0) {
         when (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
             PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
@@ -317,8 +315,7 @@ private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
             PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
                 this.engineBitboards.orPieceBitboard(BITBOARD_WB, toMask)
             }
-            else -> throw InvalidMoveException(
-                    "compactMove $compactMove produced invalid promotion piece")
+            else -> throw InvalidMoveException("compactMove $compactMove produced invalid promotion piece")
         }
         this.engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask)
     }

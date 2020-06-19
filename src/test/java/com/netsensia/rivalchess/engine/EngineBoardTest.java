@@ -2,9 +2,7 @@ package com.netsensia.rivalchess.engine;
 
 import com.netsensia.rivalchess.consts.BitboardsKt;
 import com.netsensia.rivalchess.engine.board.EngineBoard;
-import com.netsensia.rivalchess.engine.board.EngineBoard;
 import com.netsensia.rivalchess.model.Piece;
-import com.netsensia.rivalchess.model.SquareOccupant;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.util.FenUtils;
@@ -15,8 +13,16 @@ import com.netsensia.rivalchess.openings.OpeningLibrary;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_BK;
+import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_BQ;
+import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_NONE;
+import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WK;
+import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WQ;
 import static com.netsensia.rivalchess.engine.board.MoveMakingBoardExtensionsKt.makeMove;
-import static com.netsensia.rivalchess.engine.eval.PieceValueKt.pieceValue;
+import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_BISHOP;
+import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_KNIGHT;
+import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_QUEEN;
+import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_ROOK;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -111,12 +117,12 @@ public class EngineBoardTest {
     public void getSquareOccupant() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
-        assertEquals(SquareOccupant.WK, engineBoard.getSquareOccupant(3));
-        assertEquals(SquareOccupant.WQ, engineBoard.getSquareOccupant(4));
-        assertEquals(SquareOccupant.BQ, engineBoard.getSquareOccupant(60));
-        assertEquals(SquareOccupant.BK, engineBoard.getSquareOccupant(59));
+        assertEquals(BITBOARD_WK, engineBoard.getPieceIndex(3));
+        assertEquals(BITBOARD_WQ, engineBoard.getPieceIndex(4));
+        assertEquals(BITBOARD_BQ, engineBoard.getPieceIndex(60));
+        assertEquals(BITBOARD_BK, engineBoard.getPieceIndex(59));
 
-        assertEquals(SquareOccupant.NONE, engineBoard.getSquareOccupant(32));
+        assertEquals(BITBOARD_NONE, engineBoard.getPieceIndex(32));
 
     }
 
@@ -167,10 +173,10 @@ public class EngineBoardTest {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         Assert.assertEquals(
-                pieceValue(Piece.QUEEN)
-                + pieceValue(Piece.KNIGHT) * 2
-                + pieceValue(Piece.BISHOP) * 2
-                + pieceValue(Piece.ROOK) * 2,
+                VALUE_QUEEN,
+                + VALUE_KNIGHT * 2
+                + VALUE_BISHOP * 2
+                + VALUE_ROOK * 2,
                 engineBoard.getWhitePieceValues());
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4"), false, true);
@@ -181,10 +187,10 @@ public class EngineBoardTest {
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5"), false, true);
 
         Assert.assertEquals(
-                pieceValue(Piece.QUEEN)
-                        + pieceValue(Piece.KNIGHT)
-                        + pieceValue(Piece.BISHOP) * 2
-                        + pieceValue(Piece.ROOK) * 2,
+                VALUE_QUEEN
+                        + VALUE_KNIGHT
+                        + VALUE_BISHOP * 2
+                        + VALUE_ROOK * 2,
                 engineBoard.getWhitePieceValues());
 
     }
@@ -194,10 +200,10 @@ public class EngineBoardTest {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         Assert.assertEquals(
-                pieceValue(Piece.QUEEN)
-                        + pieceValue(Piece.KNIGHT) * 2
-                        + pieceValue(Piece.BISHOP) * 2
-                        + pieceValue(Piece.ROOK) * 2,
+                VALUE_QUEEN
+                        + VALUE_KNIGHT * 2
+                        + VALUE_BISHOP * 2
+                        + VALUE_ROOK * 2,
                 engineBoard.getBlackPieceValues());
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4"), false, true);
@@ -208,10 +214,10 @@ public class EngineBoardTest {
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5"), false, true);
 
         Assert.assertEquals(
-                pieceValue(Piece.QUEEN)
-                        + pieceValue(Piece.KNIGHT) * 2
-                        + pieceValue(Piece.BISHOP) * 2
-                        + pieceValue(Piece.ROOK) * 2,
+                VALUE_QUEEN
+                        + VALUE_KNIGHT * 2
+                        + VALUE_BISHOP * 2
+                        + VALUE_ROOK * 2,
                 engineBoard.getBlackPieceValues());
 
     }

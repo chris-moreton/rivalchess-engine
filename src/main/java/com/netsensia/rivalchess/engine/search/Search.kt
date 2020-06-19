@@ -8,10 +8,7 @@ import com.netsensia.rivalchess.consts.BITBOARD_ENEMY
 import com.netsensia.rivalchess.consts.BITBOARD_ENPASSANTSQUARE
 import com.netsensia.rivalchess.consts.FEN_START_POS
 import com.netsensia.rivalchess.engine.board.*
-import com.netsensia.rivalchess.engine.eval.PieceSquareTables
-import com.netsensia.rivalchess.engine.eval.evaluate
-import com.netsensia.rivalchess.engine.eval.linearScale
-import com.netsensia.rivalchess.engine.eval.pieceValue
+import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluatorSeeBoard
 import com.netsensia.rivalchess.engine.hash.isAlwaysReplaceHashTableEntryValid
@@ -21,8 +18,6 @@ import com.netsensia.rivalchess.enums.*
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.Piece
-import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
@@ -222,8 +217,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             val move = it
             val recaptureExtensionResponse =
                     recaptureExtensions(extensions,
-                            board.getBitboardTypeOfSquareOccupant(toSquare(move), board.mover.opponent()),
-                            board.getBitboardTypeOfSquareOccupant(fromSquare(move), board.mover), board, move, recaptureSquare)
+                            board.getBitboardTypeOfPieceOnSquare(toSquare(move), board.mover.opponent()),
+                            board.getBitboardTypeOfPieceOnSquare(fromSquare(move), board.mover), board, move, recaptureSquare)
 
             if (board.makeMove(EngineMove(move))) {
 
@@ -298,7 +293,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 }
                 if (toSquare(move) == recaptureSquare) {
                     if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
-                    if (abs(currentSEEValue) > getPieceValue(board.getSquareOccupant(recaptureSquare)) - RECAPTURE_EXTENSION_MARGIN) {
+                    if (abs(currentSEEValue) > getPieceValue(board.getPieceIndex(recaptureSquare)) - RECAPTURE_EXTENSION_MARGIN) {
                         recaptureExtend = 1
                     }
                 }
@@ -647,7 +642,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun adjustedSee(see: Int) = if (see > -Int.MAX_VALUE) (see.toDouble() / pieceValue(Piece.QUEEN) * 10).toInt() else see
+    private fun adjustedSee(see: Int) = if (see > -Int.MAX_VALUE) (see.toDouble() / VALUE_QUEEN * 10).toInt() else see
 
     @Throws(InvalidMoveException::class)
     private fun scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
@@ -662,9 +657,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun scoreMove(ply: Int, i: Int, board: EngineBoard): Int {
         var score = 0
         val toSquare = toSquare(orderedMoves[ply][i])
-        val isCapture = board.getSquareOccupant(toSquare, mover.opponent()) != SquareOccupant.NONE ||
+        val isCapture = board.getPieceIndex(toSquare) != BITBOARD_NONE ||
                 (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
-                        board.getSquareOccupant(fromSquare(orderedMoves[ply][i]), mover).piece == Piece.PAWN)
+                        board.getPieceIndex(fromSquare(orderedMoves[ply][i])) in arrayOf(BITBOARD_WP, BITBOARD_BP))
 
         orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
         if (orderedMoves[ply][i] == mateKiller[ply]) {
@@ -723,7 +718,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val historyScore = scoreHistoryHeuristic(board, killerScore, fromSquare, toSquare)
 
                 val finalScore = if (historyScore == 0)
-                    (if (board.getSquareOccupant(toSquare) != SquareOccupant.NONE) 1 // losing capture
+                    (if (board.getPieceIndex(toSquare) != BITBOARD_NONE) 1 // losing capture
                     else 50 + scorePieceSquareValues(
                             board,
                             if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare],
@@ -737,25 +732,25 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int) =
-            when (board.getSquareOccupant(fromSquare).piece) {
-                Piece.PAWN -> linearScale(
+            when (board.getPieceIndex(fromSquare)) {
+                BITBOARD_WP, BITBOARD_BP -> linearScale(
                         if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
                         PAWN_STAGE_MATERIAL_LOW,
                         PAWN_STAGE_MATERIAL_HIGH,
                         PieceSquareTables.pawnEndGame[toSquare] - PieceSquareTables.pawnEndGame[fromSquare],
                         PieceSquareTables.pawn[toSquare] - PieceSquareTables.pawn[fromSquare])
-                Piece.KNIGHT -> linearScale(
+                BITBOARD_WN, BITBOARD_BN -> linearScale(
                         if (board.mover == Colour.WHITE) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
                         KNIGHT_STAGE_MATERIAL_LOW,
                         KNIGHT_STAGE_MATERIAL_HIGH,
                         PieceSquareTables.knightEndGame[toSquare] - PieceSquareTables.knightEndGame[fromSquare],
                         PieceSquareTables.knight[toSquare] - PieceSquareTables.knight[fromSquare])
-                Piece.BISHOP -> PieceSquareTables.bishop[toSquare] - PieceSquareTables.bishop[fromSquare]
-                Piece.ROOK -> PieceSquareTables.rook[toSquare] - PieceSquareTables.rook[fromSquare]
-                Piece.QUEEN -> PieceSquareTables.queen[toSquare] - PieceSquareTables.queen[fromSquare]
-                Piece.KING -> linearScale(
+                BITBOARD_WB, BITBOARD_BB -> PieceSquareTables.bishop[toSquare] - PieceSquareTables.bishop[fromSquare]
+                BITBOARD_WR, BITBOARD_BR -> PieceSquareTables.rook[toSquare] - PieceSquareTables.rook[fromSquare]
+                BITBOARD_WQ, BITBOARD_BQ -> PieceSquareTables.queen[toSquare] - PieceSquareTables.queen[fromSquare]
+                BITBOARD_WK, BITBOARD_BK -> linearScale(
                         if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
-                        pieceValue(Piece.ROOK),
+                        VALUE_ROOK,
                         OPENING_PHASE_MATERIAL,
                         PieceSquareTables.kingEndGame[toSquare] - PieceSquareTables.kingEndGame[fromSquare],
                         PieceSquareTables.king[toSquare] - PieceSquareTables.king[fromSquare])

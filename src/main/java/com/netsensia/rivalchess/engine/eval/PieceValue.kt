@@ -10,26 +10,14 @@ const val VALUE_ROOK = 595
 const val VALUE_KING = 30000
 const val VALUE_QUEEN = 1175
 
-fun pieceValue(piece: Piece): Int {
-    return when (piece) {
-        Piece.PAWN -> VALUE_PAWN
-        Piece.KNIGHT -> VALUE_KNIGHT
-        Piece.BISHOP -> VALUE_BISHOP
-        Piece.ROOK -> VALUE_ROOK
-        Piece.KING -> VALUE_KING
-        Piece.QUEEN -> VALUE_QUEEN
-        Piece.NONE -> 0
-    }
-}
-
 fun pieceValue(bitboardType: Int): Int {
     return when (bitboardType) {
-        BITBOARD_WP, BITBOARD_BP -> 100
-        BITBOARD_WN, BITBOARD_BN -> 390
-        BITBOARD_WB, BITBOARD_BB -> 390
-        BITBOARD_WR, BITBOARD_BR -> 595
-        BITBOARD_WK, BITBOARD_BK -> 30000
-        BITBOARD_WQ, BITBOARD_BQ -> 1175
+        BITBOARD_WP, BITBOARD_BP -> VALUE_PAWN
+        BITBOARD_WN, BITBOARD_BN -> VALUE_KNIGHT
+        BITBOARD_WB, BITBOARD_BB -> VALUE_BISHOP
+        BITBOARD_WR, BITBOARD_BR -> VALUE_ROOK
+        BITBOARD_WK, BITBOARD_BK -> VALUE_KING
+        BITBOARD_WQ, BITBOARD_BQ -> VALUE_QUEEN
         else -> 0
     }
 }

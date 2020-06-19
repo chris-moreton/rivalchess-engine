@@ -172,8 +172,8 @@ class SeeBoard(board: EngineBoard) {
     private fun bishopCaptures(square: Int, moves: IntArray, allBitboard: Long, friendlyBitboard: Long) {
         generateSliderMoves(
                 if (mover == Colour.WHITE)
-                    bitboards.pieceBitboards[SquareOccupant.WB.index] or bitboards.pieceBitboards[BITBOARD_WQ] else
-                    bitboards.pieceBitboards[SquareOccupant.BB.index] or bitboards.pieceBitboards[BITBOARD_BQ],
+                    bitboards.pieceBitboards[BITBOARD_WB] or bitboards.pieceBitboards[BITBOARD_WQ] else
+                    bitboards.pieceBitboards[BITBOARD_BB] or bitboards.pieceBitboards[BITBOARD_BQ],
                 MagicBitboards.bishopVars,
                 allBitboard,
                 friendlyBitboard,
@@ -185,8 +185,8 @@ class SeeBoard(board: EngineBoard) {
     private fun rookCaptures(square: Int, moves: IntArray, allBitboard: Long, friendlyBitboard: Long) {
         generateSliderMoves(
                 if (mover == Colour.WHITE)
-                    bitboards.pieceBitboards[SquareOccupant.WR.index] or bitboards.pieceBitboards[BITBOARD_WQ] else
-                    bitboards.pieceBitboards[SquareOccupant.BR.index] or bitboards.pieceBitboards[BITBOARD_BQ],
+                    bitboards.pieceBitboards[BITBOARD_WR] or bitboards.pieceBitboards[BITBOARD_WQ] else
+                    bitboards.pieceBitboards[BITBOARD_BR] or bitboards.pieceBitboards[BITBOARD_BQ],
                 MagicBitboards.rookVars,
                 allBitboard,
                 friendlyBitboard,

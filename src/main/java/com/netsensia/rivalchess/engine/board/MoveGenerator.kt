@@ -5,7 +5,6 @@ import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.config.MAX_LEGAL_MOVES
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.SquareOccupant
 
 class MoveGenerator(
         private val engineBitboards: EngineBitboards,
@@ -29,13 +28,13 @@ class MoveGenerator(
                 if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
                 if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture)
         generateSliderMoves(
-                SquareOccupant.WR,
-                SquareOccupant.BR,
+                BITBOARD_WR,
+                BITBOARD_BR,
                 MagicBitboards.rookVars
         )
         generateSliderMoves(
-                SquareOccupant.WB,
-                SquareOccupant.BB,
+                BITBOARD_WB,
+                BITBOARD_BB,
                 MagicBitboards.bishopVars
         )
 
@@ -97,14 +96,14 @@ class MoveGenerator(
     private fun emptySquaresBitboard() = bitboards[BITBOARD_ALL].inv()
 
     private fun generateSliderMoves(
-            whitePiece: SquareOccupant,
-            blackPiece: SquareOccupant,
+            whitePiece: Int,
+            blackPiece: Int,
             magicVars: MagicVars
     ) {
 
         val bitboard: Long = if (mover == Colour.WHITE)
-            bitboards[whitePiece.index] or bitboards[BITBOARD_WQ] else
-            bitboards[blackPiece.index] or bitboards[BITBOARD_BQ]
+            bitboards[whitePiece] or bitboards[BITBOARD_WQ] else
+            bitboards[blackPiece] or bitboards[BITBOARD_BQ]
 
         applyToSquares(bitboard) {
             addMoves(
@@ -133,8 +132,8 @@ class MoveGenerator(
                 pawnBitboardForMover()
         )
 
-        generateQuiesceSliderMoves(generateChecks, enemyKingSquare, MagicBitboards.rookVars, SquareOccupant.WR.index, SquareOccupant.BR.index)
-        generateQuiesceSliderMoves(generateChecks, enemyKingSquare, MagicBitboards.bishopVars, SquareOccupant.WB.index, SquareOccupant.BB.index)
+        generateQuiesceSliderMoves(generateChecks, enemyKingSquare, MagicBitboards.rookVars, BITBOARD_WR, BITBOARD_BR)
+        generateQuiesceSliderMoves(generateChecks, enemyKingSquare, MagicBitboards.bishopVars, BITBOARD_WB, BITBOARD_BB)
 
         moves[moveCount] = 0
         return this

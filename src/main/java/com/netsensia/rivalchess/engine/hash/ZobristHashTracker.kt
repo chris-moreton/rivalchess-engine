@@ -14,14 +14,14 @@ class ZobristHashTracker {
     @JvmField
     var trackedBoardHashValue: Long = 0
 
-    private val whiteKingSideCastle = ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][0] xor
-            ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][2]
-    private val whiteQueenSideCastle = ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][7] xor
-            ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][4]
-    private val blackKingSideCastle = ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][56] xor
-            ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][58]
-    private val blackQueenSideCastle = ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][63] xor
-            ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][60]
+    private val whiteKingSideCastle = ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][0] xor
+            ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][2]
+    private val whiteQueenSideCastle = ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][7] xor
+            ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][4]
+    private val blackKingSideCastle = ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][56] xor
+            ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][58]
+    private val blackQueenSideCastle = ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][63] xor
+            ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][60]
 
     private val switchMoverHashValue = whiteMoverHashValue xor blackMoverHashValue
 
@@ -40,7 +40,7 @@ class ZobristHashTracker {
         val to = toSquare(move.compact)
         if (xFile(from) != xFile(to) && capturedPiece == BITBOARD_NONE) {
             val capturedPawnBitRef = to - 8
-            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[SquareOccupant.BP.index][capturedPawnBitRef]
+            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][capturedPawnBitRef]
         }
     }
 
@@ -49,7 +49,7 @@ class ZobristHashTracker {
         val to = toSquare(move.compact)
         if (xFile(from) != xFile(to) && capturedPiece == BITBOARD_NONE) {
             val capturedPawnBitRef = to + 8
-            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[SquareOccupant.WP.index][capturedPawnBitRef]
+            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][capturedPawnBitRef]
         }
     }
 
@@ -92,10 +92,10 @@ class ZobristHashTracker {
     private fun unMakeEnPassant(bitRefTo: Int, moveDetail: MoveDetail): Boolean {
         if (1L shl bitRefTo == moveDetail.enPassantBitboard) {
             if (moveDetail.movePiece == BITBOARD_WP) {
-                trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[SquareOccupant.BP.index][bitRefTo - 8]
+                trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][bitRefTo - 8]
                 return true
             } else if (moveDetail.movePiece == BITBOARD_BP) {
-                trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[SquareOccupant.WP.index][bitRefTo + 8]
+                trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][bitRefTo + 8]
                 return true
             }
         }
@@ -114,14 +114,14 @@ class ZobristHashTracker {
         return when (bitRefTo) {
             1 -> {
                 trackedBoardHashValue = trackedBoardHashValue xor
-                        ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][2] xor
-                        ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][0]
+                        ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][2] xor
+                        ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][0]
                 true
             }
             5 -> {
                 trackedBoardHashValue = trackedBoardHashValue xor
-                        ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][4] xor
-                        ZorbristHashCalculator.pieceHashValues[SquareOccupant.WR.index][7]
+                        ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][4] xor
+                        ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][7]
                 true
             }
             else -> false
@@ -132,14 +132,14 @@ class ZobristHashTracker {
         return when (bitRefTo) {
             61 -> {
                 trackedBoardHashValue = trackedBoardHashValue xor
-                        ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][60] xor
-                        ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][63]
+                        ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][60] xor
+                        ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][63]
                 true
             }
             57 -> {
                 trackedBoardHashValue = trackedBoardHashValue xor
-                        ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][58] xor
-                        ZorbristHashCalculator.pieceHashValues[SquareOccupant.BR.index][56]
+                        ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][58] xor
+                        ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][56]
                 true
             }
             else -> false

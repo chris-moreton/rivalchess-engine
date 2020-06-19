@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.engine.board
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.config.DEFAULT_HASHTABLE_SIZE_MB
+import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.engine.hash.BoardHash
@@ -9,14 +10,13 @@ import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import java.lang.Long.bitCount
-import kotlin.collections.ArrayList
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     val engineBitboards = EngineBitboards()
 
     val boardHashObject = BoardHash()
 
-    var moveHistory: MutableList<MoveDetail> = ArrayList()
+    var moveHistory = arrayOfNulls<MoveDetail>(MAX_SEARCH_DEPTH)
 
     var numMovesMade = 0
     var halfMoveCount = 0
@@ -27,7 +27,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     var isOnNullMove = false
 
-    val lastMoveMade: MoveDetail
+    val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
     lateinit var mover: Colour
@@ -56,7 +56,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     fun setBoard(board: Board) {
         numMovesMade = 0
-        moveHistory.clear()
         halfMoveCount = board.halfMoveCount
         setEngineBoardVars(board)
         boardHashObject.hashTableVersion = 0
@@ -64,7 +63,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         boardHashObject.initialiseHashCode(this)
     }
 
-    fun getBitboardTypeOfSquareOccupant(bitRef: Int, colour: Colour): Int {
+    fun getBitboardTypeOfPieceOnSquare(bitRef: Int, colour: Colour): Int {
         val bitMask = 1L shl bitRef
         (if (colour == Colour.WHITE) whiteBitboardTypes else blackBitboardTypes).forEach {
             if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
@@ -74,29 +73,19 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return BITBOARD_NONE
     }
 
-    fun getSquareOccupant(bitRef: Int, colour: Colour): SquareOccupant {
-        val bitMask = 1L shl bitRef
-        (if (colour == Colour.WHITE) whiteBitboardTypes else blackBitboardTypes).forEach {
-            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
-                return squareOccupantFromBitboardType(it)
-            }
-        }
-        return SquareOccupant.NONE
-    }
-
-    fun getSquareOccupant(bitRef: Int): SquareOccupant {
+    fun getPieceIndex(bitRef: Int): Int {
         val bitMask = 1L shl bitRef
         whiteBitboardTypes.forEach {
             if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
-                return squareOccupantFromBitboardType(it)
+                return it
             }
         }
         blackBitboardTypes.forEach {
             if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
-                return squareOccupantFromBitboardType(it)
+                return it
             }
         }
-        return SquareOccupant.NONE
+        return BITBOARD_NONE
     }
 
     fun moveGenerator() =
@@ -170,8 +159,8 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     fun wasPawnPush(): Boolean {
-        val toSquare = moveHistory[numMovesMade - 1].move and 63
-        val movePiece = moveHistory[numMovesMade - 1].movePiece
+        val toSquare = moveHistory[numMovesMade - 1]!!.move and 63
+        val movePiece = moveHistory[numMovesMade - 1]!!.movePiece
         if (movePiece !in intArrayOf(BITBOARD_WP, BITBOARD_BP)) {
             return false
         }
@@ -199,7 +188,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         var occurrences = 0
         var i = numMovesMade - 2
         while (i >= 0 && i >= numMovesMade - halfMoveCount) {
-            if (moveHistory[i].hashValue == boardHashCode) occurrences++
+            if (moveHistory[i]!!.hashValue == boardHashCode) occurrences++
             i -= 2
         }
         return occurrences

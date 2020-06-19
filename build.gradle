@@ -12,6 +12,17 @@ plugins {
     id 'signing'
 }
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
 group = "com.netsensia.rivalchess"
 version = '13.0.2'
 

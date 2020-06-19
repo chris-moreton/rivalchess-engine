@@ -9,7 +9,6 @@ import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Move
-import com.netsensia.rivalchess.model.Piece
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
@@ -58,13 +57,13 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
     val to = move and 63
     val from = move ushr 16 and 63
     val promotionPiece = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
-    when (board.getSquareOccupant(from).piece) {
-        Piece.KNIGHT -> pgnMove = "N"
-        Piece.KING -> pgnMove = "K"
-        Piece.QUEEN -> pgnMove = "Q"
-        Piece.BISHOP -> pgnMove = "B"
-        Piece.ROOK -> pgnMove = "R"
-        Piece.PAWN -> {
+    when (board.getPieceIndex(from)) {
+        BITBOARD_WN, BITBOARD_BN -> pgnMove = "N"
+        BITBOARD_WK, BITBOARD_BK -> pgnMove = "K"
+        BITBOARD_WQ, BITBOARD_BQ -> pgnMove = "Q"
+        BITBOARD_WB, BITBOARD_BB -> pgnMove = "B"
+        BITBOARD_WR, BITBOARD_BR -> pgnMove = "R"
+        BITBOARD_WP, BITBOARD_BP -> {
         }
         else -> throw InvalidMoveException("No piece found on source square")
     }
@@ -76,7 +75,7 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
         val legalMoveTo = legalMove and 63
         val legalMoveFrom = legalMove ushr 16 and 63
         if (legalMoveTo == to) {
-            if (board.getSquareOccupant(legalMoveFrom).index == board.getSquareOccupant(from).index) {
+            if (board.getPieceIndex(legalMoveFrom) == board.getPieceIndex(from)) {
                 if (legalMoveFrom != from) {
                     qualifier = if (legalMoveFrom % 8 == from % 8) ('1'.toInt() + from / 8).toChar()
                     else ('a'.toInt() + (7 - from % 8)).toChar()
@@ -87,8 +86,8 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
         legalMove = legalMoves[moveCount] and 0x00FFFFFF
     }
     if (qualifier != ' ') pgnMove += qualifier
-    if (board.getSquareOccupant(to).index != -1) {
-        if (board.getSquareOccupant(from).piece == Piece.PAWN) {
+    if (board.getPieceIndex(to) != -1) {
+        if (board.getPieceIndex(from) in arrayOf(BITBOARD_WP, BITBOARD_BP)) {
             pgnMove += ('a'.toInt() + (7 - from % 8)).toChar()
         }
         pgnMove += "x"

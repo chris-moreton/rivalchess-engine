@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.config
 
 import com.netsensia.rivalchess.engine.eval.*
-import com.netsensia.rivalchess.model.SquareOccupant
 import java.util.*
 
 const val TOTAL_PIECE_VALUE_PER_SIDE_AT_START = VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2 + VALUE_QUEEN
@@ -70,7 +69,7 @@ val pieceValues: List<Int>
             VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK)
     )
 
-fun getPieceValue(squareOccupant: SquareOccupant): Int {
-    return pieceValues[squareOccupant.index]
+fun getPieceValue(piece: Int): Int {
+    return pieceValues[piece]
 }
 

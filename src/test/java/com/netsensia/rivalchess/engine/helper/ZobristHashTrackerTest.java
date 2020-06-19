@@ -194,7 +194,7 @@ public class ZobristHashTrackerTest {
             int legalMoves[] = mg.generateLegalMoves().getMoves();
             int numLegalMoves = mg.getMoveCount();
 
-            while (!com.netsensia.rivalchess.engine.board.BoardExtensionsKt.isGameOver(ecb) && ecb.getHalfMoveCount() < 100) {
+            while (!com.netsensia.rivalchess.engine.board.BoardExtensionsKt.isGameOver(ecb) && ecb.getNumMovesMade() < 100) {
                 int move = legalMoves[r.nextInt(numLegalMoves)];
                 makeMove(ecb, new EngineMove(move), false, true);
 

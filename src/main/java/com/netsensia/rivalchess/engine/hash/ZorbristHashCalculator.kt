@@ -1,8 +1,9 @@
 package com.netsensia.rivalchess.engine.hash
 
+import com.netsensia.rivalchess.consts.BITBOARD_BR
+import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.SquareOccupant
 
 object ZorbristHashCalculator {
     const val START_HASH_VALUE = 1427869295504964227L
@@ -13,7 +14,7 @@ object ZorbristHashCalculator {
     fun calculateHash(engineBoard: EngineBoard): Long {
         var hashValue = START_HASH_VALUE
         for (bitNum in 0..63) {
-            for (piece in SquareOccupant.WP.index..SquareOccupant.BR.index) {
+            for (piece in BITBOARD_WP..BITBOARD_BR) {
                 if (engineBoard.getBitboard(piece) and (1L shl bitNum) != 0L) {
                     hashValue = hashValue xor pieceHashValues[piece][bitNum]
                 }
