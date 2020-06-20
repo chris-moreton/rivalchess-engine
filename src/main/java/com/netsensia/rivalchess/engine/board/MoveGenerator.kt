@@ -146,8 +146,7 @@ class MoveGenerator(
         val friendlyBitboardInverted = bitboards[BITBOARD_FRIENDLY].inv()
         applyToSquares(knightBitboard) {
             addMoves(it shl 16, knightMoves[it] and if (generateChecks)
-                bitboards[BITBOARD_ENEMY] or
-                        (knightMoves[enemyKingSquare] and friendlyBitboardInverted)
+                bitboards[BITBOARD_ENEMY] or (knightMoves[enemyKingSquare] and friendlyBitboardInverted)
                     else bitboards[BITBOARD_ENEMY]
             )
         }
@@ -161,6 +160,7 @@ class MoveGenerator(
         var bitboardPawnMoves: Long
         val pawnMovesCapture = if (mover == Colour.WHITE) blackPawnMovesCapture[enemyKingSquare] else whitePawnMovesCapture[enemyKingSquare]
         val emptySquaresBitboard = bitboards[BITBOARD_ALL].inv()
+        val promotionRank = RANK_1 or RANK_8
 
         applyToSquares(pawnBitboard) {
             bitboardPawnMoves = 0
@@ -169,7 +169,7 @@ class MoveGenerator(
                 bitboardPawnMoves = bitboardPawnMoves and pawnMovesCapture
             }
 
-            bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard and (RANK_1 or RANK_8))
+            bitboardPawnMoves = bitboardPawnMoves or (bitboardMaskForwardPawnMoves[it] and emptySquaresBitboard and promotionRank)
             bitboardPawnMoves = pawnForwardAndCaptureMovesBitboard(it, bitboardMaskCapturePawnMoves, bitboardPawnMoves)
             addPawnMoves(it shl 16, bitboardPawnMoves, true)
         }
