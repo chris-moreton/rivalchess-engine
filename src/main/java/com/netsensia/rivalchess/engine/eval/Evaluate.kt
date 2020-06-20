@@ -10,7 +10,6 @@ import com.netsensia.rivalchess.consts.CASTLEPRIV_WQ
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
-import java.lang.Long.bitCount
 import kotlin.math.abs
 
 fun evaluate(board: EngineBoard): Int {
@@ -85,11 +84,11 @@ fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
         }
 
 fun twoWhiteRooksTrappingKingEval(bitboards: BitboardData) =
-        if (bitCount(bitboards.whiteRooks and RANK_7) > 1 && bitboards.blackKing and RANK_8 != 0L)
+        if (popCount(bitboards.whiteRooks and RANK_7) > 1 && bitboards.blackKing and RANK_8 != 0L)
             VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING else 0
 
 fun twoBlackRooksTrappingKingEval(bitboards: BitboardData) =
-        if (bitCount(bitboards.blackRooks and RANK_2) > 1 && bitboards.whiteKing and RANK_1 != 0L)
+        if (popCount(bitboards.blackRooks and RANK_2) > 1 && bitboards.whiteKing and RANK_1 != 0L)
             VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING else 0
 
 fun whiteRookOpenFilesEval(bitboards: BitboardData, file: Int) =
@@ -119,7 +118,7 @@ fun kingAttackCount(dangerZone: Long, attacks: LongArray): Int {
     var acc = 0
     attacks.forEach {
         if (it == -1L) return@forEach
-        acc += bitCount(it and dangerZone)
+        acc += popCount(it and dangerZone)
     }
     return acc
 }
@@ -274,10 +273,10 @@ fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
         else 0)
 
 fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShield: Long, shifter: Long.(Int) -> Long) =
-        (KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * bitCount(friendlyPawns and friendlyPawnShield)
-                - KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * bitCount(enemyPawns and (friendlyPawnShield or shifter(friendlyPawnShield,8)))
-                + KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * bitCount(friendlyPawns and shifter(friendlyPawnShield,8))
-                - KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * bitCount(enemyPawns and shifter(friendlyPawnShield,16)))
+        (KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * popCount(friendlyPawns and friendlyPawnShield)
+                - KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * popCount(enemyPawns and (friendlyPawnShield or shifter(friendlyPawnShield,8)))
+                + KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * popCount(friendlyPawns and shifter(friendlyPawnShield,8))
+                - KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * popCount(enemyPawns and shifter(friendlyPawnShield,16)))
 
 fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
         if (bitboards.blackKing and F8G8 != 0L &&
@@ -308,8 +307,8 @@ fun combineWhiteKingShieldEval(bitboards: BitboardData, kingShield: Long) =
 
 fun openFilesKingShieldEval(openFiles: Long) =
         if (openFiles != 0L) {
-            KINGSAFTEY_HALFOPEN_MIDFILE * bitCount(openFiles and MIDDLE_FILES_8_BIT) +
-                    KINGSAFTEY_HALFOPEN_NONMIDFILE * bitCount(openFiles and NONMID_FILES_8_BIT)
+            KINGSAFTEY_HALFOPEN_MIDFILE * popCount(openFiles and MIDDLE_FILES_8_BIT) +
+                    KINGSAFTEY_HALFOPEN_NONMIDFILE * popCount(openFiles and NONMID_FILES_8_BIT)
         } else 0
 
 fun blackKingShieldEval(bitboards: BitboardData, kingSquares: KingSquares) =
@@ -473,16 +472,16 @@ fun whiteShouldWinWithKnightAndBishopValue(eval: Int) =
         VALUE_KNIGHT + VALUE_BISHOP + VALUE_SHOULD_WIN + eval / ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR
 
 fun whiteHasOnlyAKnightAndBishop(bitboards: BitboardData) =
-        bitCount(bitboards.whiteKnights) == 1 && (whitePieceValues(bitboards) == VALUE_KNIGHT + VALUE_BISHOP)
+        popCount(bitboards.whiteKnights) == 1 && (whitePieceValues(bitboards) == VALUE_KNIGHT + VALUE_BISHOP)
 
 fun blackHasOnlyAKnightAndBishop(bitboards: BitboardData) =
-        bitCount(bitboards.blackKnights) == 1 && (blackPieceValues(bitboards) == VALUE_KNIGHT + VALUE_BISHOP)
+        popCount(bitboards.blackKnights) == 1 && (blackPieceValues(bitboards) == VALUE_KNIGHT + VALUE_BISHOP)
 
 fun whiteHasOnlyTwoKnights(bitboards: BitboardData) =
-        bitCount(bitboards.whiteKnights) == 2 && (whitePieceValues(bitboards) == 2 * VALUE_KNIGHT)
+        popCount(bitboards.whiteKnights) == 2 && (whitePieceValues(bitboards) == 2 * VALUE_KNIGHT)
 
 fun blackHasOnlyTwoKnights(bitboards: BitboardData) =
-        bitCount(bitboards.blackKnights) == 2 && (blackPieceValues(bitboards) == 2 * VALUE_KNIGHT)
+        popCount(bitboards.blackKnights) == 2 && (blackPieceValues(bitboards) == 2 * VALUE_KNIGHT)
 
 fun blackMoreThanABishopUpInNonPawns(bitboards: BitboardData) =
         blackPieceValues(bitboards) - whitePieceValues(bitboards) > VALUE_BISHOP
@@ -543,16 +542,17 @@ fun whiteHasInsufficientMaterial(bitboards: BitboardData) =
 
 
 fun blockedKnightPenaltyEval(square: Int, enemyPawnAttacks: Long, friendlyPawns: Long) =
-        bitCount(blockedKnightLandingSquares(square, enemyPawnAttacks, friendlyPawns)) * KNIGHT_LANDING_SQ_PAWN_ATK_PENALTY
+        popCount(blockedKnightLandingSquares(square, enemyPawnAttacks, friendlyPawns)) * KNIGHT_LANDING_SQ_PAWN_ATK_PENALTY
 
 fun blockedKnightLandingSquares(square: Int, enemyPawnAttacks: Long, friendlyPawns: Long) =
         knightMoves[square] and (enemyPawnAttacks or friendlyPawns)
 
 fun whitePawnsEval(bitboards: BitboardData): Int {
     var acc = 0
+    val blackPieceValues = blackPieceValues(bitboards)
     applyToSquares(bitboards.whitePawns) {
         acc += linearScale(
-                blackPieceValues(bitboards),
+                blackPieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
                 PieceSquareTables.pawnEndGame[it],
@@ -564,9 +564,10 @@ fun whitePawnsEval(bitboards: BitboardData): Int {
 
 fun blackPawnsEval(bitboards: BitboardData): Int {
     var acc = 0
+    val whitePieceValues = whitePieceValues(bitboards)
     applyToSquares(bitboards.blackPawns) {
         acc += linearScale(
-                whitePieceValues(bitboards),
+                whitePieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
                 PieceSquareTables.pawnEndGame[bitFlippedHorizontalAxis[it]],
@@ -589,8 +590,7 @@ fun blackKnightsEval(
                 KNIGHT_STAGE_MATERIAL_HIGH,
                 PieceSquareTables.knightEndGame[bitFlippedHorizontalAxis[it]],
                 PieceSquareTables.knight[bitFlippedHorizontalAxis[it]]
-        ) -
-                blockedKnightPenaltyEval(it, attacks.whitePawns, bitboards.blackPawns)
+        ) - blockedKnightPenaltyEval(it, attacks.whitePawns, bitboards.blackPawns)
     }
     return acc
 }
@@ -616,7 +616,7 @@ fun whiteKnightsEval(
 fun blackBishopsEval(bitboards: BitboardData, blackPiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(bitboards.blackBishops) {
-        acc += VALUE_BISHOP_MOBILITY[bitCount(bishopAttacks(bitboards, it) and blackPiecesInverted)] +
+        acc += VALUE_BISHOP_MOBILITY[popCount(bishopAttacks(bitboards, it) and blackPiecesInverted)] +
                 flippedSquareTableScore(PieceSquareTables.bishop, it)
     }
     return acc
@@ -625,7 +625,7 @@ fun blackBishopsEval(bitboards: BitboardData, blackPiecesInverted: Long): Int {
 fun whiteBishopEval(bitboards: BitboardData, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(bitboards.whiteBishops) {
-        acc += VALUE_BISHOP_MOBILITY[bitCount(bishopAttacks(bitboards, it) and whitePiecesInverted)] +
+        acc += VALUE_BISHOP_MOBILITY[popCount(bishopAttacks(bitboards, it) and whitePiecesInverted)] +
                 PieceSquareTables.bishop[it]
     }
     return acc
@@ -634,7 +634,7 @@ fun whiteBishopEval(bitboards: BitboardData, whitePiecesInverted: Long): Int {
 private fun blackQueensEval(bitboards: BitboardData, blackPiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(bitboards.blackQueens) {
-        acc += VALUE_QUEEN_MOBILITY[bitCount(queenAttacks(bitboards, it) and blackPiecesInverted)] +
+        acc += VALUE_QUEEN_MOBILITY[popCount(queenAttacks(bitboards, it) and blackPiecesInverted)] +
                 flippedSquareTableScore(PieceSquareTables.queen, it)
     }
     return acc
@@ -643,7 +643,7 @@ private fun blackQueensEval(bitboards: BitboardData, blackPiecesInverted: Long):
 private fun whiteQueensEval(bitboards: BitboardData, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(bitboards.whiteQueens) {
-        acc += VALUE_QUEEN_MOBILITY[bitCount(queenAttacks(bitboards, it) and whitePiecesInverted)] +
+        acc += VALUE_QUEEN_MOBILITY[popCount(queenAttacks(bitboards, it) and whitePiecesInverted)] +
                 PieceSquareTables.queen[it]
     }
     return acc
@@ -653,7 +653,7 @@ private fun blackRooksEval(bitboards: BitboardData, blackPiecesInverted: Long): 
     var acc = 0
     applyToSquares(bitboards.blackRooks) {
         acc += blackRookOpenFilesEval(bitboards, it % 8) +
-                VALUE_ROOK_MOBILITY[bitCount(rookAttacks(bitboards, it) and blackPiecesInverted)] +
+                VALUE_ROOK_MOBILITY[popCount(rookAttacks(bitboards, it) and blackPiecesInverted)] +
                 flippedSquareTableScore(PieceSquareTables.rook, it) * rookEnemyPawnMultiplier(whitePawnValues(bitboards)) / 6
     }
     return acc
@@ -663,7 +663,7 @@ fun whiteRooksEval(bitboards: BitboardData, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(bitboards.whiteRooks) {
         acc += whiteRookOpenFilesEval(bitboards, it % 8) +
-                VALUE_ROOK_MOBILITY[bitCount(rookAttacks(bitboards, it) and whitePiecesInverted)] +
+                VALUE_ROOK_MOBILITY[popCount(rookAttacks(bitboards, it) and whitePiecesInverted)] +
                 PieceSquareTables.rook[it] * rookEnemyPawnMultiplier(blackPawnValues(bitboards)) / 6
     }
     return acc
@@ -697,41 +697,41 @@ fun pawnScore(whitePawnBitboard: Long,
     fun whitePassedPawnScore(): Int {
         var acc = 0
         applyToSquares(whitePassedPawnsBitboard) {acc += VALUE_PASSED_PAWN_BONUS[yCoordOfSquare(it)] }
-        return bitCount(whiteGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
+        return popCount(whiteGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
     }
 
     fun blackPassedPawnScore(): Int {
         var acc = 0
         applyToSquares(blackPassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[7 - yCoordOfSquare(it)] }
-        return bitCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
+        return popCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
     }
 
-    return bitCount(blackIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
-            bitCount(whiteIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
+    return popCount(blackIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
+            popCount(whiteIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
             (if (whiteIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) +
             (if (blackIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) -
-            (bitCount(whitePawnBitboard and
+            (popCount(whitePawnBitboard and
                             (whitePawnBitboard or blackPawnBitboard ushr 8).inv() and
                             (blackPawnAttacks ushr 8) and
                             northFill(whitePawnAttacks).inv() and
                     blackPawnAttacks(whitePawnBitboard) and
                             northFill(blackPawnFiles).inv()
             ) * VALUE_BACKWARD_PAWN_PENALTY) +
-            (bitCount(blackPawnBitboard and
+            (popCount(blackPawnBitboard and
                             (blackPawnBitboard or whitePawnBitboard shl 8).inv() and
                             (whitePawnAttacks shl 8) and
                             southFill(blackPawnAttacks).inv() and
                     whitePawnAttacks(blackPawnBitboard) and
                             northFill(whitePawnFiles).inv()
             ) * VALUE_BACKWARD_PAWN_PENALTY) -
-            ((bitCount(whitePawnBitboard and FILE_A) + bitCount(whitePawnBitboard and FILE_H))
+            ((popCount(whitePawnBitboard and FILE_A) + popCount(whitePawnBitboard and FILE_H))
                     * VALUE_SIDE_PAWN_PENALTY) +
-            ((bitCount(blackPawnBitboard and FILE_A) + bitCount(blackPawnBitboard and FILE_H))
+            ((popCount(blackPawnBitboard and FILE_A) + popCount(blackPawnBitboard and FILE_H))
                     * VALUE_SIDE_PAWN_PENALTY) -
-            VALUE_DOUBLED_PAWN_PENALTY * (materialValues.whitePawns / 100 - bitCount(whiteOccupiedFileMask)) -
-            bitCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
-            VALUE_DOUBLED_PAWN_PENALTY * (materialValues.blackPawns / 100 - bitCount(blackOccupiedFileMask)) +
-            bitCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
+            VALUE_DOUBLED_PAWN_PENALTY * (materialValues.whitePawns / 100 - popCount(whiteOccupiedFileMask)) -
+            popCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
+            VALUE_DOUBLED_PAWN_PENALTY * (materialValues.blackPawns / 100 - popCount(blackOccupiedFileMask)) +
+            popCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
             (linearScale(materialValues.blackPieces, 0, PAWN_ADJUST_MAX_MATERIAL, whitePassedPawnScore() * 2, whitePassedPawnScore())) -
             (linearScale(materialValues.whitePieces, 0, PAWN_ADJUST_MAX_MATERIAL, blackPassedPawnScore() * 2, blackPassedPawnScore())) +
             (if (materialValues.blackPieces < PAWN_ADJUST_MAX_MATERIAL)

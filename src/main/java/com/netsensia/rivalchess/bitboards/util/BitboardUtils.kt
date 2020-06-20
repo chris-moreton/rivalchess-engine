@@ -1,6 +1,9 @@
 package com.netsensia.rivalchess.bitboards.util
 
-import com.netsensia.rivalchess.bitboards.*
+import com.netsensia.rivalchess.bitboards.MagicBitboards
+import com.netsensia.rivalchess.bitboards.RANK_1
+import com.netsensia.rivalchess.bitboards.blackPawnMovesCapture
+import com.netsensia.rivalchess.bitboards.whitePawnMovesCapture
 import com.netsensia.rivalchess.engine.eval.blackPawnAttacks
 import com.netsensia.rivalchess.engine.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
@@ -63,4 +66,8 @@ inline fun applyToSquares(bitboard: Long, fn: (Int) -> Unit) {
         fn(square)
         bitboardCopy = bitboardCopy xor (1L shl square)
     }
+}
+
+inline fun popCount(x: Long): Int {
+    return java.lang.Long.bitCount(x)
 }

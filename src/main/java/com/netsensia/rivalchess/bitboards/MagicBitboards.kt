@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.bitboards
 
+import com.netsensia.rivalchess.bitboards.util.popCount
 import com.netsensia.rivalchess.bitboards.util.squareList
 
 object MagicBitboards {
@@ -60,7 +61,7 @@ object MagicBitboards {
         while (bitRef <= 63) {
             mask = if (isRook) occupancyMaskRook[bitRef] else occupancyMaskBishop[bitRef]
             setBitsInMask = squareList(mask)
-            bitCount = java.lang.Long.bitCount(mask)
+            bitCount = popCount(mask)
             calculateOccupancyAttackSets(isRook, bitRef, setBitsInMask, bitCount)
             setMagicMoves(isRook, bitRef, bitCount)
             bitRef++

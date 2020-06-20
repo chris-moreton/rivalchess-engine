@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.board
 
+import com.netsensia.rivalchess.bitboards.util.popCount
 import com.netsensia.rivalchess.bitboards.util.squareList
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.consts.BITBOARD_ENEMY
@@ -132,7 +133,7 @@ fun EngineBoard.getFen(): String {
         if (noPrivs) fen.append('-')
         fen.append(' ')
         val bitboard = this.engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
-        if (java.lang.Long.bitCount(bitboard) > 0) {
+        if (popCount(bitboard) > 0) {
             val epSquare = java.lang.Long.numberOfTrailingZeros(bitboard)
             val file = (7 - epSquare % 8).toChar()
             val rank = (if (epSquare <= 23) 2 else 5).toChar()

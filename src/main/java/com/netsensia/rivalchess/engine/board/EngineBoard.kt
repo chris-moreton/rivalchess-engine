@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.board
 
 import com.netsensia.rivalchess.bitboards.*
+import com.netsensia.rivalchess.bitboards.util.popCount
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.*
@@ -8,7 +9,6 @@ import com.netsensia.rivalchess.engine.hash.BoardHash
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
-import java.lang.Long.bitCount
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     @JvmField
@@ -45,22 +45,22 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         get() = moveHistory[numMovesMade]
 
     val whitePieceValues: Int
-        get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +
-                bitCount(engineBitboards.pieceBitboards[BITBOARD_WR]) * VALUE_ROOK +
-                bitCount(engineBitboards.pieceBitboards[BITBOARD_WB]) * VALUE_BISHOP +
-                bitCount(engineBitboards.pieceBitboards[BITBOARD_WQ]) * VALUE_QUEEN
+        get() = popCount(engineBitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +
+                popCount(engineBitboards.pieceBitboards[BITBOARD_WR]) * VALUE_ROOK +
+                popCount(engineBitboards.pieceBitboards[BITBOARD_WB]) * VALUE_BISHOP +
+                popCount(engineBitboards.pieceBitboards[BITBOARD_WQ]) * VALUE_QUEEN
 
     val blackPieceValues: Int
-        get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_BN]) * VALUE_KNIGHT +
-                bitCount(engineBitboards.pieceBitboards[BITBOARD_BR]) * VALUE_ROOK +
-                bitCount(engineBitboards.pieceBitboards[BITBOARD_BB]) * VALUE_BISHOP +
-                bitCount(engineBitboards.pieceBitboards[BITBOARD_BQ]) * VALUE_QUEEN
+        get() = popCount(engineBitboards.pieceBitboards[BITBOARD_BN]) * VALUE_KNIGHT +
+                popCount(engineBitboards.pieceBitboards[BITBOARD_BR]) * VALUE_ROOK +
+                popCount(engineBitboards.pieceBitboards[BITBOARD_BB]) * VALUE_BISHOP +
+                popCount(engineBitboards.pieceBitboards[BITBOARD_BQ]) * VALUE_QUEEN
 
     val whitePawnValues: Int
-        get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_WP]) * VALUE_PAWN
+        get() = popCount(engineBitboards.pieceBitboards[BITBOARD_WP]) * VALUE_PAWN
 
     val blackPawnValues: Int
-        get() = bitCount(engineBitboards.pieceBitboards[BITBOARD_BP]) * VALUE_PAWN
+        get() = popCount(engineBitboards.pieceBitboards[BITBOARD_BP]) * VALUE_PAWN
 
     init {
         setBoard(board)
@@ -181,10 +181,10 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         }
         if (mover == Colour.BLACK) // white made the last move
         {
-            if (toSquare >= 40) return bitCount(whitePassedPawnMask[toSquare] and
+            if (toSquare >= 40) return popCount(whitePassedPawnMask[toSquare] and
                     engineBitboards.pieceBitboards[BITBOARD_BP]) == 0
         } else {
-            if (toSquare <= 23) return bitCount(blackPassedPawnMask[toSquare] and
+            if (toSquare <= 23) return popCount(blackPassedPawnMask[toSquare] and
                     engineBitboards.pieceBitboards[BITBOARD_WP]) == 0
         }
         return false
