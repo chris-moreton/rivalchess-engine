@@ -17,7 +17,7 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
     override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
         val seeBoard = SeeBoard(board)
 
-        if (board.makeMove(move, false, false)) {
+        if (board.makeMove(move, false, updateHash = false)) {
             val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
             val captureSquare = toSquare(move.compact)
             val materialGain = seeBoard.makeMove(move.compact)

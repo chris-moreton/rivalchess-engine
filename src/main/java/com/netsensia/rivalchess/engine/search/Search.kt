@@ -529,7 +529,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         while (orderedMoves[ply][i] != 0) {
             var move = orderedMoves[ply][i]
             val isCapture = board.isCapture(move)
-
             move = moveNoScore(move)
             val score = board.getScore(move, includeChecks, isCapture, staticExchangeEvaluator)
             if (score > 0) orderedMoves[ply][moveCount++] = move or (127 - score shl 24)

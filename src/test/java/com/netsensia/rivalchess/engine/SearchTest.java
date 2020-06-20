@@ -1,8 +1,6 @@
 package com.netsensia.rivalchess.engine;
 
 import com.netsensia.rivalchess.engine.board.EngineBoard;
-import com.netsensia.rivalchess.engine.board.EngineBoard;
-import com.netsensia.rivalchess.engine.search.Search;
 import com.netsensia.rivalchess.engine.search.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
