@@ -3,6 +3,8 @@ Rival Chess Java Engine
 
 The Rival chess Java engine libraries used in the Rival Chess Android App.
 
+This is the main library used by the [Rival Chess UCI program](https://github.com/chris-moreton/rivalchess-uci).
+
 ### Installation
 
 #### Maven
@@ -10,12 +12,12 @@ The Rival chess Java engine libraries used in the Rival Chess Android App.
     <dependency>
         <groupId>com.netsensia.rivalchess</groupId>
         <artifactId>rivalchess-engine</artifactId>
-        <version>14.0.0</version>
+        <version>14.0.1</version>
     </dependency>
     
 #### Gradle
 
-    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '14.0.0'
+    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '14.0.1'
     
 ### Testing
     
