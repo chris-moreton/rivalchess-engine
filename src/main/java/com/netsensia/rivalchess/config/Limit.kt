@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.config
 
 const val MAX_LEGAL_MOVES = 220
+const val MAX_CAPTURES_ON_ONE_SQUARE = 10
 const val MAX_SEARCH_MILLIS = 60 * 60 * 1000
 const val MIN_SEARCH_MILLIS = 25
 const val MAX_SEARCH_DEPTH = 125

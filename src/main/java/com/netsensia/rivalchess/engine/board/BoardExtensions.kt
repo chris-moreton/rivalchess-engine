@@ -60,8 +60,8 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
     try {
         val engineMove = EngineMove(moveToVerify and 0x00FFFFFF)
-        if (makeMove(engineMove)) {
-            unMakeMove()
+        if (makeMove(engineMove, false, updateHash = false)) {
+            unMakeMove(false)
             return true
         }
     } catch (e: InvalidMoveException) {
@@ -75,9 +75,7 @@ fun EngineBoard.getCharBoard(): CharArray {
         val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
         for (i in BITBOARD_WP..BITBOARD_BR) {
             val bitsSet = squareList(this.engineBitboards.pieceBitboards[i])
-            for (bitSet in bitsSet) {
-                board[bitSet] = pieces[i]
-            }
+            for (bitSet in bitsSet) board[bitSet] = pieces[i]
         }
         return board
     }

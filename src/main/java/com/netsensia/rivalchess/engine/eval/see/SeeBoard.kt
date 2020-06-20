@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.engine.eval.see
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
+import com.netsensia.rivalchess.config.MAX_CAPTURES_ON_ONE_SQUARE
 import com.netsensia.rivalchess.config.MAX_LEGAL_MOVES
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
@@ -122,7 +123,7 @@ class SeeBoard(board: EngineBoard) {
 
     fun generateCaptureMovesOnSquare(square: Int): IntArray {
 
-        val moves = IntArray(MAX_LEGAL_MOVES)
+        val moves = IntArray(MAX_CAPTURES_ON_ONE_SQUARE + 1)
         generatedMoveCount = 0
 
         knightCaptures(square, moves)
@@ -145,7 +146,7 @@ class SeeBoard(board: EngineBoard) {
 
         applyToSquares(pawnCaptureMoves and pawnLocations) {
             if (square >= 56 || square <= 7)
-                addMove(moves, (((it shl 16) or square) or PROMOTION_PIECE_TOSQUARE_MASK_QUEEN))
+                addMove(moves, ((it shl 16) or square) or PROMOTION_PIECE_TOSQUARE_MASK_QUEEN)
             else
                 addMove(moves, ((it shl 16) or square))
         }
