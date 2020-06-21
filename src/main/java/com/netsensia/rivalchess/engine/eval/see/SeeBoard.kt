@@ -107,20 +107,6 @@ class SeeBoard(board: EngineBoard) {
         deltas[deltaCount++] = longArrayOf(bitboardType.toLong(), squareBit)
     }
 
-    val whitePieceValues: Int
-        get() = popCount(bitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +
-                popCount(bitboards.pieceBitboards[BITBOARD_WR]) * VALUE_ROOK +
-                popCount(bitboards.pieceBitboards[BITBOARD_WB]) * VALUE_BISHOP +
-                popCount(bitboards.pieceBitboards[BITBOARD_WQ]) * VALUE_QUEEN +
-                popCount(bitboards.pieceBitboards[BITBOARD_WP]) * VALUE_PAWN
-
-    val blackPieceValues: Int
-        get() = popCount(bitboards.pieceBitboards[BITBOARD_BN]) * VALUE_KNIGHT +
-                popCount(bitboards.pieceBitboards[BITBOARD_BR]) * VALUE_ROOK +
-                popCount(bitboards.pieceBitboards[BITBOARD_BB]) * VALUE_BISHOP +
-                popCount(bitboards.pieceBitboards[BITBOARD_BQ]) * VALUE_QUEEN +
-                popCount(bitboards.pieceBitboards[BITBOARD_BP]) * VALUE_PAWN
-
     fun generateCaptureMovesOnSquare(square: Int): IntArray {
 
         val moves = IntArray(MAX_CAPTURES_ON_ONE_SQUARE + 1)

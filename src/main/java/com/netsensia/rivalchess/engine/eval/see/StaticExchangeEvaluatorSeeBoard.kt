@@ -18,7 +18,7 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
         val seeBoard = SeeBoard(board)
 
         if (board.makeMove(move, false, updateHash = false)) {
-            val materialBalance = materialBalanceFromMoverPerspective(seeBoard)
+            val materialBalance = materialBalanceFromMoverPerspective(board)
             val captureSquare = toSquare(move.compact)
             val materialGain = seeBoard.makeMove(move.compact)
             val seeValue = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain)) - materialBalance
@@ -51,9 +51,9 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
         return bestScore
     }
 
-    private fun materialBalanceFromMoverPerspective(seeBoard: SeeBoard) =
-        if (seeBoard.mover == Colour.WHITE)
-            (seeBoard.whitePieceValues - seeBoard.blackPieceValues) else
-            (seeBoard.blackPieceValues - seeBoard.whitePieceValues)
+    private fun materialBalanceFromMoverPerspective(board: EngineBoard) =
+        if (board.mover == Colour.WHITE)
+            (board.whitePieceValues + board.whitePawnValues - board.blackPieceValues - board.blackPawnValues) else
+            (board.blackPieceValues + board.blackPawnValues - board.whitePieceValues - board.whitePawnValues)
 
 }

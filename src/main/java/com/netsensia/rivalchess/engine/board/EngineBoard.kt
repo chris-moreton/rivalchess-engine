@@ -44,23 +44,10 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
-    val whitePieceValues: Int
-        get() = popCount(engineBitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +
-                popCount(engineBitboards.pieceBitboards[BITBOARD_WR]) * VALUE_ROOK +
-                popCount(engineBitboards.pieceBitboards[BITBOARD_WB]) * VALUE_BISHOP +
-                popCount(engineBitboards.pieceBitboards[BITBOARD_WQ]) * VALUE_QUEEN
-
-    val blackPieceValues: Int
-        get() = popCount(engineBitboards.pieceBitboards[BITBOARD_BN]) * VALUE_KNIGHT +
-                popCount(engineBitboards.pieceBitboards[BITBOARD_BR]) * VALUE_ROOK +
-                popCount(engineBitboards.pieceBitboards[BITBOARD_BB]) * VALUE_BISHOP +
-                popCount(engineBitboards.pieceBitboards[BITBOARD_BQ]) * VALUE_QUEEN
-
-    val whitePawnValues: Int
-        get() = popCount(engineBitboards.pieceBitboards[BITBOARD_WP]) * VALUE_PAWN
-
-    val blackPawnValues: Int
-        get() = popCount(engineBitboards.pieceBitboards[BITBOARD_BP]) * VALUE_PAWN
+    var whitePieceValues = 0
+    var blackPieceValues = 0
+    var whitePawnValues = 0
+    var blackPawnValues = 0
 
     init {
         setBoard(board)
@@ -118,6 +105,10 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun setSquareContents(board: Board) {
+        whitePawnValues = 0
+        blackPawnValues = 0
+        whitePieceValues = 0
+        blackPieceValues = 0
         for (y in 0..7) {
             for (x in 0..7) {
                 val bitNum = (63 - 8 * y - x)
@@ -126,6 +117,18 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                     engineBitboards.orPieceBitboard(squareOccupant.index, 1L shl bitNum)
                     if (squareOccupant == SquareOccupant.WK) whiteKingSquare = bitNum
                     if (squareOccupant == SquareOccupant.BK) blackKingSquare = bitNum
+                    when (squareOccupant) {
+                        SquareOccupant.WP -> whitePawnValues += VALUE_PAWN
+                        SquareOccupant.WN -> whitePieceValues += VALUE_KNIGHT
+                        SquareOccupant.WB -> whitePieceValues += VALUE_BISHOP
+                        SquareOccupant.WR -> whitePieceValues += VALUE_ROOK
+                        SquareOccupant.WQ -> whitePieceValues += VALUE_QUEEN
+                        SquareOccupant.BP -> blackPawnValues += VALUE_PAWN
+                        SquareOccupant.BN -> blackPieceValues += VALUE_KNIGHT
+                        SquareOccupant.BB -> blackPieceValues += VALUE_BISHOP
+                        SquareOccupant.BR -> blackPieceValues += VALUE_ROOK
+                        SquareOccupant.BQ -> blackPieceValues += VALUE_QUEEN
+                    }
                 }
             }
         }
@@ -148,7 +151,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         castlePrivileges = (if (board.isKingSideCastleAvailable(Colour.WHITE)) CASTLEPRIV_WK else 0) or
                 (if (board.isQueenSideCastleAvailable(Colour.WHITE)) CASTLEPRIV_WQ else 0) or
                 (if (board.isKingSideCastleAvailable(Colour.BLACK)) CASTLEPRIV_BK else 0) or
-                                if (board.isQueenSideCastleAvailable(Colour.BLACK)) CASTLEPRIV_BQ else 0
+                (if (board.isQueenSideCastleAvailable(Colour.BLACK)) CASTLEPRIV_BQ else 0)
     }
 
     fun calculateSupplementaryBitboards() {
@@ -206,7 +209,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return occurrences
     }
 
-    fun trackedBoardHashCode(): Long {
+    fun boardHashCode(): Long {
         return boardHashObject.trackedHashValue
     }
 
