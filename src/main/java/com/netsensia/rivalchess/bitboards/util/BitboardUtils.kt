@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.bitboards.RANK_1
 import com.netsensia.rivalchess.bitboards.blackPawnMovesCapture
 import com.netsensia.rivalchess.bitboards.whitePawnMovesCapture
 import com.netsensia.rivalchess.engine.eval.blackPawnAttacks
+import com.netsensia.rivalchess.engine.eval.exactlyOneBitSet
 import com.netsensia.rivalchess.engine.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros

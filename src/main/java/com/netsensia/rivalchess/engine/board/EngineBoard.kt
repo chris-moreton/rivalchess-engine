@@ -44,9 +44,13 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
+    @JvmField
     var whitePieceValues = 0
+    @JvmField
     var blackPieceValues = 0
+    @JvmField
     var whitePawnValues = 0
+    @JvmField
     var blackPawnValues = 0
 
     init {
@@ -65,9 +69,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     fun getBitboardTypeOfPieceOnSquare(bitRef: Int, colour: Colour): Int {
         val bitMask = 1L shl bitRef
         (if (colour == Colour.WHITE) whiteBitboardTypes else blackBitboardTypes).forEach {
-            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
-                return it
-            }
+            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) return it
         }
         return BITBOARD_NONE
     }
@@ -87,13 +89,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return BITBOARD_NONE
     }
 
-    fun moveGenerator() =
-            MoveGenerator(
-                    engineBitboards,
-                    mover,
-                    whiteKingSquare,
-                    blackKingSquare,
-                    castlePrivileges)
+    fun moveGenerator() = MoveGenerator(engineBitboards, mover, whiteKingSquare, blackKingSquare, castlePrivileges)
 
     private fun setEngineBoardVars(board: Board) {
         mover = board.sideToMove

@@ -9,17 +9,15 @@ import com.netsensia.rivalchess.consts.BITBOARD_WR
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 
-data class RightWaySquares(
-        val h1: Int,
-        val h2: Int,
-        val h3: Int,
-        val g2: Int,
-        val g3: Int,
-        val f1: Int,
-        val f2: Int,
-        val f3: Int,
-        val f4: Int
-)
+class RightWaySquares(@JvmField val h1: Int,
+                      @JvmField val h2: Int,
+                      @JvmField val h3: Int,
+                      @JvmField val g2: Int,
+                      @JvmField val g3: Int,
+                      @JvmField val f1: Int,
+                      @JvmField val f2: Int,
+                      @JvmField val f3: Int,
+                      @JvmField val f4: Int)
 
 fun scoreRightWayPositions(
         board: EngineBoard,
@@ -96,13 +94,7 @@ fun checkForPositionsAOrD(
     checkForPositionD(friendlyPawns, friendlyKnights, friendlyBishops, rightWaySquares, cornerColour)
 }
 
-fun checkForPositionD(
-        friendlyPawns: Long,
-        friendlyKnights: Long,
-        friendlyBishops: Long,
-        rightWaySquares: RightWaySquares,
-        cornerColour: Colour)
-        : Int {
+fun checkForPositionD(friendlyPawns: Long, friendlyKnights: Long, friendlyBishops: Long, rightWaySquares: RightWaySquares, cornerColour: Colour) : Int {
     var safety = 0
     if (friendlyPawns and (1L shl rightWaySquares.h3) != 0L
             && friendlyKnights and (1L shl rightWaySquares.f3) != 0L) {
@@ -120,15 +112,13 @@ fun checkForPositionD(
 fun getWhiteKingRightWayScore(engineBoard: EngineBoard): Int {
     return if (engineBoard.whiteKingSquare == 1 || engineBoard.whiteKingSquare == 8) {
         scoreRightWayPositions(engineBoard,
-                RightWaySquares(0, 8, 16, 9, 17, 2, 10, 18, 26), true,
-                Colour.WHITE)
+                RightWaySquares(0, 8, 16, 9, 17, 2, 10, 18, 26), true, Colour.WHITE)
     } else 0
 }
 
 fun getBlackKingRightWayScore(engineBoard: EngineBoard): Int {
     return if (engineBoard.blackKingSquare == 57 || engineBoard.blackKingSquare == 48) {
         scoreRightWayPositions(engineBoard,
-                RightWaySquares(56, 48, 40, 49, 41, 58, 50, 42, 34), false,
-                Colour.BLACK)
+                RightWaySquares(56, 48, 40, 49, 41, 58, 50, 42, 34), false, Colour.BLACK)
     } else 0
 }

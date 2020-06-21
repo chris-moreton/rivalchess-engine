@@ -48,18 +48,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
     engineBitboards.movePiece(movePiece, compactMove)
 
-    when (capturePiece) {
-        BITBOARD_WP -> whitePawnValues -= VALUE_PAWN
-        BITBOARD_WN -> whitePieceValues -= VALUE_KNIGHT
-        BITBOARD_WB -> whitePieceValues -= VALUE_BISHOP
-        BITBOARD_WR -> whitePieceValues -= VALUE_ROOK
-        BITBOARD_WQ -> whitePieceValues -= VALUE_QUEEN
-        BITBOARD_BP -> blackPawnValues -= VALUE_PAWN
-        BITBOARD_BN -> blackPieceValues -= VALUE_KNIGHT
-        BITBOARD_BB -> blackPieceValues -= VALUE_BISHOP
-        BITBOARD_BR -> blackPieceValues -= VALUE_ROOK
-        BITBOARD_BQ -> blackPieceValues -= VALUE_QUEEN
-    }
+    updateMaterialAfterPieceCapture(capturePiece)
 
     makeNonTrivialMoveTypeAdjustments(moveFrom, moveTo, compactMove, capturePiece, movePiece)
 
@@ -76,6 +65,21 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
     if (updateHash) boardHashObject.move(engineMove, movePiece, capturePiece)
 
     return true
+}
+
+private fun EngineBoard.updateMaterialAfterPieceCapture(capturePiece: Int) {
+    when (capturePiece) {
+        BITBOARD_WP -> whitePawnValues -= VALUE_PAWN
+        BITBOARD_WN -> whitePieceValues -= VALUE_KNIGHT
+        BITBOARD_WB -> whitePieceValues -= VALUE_BISHOP
+        BITBOARD_WR -> whitePieceValues -= VALUE_ROOK
+        BITBOARD_WQ -> whitePieceValues -= VALUE_QUEEN
+        BITBOARD_BP -> blackPawnValues -= VALUE_PAWN
+        BITBOARD_BN -> blackPieceValues -= VALUE_KNIGHT
+        BITBOARD_BB -> blackPieceValues -= VALUE_BISHOP
+        BITBOARD_BR -> blackPieceValues -= VALUE_ROOK
+        BITBOARD_BQ -> blackPieceValues -= VALUE_QUEEN
+    }
 }
 
 @Throws(InvalidMoveException::class)

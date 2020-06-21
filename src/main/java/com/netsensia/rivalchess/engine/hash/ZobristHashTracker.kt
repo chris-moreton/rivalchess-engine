@@ -82,9 +82,7 @@ class ZobristHashTracker {
         if (movedPiece == BITBOARD_BP) {
             processPossibleBlackPawnEnPassantCapture(move, capturedPiece)
             val promotionPiece = promotionPiece(move.compact)
-            if (promotionPiece != BITBOARD_NONE) {
-                replaceWithAnotherPiece(promotionPiece, BITBOARD_BP, bitRefTo)
-            }
+            if (promotionPiece != BITBOARD_NONE) replaceWithAnotherPiece(promotionPiece, BITBOARD_BP, bitRefTo)
         }
     }
 

@@ -1,30 +1,14 @@
 package com.netsensia.rivalchess.engine.eval
 
-import com.netsensia.rivalchess.bitboards.util.popCount
+import com.netsensia.rivalchess.engine.board.EngineBoard
 
-data class MaterialValues(val bitboardData: BitboardData) {
+class MaterialValues(val board: EngineBoard) {
         @JvmField
-        val whitePieces = whitePieceValues(bitboardData)
+        val whitePieces = board.whitePieceValues
         @JvmField
-        val blackPieces = blackPieceValues(bitboardData)
+        val blackPieces = board.blackPieceValues
         @JvmField
-        val whitePawns = whitePawnValues(bitboardData)
+        val whitePawns = board.whitePawnValues
         @JvmField
-        val blackPawns = blackPawnValues(bitboardData)
+        val blackPawns = board.blackPawnValues
 }
-
-fun whitePieceValues(bitboards: BitboardData) =
-        popCount(bitboards.whiteKnights) * VALUE_KNIGHT +
-        popCount(bitboards.whiteRooks) * VALUE_ROOK +
-        popCount(bitboards.whiteBishops) * VALUE_BISHOP +
-        popCount(bitboards.whiteQueens) * VALUE_QUEEN
-
-fun blackPieceValues(bitboards: BitboardData) =
-        popCount(bitboards.blackKnights) * VALUE_KNIGHT +
-        popCount(bitboards.blackRooks) * VALUE_ROOK +
-        popCount(bitboards.blackBishops) * VALUE_BISHOP +
-        popCount(bitboards.blackQueens) * VALUE_QUEEN
-
-fun whitePawnValues(bitboards: BitboardData) = popCount(bitboards.whitePawns) * VALUE_PAWN
-
-fun blackPawnValues(bitboards: BitboardData) = popCount(bitboards.blackPawns) * VALUE_PAWN

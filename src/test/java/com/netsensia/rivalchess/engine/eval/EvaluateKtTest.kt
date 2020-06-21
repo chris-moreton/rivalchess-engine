@@ -6,14 +6,15 @@ import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.model.util.FenUtils.invertFen
 import junit.framework.TestCase
 import org.junit.Test
+import java.lang.Math.pow
 
 class EvaluateKtTest : TestCase() {
 
     private fun assertTradePawnBonusScore(fen: String, score: Int, flipped: Boolean = true) {
         val ecb = EngineBoard(getBoardModel(fen))
-        var bitboards = BitboardData(ecb)
-        var materialDifference = materialDifferenceEval(MaterialValues(bitboards))
-        assertEquals(score, tradePawnBonusWhenMoreMaterial(bitboards, materialDifference))
+        val materialValues = MaterialValues(ecb)
+        var materialDifference = materialDifferenceEval(materialValues)
+        assertEquals(score, tradePawnBonusWhenMoreMaterial(materialValues, materialDifference))
         if (!flipped) {
             assertTradePawnBonusScore(invertFen(fen), -score, true)
         }
@@ -42,5 +43,13 @@ class EvaluateKtTest : TestCase() {
         assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP1PPP/4K3 w KQ - 0 1", 363)
         assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP2PP/3QK3 w KQ - 0 1", 255)
         assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP3P/2BQK3 w KQ - 0 1", 226)
+    }
+
+    @Test
+    fun testOnlyOneBitSet() {
+        assertFalse(exactlyOneBitSet(0L))
+        for (i in 0..63) {
+            assertTrue(exactlyOneBitSet(1L shl i))
+        }
     }
 }

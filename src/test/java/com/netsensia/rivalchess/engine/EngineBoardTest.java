@@ -177,7 +177,7 @@ public class EngineBoardTest {
                 + VALUE_KNIGHT * 2
                 + VALUE_BISHOP * 2
                 + VALUE_ROOK * 2,
-                engineBoard.getWhitePieceValues());
+                engineBoard.whitePieceValues);
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4"), false, true);
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6"), false, true);
@@ -191,7 +191,7 @@ public class EngineBoardTest {
                         + VALUE_KNIGHT
                         + VALUE_BISHOP * 2
                         + VALUE_ROOK * 2,
-                engineBoard.getWhitePieceValues());
+                engineBoard.whitePieceValues);
 
     }
 
@@ -199,12 +199,7 @@ public class EngineBoardTest {
     public void getBlackPieceValues() throws IllegalFenException, InvalidMoveException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
-        Assert.assertEquals(
-                VALUE_QUEEN
-                        + VALUE_KNIGHT * 2
-                        + VALUE_BISHOP * 2
-                        + VALUE_ROOK * 2,
-                engineBoard.getBlackPieceValues());
+        Assert.assertEquals(VALUE_QUEEN + VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2, engineBoard.blackPieceValues);
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4"), false, true);
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6"), false, true);
@@ -213,13 +208,7 @@ public class EngineBoardTest {
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5"), false, true);
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5"), false, true);
 
-        Assert.assertEquals(
-                VALUE_QUEEN
-                        + VALUE_KNIGHT * 2
-                        + VALUE_BISHOP * 2
-                        + VALUE_ROOK * 2,
-                engineBoard.getBlackPieceValues());
-
+        Assert.assertEquals(VALUE_QUEEN + VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2, engineBoard.blackPieceValues);
     }
 
     @Test

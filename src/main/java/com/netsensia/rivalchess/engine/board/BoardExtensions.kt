@@ -8,15 +8,15 @@ import com.netsensia.rivalchess.consts.BITBOARD_ENPASSANTSQUARE
 import com.netsensia.rivalchess.consts.BITBOARD_FRIENDLY
 import com.netsensia.rivalchess.engine.eval.VALUE_QUEEN
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
-import com.netsensia.rivalchess.engine.eval.onlyOneBitSet
+import com.netsensia.rivalchess.engine.eval.exactlyOneBitSet
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 
 fun EngineBoard.onlyKingsRemain() =
-    onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_ENEMY]) &&
-            onlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_FRIENDLY])
+    exactlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_ENEMY]) &&
+            exactlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_FRIENDLY])
 
 fun EngineBoard.isSquareEmpty(bitRef: Int) = engineBitboards.pieceBitboards[BITBOARD_ALL] and (1L shl bitRef) == 0L
 
