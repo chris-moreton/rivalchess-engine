@@ -220,11 +220,19 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             board.getBitboardTypeOfPieceOnSquare(toSquare(move), board.mover.opponent()),
                             board.getBitboardTypeOfPieceOnSquare(fromSquare(move), board.mover), board, move, recaptureSquare)
 
-            var futilityScore = 0
-            val canFutilityPrune = if (depthRemaining == 1 && !board.isCheck(board.mover) && threatExtend == 0 && Math.abs(localLow) < MATE_SCORE_START && Math.abs(localHigh) < MATE_SCORE_START) {
-                futilityScore = (evaluate(board) + 300)
-                futilityScore < localLow
-            } else false
+//            var futilityScore = 0
+//            val canFutilityPrune = if (depthRemaining == 1 && !board.isCheck(board.mover) && threatExtend == 0 && Math.abs(localLow) < MATE_SCORE_START && Math.abs(localHigh) < MATE_SCORE_START) {
+//                futilityScore = (evaluate(board) + 300)
+//                futilityScore < localLow
+//            } else false
+
+            // Check to see if we can futility prune this whole node
+            var canFutilityPrune = false
+            var futilityScore = localLow
+            if (depthRemaining < 4 && !board.isCheck(board.mover)  && threatExtend == 0 && Math.abs(localLow) < MATE_SCORE_START && Math.abs(localHigh) < MATE_SCORE_START) {
+                futilityScore = evaluate(board) + 200
+                if (futilityScore < localLow) canFutilityPrune = true
+            }
 
             if (board.makeMove(EngineMove(move))) {
 
