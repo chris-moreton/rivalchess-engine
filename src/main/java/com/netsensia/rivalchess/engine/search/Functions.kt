@@ -18,20 +18,11 @@ fun promotionPiece(move: Int): Int {
     }
 }
 
-fun xFile(move: Int) = move % 8
-fun yRank(move: Int) = move / 8
 
 fun moveSequence(moves: IntArray) = sequence {
     var i = -1;
     while (moveNoScore(moves[++i]) != 0) {
         yield (moves[i])
-    }
-}
-
-fun applyToMoves(moves: IntArray, fn: (Int) -> SearchPath) {
-    var i = -1;
-    while (moveNoScore(moves[++i]) != 0) {
-        fn (moves[i])
     }
 }
 
