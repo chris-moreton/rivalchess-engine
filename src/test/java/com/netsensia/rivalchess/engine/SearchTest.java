@@ -97,7 +97,7 @@ public class SearchTest {
         search.setNodesToSearch(5000000);
         search.startSearch();
 
-        MILLISECONDS.sleep(200);
+        MILLISECONDS.sleep(500);
 
         await().atMost(10, SECONDS).until(() -> !search.isSearching());
 
