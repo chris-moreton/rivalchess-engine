@@ -33,7 +33,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private val moveOrderStatus = arrayOfNulls<MoveOrder>(MAX_TREE_DEPTH)
     private val drawnPositionsAtRoot: MutableList<MutableList<Long>>
     private val drawnPositionsAtRootCount = mutableListOf(0,0)
-    private val mateKiller: MutableList<Int> = ArrayList()
+    private val mateKiller = IntArray(MAX_TREE_DEPTH) {-1}
     private val killerMoves: Array<IntArray>
     private val historyMovesSuccess = Array(2) { Array(64) { IntArray(64) } }
     private val historyMovesFail = Array(2) { Array(64) { IntArray(64) } }
@@ -785,7 +785,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun setupMateAndKillerMoveTables() {
         for (i in 0 until MAX_TREE_DEPTH) {
-            mateKiller.add(-1)
             killerMoves[i][0] = -1
             killerMoves[i][1] = -1
         }

@@ -44,6 +44,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
+    var trackedWhitePieceValues = 0
+    var trackedBlackPieceValues = 0
+    var trackedWhitePawnValues = 0
+    var trackedBlackPawnValues = 0
+
     val whitePieceValues: Int
         get() = popCount(engineBitboards.pieceBitboards[BITBOARD_WN]) * VALUE_KNIGHT +
                 popCount(engineBitboards.pieceBitboards[BITBOARD_WR]) * VALUE_ROOK +
@@ -126,6 +131,18 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                     engineBitboards.orPieceBitboard(squareOccupant.index, 1L shl bitNum)
                     if (squareOccupant == SquareOccupant.WK) whiteKingSquare = bitNum
                     if (squareOccupant == SquareOccupant.BK) blackKingSquare = bitNum
+                    when (squareOccupant) {
+                        SquareOccupant.WP -> trackedWhitePawnValues += VALUE_PAWN
+                        SquareOccupant.WN -> trackedWhitePieceValues += VALUE_KNIGHT
+                        SquareOccupant.WB -> trackedWhitePieceValues += VALUE_BISHOP
+                        SquareOccupant.WR -> trackedWhitePieceValues += VALUE_ROOK
+                        SquareOccupant.WQ -> trackedWhitePieceValues += VALUE_QUEEN
+                        SquareOccupant.BP -> trackedBlackPawnValues += VALUE_PAWN
+                        SquareOccupant.BN -> trackedBlackPieceValues += VALUE_KNIGHT
+                        SquareOccupant.BB -> trackedBlackPieceValues += VALUE_BISHOP
+                        SquareOccupant.BR -> trackedBlackPieceValues += VALUE_ROOK
+                        SquareOccupant.BQ -> trackedBlackPieceValues += VALUE_QUEEN
+                    }
                 }
             }
         }
@@ -148,7 +165,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         castlePrivileges = (if (board.isKingSideCastleAvailable(Colour.WHITE)) CASTLEPRIV_WK else 0) or
                 (if (board.isQueenSideCastleAvailable(Colour.WHITE)) CASTLEPRIV_WQ else 0) or
                 (if (board.isKingSideCastleAvailable(Colour.BLACK)) CASTLEPRIV_BK else 0) or
-                                if (board.isQueenSideCastleAvailable(Colour.BLACK)) CASTLEPRIV_BQ else 0
+                (if (board.isQueenSideCastleAvailable(Colour.BLACK)) CASTLEPRIV_BQ else 0)
     }
 
     fun calculateSupplementaryBitboards() {
