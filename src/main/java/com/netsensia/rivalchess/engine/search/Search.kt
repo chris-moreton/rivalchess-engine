@@ -239,8 +239,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
 
                 val newPath =
-                        if (canFutilityPrune && !board.isCheck(mover) && !board.wasCapture() && !board.wasPawnPush()) {
-                            searchPath[ply + 1].withHeight(0).withScore(-futilityScore) // newPath.score gets reversed later
+                        if (canFutilityPrune && !board.isCheck(mover) && board.wasCapture() && !board.wasPawnPush()) {
+                            searchPath[ply + 1].withHeight(0).withScore(futilityScore)
                         } else
                         scoutSearch(useScoutSearch, depth, ply, Window(localLow, localHigh), newExtensions,
                                 recaptureExtensionResponse.captureSquare, board.isCheck(mover), board).also {
