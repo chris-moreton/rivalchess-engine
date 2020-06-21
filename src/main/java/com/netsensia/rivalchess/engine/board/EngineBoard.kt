@@ -169,6 +169,10 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         engineBitboards.setPieceBitboard(BITBOARD_ALL, white or black)
     }
 
+    fun wasCapture(): Boolean {
+        return moveHistory[numMovesMade - 1]!!.capturePiece == BITBOARD_NONE
+    }
+
     fun wasPawnPush(): Boolean {
         val toSquare = moveHistory[numMovesMade - 1]!!.move and 63
         val movePiece = moveHistory[numMovesMade - 1]!!.movePiece

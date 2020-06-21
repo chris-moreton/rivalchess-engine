@@ -36,7 +36,7 @@ public class EpdTest {
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
-    private static final boolean RECALCULATE_FAILURES = false;
+    private static final boolean RECALCULATE_FAILURES = true;
 
     @BeforeClass
     public static void setup() {

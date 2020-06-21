@@ -220,11 +220,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             board.getBitboardTypeOfPieceOnSquare(toSquare(move), board.mover.opponent()),
                             board.getBitboardTypeOfPieceOnSquare(fromSquare(move), board.mover), board, move, recaptureSquare)
 
+            var futilityScore = 0
+            val canFutilityPrune = if (depthRemaining == 1 && !board.isCheck(board.mover) && threatExtend == 0 && Math.abs(localLow) < MATE_SCORE_START && Math.abs(localHigh) < MATE_SCORE_START) {
+                futilityScore = (evaluate(board) + 300)
+                futilityScore < localLow
+            } else false
+
             if (board.makeMove(EngineMove(move))) {
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
 
                 val newPath =
+                        if (canFutilityPrune && !board.isCheck(mover) && !board.wasCapture() && !board.wasPawnPush()) {
+                            searchPath[ply + 1].withHeight(0).withScore(-futilityScore) // newPath.score gets reversed later
+                        } else
                         scoutSearch(useScoutSearch, depth, ply, Window(localLow, localHigh), newExtensions,
                                 recaptureExtensionResponse.captureSquare, board.isCheck(mover), board).also {
                             it.score = -it.score
