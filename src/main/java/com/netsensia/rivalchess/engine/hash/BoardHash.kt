@@ -49,12 +49,11 @@ class BoardHash {
         }
     }
 
-    fun storeHashMove(move: Int, board: EngineBoard, score: Int, flag: Byte, height: Int) {
+    fun storeHashMove(move: Int, board: EngineBoard, score: Int, flag: Int, height: Int) {
         val hashIndex = (board.boardHashCode() % maxHashEntries).toInt() * NUM_HASH_FIELDS
         if (height >= hashTableUseHeight[hashIndex + HASHENTRY_HEIGHT] || hashTableVersion > hashTableUseHeight[hashIndex + HASHENTRY_VERSION]) {
-            if (hashTableVersion == hashTableUseHeight[hashIndex + HASHENTRY_VERSION]) {
+            if (hashTableVersion == hashTableUseHeight[hashIndex + HASHENTRY_VERSION])
                 copyEntryFromUseHeightToIgnoreHeightTable(hashIndex)
-            }
             storeMoveInHashTable(move, board, score, flag, height, hashIndex, hashTableUseHeight)
         } else {
             storeMoveInHashTable(move, board, score, flag, height, hashIndex, hashTableIgnoreHeight)
@@ -71,10 +70,10 @@ class BoardHash {
         hashTableIgnoreHeight[hashIndex + HASHENTRY_VERSION] = hashTableUseHeight[hashIndex + HASHENTRY_VERSION]
     }
 
-    private fun storeMoveInHashTable(move: Int, board: EngineBoard, score: Int, flag: Byte, height: Int, hashIndex: Int, hashTableUseHeight: IntArray) {
+    private fun storeMoveInHashTable(move: Int, board: EngineBoard, score: Int, flag: Int, height: Int, hashIndex: Int, hashTableUseHeight: IntArray) {
         hashTableUseHeight[hashIndex + HASHENTRY_MOVE] = move
         hashTableUseHeight[hashIndex + HASHENTRY_SCORE] = score
-        hashTableUseHeight[hashIndex + HASHENTRY_FLAG] = flag.toInt()
+        hashTableUseHeight[hashIndex + HASHENTRY_FLAG] = flag
         hashTableUseHeight[hashIndex + HASHENTRY_64BIT1] = (board.boardHashCode() ushr 32).toInt()
         hashTableUseHeight[hashIndex + HASHENTRY_64BIT2] = (board.boardHashCode() and LOW32).toInt()
         hashTableUseHeight[hashIndex + HASHENTRY_HEIGHT] = height
