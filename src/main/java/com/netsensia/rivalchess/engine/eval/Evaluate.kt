@@ -234,13 +234,13 @@ fun kingSafetyEval(bitboards: BitboardData, materialValues: MaterialValues, atta
 
     val blackKingDangerZone = blackKingDangerZone(kingSquares)
 
-    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attacks.whiteRookPair.first) +
-            kingAttackCount(blackKingDangerZone, attacks.whiteQueenPair.first) * 2 +
-            kingAttackCount(blackKingDangerZone, attacks.whiteBishopPair.first)
+    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attacks.whiteRooks) +
+            kingAttackCount(blackKingDangerZone, attacks.whiteQueens) * 2 +
+            kingAttackCount(blackKingDangerZone, attacks.whiteBishops)
 
-    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attacks.blackRookPair.first) +
-            kingAttackCount(whiteKingDangerZone, attacks.blackQueenPair.first) * 2 +
-            kingAttackCount(whiteKingDangerZone, attacks.blackBishopPair.first)
+    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attacks.blackRooks) +
+            kingAttackCount(whiteKingDangerZone, attacks.blackQueens) * 2 +
+            kingAttackCount(whiteKingDangerZone, attacks.blackBishops)
 
     val averagePiecesPerSide = (materialValues.whitePieces + materialValues.blackPieces) / 2
 

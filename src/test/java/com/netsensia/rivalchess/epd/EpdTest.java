@@ -102,7 +102,6 @@ public class EpdTest {
         search.setMillisToThink(MAX_SEARCH_SECONDS * 1000);
 
         search.setNodesToSearch(epdItem.getMaxNodesToSearch());
-        search.setHashSizeMB(32);
         search.clearHash();
         search.startSearch();
 

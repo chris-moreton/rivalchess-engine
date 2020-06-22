@@ -35,9 +35,9 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
     moveDetail.move = compactMove
     moveDetail.hashValue = boardHashObject.trackedHashValue
     moveDetail.isOnNullMove = isOnNullMove
-    moveDetail.halfMoveCount = halfMoveCount.toByte()
+    moveDetail.halfMoveCount = halfMoveCount
     moveDetail.enPassantBitboard = engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
-    moveDetail.castlePrivileges = castlePrivileges.toByte()
+    moveDetail.castlePrivileges = castlePrivileges
     moveDetail.movePiece = movePiece
 
     moveHistory[numMovesMade] = moveDetail

@@ -187,6 +187,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val hashProbeResult = hashProbe(board, depthRemaining, window, searchPathPly)
         if (hashProbeResult.bestPath != null) return searchPathPly
+
         var localLow = hashProbeResult.window.low
         val localHigh = hashProbeResult.window.high
 
