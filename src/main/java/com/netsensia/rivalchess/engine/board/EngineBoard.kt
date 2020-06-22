@@ -73,7 +73,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return BITBOARD_NONE
     }
 
-    fun getPieceIndex(bitRef: Int): Int {
+    fun getBitboardTypeOfPieceOnSquare(bitRef: Int): Int {
         val bitMask = 1L shl bitRef
         for (type in allBitboardTypes) if (engineBitboards.pieceBitboards[type] and bitMask != 0L) return type
         return BITBOARD_NONE

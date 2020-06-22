@@ -61,7 +61,7 @@ fun blackPawnAttacks(blackPawns: Long) = blackPawns and FILE_A.inv() ushr 7 or (
 fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(whiteAttacksBitboard(bitboards, attacks)) {
-        acc += pieceValue(board.getPieceIndex(it))
+        acc += pieceValue(board.getBitboardTypeOfPieceOnSquare(it, Colour.BLACK))
     }
     return acc
 }
@@ -69,7 +69,7 @@ fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoa
 fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(blackAttacksBitboard(bitboards, attacks)) {
-        acc += pieceValue(board.getPieceIndex(it))
+        acc += pieceValue(board.getBitboardTypeOfPieceOnSquare(it, Colour.WHITE))
     }
     return acc
 }

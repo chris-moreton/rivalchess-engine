@@ -57,7 +57,7 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
     val to = move and 63
     val from = move ushr 16 and 63
     val promotionPiece = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
-    when (board.getPieceIndex(from)) {
+    when (board.getBitboardTypeOfPieceOnSquare(from)) {
         BITBOARD_WN, BITBOARD_BN -> pgnMove = "N"
         BITBOARD_WK, BITBOARD_BK -> pgnMove = "K"
         BITBOARD_WQ, BITBOARD_BQ -> pgnMove = "Q"
@@ -75,7 +75,7 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
         val legalMoveTo = legalMove and 63
         val legalMoveFrom = legalMove ushr 16 and 63
         if (legalMoveTo == to) {
-            if (board.getPieceIndex(legalMoveFrom) == board.getPieceIndex(from)) {
+            if (board.getBitboardTypeOfPieceOnSquare(legalMoveFrom) == board.getBitboardTypeOfPieceOnSquare(from)) {
                 if (legalMoveFrom != from) {
                     qualifier = if (legalMoveFrom % 8 == from % 8) ('1'.toInt() + from / 8).toChar()
                     else ('a'.toInt() + (7 - from % 8)).toChar()
@@ -86,8 +86,8 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
         legalMove = legalMoves[moveCount] and 0x00FFFFFF
     }
     if (qualifier != ' ') pgnMove += qualifier
-    if (board.getPieceIndex(to) != -1) {
-        if (board.getPieceIndex(from) in arrayOf(BITBOARD_WP, BITBOARD_BP)) {
+    if (board.getBitboardTypeOfPieceOnSquare(to) != -1) {
+        if (board.getBitboardTypeOfPieceOnSquare(from) in arrayOf(BITBOARD_WP, BITBOARD_BP)) {
             pgnMove += ('a'.toInt() + (7 - from % 8)).toChar()
         }
         pgnMove += "x"

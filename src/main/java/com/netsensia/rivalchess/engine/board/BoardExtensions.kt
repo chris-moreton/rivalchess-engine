@@ -9,7 +9,6 @@ import com.netsensia.rivalchess.consts.BITBOARD_FRIENDLY
 import com.netsensia.rivalchess.engine.eval.VALUE_QUEEN
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.eval.exactlyOneBitSet
-import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
@@ -27,7 +26,7 @@ fun EngineBoard.isCapture(move: Int): Boolean {
             getBitboardTypeOfPieceOnSquare(move ushr 16 and 63, mover) in intArrayOf(BITBOARD_WP, BITBOARD_BP))
 }
 
-fun EngineBoard.getPiece(bitRef: Int) = when (getPieceIndex(bitRef)) {
+fun EngineBoard.getPiece(bitRef: Int) = when (getBitboardTypeOfPieceOnSquare(bitRef)) {
         BITBOARD_WP, BITBOARD_BP -> Piece.PAWN
         BITBOARD_WB, BITBOARD_BB -> Piece.BISHOP
         BITBOARD_WN, BITBOARD_BN -> Piece.KNIGHT
