@@ -36,8 +36,7 @@ object ZorbristHashCalculator {
                 }
             }
         }
-        hashValue = hashValue xor moverHashValues[if (engineBoard.mover == Colour.WHITE) 0 else 1]
-        return hashValue
+        return hashValue xor moverHashValues[if (engineBoard.mover == Colour.WHITE) 0 else 1]
     }
 
     @JvmStatic
