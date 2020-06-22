@@ -47,7 +47,7 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
     var score = 0
     val promotionMask = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     if (isCapture) {
-        val see = staticExchangeEvaluator.staticExchangeEvaluation(this, EngineMove(move))
+        val see = staticExchangeEvaluator.staticExchangeEvaluation(this, move)
         if (see > 0) score = 100 + (see.toDouble() / VALUE_QUEEN * 10).toInt()
         if (promotionMask == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) score += 9
     } else if (promotionMask == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
@@ -60,8 +60,7 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
 
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
     try {
-        val engineMove = EngineMove(moveToVerify and 0x00FFFFFF)
-        if (makeMove(engineMove, false, updateHash = false)) {
+        if (makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false)) {
             unMakeMove(false)
             return true
         }

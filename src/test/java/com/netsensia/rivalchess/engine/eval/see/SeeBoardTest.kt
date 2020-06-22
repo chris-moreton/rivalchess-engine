@@ -67,10 +67,10 @@ internal class SeeBoardTest {
     }
 
     private fun makeMove(board: EngineBoard, seeBoard: SeeBoard, moveString: String) {
-        var move: EngineMove
+        var move: Int
 
-        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
-        seeBoard.makeMove(move.compact)
+        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).compact.also { move = it } )
+        seeBoard.makeMove(move)
         assertPieceBitboardsMatch(board, seeBoard)
         assertEquals(board.mover, seeBoard.mover)
 
@@ -79,8 +79,8 @@ internal class SeeBoardTest {
         assertPieceBitboardsMatch(board, seeBoard)
         assertEquals(board.mover, seeBoard.mover)
 
-        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).also { move = it } )
-        seeBoard.makeMove(move.compact)
+        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).compact.also { move = it } )
+        seeBoard.makeMove(move)
         assertEquals(board.mover, seeBoard.mover)
     }
 

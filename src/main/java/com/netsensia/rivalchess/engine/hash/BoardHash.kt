@@ -103,8 +103,8 @@ class BoardHash {
         return (hashValue % maxHashEntries).toInt() * NUM_HASH_FIELDS
     }
 
-    fun move(move: EngineMove, movePiece: Int, capturePiece: Int) {
-        hashTracker.makeMove(move, movePiece, capturePiece)
+    fun move(compactMove: Int, movePiece: Int, capturePiece: Int) {
+        hashTracker.makeMove(compactMove, movePiece, capturePiece)
     }
 
     fun unMove(engineBoard: EngineBoard) {

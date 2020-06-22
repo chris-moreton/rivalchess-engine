@@ -36,17 +36,17 @@ class ZobristHashTracker {
 
     private fun differentFiles(sq1: Int, sq2: Int) = sq1 % 8 != sq2 % 8
 
-    private fun processPossibleWhitePawnEnPassantCapture(move: EngineMove, capturedPiece: Int) {
-        val from = fromSquare(move.compact)
-        val to = toSquare(move.compact)
+    private fun processPossibleWhitePawnEnPassantCapture(compactMove: Int, capturedPiece: Int) {
+        val from = fromSquare(compactMove)
+        val to = toSquare(compactMove)
         if (differentFiles(from, to) && capturedPiece == BITBOARD_NONE) {
             trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][to - 8]
         }
     }
 
-    private fun processPossibleBlackPawnEnPassantCapture(move: EngineMove, capturedPiece: Int) {
-        val from = fromSquare(move.compact)
-        val to = toSquare(move.compact)
+    private fun processPossibleBlackPawnEnPassantCapture(compactMove: Int, capturedPiece: Int) {
+        val from = fromSquare(compactMove)
+        val to = toSquare(compactMove)
         if (differentFiles(from, to) && capturedPiece == BITBOARD_NONE) {
             trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][to + 8]
         }
@@ -73,15 +73,15 @@ class ZobristHashTracker {
         }
     }
 
-    private fun processSpecialPawnMoves(move: EngineMove, movedPiece: Int, bitRefTo: Int, capturedPiece: Int) {
+    private fun processSpecialPawnMoves(compactMove: Int, movedPiece: Int, bitRefTo: Int, capturedPiece: Int) {
         if (movedPiece == BITBOARD_WP) {
-            processPossibleWhitePawnEnPassantCapture(move, capturedPiece)
-            val promotionPiece = promotionPiece(move.compact)
+            processPossibleWhitePawnEnPassantCapture(compactMove, capturedPiece)
+            val promotionPiece = promotionPiece(compactMove)
             if (promotionPiece != BITBOARD_NONE) replaceWithAnotherPiece(promotionPiece, BITBOARD_WP, bitRefTo)
         }
         if (movedPiece == BITBOARD_BP) {
-            processPossibleBlackPawnEnPassantCapture(move, capturedPiece)
-            val promotionPiece = promotionPiece(move.compact)
+            processPossibleBlackPawnEnPassantCapture(compactMove, capturedPiece)
+            val promotionPiece = promotionPiece(compactMove)
             if (promotionPiece != BITBOARD_NONE) replaceWithAnotherPiece(promotionPiece, BITBOARD_BP, bitRefTo)
         }
     }
@@ -158,12 +158,12 @@ class ZobristHashTracker {
 
     fun nullMove() = switchMover()
 
-    fun makeMove(engineMove: EngineMove, movedPiece: Int, capturedPiece: Int) {
-        val bitRefFrom = fromSquare(engineMove.compact)
-        val bitRefTo = toSquare(engineMove.compact)
+    fun makeMove(compactMove: Int, movedPiece: Int, capturedPiece: Int) {
+        val bitRefFrom = fromSquare(compactMove)
+        val bitRefTo = toSquare(compactMove)
         trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[movedPiece][bitRefFrom]
         processCapture(movedPiece, capturedPiece, bitRefTo)
-        processSpecialPawnMoves(engineMove, movedPiece, bitRefTo, capturedPiece)
+        processSpecialPawnMoves(compactMove, movedPiece, bitRefTo, capturedPiece)
         processCastling(bitRefFrom, movedPiece, bitRefTo)
         switchMover()
     }

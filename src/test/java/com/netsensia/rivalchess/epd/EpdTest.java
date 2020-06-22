@@ -36,7 +36,7 @@ public class EpdTest {
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
-    private static final boolean RECALCULATE_FAILURES = true;
+    private static final boolean RECALCULATE_FAILURES = false;
 
     @BeforeClass
     public static void setup() {
@@ -46,29 +46,30 @@ public class EpdTest {
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
             "WAC.002", // Fail 1
-            "WAC.018", // Fail 2
-            "WAC.041", // Fail 3
-            "WAC.071", // Fail 4
-            "WAC.080", // Fail 5
-            "WAC.092", // Fail 6
-            "WAC.093", // Fail 7
-            "WAC.101", // Fail 8
-            "WAC.120", // Fail 9
-            "WAC.145", // Fail 10
-            "WAC.155", // Fail 11
+            "WAC.041", // Fail 2
+            "WAC.071", // Fail 3
+            "WAC.092", // Fail 4
+            "WAC.100", // Fail 5
+            "WAC.131", // Fail 6
+            "WAC.141", // Fail 7
+            "WAC.145", // Fail 8
+            "WAC.152", // Fail 9
+            "WAC.155", // Fail 10
+            "WAC.157", // Fail 11
             "WAC.163", // Fail 12
-            "WAC.190", // Fail 13
-            "WAC.196", // Fail 14
-            "WAC.213", // Fail 15
-            "WAC.229", // Fail 16
-            "WAC.230", // Fail 17
-            "WAC.237", // Fail 18
-            "WAC.265", // Fail 19
-            "WAC.269", // Fail 20
-            "WAC.274", // Fail 21
-            "WAC.291", // Fail 22
-            "WAC.293", // Fail 23
-            "WAC.297" // Fail 24
+            "WAC.178", // Fail 13
+            "WAC.213", // Fail 14
+            "WAC.229", // Fail 15
+            "WAC.230", // Fail 16
+            "WAC.237", // Fail 17
+            "WAC.238", // Fail 18
+            "WAC.247", // Fail 19
+            "WAC.261", // Fail 20
+            "WAC.265", // Fail 21
+            "WAC.274", // Fail 22
+            "WAC.277", // Fail 23
+            "WAC.291", // Fail 24
+            "WAC.297" // Fail 25
     ));
 
     @Test

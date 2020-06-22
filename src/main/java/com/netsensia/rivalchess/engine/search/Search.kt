@@ -129,7 +129,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
 
-            if (engineBoard.makeMove(EngineMove(move))) {
+            if (engineBoard.makeMove(move)) {
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
                 val isCheck = board.isCheck(mover)
@@ -213,35 +213,28 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         val startNodes = nodes
-        highScoreMoveSequence(board, ply, highRankingMove).forEach {
-            val move = it
+        for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
             val recaptureExtensionResponse =
                     recaptureExtensions(extensions,
                             board.getBitboardTypeOfPieceOnSquare(toSquare(move), board.mover.opponent()),
                             board.getBitboardTypeOfPieceOnSquare(fromSquare(move), board.mover), board, move, recaptureSquare)
 
-//            var futilityScore = 0
-//            val canFutilityPrune = if (depthRemaining == 1 && !board.isCheck(board.mover) && threatExtend == 0 && Math.abs(localLow) < MATE_SCORE_START && Math.abs(localHigh) < MATE_SCORE_START) {
-//                futilityScore = (evaluate(board) + 300)
-//                futilityScore < localLow
-//            } else false
-
             // Check to see if we can futility prune this whole node
-            var canFutilityPrune = false
-            var futilityScore = localLow
-            if (depthRemaining < 4 && !board.isCheck(board.mover)  && threatExtend == 0 && Math.abs(localLow) < MATE_SCORE_START && Math.abs(localHigh) < MATE_SCORE_START) {
-                futilityScore = evaluate(board) + 200
-                if (futilityScore < localLow) canFutilityPrune = true
-            }
+//            var canFutilityPrune = false
+//            var futilityScore = localLow
+//            if (depthRemaining < 4 && !board.isCheck(board.mover)  && threatExtend == 0 && Math.abs(localLow) < MATE_SCORE_START && Math.abs(localHigh) < MATE_SCORE_START) {
+//                futilityScore = evaluate(board) + 200
+//                if (futilityScore < localLow) canFutilityPrune = true
+//            }
 
-            if (board.makeMove(EngineMove(move))) {
+            if (board.makeMove(move)) {
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
 
                 val newPath =
-                        if (canFutilityPrune && !board.isCheck(mover) && board.wasCapture() && !board.wasPawnPush()) {
-                            searchPath[ply + 1].withHeight(0).withScore(futilityScore)
-                        } else
+//                        if (canFutilityPrune && !board.isCheck(mover) && board.wasCapture() && !board.wasPawnPush()) {
+//                            searchPath[ply + 1].withHeight(0).withScore(futilityScore)
+//                        } else
                         scoutSearch(useScoutSearch, depth, ply, Window(localLow, localHigh), newExtensions,
                                 recaptureExtensionResponse.captureSquare, board.isCheck(mover), board).also {
                             it.score = -it.score
@@ -305,11 +298,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 var recaptureExtend = 0
                 var newRecaptureSquare = -1
                 if (targetPiece != -1 && pieceValues[movePiece] == pieceValues[targetPiece]) {
-                    currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
+                    currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
                     if (abs(currentSEEValue) <= RECAPTURE_EXTENSION_MARGIN) newRecaptureSquare = toSquare(move)
                 }
                 if (toSquare(move) == recaptureSquare) {
-                    if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
+                    if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
                     if (abs(currentSEEValue) > getPieceValue(board.getPieceIndex(recaptureSquare)) - RECAPTURE_EXTENSION_MARGIN) {
                         recaptureExtend = 1
                     }
@@ -483,13 +476,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun determineDrawnPositionsAndGenerateDepthZeroMoves() {
         moveSequence(setDepthZeroMoves()).forEach {
-            if (engineBoard.makeMove(EngineMove(it))) {
+            if (engineBoard.makeMove(it)) {
                 val plyDraw = mutableListOf(false, false)
 
                 if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[0] = true
 
                 moveSequence(boardMoves()).forEach {
-                    if (engineBoard.makeMove(EngineMove(moveNoScore(it)))) {
+                    if (engineBoard.makeMove(moveNoScore(it))) {
                         if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[1] = true
                         engineBoard.unMakeMove()
                     }
@@ -617,7 +610,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
-            if (board.makeMove(EngineMove(move))) {
+            if (board.makeMove(move)) {
                 legalMoveCount++
                 newPath = quiesce(
                         board,
@@ -682,7 +675,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             score = 126
         } else if (isCapture) {
 
-            val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(orderedMoves[ply][i])))
+            val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, orderedMoves[ply][i]))
 
             score = if (see > 0) {
                 110 + see
@@ -921,8 +914,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     fun getFen() = engineBoard.getFen()
 
-    fun makeMove(engineMove: EngineMove) {
-        engineBoard.makeMove(engineMove)
+    fun makeMove(compactMove: Int) {
+        engineBoard.makeMove(compactMove)
     }
 
     init {

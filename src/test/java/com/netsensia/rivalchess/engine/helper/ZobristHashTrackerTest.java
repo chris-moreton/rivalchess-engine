@@ -62,7 +62,7 @@ public class ZobristHashTrackerTest {
     }
 
     private void compareCalculatedHashWithTrackedHash(EngineBoard ecb, String move) throws InvalidMoveException {
-        makeMove(ecb, new EngineMove(getEngineMoveFromSimpleAlgebraic(move).compact), false, true);
+        makeMove(ecb, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
         final long originalTrackedHashCode = ecb.boardHashCode();
         final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
@@ -72,7 +72,7 @@ public class ZobristHashTrackerTest {
         final long unmadeCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
-        makeMove(ecb, new EngineMove(getEngineMoveFromSimpleAlgebraic(move).compact), false, true);
+        makeMove(ecb, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
         assertEquals(ecb.boardHashCode(), originalTrackedHashCode);
         assertEquals(ZorbristHashCalculator.calculateHash(ecb), originalCalculatedHashCode);
 
@@ -161,11 +161,11 @@ public class ZobristHashTrackerTest {
         final long originalCalculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
-        makeMove(ecb, new EngineMove(getEngineMoveFromSimpleAlgebraic("h2h3").compact), false, true);
+        makeMove(ecb, getEngineMoveFromSimpleAlgebraic("h2h3").compact, false, true);
         final long hashCodeAfterIllegalMove = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, hashCodeAfterIllegalMove);
 
-        makeMove(ecb, new EngineMove(getEngineMoveFromSimpleAlgebraic("e1e2").compact), false, true);
+        makeMove(ecb, getEngineMoveFromSimpleAlgebraic("e1e2").compact, false, true);
         final long hashCodeAfterLegalMove = ZorbristHashCalculator.calculateHash(ecb);
         assertNotEquals(originalCalculatedHashCode, hashCodeAfterLegalMove);
 
@@ -175,7 +175,7 @@ public class ZobristHashTrackerTest {
     public void testInterestingFailure() throws InvalidMoveException {
         EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel("8/p4kp1/5p2/2P2QN1/3p3p/3PbK1P/7P/2q5 b - - 2 2"));
 
-        makeMove(ecb, new EngineMove(getEngineMoveFromSimpleAlgebraic("c1g1").compact), false, true);
+        makeMove(ecb, getEngineMoveFromSimpleAlgebraic("c1g1").compact, false, true);
         final long trackedCode = ecb.boardHashCode();
         final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);
         assertEquals(calculatedHashCode, trackedCode);
@@ -196,7 +196,7 @@ public class ZobristHashTrackerTest {
 
             while (!com.netsensia.rivalchess.engine.board.BoardExtensionsKt.isGameOver(ecb) && ecb.numMovesMade < 100) {
                 int move = legalMoves[r.nextInt(numLegalMoves)];
-                makeMove(ecb, new EngineMove(move), false, true);
+                makeMove(ecb, move, false, true);
 
                 final long trackedCode = ecb.boardHashCode();
                 final long calculatedHashCode = ZorbristHashCalculator.calculateHash(ecb);

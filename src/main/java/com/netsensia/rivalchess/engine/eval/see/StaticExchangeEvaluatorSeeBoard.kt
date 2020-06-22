@@ -14,13 +14,13 @@ import com.netsensia.rivalchess.model.Colour
 class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 
     @Throws(InvalidMoveException::class)
-    override fun staticExchangeEvaluation(board: EngineBoard, move: EngineMove): Int {
+    override fun staticExchangeEvaluation(board: EngineBoard, compactMove: Int): Int {
         val seeBoard = SeeBoard(board)
 
-        if (board.makeMove(move, false, updateHash = false)) {
+        if (board.makeMove(compactMove, false, updateHash = false)) {
             val materialBalance = materialBalanceFromMoverPerspective(board)
-            val captureSquare = toSquare(move.compact)
-            val materialGain = seeBoard.makeMove(move.compact)
+            val captureSquare = toSquare(compactMove)
+            val materialGain = seeBoard.makeMove(compactMove)
             val seeValue = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain)) - materialBalance
             board.unMakeMove(false)
             return seeValue
