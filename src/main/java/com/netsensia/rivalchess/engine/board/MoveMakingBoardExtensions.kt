@@ -3,7 +3,6 @@ package com.netsensia.rivalchess.engine.board
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.*
-import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
@@ -24,8 +23,7 @@ fun EngineBoard.unMakeNullMove() {
 }
 
 @Throws(InvalidMoveException::class)
-fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, updateHash: Boolean = true): Boolean {
-    val compactMove = engineMove.compact
+fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateHash: Boolean = true): Boolean {
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
     val capturePiece = getBitboardTypeOfPieceOnSquare(moveTo, mover.opponent())
@@ -36,9 +34,9 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
     moveDetail.move = compactMove
     moveDetail.hashValue = boardHashObject.trackedHashValue
     moveDetail.isOnNullMove = isOnNullMove
-    moveDetail.halfMoveCount = halfMoveCount.toByte()
+    moveDetail.halfMoveCount = halfMoveCount
     moveDetail.enPassantBitboard = engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
-    moveDetail.castlePrivileges = castlePrivileges.toByte()
+    moveDetail.castlePrivileges = castlePrivileges
     moveDetail.movePiece = movePiece
 
     moveHistory[numMovesMade] = moveDetail
@@ -62,7 +60,7 @@ fun EngineBoard.makeMove(engineMove: EngineMove, ignoreCheck: Boolean = false, u
         return false
     }
 
-    if (updateHash) boardHashObject.move(engineMove, movePiece, capturePiece)
+    if (updateHash) boardHashObject.move(compactMove, movePiece, capturePiece)
 
     return true
 }
@@ -85,10 +83,10 @@ private fun EngineBoard.updateMaterialAfterPieceCapture(capturePiece: Int) {
 @Throws(InvalidMoveException::class)
 fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     numMovesMade--
-    halfMoveCount = moveHistory[numMovesMade]!!.halfMoveCount.toInt()
+    halfMoveCount = moveHistory[numMovesMade]!!.halfMoveCount
     mover = mover.opponent()
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveHistory[numMovesMade]!!.enPassantBitboard)
-    castlePrivileges = moveHistory[numMovesMade]!!.castlePrivileges.toInt()
+    castlePrivileges = moveHistory[numMovesMade]!!.castlePrivileges
     isOnNullMove = moveHistory[numMovesMade]!!.isOnNullMove
     val fromSquare = moveHistory[numMovesMade]!!.move ushr 16 and 63
     val toSquare = moveHistory[numMovesMade]!!.move and 63

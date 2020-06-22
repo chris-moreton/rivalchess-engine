@@ -68,24 +68,14 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     fun getBitboardTypeOfPieceOnSquare(bitRef: Int, colour: Colour): Int {
         val bitMask = 1L shl bitRef
-        (if (colour == Colour.WHITE) whiteBitboardTypes else blackBitboardTypes).forEach {
-            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) return it
-        }
+        for (type in if (colour == Colour.WHITE) whiteBitboardTypes else blackBitboardTypes)
+            if (engineBitboards.pieceBitboards[type] and bitMask != 0L) return type
         return BITBOARD_NONE
     }
 
-    fun getPieceIndex(bitRef: Int): Int {
+    fun getBitboardTypeOfPieceOnSquare(bitRef: Int): Int {
         val bitMask = 1L shl bitRef
-        whiteBitboardTypes.forEach {
-            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
-                return it
-            }
-        }
-        blackBitboardTypes.forEach {
-            if (engineBitboards.pieceBitboards[it] and bitMask != 0L) {
-                return it
-            }
-        }
+        for (type in allBitboardTypes) if (engineBitboards.pieceBitboards[type] and bitMask != 0L) return type
         return BITBOARD_NONE
     }
 
@@ -124,6 +114,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                         SquareOccupant.BB -> blackPieceValues += VALUE_BISHOP
                         SquareOccupant.BR -> blackPieceValues += VALUE_ROOK
                         SquareOccupant.BQ -> blackPieceValues += VALUE_QUEEN
+                        else -> {}
                     }
                 }
             }
@@ -132,15 +123,13 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     private fun setEnPassantBitboard(board: Board) {
         val ep = board.enPassantFile
-        if (ep == -1) {
+        if (ep == -1)
             engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
-        } else {
-            if (board.sideToMove == Colour.WHITE) {
+        else
+            if (board.sideToMove == Colour.WHITE)
                 engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 1L shl 40 + (7 - ep))
-            } else {
+            else
                 engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 1L shl 16 + (7 - ep))
-            }
-        }
     }
 
     private fun setCastlePrivileges(board: Board) {
@@ -167,6 +156,10 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
             engineBitboards.setPieceBitboard(BITBOARD_ENEMY, white)
         }
         engineBitboards.setPieceBitboard(BITBOARD_ALL, white or black)
+    }
+
+    fun wasCapture(): Boolean {
+        return moveHistory[numMovesMade - 1]!!.capturePiece == BITBOARD_NONE
     }
 
     fun wasPawnPush(): Boolean {

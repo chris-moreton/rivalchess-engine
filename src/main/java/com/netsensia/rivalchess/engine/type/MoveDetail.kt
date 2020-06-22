@@ -13,10 +13,10 @@ class MoveDetail {
 	var move = 0
 
 	@JvmField
-	var halfMoveCount: Byte = 0
+	var halfMoveCount: Int = 0
 
 	@JvmField
-	var castlePrivileges: Byte = 0
+	var castlePrivileges: Int = 0
 
 	@JvmField
 	var enPassantBitboard: Long = 0

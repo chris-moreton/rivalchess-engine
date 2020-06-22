@@ -9,7 +9,6 @@ import com.netsensia.rivalchess.consts.BITBOARD_FRIENDLY
 import com.netsensia.rivalchess.engine.eval.VALUE_QUEEN
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.eval.exactlyOneBitSet
-import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
@@ -27,7 +26,7 @@ fun EngineBoard.isCapture(move: Int): Boolean {
             getBitboardTypeOfPieceOnSquare(move ushr 16 and 63, mover) in intArrayOf(BITBOARD_WP, BITBOARD_BP))
 }
 
-fun EngineBoard.getPiece(bitRef: Int) = when (getPieceIndex(bitRef)) {
+fun EngineBoard.getPiece(bitRef: Int) = when (getBitboardTypeOfPieceOnSquare(bitRef)) {
         BITBOARD_WP, BITBOARD_BP -> Piece.PAWN
         BITBOARD_WB, BITBOARD_BB -> Piece.BISHOP
         BITBOARD_WN, BITBOARD_BN -> Piece.KNIGHT
@@ -47,7 +46,7 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
     var score = 0
     val promotionMask = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     if (isCapture) {
-        val see = staticExchangeEvaluator.staticExchangeEvaluation(this, EngineMove(move))
+        val see = staticExchangeEvaluator.staticExchangeEvaluation(this, move)
         if (see > 0) score = 100 + (see.toDouble() / VALUE_QUEEN * 10).toInt()
         if (promotionMask == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) score += 9
     } else if (promotionMask == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
@@ -60,8 +59,7 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
 
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
     try {
-        val engineMove = EngineMove(moveToVerify and 0x00FFFFFF)
-        if (makeMove(engineMove, false, updateHash = false)) {
+        if (makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false)) {
             unMakeMove(false)
             return true
         }

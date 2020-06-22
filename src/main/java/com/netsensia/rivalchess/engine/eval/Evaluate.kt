@@ -29,7 +29,7 @@ fun evaluate(board: EngineBoard): Int {
 
     val eval =  materialDifference +
             (twoWhiteRooksTrappingKingEval(bitboards) - twoBlackRooksTrappingKingEval(bitboards)) +
-            (doubledRooksEval(squareList(bitboards.whiteRooks)) - doubledRooksEval(squareList(bitboards.blackRooks))) +
+            (doubledRooksEval(bitboards.whiteRooks) - doubledRooksEval(bitboards.blackRooks)) +
             (whiteRooksEval(bitboards, materialValues, whitePieces.inv()) - blackRooksEval(bitboards, materialValues, blackPieces.inv())) +
             pawnScore(bitboards.whitePawns, bitboards.blackPawns, attacks, materialValues, board.whiteKingSquare, board.blackKingSquare, board.mover) +
             tradePawnBonusWhenMoreMaterial(materialValues, materialDifference) +
@@ -106,18 +106,21 @@ fun blackRookOpenFilesEval(bitboards: BitboardData, file: Int) =
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) = (enemyPawnValues / VALUE_PAWN).coerceAtMost(6)
 fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 
-fun doubledRooksEval(squares: List<Int>) =
-        if (squares.size > 1 && sameFile(squares[0], squares[1]))
-            VALUE_ROOKS_ON_SAME_FILE else
-            if (squares.size > 2 && (sameFile(squares[0], squares[2]) || sameFile(squares[1], squares[2])))
-                VALUE_ROOKS_ON_SAME_FILE else 0
+fun doubledRooksEval(bitboard: Long): Int {
+    var files = booleanArrayOf(false,false,false,false,false,false,false,false)
+    applyToSquares(bitboard) {
+        if (files[it % 8]) return VALUE_ROOKS_ON_SAME_FILE
+        files[it % 8] = true
+    }
+    return 0
+}
 
 fun flippedSquareTableScore(table: IntArray, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
 
 fun kingAttackCount(dangerZone: Long, attacks: LongArray): Int {
     var acc = 0
-    attacks.forEach {
-        if (it == -1L) return@forEach
+    for (it in attacks) {
+        if (it == -1L) return acc
         acc += popCount(it and dangerZone)
     }
     return acc
@@ -173,11 +176,11 @@ fun oppositeColourBishopsEval(bitboards: BitboardData, materialValues: MaterialV
 
 fun bishopPairEval(bitboards: BitboardData, materialValues: MaterialValues) =
         (if (whiteBishopColourCount(bitboards) == 2) VALUE_BISHOP_PAIR +
-            (8 - materialValues.whitePawns / VALUE_PAWN) *
-            VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS else 0) -
-        if (blackBishopColourCount(bitboards) == 2) VALUE_BISHOP_PAIR +
-                    (8 - materialValues.blackPawns / VALUE_PAWN) *
-                    VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS else 0
+                (8 - materialValues.whitePawns / VALUE_PAWN) *
+                VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS else 0) -
+                if (blackBishopColourCount(bitboards) == 2) VALUE_BISHOP_PAIR +
+                        (8 - materialValues.blackPawns / VALUE_PAWN) *
+                        VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS else 0
 
 fun trappedBishopEval(bitboards: BitboardData) =
         if (bitboards.whiteBishops or bitboards.blackBishops and A2A7H2H7 != 0L)
@@ -231,13 +234,13 @@ fun kingSafetyEval(bitboards: BitboardData, materialValues: MaterialValues, atta
 
     val blackKingDangerZone = blackKingDangerZone(kingSquares)
 
-    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attacks.whiteRookPair.first) +
-            kingAttackCount(blackKingDangerZone, attacks.whiteQueenPair.first) * 2 +
-            kingAttackCount(blackKingDangerZone, attacks.whiteBishopPair.first)
+    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attacks.whiteRooks) +
+            kingAttackCount(blackKingDangerZone, attacks.whiteQueens) * 2 +
+            kingAttackCount(blackKingDangerZone, attacks.whiteBishops)
 
-    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attacks.blackRookPair.first) +
-            kingAttackCount(whiteKingDangerZone, attacks.blackQueenPair.first) * 2 +
-            kingAttackCount(whiteKingDangerZone, attacks.blackBishopPair.first)
+    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attacks.blackRooks) +
+            kingAttackCount(whiteKingDangerZone, attacks.blackQueens) * 2 +
+            kingAttackCount(whiteKingDangerZone, attacks.blackBishops)
 
     val averagePiecesPerSide = (materialValues.whitePieces + materialValues.blackPieces) / 2
 
@@ -364,7 +367,6 @@ fun blackTimeToCastleQueenSide(castlePrivileges: Int, bitboards: BitboardData) =
                     (if (bitboards.all and (1L shl 61) != 0L) 1 else 0) +
                     (if (bitboards.all and (1L shl 62) != 0L) 1 else 0)
         } else 100
-
 
 fun blackTimeToCastleKingSide(castlePrivileges: Int, bitboards: BitboardData) =
         if (castlePrivileges and CASTLEPRIV_BK != 0) {
@@ -706,18 +708,18 @@ fun pawnScore(whitePawnBitboard: Long,
             (if (whiteIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) +
             (if (blackIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) -
             (popCount(whitePawnBitboard and
-                            (whitePawnBitboard or blackPawnBitboard ushr 8).inv() and
-                            (blackPawnAttacks ushr 8) and
-                            northFill(whitePawnAttacks).inv() and
+                    (whitePawnBitboard or blackPawnBitboard ushr 8).inv() and
+                    (blackPawnAttacks ushr 8) and
+                    northFill(whitePawnAttacks).inv() and
                     blackPawnAttacks(whitePawnBitboard) and
-                            northFill(blackPawnFiles).inv()
+                    northFill(blackPawnFiles).inv()
             ) * VALUE_BACKWARD_PAWN_PENALTY) +
             (popCount(blackPawnBitboard and
-                            (blackPawnBitboard or whitePawnBitboard shl 8).inv() and
-                            (whitePawnAttacks shl 8) and
-                            southFill(blackPawnAttacks).inv() and
+                    (blackPawnBitboard or whitePawnBitboard shl 8).inv() and
+                    (whitePawnAttacks shl 8) and
+                    southFill(blackPawnAttacks).inv() and
                     whitePawnAttacks(blackPawnBitboard) and
-                            northFill(whitePawnFiles).inv()
+                    northFill(whitePawnFiles).inv()
             ) * VALUE_BACKWARD_PAWN_PENALTY) -
             ((popCount(whitePawnBitboard and FILE_A) + popCount(whitePawnBitboard and FILE_H))
                     * VALUE_SIDE_PAWN_PENALTY) +
@@ -766,27 +768,29 @@ fun calculateLowMaterialPawnBonus(
     val kingY = yCoordOfSquare(kingSquare)
     val lowMaterialSidePieceValues = if (lowMaterialColour == Colour.WHITE) materialValues.whitePieces else materialValues.blackPieces
 
-    return squareList(if (lowMaterialColour == Colour.WHITE) blackPassedPawnsBitboard else whitePassedPawnsBitboard)
-            .map {
-                val pawnDistance = pawnDistanceFromPromotion(lowMaterialColour, it).coerceAtMost(5)
-                val kingXDistanceFromPawn = difference(kingX, it)
-                val kingYDistanceFromPawn = difference(colourAdjustedYRank(lowMaterialColour, kingY), it)
-                val kingDistanceFromPawn = kingXDistanceFromPawn.coerceAtLeast(kingYDistanceFromPawn)
+    var acc = 0
+    applyToSquares (if (lowMaterialColour == Colour.WHITE) blackPassedPawnsBitboard else whitePassedPawnsBitboard) {
+        val pawnDistance = pawnDistanceFromPromotion(lowMaterialColour, it).coerceAtMost(5)
+        val kingXDistanceFromPawn = difference(kingX, it)
+        val kingYDistanceFromPawn = difference(colourAdjustedYRank(lowMaterialColour, kingY), it)
+        val kingDistanceFromPawn = kingXDistanceFromPawn.coerceAtLeast(kingYDistanceFromPawn)
 
-                val moverAdjustment = if (lowMaterialColour == mover) 1 else 0
+        val moverAdjustment = if (lowMaterialColour == mover) 1 else 0
 
-                val scoreAdjustment = linearScale(
-                        lowMaterialSidePieceValues,
-                        0,
-                        PAWN_ADJUST_MAX_MATERIAL,
-                        kingDistanceFromPawn * 4,
-                        0) +
-                        if (pawnDistance < kingDistanceFromPawn - moverAdjustment && lowMaterialSidePieceValues == 0) {
-                            VALUE_KING_CANNOT_CATCH_PAWN
-                        } else 0
+        val scoreAdjustment = linearScale(
+                lowMaterialSidePieceValues,
+                0,
+                PAWN_ADJUST_MAX_MATERIAL,
+                kingDistanceFromPawn * 4,
+                0) +
+                if (pawnDistance < kingDistanceFromPawn - moverAdjustment && lowMaterialSidePieceValues == 0) {
+                    VALUE_KING_CANNOT_CATCH_PAWN
+                } else 0
 
-                if (lowMaterialColour == Colour.WHITE) -scoreAdjustment else scoreAdjustment
-            }.fold(0) { acc, i -> acc + i }
+        acc += if (lowMaterialColour == Colour.WHITE) -scoreAdjustment else scoreAdjustment
+    }
+
+    return acc
 
 }
 

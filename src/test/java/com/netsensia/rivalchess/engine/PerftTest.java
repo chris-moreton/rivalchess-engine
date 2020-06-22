@@ -30,7 +30,7 @@ public class PerftTest {
         int[] legalMoves = board.moveGenerator().generateLegalMoves().getMoves();
 
         while (legalMoves[moveNum] != 0) {
-            if (makeMove(board, new EngineMove(legalMoves[moveNum]), false, true)) {
+            if (makeMove(board, legalMoves[moveNum], false, true)) {
                 nodes += getPerft(board, depth - 1);
                 unMakeMove(board, true);
             }

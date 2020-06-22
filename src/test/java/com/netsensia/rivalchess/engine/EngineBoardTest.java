@@ -42,7 +42,7 @@ public class EngineBoardTest {
         board.setBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         for (String move : moves) {
-            makeMove(board, getEngineMoveFromSimpleAlgebraic(move), false, true);
+            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
         }
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
@@ -61,7 +61,7 @@ public class EngineBoardTest {
         moves.add("b8a6");
 
         for (String move : moves) {
-            makeMove(board, getEngineMoveFromSimpleAlgebraic(move), false, true);
+            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
         }
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
@@ -72,7 +72,7 @@ public class EngineBoardTest {
         moves.add("a6b8");
 
         for (String move : moves) {
-            makeMove(board, getEngineMoveFromSimpleAlgebraic(move), false, true);
+            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
         }
 
         assertEquals(3, board.previousOccurrencesOfThisPosition());
@@ -88,7 +88,7 @@ public class EngineBoardTest {
         board.setBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         for (String move : moves) {
-            makeMove(board, getEngineMoveFromSimpleAlgebraic(move), false, true);
+            makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
         }
     }
 
@@ -117,12 +117,12 @@ public class EngineBoardTest {
     public void getSquareOccupant() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
-        assertEquals(BITBOARD_WK, engineBoard.getPieceIndex(3));
-        assertEquals(BITBOARD_WQ, engineBoard.getPieceIndex(4));
-        assertEquals(BITBOARD_BQ, engineBoard.getPieceIndex(60));
-        assertEquals(BITBOARD_BK, engineBoard.getPieceIndex(59));
+        assertEquals(BITBOARD_WK, engineBoard.getBitboardTypeOfPieceOnSquare(3));
+        assertEquals(BITBOARD_WQ, engineBoard.getBitboardTypeOfPieceOnSquare(4));
+        assertEquals(BITBOARD_BQ, engineBoard.getBitboardTypeOfPieceOnSquare(60));
+        assertEquals(BITBOARD_BK, engineBoard.getBitboardTypeOfPieceOnSquare(59));
 
-        assertEquals(BITBOARD_NONE, engineBoard.getPieceIndex(32));
+        assertEquals(BITBOARD_NONE, engineBoard.getBitboardTypeOfPieceOnSquare(32));
 
     }
 
@@ -179,12 +179,12 @@ public class EngineBoardTest {
                 + VALUE_ROOK * 2,
                 engineBoard.whitePieceValues);
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("g1f3"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e7e5"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("g1f3").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e7e5").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5").compact, false, true);
 
         Assert.assertEquals(
                 VALUE_QUEEN
@@ -201,12 +201,12 @@ public class EngineBoardTest {
 
         Assert.assertEquals(VALUE_QUEEN + VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2, engineBoard.blackPieceValues);
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("g1f3"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e7e5"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5"), false, true);
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("g1f3").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e7e5").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5").compact, false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5").compact, false, true);
 
         Assert.assertEquals(VALUE_QUEEN + VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2, engineBoard.blackPieceValues);
     }
@@ -217,37 +217,37 @@ public class EngineBoardTest {
 
         Assert.assertEquals(BitboardsKt.FEN_START_POS, com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false, true);
         Assert.assertEquals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6").compact, false, true);
         Assert.assertEquals("rnbqkbnr/ppp1pppp/3p4/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("g1f3"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("g1f3").compact, false, true);
         Assert.assertEquals("rnbqkbnr/ppp1pppp/3p4/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e7e5"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e7e5").compact, false, true);
         Assert.assertEquals("rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq e6 0 3", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5").compact, false, true);
         Assert.assertEquals("rnbqkbnr/ppp2ppp/3p4/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5").compact, false, true);
         Assert.assertEquals("rnbqkbnr/ppp2ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 0 4", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("c2c4"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("c2c4").compact, false, true);
         Assert.assertEquals("rnbqkbnr/ppp2ppp/8/4p3/2P1P3/8/PP1P1PPP/RNBQKB1R b KQkq c3 0 4", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("b7b5"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("b7b5").compact, false, true);
         Assert.assertEquals("rnbqkbnr/p1p2ppp/8/1p2p3/2P1P3/8/PP1P1PPP/RNBQKB1R w KQkq b6 0 5", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f1e2"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f1e2").compact, false, true);
         Assert.assertEquals("rnbqkbnr/p1p2ppp/8/1p2p3/2P1P3/8/PP1PBPPP/RNBQK2R b KQkq - 1 5", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("b5b4"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("b5b4").compact, false, true);
         Assert.assertEquals("rnbqkbnr/p1p2ppp/8/4p3/1pP1P3/8/PP1PBPPP/RNBQK2R w KQkq - 0 6", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
-        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e1f1"), false, true);
+        makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e1f1").compact, false, true);
         Assert.assertEquals("rnbqkbnr/p1p2ppp/8/4p3/1pP1P3/8/PP1PBPPP/RNBQ1K1R b kq - 1 6", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
     }
 

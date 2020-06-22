@@ -4,6 +4,7 @@ import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.config.THREAT_SCORE_DIVISOR
 import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.model.Colour
 
 class Attacks(bitboardData: BitboardData) {
     @JvmField
@@ -11,52 +12,56 @@ class Attacks(bitboardData: BitboardData) {
     @JvmField
     val blackPawns = blackPawnAttacks(bitboardData.blackPawns)
     @JvmField
-    val whiteRookPair = attackList(bitboardData, bitboardData.whiteRooks, ::rookAttacks)
+    val whiteRooks = attackList(bitboardData, bitboardData.whiteRooks, ::rookAttacks, Colour.WHITE)
     @JvmField
-    val whiteBishopPair = attackList(bitboardData, bitboardData.whiteBishops, ::bishopAttacks)
+    val whiteBishops = attackList(bitboardData, bitboardData.whiteBishops, ::bishopAttacks, Colour.WHITE)
     @JvmField
-    val whiteQueenPair = attackList(bitboardData, bitboardData.whiteQueens, ::queenAttacks)
+    val whiteQueens = attackList(bitboardData, bitboardData.whiteQueens, ::queenAttacks, Colour.WHITE)
     @JvmField
-    val allWhiteKnightAttacks = knightAttackList(bitboardData.whiteKnights)
+    val blackRooks = attackList(bitboardData, bitboardData.blackRooks, ::rookAttacks, Colour.BLACK)
     @JvmField
-    val blackRookPair = attackList(bitboardData, bitboardData.blackRooks, ::rookAttacks)
+    val blackBishops = attackList(bitboardData, bitboardData.blackBishops, ::bishopAttacks, Colour.BLACK)
     @JvmField
-    val blackBishopPair = attackList(bitboardData, bitboardData.blackBishops, ::bishopAttacks)
+    val blackQueens = attackList(bitboardData, bitboardData.blackQueens, ::queenAttacks, Colour.BLACK)
     @JvmField
-    val blackQueenPair = attackList(bitboardData, bitboardData.blackQueens, ::queenAttacks)
+    var blackPieceAttacks = 0L
     @JvmField
-    val allBlackKnightAttacks = knightAttackList(bitboardData.blackKnights)
+    var whitePieceAttacks = 0L
+
+    init {
+        knightAttackList(bitboardData.whiteKnights, Colour.WHITE)
+        knightAttackList(bitboardData.blackKnights, Colour.BLACK)
+    }
+
+    private inline fun attackList(bitboards: BitboardData, squaresBitboard: Long, fn: (BitboardData, Int) -> Long, colour: Colour): LongArray {
+        var count = 0
+        val a = longArrayOf(-1L,-1L,-1L,-1L)
+        applyToSquares(squaresBitboard) {
+            val attacksForSquare = fn(bitboards, it)
+            a[count++] = attacksForSquare
+            if (colour == Colour.WHITE) whitePieceAttacks = whitePieceAttacks or attacksForSquare else
+                blackPieceAttacks = blackPieceAttacks or attacksForSquare
+            if (count == 4) return@applyToSquares
+        }
+        return a
+    }
+
+    private fun knightAttackList(squaresBitboard: Long, colour: Colour) {
+        applyToSquares(squaresBitboard) {
+            if (colour == Colour.WHITE) whitePieceAttacks = whitePieceAttacks or knightMoves[it] else
+                blackPieceAttacks = blackPieceAttacks or knightMoves[it]
+        }
+    }
 }
 
 fun whitePawnAttacks(whitePawns: Long) = whitePawns and FILE_A.inv() shl 9 or (whitePawns and FILE_H.inv() shl 7)
 
 fun blackPawnAttacks(blackPawns: Long) = blackPawns and FILE_A.inv() ushr 7 or (blackPawns and FILE_H.inv() ushr 9)
 
-inline fun attackList(bitboards: BitboardData, squaresBitboard: Long, fn: (BitboardData, Int) -> Long): Pair<LongArray, Long> {
-    var orred = 0L
-    var count = 0
-    val array = longArrayOf(-1L,-1L,-1L,-1L)
-    applyToSquares(squaresBitboard) {
-        val attacksForSquare = fn(bitboards, it)
-        array[count++] = attacksForSquare
-        orred = orred or attacksForSquare
-        if (count == 4) return@applyToSquares
-    }
-    return Pair(array, orred)
-}
-
-fun knightAttackList(squaresBitboard: Long): Long {
-    var orred = 0L
-    applyToSquares(squaresBitboard) {
-        orred = orred or knightMoves[it]
-    }
-    return orred
-}
-
 fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(whiteAttacksBitboard(bitboards, attacks)) {
-        acc += pieceValue(board.getPieceIndex(it))
+        acc += pieceValue(board.getBitboardTypeOfPieceOnSquare(it, Colour.BLACK))
     }
     return acc
 }
@@ -64,33 +69,21 @@ fun whiteAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoa
 fun blackAttackScore(bitboards: BitboardData, attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(blackAttacksBitboard(bitboards, attacks)) {
-        acc += pieceValue(board.getPieceIndex(it))
+        acc += pieceValue(board.getBitboardTypeOfPieceOnSquare(it, Colour.WHITE))
     }
     return acc
 }
 
-fun whitePieceAttacks(attacks: Attacks) =
-        attacks.whiteRookPair.second or
-        attacks.whiteQueenPair.second or
-        attacks.whiteBishopPair.second or
-        attacks.allWhiteKnightAttacks
-
-fun blackPieceAttacks(attacks: Attacks) =
-        attacks.blackRookPair.second or
-        attacks.blackQueenPair.second or
-        attacks.blackBishopPair.second or
-        attacks.allBlackKnightAttacks
-
 fun whiteAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
-        (whitePieceAttacks(attacks) or attacks.whitePawns) and blackPieceBitboard(bitboards)
+        (attacks.whitePieceAttacks or attacks.whitePawns) and blackPieceBitboard(bitboards)
 
 fun blackAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
-        (blackPieceAttacks(attacks) or attacks.blackPawns) and whitePieceBitboard(bitboards)
+        (attacks.blackPieceAttacks or attacks.blackPawns) and whitePieceBitboard(bitboards)
 
 fun threatEval(bitboards: BitboardData, attacks: Attacks, board: EngineBoard) =
-    (adjustedAttackScore(whiteAttackScore(bitboards, attacks, board)) -
-            adjustedAttackScore(blackAttackScore(bitboards, attacks, board))) /
-            THREAT_SCORE_DIVISOR
+        (adjustedAttackScore(whiteAttackScore(bitboards, attacks, board)) -
+                adjustedAttackScore(blackAttackScore(bitboards, attacks, board))) /
+                THREAT_SCORE_DIVISOR
 
 fun adjustedAttackScore(attackScore: Int) = attackScore + attackScore * (attackScore / VALUE_QUEEN)
 

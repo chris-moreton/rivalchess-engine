@@ -27,7 +27,6 @@ import kotlin.math.abs
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
-    private val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
     private val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluatorSeeBoard()
 
     private val moveOrderStatus = arrayOfNulls<MoveOrder>(MAX_TREE_DEPTH)
@@ -62,6 +61,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     var currentDepthZeroMoveNumber = 0
     var currentPath: SearchPath
     var isUciMode = false
+
+    val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
 
     var useOpeningBook = USE_INTERNAL_OPENING_BOOK
         set(useOpeningBook) {
@@ -129,7 +130,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
 
-            if (engineBoard.makeMove(EngineMove(move))) {
+            if (engineBoard.makeMove(move)) {
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
                 val isCheck = board.isCheck(mover)
@@ -141,7 +142,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 newPath.score = -newPath.score
                 if (newPath.score >= window.high) {
                     board.unMakeMove()
-                    engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, LOWER.toByte(), depth)
+                    engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depth)
                     depthZeroMoveScores[numMoves] = newPath.score
                     return bestPath.withPath(move, newPath)
                 }
@@ -167,13 +168,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         abortingSearch = onlyOneMoveAndNotOnFixedTime(numLegalMoves)
 
-        engineBoard.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashEntryType.toByte(), depth)
+        engineBoard.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashEntryType, depth)
         return bestPath
     }
 
     private fun onlyOneMoveAndNotOnFixedTime(numLegalMoves: Int) = numLegalMoves == 1 && millisToThink < MAX_SEARCH_MILLIS
 
-    fun search(board: EngineBoard, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath {
+    fun search(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath {
 
         nodes++
 
@@ -185,8 +186,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val depthRemaining = depth + extensions / FRACTIONAL_EXTENSION_FULL
 
-        val hashProbeResult = hashProbe(board, depthRemaining, window, searchPathPly)
+        val hashProbeResult = hashProbe(board, depthRemaining, Window(low, high), searchPathPly)
         if (hashProbeResult.bestPath != null) return searchPathPly
+
         var localLow = hashProbeResult.window.low
         val localHigh = hashProbeResult.window.high
 
@@ -213,18 +215,28 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         val startNodes = nodes
-        highScoreMoveSequence(board, ply, highRankingMove).forEach {
-            val move = it
+        for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
             val recaptureExtensionResponse =
                     recaptureExtensions(extensions,
                             board.getBitboardTypeOfPieceOnSquare(toSquare(move), board.mover.opponent()),
                             board.getBitboardTypeOfPieceOnSquare(fromSquare(move), board.mover), board, move, recaptureSquare)
 
-            if (board.makeMove(EngineMove(move))) {
+            // Check to see if we can futility prune this whole node
+//            var canFutilityPrune = false
+//            var futilityScore = localLow
+//            if (depthRemaining < 4 && !board.isCheck(board.mover)  && threatExtend == 0 && Math.abs(localLow) < MATE_SCORE_START && Math.abs(localHigh) < MATE_SCORE_START) {
+//                futilityScore = evaluate(board) + 200
+//                if (futilityScore < localLow) canFutilityPrune = true
+//            }
+
+            if (board.makeMove(move)) {
 
                 val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
 
                 val newPath =
+//                        if (canFutilityPrune && !board.isCheck(mover) && board.wasCapture() && !board.wasPawnPush()) {
+//                            searchPath[ply + 1].withHeight(0).withScore(futilityScore)
+//                        } else
                         scoutSearch(useScoutSearch, depth, ply, Window(localLow, localHigh), newExtensions,
                                 recaptureExtensionResponse.captureSquare, board.isCheck(mover), board).also {
                             it.score = -it.score
@@ -235,7 +247,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (newPath.score >= localHigh) {
                     updateHistoryMoves(board.mover, move, depthRemaining, true)
                     board.unMakeMove()
-                    board.boardHashObject.storeHashMove(move, board, newPath.score, LOWER.toByte(), depthRemaining)
+                    board.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depthRemaining)
                     updateKillerMoves(board.getBitboard(BITBOARD_ENEMY), move, ply, newPath)
                     return searchPathPly.withPath(move, newPath)
                 }
@@ -256,10 +268,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         if (abortingSearch) return SearchPath()
         if (nodes == startNodes) {
-            board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT.toByte(), MAX_SEARCH_DEPTH)
+            board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
             return searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
         }
-        board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag.toByte(), depthRemaining)
+        board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
 
@@ -288,12 +300,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 var recaptureExtend = 0
                 var newRecaptureSquare = -1
                 if (targetPiece != -1 && pieceValues[movePiece] == pieceValues[targetPiece]) {
-                    currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
+                    currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
                     if (abs(currentSEEValue) <= RECAPTURE_EXTENSION_MARGIN) newRecaptureSquare = toSquare(move)
                 }
                 if (toSquare(move) == recaptureSquare) {
-                    if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(move))
-                    if (abs(currentSEEValue) > getPieceValue(board.getPieceIndex(recaptureSquare)) - RECAPTURE_EXTENSION_MARGIN) {
+                    if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
+                    if (abs(currentSEEValue) > getPieceValue(board.getBitboardTypeOfPieceOnSquare(recaptureSquare, board.mover.opponent())) - RECAPTURE_EXTENSION_MARGIN) {
                         recaptureExtend = 1
                     }
                 }
@@ -304,19 +316,19 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, window: Window, newExtensions: Int, newRecaptureSquare: Int, localIsCheck: Boolean, board: EngineBoard) =
             if (useScoutSearch) {
-                val scoutPath = search(engineBoard, (depth - 1), ply + 1, Window(-window.low - 1, -window.low), newExtensions, newRecaptureSquare, localIsCheck).also {
+                val scoutPath = search(engineBoard, (depth - 1), ply + 1, -window.low - 1, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
                     if (it.score > MATE_SCORE_START) it.score-- else
                         if (it.score < -MATE_SCORE_START) it.score++
                 }
 
                 if (!abortingSearch && -scoutPath.score > window.low) {
-                    search(engineBoard, (depth - 1), ply + 1, Window(-window.high, -window.low), newExtensions, newRecaptureSquare, localIsCheck).also {
+                    search(engineBoard, (depth - 1), ply + 1, -window.high, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
                         if (it.score > MATE_SCORE_START) it.score-- else
                             if (it.score < -MATE_SCORE_START) it.score++
                     }
                 } else scoutPath
             } else {
-                search(board, depth - 1, ply + 1, Window(-window.high, -window.low), newExtensions, newRecaptureSquare, localIsCheck).also {
+                search(board, depth - 1, ply + 1, -window.high, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
                     if (it.score > MATE_SCORE_START) it.score-- else
                         if (it.score < -MATE_SCORE_START) it.score++
                 }
@@ -325,7 +337,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): Int {
         if (hashMove == 0 && !board.isOnNullMove && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
             val iidDepth = depth - IID_REDUCE_DEPTH
-            if (iidDepth > 0) search(board, iidDepth, ply, window, extensions, recaptureSquare, isCheck).also {
+            if (iidDepth > 0) search(board, iidDepth, ply, window.low, window.high, extensions, recaptureSquare, isCheck).also {
                 if (it.height > 0) return it.move[0]
             }
         }
@@ -367,16 +379,16 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, window: Window, extensions: Int, isCheck: Boolean) =
             if (isDrawnAtRoot()) SearchPath().withScore(0).withPath(move) else
                 if (scoutSearch) {
-                    val scoutPath = search(engineBoard, (depth - 1), ply + 1, Window(-window.low - 1, -window.low), extensions, -1, isCheck).also {
+                    val scoutPath = search(engineBoard, (depth - 1), ply + 1, -window.low - 1, -window.low, extensions, -1, isCheck).also {
                         adjustScoreForMateDepth(it)
                     }
 
                     if (!abortingSearch && -scoutPath.score > window.low)
-                        search(engineBoard, (depth - 1), ply + 1, Window(-window.high, -window.low), extensions, -1, isCheck)
+                        search(engineBoard, (depth - 1), ply + 1, -window.high, -window.low, extensions, -1, isCheck)
                     else
                         scoutPath
                 } else {
-                    search(engineBoard, (depth - 1), ply + 1, Window(-window.high, -window.low), extensions, -1, isCheck)
+                    search(engineBoard, (depth - 1), ply + 1, -window.high, -window.low, extensions, -1, isCheck)
                 }.also {
                     adjustScoreForMateDepth(it)
                 }
@@ -419,7 +431,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
         val bestPath = quiesce(board, MAX_QUIESCE_DEPTH - 1, ply, 0, low, high, isCheck)
         val hashFlag = if (bestPath.score < low) UPPER else if (bestPath.score > high) LOWER else EXACT
-        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag.toByte(),0)
+        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag,0)
         return bestPath
     }
 
@@ -435,7 +447,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, window: Window, extensions: Int): SearchPath {
         board.makeNullMove()
-        val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply + 1, Window(-window.high, -window.low), extensions, -1, false)
+        val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply + 1, -window.high, -window.low, extensions, -1, false)
         board.unMakeNullMove()
         return newPath
     }
@@ -466,13 +478,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun determineDrawnPositionsAndGenerateDepthZeroMoves() {
         moveSequence(setDepthZeroMoves()).forEach {
-            if (engineBoard.makeMove(EngineMove(it))) {
+            if (engineBoard.makeMove(it)) {
                 val plyDraw = mutableListOf(false, false)
 
                 if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[0] = true
 
                 moveSequence(boardMoves()).forEach {
-                    if (engineBoard.makeMove(EngineMove(moveNoScore(it)))) {
+                    if (engineBoard.makeMove(moveNoScore(it))) {
                         if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[1] = true
                         engineBoard.unMakeMove()
                     }
@@ -600,7 +612,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
-            if (board.makeMove(EngineMove(move))) {
+            if (board.makeMove(move)) {
                 legalMoveCount++
                 newPath = quiesce(
                         board,
@@ -656,16 +668,16 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun scoreMove(ply: Int, i: Int, board: EngineBoard): Int {
         var score = 0
         val toSquare = toSquare(orderedMoves[ply][i])
-        val isCapture = board.getPieceIndex(toSquare) != BITBOARD_NONE ||
+        val isCapture = board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE ||
                 (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
-                        board.getPieceIndex(fromSquare(orderedMoves[ply][i])) in arrayOf(BITBOARD_WP, BITBOARD_BP))
+                        board.getBitboardTypeOfPieceOnSquare(fromSquare(orderedMoves[ply][i]), board.mover) in arrayOf(BITBOARD_WP, BITBOARD_BP))
 
         orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
         if (orderedMoves[ply][i] == mateKiller[ply]) {
             score = 126
         } else if (isCapture) {
 
-            val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, EngineMove(orderedMoves[ply][i])))
+            val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, orderedMoves[ply][i]))
 
             score = if (see > 0) {
                 110 + see
@@ -717,11 +729,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val historyScore = scoreHistoryHeuristic(board, killerScore, fromSquare, toSquare)
 
                 val finalScore = if (historyScore == 0)
-                    (if (board.getPieceIndex(toSquare) != BITBOARD_NONE) 1 // losing capture
-                    else 50 + scorePieceSquareValues(
-                            board,
-                            if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare],
-                            if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]) / 2)
+                    (if (board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE) 1 // losing capture
+                        else 50 + scorePieceSquareValues(
+                                board,
+                                if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare],
+                                if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]) / 2)
                 else historyScore
 
                 orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - finalScore shl 24)
@@ -731,7 +743,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int) =
-            when (board.getPieceIndex(fromSquare)) {
+            when (board.getBitboardTypeOfPieceOnSquare(fromSquare)) {
                 BITBOARD_WP, BITBOARD_BP -> linearScale(
                         if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
                         PAWN_STAGE_MATERIAL_LOW,
@@ -768,7 +780,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     val mover: Colour
-        get() = engineBoard.mover
+        inline get() = engineBoard.mover
 
     private fun initSearchVariables() {
         engineState = SearchState.SEARCHING
@@ -904,8 +916,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     fun getFen() = engineBoard.getFen()
 
-    fun makeMove(engineMove: EngineMove) {
-        engineBoard.makeMove(engineMove)
+    fun makeMove(compactMove: Int) {
+        engineBoard.makeMove(compactMove)
     }
 
     init {
