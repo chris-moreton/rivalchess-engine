@@ -246,9 +246,9 @@ fun kingSafetyEval(bitboards: BitboardData, materialValues: MaterialValues, atta
 
     if (averagePiecesPerSide <= KINGSAFETY_MIN_PIECE_BALANCE) return 0
 
-    val whiteKingSafety: Int = getWhiteKingRightWayScore(board) + KINGSAFETY_SHIELD_BASE + whiteKingShieldEval(bitboards, kingSquares)
+    val whiteKingSafety: Int = whiteKingShieldEval(bitboards, kingSquares)
 
-    val blackKingSafety: Int = getBlackKingRightWayScore(board) + KINGSAFETY_SHIELD_BASE + blackKingShieldEval(bitboards, kingSquares)
+    val blackKingSafety: Int = blackKingShieldEval(bitboards, kingSquares)
 
     return linearScale(
             averagePiecesPerSide,
@@ -297,6 +297,7 @@ fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
 fun openFiles(kingShield: Long, pawnBitboard: Long) = southFill(kingShield) and southFill(pawnBitboard).inv() and RANK_1
 
 fun whiteKingShieldEval(bitboards: BitboardData, kingSquares: KingSquares) =
+        KINGSAFETY_SHIELD_BASE +
         if (whiteKingOnFirstTwoRanks(kingSquares)) {
             combineWhiteKingShieldEval(bitboards, whiteKingShield(kingSquares))
         } else 0
@@ -315,6 +316,7 @@ fun openFilesKingShieldEval(openFiles: Long) =
         } else 0
 
 fun blackKingShieldEval(bitboards: BitboardData, kingSquares: KingSquares) =
+        KINGSAFETY_SHIELD_BASE +
         if (blackKingOnFirstTwoRanks(kingSquares)) {
             combineBlackKingShieldEval(bitboards, blackKingShield(kingSquares))
         } else 0
@@ -460,11 +462,9 @@ fun whiteKnightAndBishopVKingEval(currentScore: Int, bitboards: BitboardData, ki
     else enemyKingCloseToLightCornerMateSquareValue(kingSquares.black)
 }
 
-fun enemyKingCloseToDarkCornerMateSquareValue(kingSquare: Int) =
-        enemyKingCloseToLightCornerMateSquareValue(bitFlippedHorizontalAxis[kingSquare])
+fun enemyKingCloseToDarkCornerMateSquareValue(kingSquare: Int) = enemyKingCloseToLightCornerMateSquareValue(bitFlippedHorizontalAxis[kingSquare])
 
-fun enemyKingCloseToLightCornerMateSquareValue(kingSquare: Int) =
-        (7 - distanceToH1OrA8[kingSquare]) * ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE
+fun enemyKingCloseToLightCornerMateSquareValue(kingSquare: Int) = (7 - distanceToH1OrA8[kingSquare]) * ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE
 
 fun blackShouldWinWithKnightAndBishopValue(eval: Int) =
         -(VALUE_KNIGHT + VALUE_BISHOP + VALUE_SHOULD_WIN) +

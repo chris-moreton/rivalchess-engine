@@ -82,8 +82,7 @@ fun blackAttacksBitboard(bitboards: BitboardData, attacks: Attacks) =
 
 fun threatEval(bitboards: BitboardData, attacks: Attacks, board: EngineBoard) =
         (adjustedAttackScore(whiteAttackScore(bitboards, attacks, board)) -
-                adjustedAttackScore(blackAttackScore(bitboards, attacks, board))) /
-                THREAT_SCORE_DIVISOR
+                adjustedAttackScore(blackAttackScore(bitboards, attacks, board))) / THREAT_SCORE_DIVISOR
 
 fun adjustedAttackScore(attackScore: Int) = attackScore + attackScore * (attackScore / VALUE_QUEEN)
 

@@ -4,6 +4,6 @@ class HashProbeResult constructor (@JvmField val move: Int, @JvmField val window
 
 class Window(@JvmField var low: Int, @JvmField var high: Int) {}
 
-class AspirationSearchResult constructor (@JvmField val path: SearchPath?, @JvmField val window: Window)
+class AspirationSearchResult constructor (@JvmField val path: SearchPath?, @JvmField val low: Int, val high: Int)
 
 class RecaptureExtensionResponse constructor (@JvmField val extend: Int, @JvmField val captureSquare: Int)

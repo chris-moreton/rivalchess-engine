@@ -75,11 +75,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         initSearchVariables()
         if (isBookMoveAvailable()) return
         determineDrawnPositionsAndGenerateDepthZeroMoves()
-        var result = AspirationSearchResult(null, Window(-Int.MAX_VALUE, Int.MAX_VALUE))
+        var result = AspirationSearchResult(null, -Int.MAX_VALUE, Int.MAX_VALUE)
 
         for (depth in 1..finalDepthToSearch) {
             iterativeDeepeningDepth = depth
-            result = aspirationSearch(depth, result.window)
+            result = aspirationSearch(depth, result.low, result.high)
             reorderDepthZeroMoves()
             if (abortingSearch) break
             currentPath.setPath((result.path)!!)
@@ -88,10 +88,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setSearchComplete()
     }
 
-    private fun aspirationSearch(depth: Int, aspirationWindow: Window): AspirationSearchResult {
+    private fun aspirationSearch(depth: Int, low: Int, high: Int): AspirationSearchResult {
         var path: SearchPath
-        var low = aspirationWindow.low
-        var high = aspirationWindow.high
+        var low = low
+        var high = high
 
         path = searchZero(engineBoard, depth, 0, Window(low, high))
         if (!abortingSearch && path.score <= low) {
@@ -110,7 +110,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             low = path.score - ASPIRATION_RADIUS
             high = path.score + ASPIRATION_RADIUS
         }
-        return AspirationSearchResult(path, Window(low, high))
+        return AspirationSearchResult(path, low, high)
     }
 
     @Throws(InvalidMoveException::class)

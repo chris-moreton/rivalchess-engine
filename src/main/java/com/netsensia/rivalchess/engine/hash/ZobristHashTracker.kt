@@ -30,24 +30,22 @@ class ZobristHashTracker {
 
     private fun replaceWithAnotherPiece(movedPiece: Int, capturedPiece: Int, bitRef: Int) {
         trackedBoardHashValue = trackedBoardHashValue xor
-                ZorbristHashCalculator.pieceHashValues[capturedPiece][bitRef] xor
-                ZorbristHashCalculator.pieceHashValues[movedPiece][bitRef]
+            ZorbristHashCalculator.pieceHashValues[capturedPiece][bitRef] xor
+            ZorbristHashCalculator.pieceHashValues[movedPiece][bitRef]
     }
 
     private fun differentFiles(sq1: Int, sq2: Int) = sq1 % 8 != sq2 % 8
 
     private fun processPossibleWhitePawnEnPassantCapture(compactMove: Int, capturedPiece: Int) {
         val to = toSquare(compactMove)
-        if (differentFiles(fromSquare(compactMove), to) && capturedPiece == BITBOARD_NONE) {
+        if (differentFiles(fromSquare(compactMove), to) && capturedPiece == BITBOARD_NONE)
             trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][to - 8]
-        }
     }
 
     private fun processPossibleBlackPawnEnPassantCapture(compactMove: Int, capturedPiece: Int) {
         val to = toSquare(compactMove)
-        if (differentFiles(fromSquare(compactMove), to) && capturedPiece == BITBOARD_NONE) {
+        if (differentFiles(fromSquare(compactMove), to) && capturedPiece == BITBOARD_NONE)
             trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][to + 8]
-        }
     }
 
     private fun processCapture(movedPiece: Int, capturedPiece: Int, bitRefTo: Int) {
