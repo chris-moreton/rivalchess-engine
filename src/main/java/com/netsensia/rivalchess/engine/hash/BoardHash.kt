@@ -106,13 +106,9 @@ class BoardHash {
         hashTracker.makeMove(compactMove, movePiece, capturePiece)
     }
 
-    fun unMove(engineBoard: EngineBoard) {
-        hashTracker.unMakeMove(engineBoard.lastMoveMade!!)
-    }
+    fun unMove(engineBoard: EngineBoard) = hashTracker.unMakeMove(engineBoard.lastMoveMade!!)
 
-    fun makeNullMove() {
-        hashTracker.nullMove()
-    }
+    fun makeNullMove() = hashTracker.nullMove()
 
     val trackedHashValue: Long
         get() = hashTracker.trackedBoardHashValue

@@ -168,9 +168,8 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         if (movePiece !in intArrayOf(BITBOARD_WP, BITBOARD_BP)) {
             return false
         }
-        if (toSquare >= 48 || toSquare <= 15) {
-            return true
-        }
+        if (toSquare >= 48 || toSquare <= 15) return true
+
         if (mover == Colour.BLACK) // white made the last move
         {
             if (toSquare >= 40) return popCount(whitePassedPawnMask[toSquare] and
@@ -198,12 +197,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return occurrences
     }
 
-    fun boardHashCode(): Long {
-        return boardHashObject.trackedHashValue
-    }
+    fun boardHashCode() = boardHashObject.trackedHashValue
 
-    override fun toString(): String {
-        return this.getFen()
-    }
-
+    override fun toString() = this.getFen()
 }

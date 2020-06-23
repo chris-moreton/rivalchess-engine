@@ -37,17 +37,15 @@ class ZobristHashTracker {
     private fun differentFiles(sq1: Int, sq2: Int) = sq1 % 8 != sq2 % 8
 
     private fun processPossibleWhitePawnEnPassantCapture(compactMove: Int, capturedPiece: Int) {
-        val from = fromSquare(compactMove)
         val to = toSquare(compactMove)
-        if (differentFiles(from, to) && capturedPiece == BITBOARD_NONE) {
+        if (differentFiles(fromSquare(compactMove), to) && capturedPiece == BITBOARD_NONE) {
             trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][to - 8]
         }
     }
 
     private fun processPossibleBlackPawnEnPassantCapture(compactMove: Int, capturedPiece: Int) {
-        val from = fromSquare(compactMove)
         val to = toSquare(compactMove)
-        if (differentFiles(from, to) && capturedPiece == BITBOARD_NONE) {
+        if (differentFiles(fromSquare(compactMove), to) && capturedPiece == BITBOARD_NONE) {
             trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][to + 8]
         }
     }
@@ -86,76 +84,6 @@ class ZobristHashTracker {
         }
     }
 
-    private fun unMakeEnPassant(bitRefTo: Int, moveDetail: MoveDetail): Boolean {
-        if (1L shl bitRefTo == moveDetail.enPassantBitboard) {
-            if (moveDetail.movePiece == BITBOARD_WP) {
-                trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][bitRefTo - 8]
-                return true
-            } else if (moveDetail.movePiece == BITBOARD_BP) {
-                trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][bitRefTo + 8]
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun unMakeCapture(bitRefTo: Int, moveDetail: MoveDetail): Boolean {
-        if (moveDetail.capturePiece != BITBOARD_NONE) {
-            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[moveDetail.capturePiece][bitRefTo]
-            return true
-        }
-        return false
-    }
-
-    private fun unMakeWhiteCastle(bitRefTo: Int): Boolean {
-        return when (bitRefTo) {
-            1 -> {
-                trackedBoardHashValue = trackedBoardHashValue xor
-                        ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][2] xor
-                        ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][0]
-                true
-            }
-            5 -> {
-                trackedBoardHashValue = trackedBoardHashValue xor
-                        ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][4] xor
-                        ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][7]
-                true
-            }
-            else -> false
-        }
-    }
-
-    private fun unMakeBlackCastle(bitRefTo: Int): Boolean {
-        return when (bitRefTo) {
-            61 -> {
-                trackedBoardHashValue = trackedBoardHashValue xor
-                        ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][60] xor
-                        ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][63]
-                true
-            }
-            57 -> {
-                trackedBoardHashValue = trackedBoardHashValue xor
-                        ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][58] xor
-                        ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][56]
-                true
-            }
-            else -> false
-        }
-    }
-
-    private fun unMakePromotion(bitRefFrom: Int, bitRefTo: Int, moveDetail: MoveDetail): Boolean {
-        val movedPiece = moveDetail.movePiece
-        val promotedPiece = promotionPiece(moveDetail.move)
-        if (promotedPiece != BITBOARD_NONE) {
-            trackedBoardHashValue = trackedBoardHashValue xor
-                    ZorbristHashCalculator.pieceHashValues[movedPiece][bitRefFrom] xor
-                    ZorbristHashCalculator.pieceHashValues[promotedPiece][bitRefTo]
-            unMakeCapture(bitRefTo, moveDetail)
-            return true
-        }
-        return false
-    }
-
     fun nullMove() = switchMover()
 
     fun makeMove(compactMove: Int, movedPiece: Int, capturedPiece: Int) {
@@ -169,18 +97,7 @@ class ZobristHashTracker {
     }
 
     fun unMakeMove(moveDetail: MoveDetail) {
-        val bitRefFrom = fromSquare(moveDetail.move)
-        val bitRefTo = toSquare(moveDetail.move)
-        if (!unMakePromotion(bitRefFrom, bitRefTo, moveDetail)) {
-            trackedBoardHashValue = trackedBoardHashValue xor
-                    ZorbristHashCalculator.pieceHashValues[moveDetail.movePiece][bitRefFrom] xor
-                    ZorbristHashCalculator.pieceHashValues[moveDetail.movePiece][bitRefTo]
-            if (!unMakeEnPassant(bitRefTo, moveDetail) && !unMakeCapture(bitRefTo, moveDetail)) {
-                if (moveDetail.movePiece == BITBOARD_WK && bitRefFrom == 3) unMakeWhiteCastle(bitRefTo)
-                if (moveDetail.movePiece == BITBOARD_BK && bitRefFrom == 59) unMakeBlackCastle(bitRefTo)
-            }
-        }
-        switchMover()
+        trackedBoardHashValue = moveDetail.hashValue
     }
 
 }

@@ -17,12 +17,14 @@ class MoveGenerator(
     var moves = IntArray(MAX_LEGAL_MOVES)
     val bitboards = engineBitboards.pieceBitboards
     var moveCount = 0
+    private val friendlyBitboardInverted = bitboards[BITBOARD_FRIENDLY].inv()
+    private val knightBitboardForMover = if (mover == Colour.WHITE) bitboards[BITBOARD_WN] else bitboards[BITBOARD_BN]
 
     fun generateLegalMoves(): MoveGenerator {
 
         moveCount = 0
 
-        generateKnightMoves(knightBitboardForMover())
+        generateKnightMoves()
         generateKingMoves(kingSquareForMover())
         generatePawnMoves(pawnBitboardForMover(),
                 if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
@@ -45,11 +47,8 @@ class MoveGenerator(
 
     private fun kingSquareForMover() = if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare
 
-    private fun knightBitboardForMover() = if (mover == Colour.WHITE) bitboards[BITBOARD_WN] else bitboards[BITBOARD_BN]
-
-    private fun generateKnightMoves(knightBitboard: Long) {
-        val friendlyBitboardInverted = bitboards[BITBOARD_FRIENDLY].inv()
-        applyToSquares(knightBitboard) {
+    private fun generateKnightMoves() {
+        applyToSquares(knightBitboardForMover) {
             addMoves(it shl 16, knightMoves[it] and friendlyBitboardInverted)
         }
     }
@@ -64,30 +63,31 @@ class MoveGenerator(
         if (mover == Colour.WHITE)
             generateCastleMoves(
                     3, 4, Colour.BLACK,
-                    Pair(CASTLEPRIV_WK, CASTLEPRIV_WQ),
-                    Pair(WHITEKINGSIDECASTLESQUARES, WHITEQUEENSIDECASTLESQUARES)) else
+                    CASTLEPRIV_WK, CASTLEPRIV_WQ,
+                    WHITEKINGSIDECASTLESQUARES, WHITEQUEENSIDECASTLESQUARES) else
             generateCastleMoves(
                     59, 60, Colour.WHITE,
-                    Pair(CASTLEPRIV_BK, CASTLEPRIV_BQ),
-                    Pair(BLACKKINGSIDECASTLESQUARES, BLACKQUEENSIDECASTLESQUARES))
+                    CASTLEPRIV_BK, CASTLEPRIV_BQ,
+                    BLACKKINGSIDECASTLESQUARES, BLACKQUEENSIDECASTLESQUARES)
 
-        addMoves(kingSquare shl 16, kingMoves[kingSquare] and
-                bitboards[BITBOARD_FRIENDLY].inv())
+        addMoves(kingSquare shl 16, kingMoves[kingSquare] and friendlyBitboardInverted)
     }
 
     private fun generateCastleMoves(
             kingStartSquare: Int = 3,
             queenStartSquare: Int = 4,
             opponent: Colour = Colour.BLACK,
-            privileges: Pair<Int,Int>,
-            castleSquares: Pair<Long,Long>
+            kingPrivileges: Int,
+            queenPrivileges: Int,
+            kingCastleSquares: Long,
+            queenCastleSquares: Long
     ) {
-        if ((castlePrivileges and privileges.first).toLong() != 0L && bitboards[BITBOARD_ALL] and castleSquares.first == 0L &&
+        if ((castlePrivileges and kingPrivileges).toLong() != 0L && bitboards[BITBOARD_ALL] and kingCastleSquares == 0L &&
                 !engineBitboards.isSquareAttackedBy(kingStartSquare, opponent) &&
                 !engineBitboards.isSquareAttackedBy(kingStartSquare - 1, opponent)) {
             moves[moveCount++] = (kingStartSquare shl 16 or kingStartSquare - 2)
         }
-        if ((castlePrivileges and privileges.second).toLong() != 0L && bitboards[BITBOARD_ALL] and castleSquares.second == 0L &&
+        if ((castlePrivileges and queenPrivileges).toLong() != 0L && bitboards[BITBOARD_ALL] and queenCastleSquares == 0L &&
                 !engineBitboards.isSquareAttackedBy(kingStartSquare, opponent) &&
                 !engineBitboards.isSquareAttackedBy(queenStartSquare, opponent)) {
             moves[moveCount++] = (kingStartSquare shl 16 or queenStartSquare + 1)
@@ -106,8 +106,6 @@ class MoveGenerator(
             bitboards[whitePiece] or bitboards[BITBOARD_WQ] else
             bitboards[blackPiece] or bitboards[BITBOARD_BQ]
 
-        val friendlyBitboardInverted = bitboards[BITBOARD_FRIENDLY].inv()
-
         applyToSquares(bitboard) {
             addMoves(
                     it shl 16,
@@ -125,7 +123,7 @@ class MoveGenerator(
         val enemyKingSquare:Int = (if (mover == Colour.WHITE) blackKingSquare else whiteKingSquare).toInt()
         generateQuiesceKnightMoves(generateChecks,
                 enemyKingSquare,
-                knightBitboardForMover()
+                knightBitboardForMover
         )
         addMoves(kingSquare shl 16, kingMoves[kingSquare] and bitboards[BITBOARD_ENEMY])
         generateQuiescePawnMoves(generateChecks,
@@ -143,7 +141,6 @@ class MoveGenerator(
     }
 
     private fun generateQuiesceKnightMoves(generateChecks: Boolean, enemyKingSquare: Int, knightBitboard: Long) {
-        val friendlyBitboardInverted = bitboards[BITBOARD_FRIENDLY].inv()
         applyToSquares(knightBitboard) {
             addMoves(it shl 16, knightMoves[it] and if (generateChecks)
                 bitboards[BITBOARD_ENEMY] or (knightMoves[enemyKingSquare] and friendlyBitboardInverted)
@@ -181,7 +178,6 @@ class MoveGenerator(
         val pieceBitboard = if (mover == Colour.WHITE) engineBitboards.pieceBitboards[whiteSliderConstant] or
                 bitboards[BITBOARD_WQ] else engineBitboards.pieceBitboards[blackSliderConstant] or bitboards[BITBOARD_BQ]
 
-        val friendlyBitboardInverted = bitboards[BITBOARD_FRIENDLY].inv()
         val enemyBitboard = if (generateChecks) checkSquares or bitboards[BITBOARD_ENEMY] else bitboards[BITBOARD_ENEMY]
 
         applyToSquares(pieceBitboard) {
@@ -232,8 +228,7 @@ class MoveGenerator(
 
     private fun pawnForwardAndCaptureMovesBitboard(bitRef: Int, bitboardMaskCapturePawnMoves: LongArray, bitboardPawnMoves: Long) =
             bitboardPawnMoves or if (bitboards[BITBOARD_ENPASSANTSQUARE] and enPassantCaptureRank(mover) != 0L)
-                pawnCapturesPlusEnPassantSquare(bitboardMaskCapturePawnMoves, bitRef)
-            else
+                pawnCapturesPlusEnPassantSquare(bitboardMaskCapturePawnMoves, bitRef) else
                 pawnCaptures(bitboardMaskCapturePawnMoves, bitRef, BITBOARD_ENEMY)
 
     private fun pawnCapturesPlusEnPassantSquare(bitboardMaskCapturePawnMoves: LongArray, bitRef: Int) =

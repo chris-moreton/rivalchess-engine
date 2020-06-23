@@ -95,7 +95,6 @@ fun rookAttacks(bitboards: BitboardData, sq: Int) : Long =
 fun bishopAttacks(bitboards: BitboardData, sq: Int) =
         MagicBitboards.magicMovesBishop[sq][
                 ((bitboards.all and MagicBitboards.occupancyMaskBishop[sq])
-                        * MagicBitboards.magicNumberBishop[sq]
-                        ushr MagicBitboards.magicNumberShiftsBishop[sq]).toInt()]
+                        * MagicBitboards.magicNumberBishop[sq] ushr MagicBitboards.magicNumberShiftsBishop[sq]).toInt()]
 
 fun queenAttacks(bitboards: BitboardData, sq: Int) = rookAttacks(bitboards, sq) or bishopAttacks(bitboards, sq)

@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.eval
 
 import com.netsensia.rivalchess.consts.*
-import com.netsensia.rivalchess.model.Piece
 
 const val VALUE_PAWN = 100
 const val VALUE_KNIGHT = 390
