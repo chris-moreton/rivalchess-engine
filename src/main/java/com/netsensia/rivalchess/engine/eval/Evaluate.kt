@@ -275,22 +275,18 @@ fun uncastledTrappedWhiteRookEval(bitboards: BitboardData) =
             KINGSAFETY_UNCASTLED_TRAPPED_ROOK
         else 0)
 
-fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShield: Long, shifter: Long.(Int) -> Long) =
+inline fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShield: Long, shifter: Long.(Int) -> Long) =
         (KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * popCount(friendlyPawns and friendlyPawnShield)
                 - KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * popCount(enemyPawns and (friendlyPawnShield or shifter(friendlyPawnShield,8)))
                 + KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * popCount(friendlyPawns and shifter(friendlyPawnShield,8))
                 - KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * popCount(enemyPawns and shifter(friendlyPawnShield,16)))
 
 fun uncastledTrappedBlackRookEval(bitboards: BitboardData) =
-        if (bitboards.blackKing and F8G8 != 0L &&
-                bitboards.blackRooks and G8H8 != 0L &&
-                bitboards.blackPawns and FILE_G != 0L &&
-                bitboards.blackPawns and FILE_H != 0L)
+        if (bitboards.blackKing and F8G8 != 0L && bitboards.blackRooks and G8H8 != 0L &&
+                bitboards.blackPawns and FILE_G != 0L && bitboards.blackPawns and FILE_H != 0L)
             KINGSAFETY_UNCASTLED_TRAPPED_ROOK
-        else (if (bitboards.blackKing and B8C8 != 0L &&
-                bitboards.blackRooks and A8B8 != 0L &&
-                bitboards.blackPawns and FILE_A != 0L &&
-                bitboards.blackPawns and FILE_B != 0L)
+        else (if (bitboards.blackKing and B8C8 != 0L && bitboards.blackRooks and A8B8 != 0L &&
+                bitboards.blackPawns and FILE_A != 0L && bitboards.blackPawns and FILE_B != 0L)
             KINGSAFETY_UNCASTLED_TRAPPED_ROOK
         else 0)
 
@@ -474,10 +470,10 @@ fun whiteShouldWinWithKnightAndBishopValue(eval: Int) =
         VALUE_KNIGHT + VALUE_BISHOP + VALUE_SHOULD_WIN + eval / ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR
 
 fun whiteHasOnlyAKnightAndBishop(bitboards: BitboardData, materialValues: MaterialValues) =
-        popCount(bitboards.whiteKnights) == 1 && (materialValues.whitePieces == VALUE_KNIGHT + VALUE_BISHOP)
+        exactlyOneBitSet(bitboards.whiteKnights) && (materialValues.whitePieces == VALUE_KNIGHT + VALUE_BISHOP)
 
 fun blackHasOnlyAKnightAndBishop(bitboards: BitboardData, materialValues: MaterialValues) =
-        popCount(bitboards.blackKnights) == 1 && (materialValues.blackPieces == VALUE_KNIGHT + VALUE_BISHOP)
+        exactlyOneBitSet(bitboards.blackKnights) && (materialValues.blackPieces == VALUE_KNIGHT + VALUE_BISHOP)
 
 fun whiteHasOnlyTwoKnights(bitboards: BitboardData, materialValues: MaterialValues) =
         popCount(bitboards.whiteKnights) == 2 && (materialValues.whitePieces == 2 * VALUE_KNIGHT)

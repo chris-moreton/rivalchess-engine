@@ -4,7 +4,6 @@ import com.netsensia.rivalchess.bitboards.LOW32
 import com.netsensia.rivalchess.config.DEFAULT_SEARCH_HASH_HEIGHT
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
-import com.netsensia.rivalchess.engine.type.EngineMove
 
 class BoardHash {
 

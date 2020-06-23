@@ -46,7 +46,7 @@ class EvaluateKtTest : TestCase() {
     }
 
     @Test
-    fun testOnlyOneBitSet() {
+    fun testExactlyOneBitSet() {
         assertFalse(exactlyOneBitSet(0L))
         for (i in 0..63) {
             assertTrue(exactlyOneBitSet(1L shl i))
