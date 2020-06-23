@@ -19,11 +19,13 @@ class StaticExchangeEvaluatorSeeBoard : StaticExchangeEvaluator {
 
         if (board.makeMove(compactMove, false, updateHash = false)) {
             val materialBalance = materialBalanceFromMoverPerspective(board)
-            val captureSquare = toSquare(compactMove)
-            val materialGain = seeBoard.makeMove(compactMove)
-            val seeValue = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain)) - materialBalance
             board.unMakeMove(false)
-            return seeValue
+
+            return -seeSearch(
+                    seeBoard,
+                    toSquare(compactMove),
+                    -(materialBalance + seeBoard.makeMove(compactMove))
+            ) - materialBalance
         }
         return -Int.MAX_VALUE
     }
