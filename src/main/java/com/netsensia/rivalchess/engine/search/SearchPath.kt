@@ -55,7 +55,8 @@ class SearchPath {
     override fun toString(): String {
         var retString = ""
         try {
-            for (i in 0 until height) retString += if (move[i] != 0) getSimpleAlgebraicMoveFromCompactMove(move[i]) + " " else break
+            for (i in 0 until height)
+                retString += if (move[i] != 0) getSimpleAlgebraicMoveFromCompactMove(move[i]) + " " else break
         } catch (e: NullPointerException) {
             throw RuntimeException()
         }
