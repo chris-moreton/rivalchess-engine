@@ -296,44 +296,44 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun recaptureExtensions(extensions: Int, targetPiece: Int, movePiece: Int, board: EngineBoard, move: Int, recaptureSquare: Int) =
-            if (FRACTIONAL_EXTENSION_RECAPTURE > 0 && extensions / FRACTIONAL_EXTENSION_FULL < MAX_EXTENSION_DEPTH) {
-                var currentSEEValue = -Int.MAX_VALUE
-                var recaptureExtend = 0
-                var newRecaptureSquare = -1
-                if (targetPiece != -1 && pieceValues[movePiece] == pieceValues[targetPiece]) {
-                    currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
-                    if (abs(currentSEEValue) <= RECAPTURE_EXTENSION_MARGIN) newRecaptureSquare = toSquare(move)
-                }
-                if (toSquare(move) == recaptureSquare) {
-                    if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
-                    if (abs(currentSEEValue) > getPieceValue(board.getBitboardTypeOfPieceOnSquare(recaptureSquare, board.mover.opponent())) - RECAPTURE_EXTENSION_MARGIN) {
-                        recaptureExtend = 1
-                    }
-                }
-                RecaptureExtensionResponse(recaptureExtend, newRecaptureSquare)
-            } else {
-                RecaptureExtensionResponse(-Int.MAX_VALUE, -1)
+        if (FRACTIONAL_EXTENSION_RECAPTURE > 0 && extensions / FRACTIONAL_EXTENSION_FULL < MAX_EXTENSION_DEPTH) {
+            var currentSEEValue = -Int.MAX_VALUE
+            var recaptureExtend = 0
+            var newRecaptureSquare = -1
+            if (targetPiece != -1 && pieceValues[movePiece] == pieceValues[targetPiece]) {
+                currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
+                if (abs(currentSEEValue) <= RECAPTURE_EXTENSION_MARGIN) newRecaptureSquare = toSquare(move)
             }
+            if (toSquare(move) == recaptureSquare) {
+                if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
+                if (abs(currentSEEValue) > getPieceValue(board.getBitboardTypeOfPieceOnSquare(recaptureSquare, board.mover.opponent())) - RECAPTURE_EXTENSION_MARGIN) {
+                    recaptureExtend = 1
+                }
+            }
+            RecaptureExtensionResponse(recaptureExtend, newRecaptureSquare)
+        } else {
+            RecaptureExtensionResponse(-Int.MAX_VALUE, -1)
+        }
 
     private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, window: Window, newExtensions: Int, newRecaptureSquare: Int, localIsCheck: Boolean, board: EngineBoard) =
-            if (useScoutSearch) {
-                val scoutPath = search(engineBoard, (depth - 1), ply + 1, -window.low - 1, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
-                    if (it.score > MATE_SCORE_START) it.score-- else
-                        if (it.score < -MATE_SCORE_START) it.score++
-                }
-
-                if (!abortingSearch && -scoutPath.score > window.low) {
-                    search(engineBoard, (depth - 1), ply + 1, -window.high, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
-                        if (it.score > MATE_SCORE_START) it.score-- else
-                            if (it.score < -MATE_SCORE_START) it.score++
-                    }
-                } else scoutPath
-            } else {
-                search(board, depth - 1, ply + 1, -window.high, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
-                    if (it.score > MATE_SCORE_START) it.score-- else
-                        if (it.score < -MATE_SCORE_START) it.score++
-                }
+        if (useScoutSearch) {
+            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -window.low - 1, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
+                if (it.score > MATE_SCORE_START) it.score-- else
+                    if (it.score < -MATE_SCORE_START) it.score++
             }
+
+            if (!abortingSearch && -scoutPath.score > window.low) {
+                search(engineBoard, (depth - 1), ply + 1, -window.high, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
+                    if (it.score > MATE_SCORE_START) it.score-- else
+                        if (it.score < -MATE_SCORE_START) it.score++
+                }
+            } else scoutPath
+        } else {
+            search(board, depth - 1, ply + 1, -window.high, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
+                if (it.score > MATE_SCORE_START) it.score-- else
+                    if (it.score < -MATE_SCORE_START) it.score++
+            }
+        }
 
     private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): Int {
         if (hashMove == 0 && !board.isOnNullMove && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
