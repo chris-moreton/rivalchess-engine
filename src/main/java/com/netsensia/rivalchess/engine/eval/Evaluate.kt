@@ -236,24 +236,14 @@ fun isEndGame(materialValues: MaterialValues) =
 
 fun kingSafetyEval(board: EngineBoard, materialValues: MaterialValues, attacks: Attacks): Int {
 
-    val whiteKingDangerZone = whiteKingDangerZone(board)
-
-    val blackKingDangerZone = blackKingDangerZone(board)
-
-    val blackKingAttackedCount = kingAttackCount(blackKingDangerZone, attacks.whiteRooks) +
-            kingAttackCount(blackKingDangerZone, attacks.whiteQueens) * 2 +
-            kingAttackCount(blackKingDangerZone, attacks.whiteBishops)
-
-    val whiteKingAttackedCount = kingAttackCount(whiteKingDangerZone, attacks.blackRooks) +
-            kingAttackCount(whiteKingDangerZone, attacks.blackQueens) * 2 +
-            kingAttackCount(whiteKingDangerZone, attacks.blackBishops)
+    val whiteKingAttackedCount = whiteKingAttackCount(whiteKingDangerZone[board.whiteKingSquare], attacks)
+    val blackKingAttackedCount = blackKingAttackCount(blackKingDangerZone[board.blackKingSquare], attacks)
 
     val averagePiecesPerSide = (materialValues.whitePieces + materialValues.blackPieces) / 2
 
     if (averagePiecesPerSide <= KINGSAFETY_MIN_PIECE_BALANCE) return 0
 
     val whiteKingSafety: Int = whiteKingShieldEval(board)
-
     val blackKingSafety: Int = blackKingShieldEval(board)
 
     return linearScale(
@@ -264,9 +254,17 @@ fun kingSafetyEval(board: EngineBoard, materialValues: MaterialValues, attacks: 
             whiteKingSafety - blackKingSafety + (blackKingAttackedCount - whiteKingAttackedCount) * KINGSAFETY_ATTACK_MULTIPLIER)
 }
 
-private fun blackKingDangerZone(board: EngineBoard) = kingMoves[board.blackKingSquare] or (kingMoves[board.blackKingSquare] ushr 8)
+private fun whiteKingAttackCount(whiteKingDangerZone: Long, attacks: Attacks): Int {
+    return kingAttackCount(whiteKingDangerZone, attacks.blackRooks) +
+            kingAttackCount(whiteKingDangerZone, attacks.blackQueens) * 2 +
+            kingAttackCount(whiteKingDangerZone, attacks.blackBishops)
+}
 
-private fun whiteKingDangerZone(board: EngineBoard) = kingMoves[board.whiteKingSquare] or (kingMoves[board.whiteKingSquare] shl 8)
+private fun blackKingAttackCount(blackKingDangerZone: Long, attacks: Attacks): Int {
+    return kingAttackCount(blackKingDangerZone, attacks.whiteRooks) +
+            kingAttackCount(blackKingDangerZone, attacks.whiteQueens) * 2 +
+            kingAttackCount(blackKingDangerZone, attacks.whiteBishops)
+}
 
 fun uncastledTrappedWhiteRookEval(board: EngineBoard) =
         if (board.getBitboard(BITBOARD_WK) and F1G1 != 0L &&

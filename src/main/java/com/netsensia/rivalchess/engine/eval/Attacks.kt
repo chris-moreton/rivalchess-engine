@@ -56,7 +56,6 @@ class Attacks(board: EngineBoard) {
 }
 
 fun whitePawnAttacks(whitePawns: Long) = whitePawns and FILE_A.inv() shl 9 or (whitePawns and FILE_H.inv() shl 7)
-
 fun blackPawnAttacks(blackPawns: Long) = blackPawns and FILE_A.inv() ushr 7 or (blackPawns and FILE_H.inv() ushr 9)
 
 fun whiteAttackScore(attacks: Attacks, board: EngineBoard): Int {
