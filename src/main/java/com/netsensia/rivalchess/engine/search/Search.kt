@@ -729,10 +729,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val finalScore = if (historyScore == 0)
                     (if (board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE) 1 // losing capture
-                        else 50 + scorePieceSquareValues(
-                                board,
-                                if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare],
-                                if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]) / 2)
+                        else 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2)
                 else historyScore
 
                 orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - finalScore shl 24)
@@ -741,31 +738,36 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int) =
-            when (board.getBitboardTypeOfPieceOnSquare(fromSquare)) {
-                BITBOARD_WP, BITBOARD_BP -> linearScale(
-                        if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
-                        PAWN_STAGE_MATERIAL_LOW,
-                        PAWN_STAGE_MATERIAL_HIGH,
-                        PieceSquareTables.pawnEndGame[toSquare] - PieceSquareTables.pawnEndGame[fromSquare],
-                        PieceSquareTables.pawn[toSquare] - PieceSquareTables.pawn[fromSquare])
-                BITBOARD_WN, BITBOARD_BN -> linearScale(
-                        if (board.mover == Colour.WHITE) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
-                        KNIGHT_STAGE_MATERIAL_LOW,
-                        KNIGHT_STAGE_MATERIAL_HIGH,
-                        PieceSquareTables.knightEndGame[toSquare] - PieceSquareTables.knightEndGame[fromSquare],
-                        PieceSquareTables.knight[toSquare] - PieceSquareTables.knight[fromSquare])
-                BITBOARD_WB, BITBOARD_BB -> PieceSquareTables.bishop[toSquare] - PieceSquareTables.bishop[fromSquare]
-                BITBOARD_WR, BITBOARD_BR -> PieceSquareTables.rook[toSquare] - PieceSquareTables.rook[fromSquare]
-                BITBOARD_WQ, BITBOARD_BQ -> PieceSquareTables.queen[toSquare] - PieceSquareTables.queen[fromSquare]
-                BITBOARD_WK, BITBOARD_BK -> linearScale(
-                        if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
-                        VALUE_ROOK,
-                        OPENING_PHASE_MATERIAL,
-                        PieceSquareTables.kingEndGame[toSquare] - PieceSquareTables.kingEndGame[fromSquare],
-                        PieceSquareTables.king[toSquare] - PieceSquareTables.king[fromSquare])
-                else -> 0
-            }
+    private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): Int {
+        val piece = board.getBitboardTypeOfPieceOnSquare(fromSquare, board.mover)
+        val fromAdjusted = if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare]
+        val toAdjusted = if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]
+
+        return when (piece) {
+            BITBOARD_WP, BITBOARD_BP -> linearScale(
+                    if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
+                    PAWN_STAGE_MATERIAL_LOW,
+                    PAWN_STAGE_MATERIAL_HIGH,
+                    PieceSquareTables.pawnEndGame[toAdjusted] - PieceSquareTables.pawnEndGame[fromAdjusted],
+                    PieceSquareTables.pawn[toAdjusted] - PieceSquareTables.pawn[fromAdjusted])
+            BITBOARD_WN, BITBOARD_BN -> linearScale(
+                    if (board.mover == Colour.WHITE) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
+                    KNIGHT_STAGE_MATERIAL_LOW,
+                    KNIGHT_STAGE_MATERIAL_HIGH,
+                    PieceSquareTables.knightEndGame[toAdjusted] - PieceSquareTables.knightEndGame[fromAdjusted],
+                    PieceSquareTables.knight[toAdjusted] - PieceSquareTables.knight[fromAdjusted])
+            BITBOARD_WB, BITBOARD_BB -> PieceSquareTables.bishop[toAdjusted] - PieceSquareTables.bishop[fromAdjusted]
+            BITBOARD_WR, BITBOARD_BR -> PieceSquareTables.rook[toAdjusted] - PieceSquareTables.rook[fromAdjusted]
+            BITBOARD_WQ, BITBOARD_BQ -> PieceSquareTables.queen[toAdjusted] - PieceSquareTables.queen[fromAdjusted]
+            BITBOARD_WK, BITBOARD_BK -> linearScale(
+                    if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
+                    VALUE_ROOK,
+                    OPENING_PHASE_MATERIAL,
+                    PieceSquareTables.kingEndGame[toAdjusted] - PieceSquareTables.kingEndGame[fromAdjusted],
+                    PieceSquareTables.king[toAdjusted] - PieceSquareTables.king[fromAdjusted])
+            else -> 0
+        }
+    }
 
     private fun scoreHistoryHeuristic(board: EngineBoard, score: Int, fromSquare: Int, toSquare: Int) =
             if (score == 0 && USE_HISTORY_HEURISTIC && historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
