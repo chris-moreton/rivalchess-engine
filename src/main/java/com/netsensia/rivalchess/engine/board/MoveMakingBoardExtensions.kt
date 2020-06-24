@@ -88,13 +88,14 @@ private fun EngineBoard.updateMaterialAfterPieceCapture(capturePiece: Int, colou
 @Throws(InvalidMoveException::class)
 fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     numMovesMade--
-    halfMoveCount = moveHistory[numMovesMade]!!.halfMoveCount
+    val moveMade = moveHistory[numMovesMade]!!
+    halfMoveCount = moveMade.halfMoveCount
     mover = mover.opponent()
-    engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveHistory[numMovesMade]!!.enPassantBitboard)
-    castlePrivileges = moveHistory[numMovesMade]!!.castlePrivileges
-    isOnNullMove = moveHistory[numMovesMade]!!.isOnNullMove
-    val fromSquare = moveHistory[numMovesMade]!!.move ushr 16 and 63
-    val toSquare = moveHistory[numMovesMade]!!.move and 63
+    engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveMade.enPassantBitboard)
+    castlePrivileges = moveMade.castlePrivileges
+    isOnNullMove = moveMade.isOnNullMove
+    val fromSquare = moveMade.move ushr 16 and 63
+    val toSquare = moveMade.move and 63
     val fromMask = 1L shl fromSquare
     val toMask = 1L shl toSquare
     if (updateHash) boardHashObject.unMove(this)

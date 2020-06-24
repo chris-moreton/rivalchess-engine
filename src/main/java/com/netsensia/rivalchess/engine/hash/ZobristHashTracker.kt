@@ -2,25 +2,24 @@ package com.netsensia.rivalchess.engine.hash
 
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
-import com.netsensia.rivalchess.engine.hash.ZorbristHashCalculator.blackMoverHashValue
-import com.netsensia.rivalchess.engine.hash.ZorbristHashCalculator.calculateHash
-import com.netsensia.rivalchess.engine.hash.ZorbristHashCalculator.whiteMoverHashValue
+import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator.blackMoverHashValue
+import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator.calculateHash
+import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator.whiteMoverHashValue
 import com.netsensia.rivalchess.engine.search.*
-import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.engine.type.MoveDetail
 
 class ZobristHashTracker {
     @JvmField
     var trackedBoardHashValue: Long = 0
 
-    private val whiteKingSideCastle = ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][0] xor
-            ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][2]
-    private val whiteQueenSideCastle = ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][7] xor
-            ZorbristHashCalculator.pieceHashValues[BITBOARD_WR][4]
-    private val blackKingSideCastle = ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][56] xor
-            ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][58]
-    private val blackQueenSideCastle = ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][63] xor
-            ZorbristHashCalculator.pieceHashValues[BITBOARD_BR][60]
+    private val whiteKingSideCastle = ZobristHashCalculator.pieceHashValues[BITBOARD_WR][0] xor
+            ZobristHashCalculator.pieceHashValues[BITBOARD_WR][2]
+    private val whiteQueenSideCastle = ZobristHashCalculator.pieceHashValues[BITBOARD_WR][7] xor
+            ZobristHashCalculator.pieceHashValues[BITBOARD_WR][4]
+    private val blackKingSideCastle = ZobristHashCalculator.pieceHashValues[BITBOARD_BR][56] xor
+            ZobristHashCalculator.pieceHashValues[BITBOARD_BR][58]
+    private val blackQueenSideCastle = ZobristHashCalculator.pieceHashValues[BITBOARD_BR][63] xor
+            ZobristHashCalculator.pieceHashValues[BITBOARD_BR][60]
 
     private val switchMoverHashValue = whiteMoverHashValue xor blackMoverHashValue
 
@@ -30,8 +29,8 @@ class ZobristHashTracker {
 
     private fun replaceWithAnotherPiece(movedPiece: Int, capturedPiece: Int, bitRef: Int) {
         trackedBoardHashValue = trackedBoardHashValue xor
-            ZorbristHashCalculator.pieceHashValues[capturedPiece][bitRef] xor
-            ZorbristHashCalculator.pieceHashValues[movedPiece][bitRef]
+            ZobristHashCalculator.pieceHashValues[capturedPiece][bitRef] xor
+            ZobristHashCalculator.pieceHashValues[movedPiece][bitRef]
     }
 
     private fun differentFiles(sq1: Int, sq2: Int) = sq1 % 8 != sq2 % 8
@@ -39,18 +38,18 @@ class ZobristHashTracker {
     private fun processPossibleWhitePawnEnPassantCapture(compactMove: Int, capturedPiece: Int) {
         val to = toSquare(compactMove)
         if (differentFiles(fromSquare(compactMove), to) && capturedPiece == BITBOARD_NONE)
-            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_BP][to - 8]
+            trackedBoardHashValue = trackedBoardHashValue xor ZobristHashCalculator.pieceHashValues[BITBOARD_BP][to - 8]
     }
 
     private fun processPossibleBlackPawnEnPassantCapture(compactMove: Int, capturedPiece: Int) {
         val to = toSquare(compactMove)
         if (differentFiles(fromSquare(compactMove), to) && capturedPiece == BITBOARD_NONE)
-            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[BITBOARD_WP][to + 8]
+            trackedBoardHashValue = trackedBoardHashValue xor ZobristHashCalculator.pieceHashValues[BITBOARD_WP][to + 8]
     }
 
     private fun processCapture(movedPiece: Int, capturedPiece: Int, bitRefTo: Int) {
         if (capturedPiece == BITBOARD_NONE)
-            trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[movedPiece][bitRefTo]
+            trackedBoardHashValue = trackedBoardHashValue xor ZobristHashCalculator.pieceHashValues[movedPiece][bitRefTo]
         else replaceWithAnotherPiece(movedPiece, capturedPiece, bitRefTo)
     }
 
@@ -87,7 +86,7 @@ class ZobristHashTracker {
     fun makeMove(compactMove: Int, movedPiece: Int, capturedPiece: Int) {
         val bitRefFrom = fromSquare(compactMove)
         val bitRefTo = toSquare(compactMove)
-        trackedBoardHashValue = trackedBoardHashValue xor ZorbristHashCalculator.pieceHashValues[movedPiece][bitRefFrom]
+        trackedBoardHashValue = trackedBoardHashValue xor ZobristHashCalculator.pieceHashValues[movedPiece][bitRefFrom]
         processCapture(movedPiece, capturedPiece, bitRefTo)
         processSpecialPawnMoves(compactMove, movedPiece, bitRefTo, capturedPiece)
         processCastling(bitRefFrom, movedPiece, bitRefTo)

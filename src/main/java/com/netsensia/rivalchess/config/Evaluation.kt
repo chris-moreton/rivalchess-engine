@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.config
 
 import com.netsensia.rivalchess.engine.eval.*
-import java.util.*
 
 const val TOTAL_PIECE_VALUE_PER_SIDE_AT_START = VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2 + VALUE_QUEEN
 const val OPENING_PHASE_MATERIAL = (TOTAL_PIECE_VALUE_PER_SIDE_AT_START * 0.8).toInt()
@@ -61,15 +60,12 @@ val VALUE_BISHOP_MOBILITY = intArrayOf(-15, -10, -6, -2, 2, 6, 10, 13, 16, 18, 2
 val VALUE_ROOK_MOBILITY = intArrayOf(-10, -7, -4, -1, 2, 5, 7, 9, 11, 12, 13, 14, 14, 14, 14)
 val VALUE_QUEEN_MOBILITY = intArrayOf(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
 val VALUE_PASSED_PAWN_BONUS = intArrayOf(-1, 24, 26, 30, 36, 44, 56, -1)
+
 const val endgameSubtractInsufficientMaterialMultiplier = 0.9
 
-val pieceValues: List<Int>
-    get() = Collections.unmodifiableList(Arrays.asList(
+val pieceValues = listOf(
             VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK,
-            VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK)
+            VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK
     )
 
-fun getPieceValue(piece: Int): Int {
-    return pieceValues[piece]
-}
-
+fun getPieceValue(piece: Int) = pieceValues[piece]

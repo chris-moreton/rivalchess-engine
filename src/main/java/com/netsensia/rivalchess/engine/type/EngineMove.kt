@@ -13,7 +13,7 @@ class EngineMove {
         this.compact = compact
     }
 
-    fun from() = compact shr 16 and 63
+    private fun from() = compact shr 16 and 63
     fun to() = compact and 63
 
     constructor(move: Move) {

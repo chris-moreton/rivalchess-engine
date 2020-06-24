@@ -5,8 +5,8 @@ import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 
-object ZorbristHashCalculator {
-    const val START_HASH_VALUE = 1427869295504964227L
+object ZobristHashCalculator {
+    private const val START_HASH_VALUE = 1427869295504964227L
 
     @JvmField
     val pieceHashValues = arrayOf(
@@ -27,6 +27,12 @@ object ZorbristHashCalculator {
     private val moverHashValues = longArrayOf(6612194290785701391L, 7796428774704130372L)
 
     @JvmStatic
+    val whiteMoverHashValue = moverHashValues[0]
+
+    @JvmStatic
+    val blackMoverHashValue = moverHashValues[1]
+
+    @JvmStatic
     fun calculateHash(engineBoard: EngineBoard): Long {
         var hashValue = START_HASH_VALUE
         for (bitNum in 0..63) {
@@ -39,11 +45,4 @@ object ZorbristHashCalculator {
         return hashValue xor moverHashValues[if (engineBoard.mover == Colour.WHITE) 0 else 1]
     }
 
-    @JvmStatic
-    val whiteMoverHashValue: Long
-        get() = moverHashValues[0]
-
-    @JvmStatic
-    val blackMoverHashValue: Long
-        get() = moverHashValues[1]
 }

@@ -21,23 +21,16 @@ class MoveGenerator(
     private val knightBitboardForMover = if (mover == Colour.WHITE) bitboards[BITBOARD_WN] else bitboards[BITBOARD_BN]
 
     fun generateLegalMoves(): MoveGenerator {
-
         moveCount = 0
 
         generateKnightMoves()
         generateKingMoves()
-        generatePawnMoves(if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
-                if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture)
-        generateSliderMoves(
-                BITBOARD_WR,
-                BITBOARD_BR,
-                MagicBitboards.rookVars
+        generatePawnMoves(
+                if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
+                if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture
         )
-        generateSliderMoves(
-                BITBOARD_WB,
-                BITBOARD_BB,
-                MagicBitboards.bishopVars
-        )
+        generateSliderMoves(BITBOARD_WR, BITBOARD_BR, MagicBitboards.rookVars)
+        generateSliderMoves(BITBOARD_WB, BITBOARD_BB, MagicBitboards.bishopVars)
 
         moves[moveCount] = 0
 

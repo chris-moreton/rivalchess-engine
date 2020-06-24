@@ -40,7 +40,7 @@ fun evaluate(board: EngineBoard): Int {
             tradePieceBonusWhenMoreMaterial(materialValues, materialDifference) +
             castlingEval(bitboards, materialValues, board.castlePrivileges) +
             threatEval(bitboards, attacks, board) +
-            kingSafetyEval(bitboards, materialValues, attacks, board, kingSquares) +
+            kingSafetyEval(bitboards, materialValues, attacks, kingSquares) +
             (whiteQueensEval(bitboards, whitePieces.inv()) - blackQueensEval(bitboards, blackPieces.inv())) +
             bishopScore(bitboards, materialDifference, materialValues)
 
@@ -49,6 +49,16 @@ fun evaluate(board: EngineBoard): Int {
     return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
 
 }
+
+private fun colourAdjustedYRank(colour: Colour, yRank: Int) = if (colour == Colour.WHITE) yRank else abs(yRank - 7)
+
+private fun difference(kingX: Int, it: Int) = abs(kingX - xCoordOfSquare(it))
+
+private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
+
+private fun xCoordOfSquare(square: Int) = square % 8
+
+private fun yCoordOfSquare(square: Int) = square / 8
 
 fun materialDifferenceEval(materialValues: MaterialValues) =
         materialValues.whitePieces - materialValues.blackPieces +
@@ -183,7 +193,7 @@ fun bishopPairEval(bitboards: BitboardData, materialValues: MaterialValues) =
                         VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS else 0
 
 fun trappedBishopEval(bitboards: BitboardData) =
-        if (bitboards.whiteBishops or bitboards.blackBishops and A2A7H2H7 != 0L)
+        if ((bitboards.whiteBishops or bitboards.blackBishops) and A2A7H2H7 != 0L)
             blackA2TrappedBishopEval(bitboards) + blackH2TrappedBishopEval(bitboards) -
                     whiteA7TrappedBishopEval(bitboards) - whiteH7TrappedBishopEval(bitboards)
         else 0
@@ -228,7 +238,7 @@ fun isEndGame(materialValues: MaterialValues) =
                 materialValues.blackPieces +
                 materialValues.blackPawns) <= EVAL_ENDGAME_TOTAL_PIECES
 
-fun kingSafetyEval(bitboards: BitboardData, materialValues: MaterialValues, attacks: Attacks, board: EngineBoard, kingSquares: KingSquares): Int {
+fun kingSafetyEval(bitboards: BitboardData, materialValues: MaterialValues, attacks: Attacks, kingSquares: KingSquares): Int {
 
     val whiteKingDangerZone = whiteKingDangerZone(kingSquares)
 
@@ -390,7 +400,7 @@ fun kingSquareBonusEndGame() = PieceSquareTables.kingEndGame[1] - PieceSquareTab
 fun kingSquareBonusMiddleGame() = PieceSquareTables.king[1] - PieceSquareTables.king[3]
 
 fun castlingEval(bitboards: BitboardData, materialValues: MaterialValues, castlePrivileges: Int) =
-        if (isAnyCastleAvailable(castlePrivileges)) {
+        if (castlePrivileges != 0) {
             whiteCastlingEval(bitboards, materialValues, castlePrivileges) - blackCastlingEval(bitboards, materialValues, castlePrivileges)
         } else 0
 
@@ -406,8 +416,6 @@ fun kingSquareBonusScaled(pieceValues: Int, kingSquareBonusEndGame: Int, kingSqu
                 CASTLE_BONUS_HIGH_MATERIAL,
                 kingSquareBonusEndGame,
                 kingSquareBonusMiddleGame)
-
-fun isAnyCastleAvailable(castlePrivileges: Int) = castlePrivileges != 0
 
 fun endGameAdjustment(bitboards: BitboardData, materialValues: MaterialValues, currentScore: Int, kingSquares: KingSquares) =
         if (bothSidesHaveOnlyOneKnightOrBishopEach(materialValues)) currentScore / ENDGAME_DRAW_DIVISOR
@@ -717,10 +725,8 @@ fun pawnScore(whitePawnBitboard: Long,
                     whitePawnAttacks(blackPawnBitboard) and
                     northFill(whitePawnFiles).inv()
             ) * VALUE_BACKWARD_PAWN_PENALTY) -
-            ((popCount(whitePawnBitboard and FILE_A) + popCount(whitePawnBitboard and FILE_H))
-                    * VALUE_SIDE_PAWN_PENALTY) +
-            ((popCount(blackPawnBitboard and FILE_A) + popCount(blackPawnBitboard and FILE_H))
-                    * VALUE_SIDE_PAWN_PENALTY) -
+            ((popCount(whitePawnBitboard and FILE_A) + popCount(whitePawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) +
+            ((popCount(blackPawnBitboard and FILE_A) + popCount(blackPawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) -
             VALUE_DOUBLED_PAWN_PENALTY * (materialValues.whitePawns / 100 - popCount(whiteOccupiedFileMask)) -
             popCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
             VALUE_DOUBLED_PAWN_PENALTY * (materialValues.blackPawns / 100 - popCount(blackOccupiedFileMask)) +
@@ -789,14 +795,4 @@ fun calculateLowMaterialPawnBonus(
     return acc
 
 }
-
-private fun colourAdjustedYRank(colour: Colour, yRank: Int) = if (colour == Colour.WHITE) yRank else abs(yRank - 7)
-
-private fun difference(kingX: Int, it: Int) = abs(kingX - xCoordOfSquare(it))
-
-private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
-
-private fun xCoordOfSquare(it: Int) = it % 8
-
-private fun yCoordOfSquare(kingSquare: Int) = kingSquare / 8
 

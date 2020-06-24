@@ -53,11 +53,10 @@ object MagicBitboards {
     }
 
     private fun generateOccupancyVariationsAndDatabase(isRook: Boolean) {
-        var bitRef: Int
         var mask: Long
         var setBitsInMask: List<Int>
         var bitCount: Int
-        bitRef = 0
+        var bitRef: Int = 0
         while (bitRef <= 63) {
             mask = if (isRook) occupancyMaskRook[bitRef] else occupancyMaskBishop[bitRef]
             setBitsInMask = squareList(mask)
@@ -69,19 +68,16 @@ object MagicBitboards {
     }
 
     private fun setMagicMoves(isRook: Boolean, bitRef: Int, bitCount: Int) {
-        val variations: Int
-        var i: Int
         var validMoves: Long
-        variations = (1L shl bitCount).toInt()
-        i = 0
+        val variations: Int = (1L shl bitCount).toInt()
+        var i: Int = 0
         while (i < variations) {
             validMoves = 0
             if (isRook) {
-                setMagicMovesForRooks(bitRef, i, validMoves)
+                setMagicMovesForRooks(bitRef, i++, validMoves)
             } else {
-                setMagicMovesForBishop(bitRef, i, validMoves)
+                setMagicMovesForBishop(bitRef, i++, validMoves)
             }
-            i++
         }
     }
 
@@ -98,8 +94,7 @@ object MagicBitboards {
 
     private fun setMagicMovesForSouthWestDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
         var validMovesShadow = validMoves
-        var j: Int
-        j = bitRef - 7
+        var j: Int = bitRef - 7
         while (j % 8 != 0 && j >= 0) {
             validMovesShadow = validMovesShadow or (1L shl j)
             if (occupancyVariation!![i] and (1L shl j) != 0L) {

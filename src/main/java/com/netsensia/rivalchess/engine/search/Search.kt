@@ -90,27 +90,28 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int): AspirationSearchResult {
         var path: SearchPath
-        var low = low
-        var high = high
+        var newLow = low
+        var newHigh = high
 
         path = searchZero(engineBoard, depth, 0, Window(low, high))
-        if (!abortingSearch && path.score <= low) {
-            low = -Int.MAX_VALUE
-            path = searchZero(engineBoard, depth, 0, Window(low, high))
+
+        if (!abortingSearch && path.score <= newLow) {
+            newLow = -Int.MAX_VALUE
+            path = searchZero(engineBoard, depth, 0, Window(newLow, high))
         } else if (!abortingSearch && path.score >= high) {
-            high = Int.MAX_VALUE
-            path = searchZero(engineBoard, depth, 0, Window(low, high))
+            newHigh = Int.MAX_VALUE
+            path = searchZero(engineBoard, depth, 0, Window(low, newHigh))
         }
 
-        if (!abortingSearch && (path.score <= low || path.score >= high))
+        if (!abortingSearch && (path.score <= newLow || path.score >= newHigh))
             path = searchZero(engineBoard, depth, 0, Window(-Int.MAX_VALUE, Int.MAX_VALUE))
 
         if (!abortingSearch) {
             currentPath.setPath(path)
-            low = path.score - ASPIRATION_RADIUS
-            high = path.score + ASPIRATION_RADIUS
+            newLow = path.score - ASPIRATION_RADIUS
+            newHigh = path.score + ASPIRATION_RADIUS
         }
-        return AspirationSearchResult(path, low, high)
+        return AspirationSearchResult(path, newLow, newHigh)
     }
 
     @Throws(InvalidMoveException::class)
@@ -135,7 +136,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = getExtensions(isCheck, board.wasPawnPush())
-                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, Window(window.low, window.high), extensions, isCheck)
+                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, window.low, window.high, extensions, isCheck)
 
                 if (abortingSearch) return SearchPath()
 
@@ -376,19 +377,19 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             else if (FRACTIONAL_EXTENSION_PAWN > 0 && wasPawnPush) FRACTIONAL_EXTENSION_PAWN
             else 0
 
-    private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, window: Window, extensions: Int, isCheck: Boolean) =
+    private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
             if (isDrawnAtRoot()) SearchPath().withScore(0).withPath(move) else
                 if (scoutSearch) {
-                    val scoutPath = search(engineBoard, (depth - 1), ply + 1, -window.low - 1, -window.low, extensions, -1, isCheck).also {
+                    val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low - 1, -low, extensions, -1, isCheck).also {
                         adjustScoreForMateDepth(it)
                     }
 
-                    if (!abortingSearch && -scoutPath.score > window.low)
-                        search(engineBoard, (depth - 1), ply + 1, -window.high, -window.low, extensions, -1, isCheck)
+                    if (!abortingSearch && -scoutPath.score > low)
+                        search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
                     else
                         scoutPath
                 } else {
-                    search(engineBoard, (depth - 1), ply + 1, -window.high, -window.low, extensions, -1, isCheck)
+                    search(engineBoard, (depth - 1), ply + 1, -high, -low, extensions, -1, isCheck)
                 }.also {
                     adjustScoreForMateDepth(it)
                 }
@@ -403,6 +404,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             hashMove = boardHash.useHeight(hashIndex + HASHENTRY_MOVE)
             val flag = boardHash.useHeight(hashIndex + HASHENTRY_FLAG)
             val score = boardHash.useHeight(hashIndex + HASHENTRY_SCORE)
+
             if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
         }
 

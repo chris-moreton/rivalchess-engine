@@ -68,6 +68,6 @@ inline fun applyToSquares(bitboard: Long, fn: (Int) -> Unit) {
     }
 }
 
-inline fun popCount(x: Long): Int {
+fun popCount(x: Long): Int {
     return java.lang.Long.bitCount(x)
 }
