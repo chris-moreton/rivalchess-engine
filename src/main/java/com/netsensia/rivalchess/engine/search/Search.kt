@@ -238,7 +238,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 //                        if (canFutilityPrune && !board.isCheck(mover) && board.wasCapture() && !board.wasPawnPush()) {
 //                            searchPath[ply + 1].withHeight(0).withScore(futilityScore)
 //                        } else
-                        scoutSearch(useScoutSearch, depth, ply, Window(localLow, localHigh), newExtensions,
+                        scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions,
                                 recaptureExtensionResponse.captureSquare, board.isCheck(mover), board).also {
                             it.score = -it.score
                         }
@@ -315,23 +315,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             RecaptureExtensionResponse(-Int.MAX_VALUE, -1)
         }
 
-    private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, window: Window, newExtensions: Int, newRecaptureSquare: Int, localIsCheck: Boolean, board: EngineBoard) =
+    private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, newExtensions: Int, newRecaptureSquare: Int, localIsCheck: Boolean, board: EngineBoard) =
         if (useScoutSearch) {
-            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -window.low - 1, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
-                if (it.score > MATE_SCORE_START) it.score-- else
-                    if (it.score < -MATE_SCORE_START) it.score++
+            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low-1, -low, newExtensions, newRecaptureSquare, localIsCheck).also {
+                if (it.score > MATE_SCORE_START) it.score-- else if (it.score < -MATE_SCORE_START) it.score++
             }
 
-            if (!abortingSearch && -scoutPath.score > window.low) {
-                search(engineBoard, (depth - 1), ply + 1, -window.high, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
-                    if (it.score > MATE_SCORE_START) it.score-- else
-                        if (it.score < -MATE_SCORE_START) it.score++
+            if (!abortingSearch && -scoutPath.score > low) {
+                search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, newRecaptureSquare, localIsCheck).also {
+                    if (it.score > MATE_SCORE_START) it.score-- else if (it.score < -MATE_SCORE_START) it.score++
                 }
             } else scoutPath
         } else {
-            search(board, depth - 1, ply + 1, -window.high, -window.low, newExtensions, newRecaptureSquare, localIsCheck).also {
-                if (it.score > MATE_SCORE_START) it.score-- else
-                    if (it.score < -MATE_SCORE_START) it.score++
+            search(board, depth - 1, ply + 1, -high, -low, newExtensions, newRecaptureSquare, localIsCheck).also {
+                if (it.score > MATE_SCORE_START) it.score-- else if (it.score < -MATE_SCORE_START) it.score++
             }
         }
 
