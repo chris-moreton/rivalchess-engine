@@ -17,9 +17,10 @@ import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_ROOK;
 import static com.netsensia.rivalchess.engine.eval.PieceValueKt.pieceValue;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic;
 
-public class StaticExchangeEvaluatorSeeBoardTest extends TestCase {
+public class StaticExchangeEvaluatorTest extends TestCase {
 
-    private com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator staticExchangeEvaluator = new com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluatorSeeBoard();
+    private com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator staticExchangeEvaluator =
+            new com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator();
 
     public void assertSeeScore (final String fen, final String move, final int expectedScore) throws InvalidMoveException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(fen));

@@ -38,8 +38,10 @@ class MoveGenerator(
     }
 
     private fun generateKnightMoves() {
-        applyToSquares(knightBitboardForMover) {
-            addMoves(it shl 16, knightMoves[it] and friendlyBitboardInverted)
+        applyToSquares(knightBitboardForMover) { from ->
+            applyToSquares(knightMoves[from] and friendlyBitboardInverted) { to ->
+                moves[moveCount++] = (from shl 16 or to)
+            }
         }
     }
 
