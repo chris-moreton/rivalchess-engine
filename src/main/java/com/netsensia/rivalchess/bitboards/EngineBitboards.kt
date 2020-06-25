@@ -71,8 +71,7 @@ class EngineBitboards() {
 
         if (pieceBitboards[knights] and knightMoves[attackedSquare] != 0L ||
                 pieceBitboards[kings] and kingMoves[attackedSquare] != 0L ||
-                (pieceBitboards[pawns]
-                        and getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L) return true
+                (pieceBitboards[pawns] and getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L) return true
 
         applyToSquares(getBishopMovePiecesBitboard(attacker)) {
             if (isBishopAttackingSquare(attackedSquare, it, pieceBitboards[BITBOARD_ALL])) return true

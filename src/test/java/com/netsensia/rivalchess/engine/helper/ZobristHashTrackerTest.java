@@ -24,8 +24,6 @@ public class ZobristHashTrackerTest {
 
     @Test
     public void initHash() throws IllegalFenException {
-        ZobristHashTracker hashCalculator = new ZobristHashTracker();
-
         Assert.assertEquals(8377675270202223558L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("2R2k2/p7/7K/8/6p1/6P1/8/8 b - - 6 5"))));
         assertEquals(7804811707366554848L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("6rk/p7/7K/8/6p1/6P1/8/4R3 w - - 5 3"))));
         assertEquals(1075668445979296707L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("r3k2r/3bbppp/pB2pn2/2N5/1p3P2/8/PPP3PP/R2Q1RK1 w k - 3 4"))));
