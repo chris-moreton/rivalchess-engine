@@ -22,6 +22,7 @@ fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): 
                 PAWN_STAGE_MATERIAL_HIGH,
                 PieceSquareTables.pawnEndGame[toAdjusted] - PieceSquareTables.pawnEndGame[fromAdjusted],
                 PieceSquareTables.pawn[toAdjusted] - PieceSquareTables.pawn[fromAdjusted])
+        BITBOARD_WR, BITBOARD_BR -> PieceSquareTables.rook[toAdjusted] - PieceSquareTables.rook[fromAdjusted]
         BITBOARD_WN, BITBOARD_BN -> linearScale(
                 if (board.mover == Colour.WHITE) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
                 KNIGHT_STAGE_MATERIAL_LOW,
@@ -29,7 +30,6 @@ fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): 
                 PieceSquareTables.knightEndGame[toAdjusted] - PieceSquareTables.knightEndGame[fromAdjusted],
                 PieceSquareTables.knight[toAdjusted] - PieceSquareTables.knight[fromAdjusted])
         BITBOARD_WB, BITBOARD_BB -> PieceSquareTables.bishop[toAdjusted] - PieceSquareTables.bishop[fromAdjusted]
-        BITBOARD_WR, BITBOARD_BR -> PieceSquareTables.rook[toAdjusted] - PieceSquareTables.rook[fromAdjusted]
         BITBOARD_WQ, BITBOARD_BQ -> PieceSquareTables.queen[toAdjusted] - PieceSquareTables.queen[fromAdjusted]
         BITBOARD_WK, BITBOARD_BK -> linearScale(
                 if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
@@ -60,4 +60,4 @@ fun getHighestScoringMoveFromArray(theseMoves: IntArray): Int {
     }
 }
 
-fun adjustedSee(see: Int) = if (see > -Int.MAX_VALUE) (see.toDouble() / VALUE_QUEEN * 10).toInt() else see
+fun adjustedSee(see: Int) = if (see > -Int.MAX_VALUE) ((see.toDouble() / VALUE_QUEEN) * 10).toInt() else see

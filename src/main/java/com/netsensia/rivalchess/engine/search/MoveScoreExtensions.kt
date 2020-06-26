@@ -67,7 +67,7 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
         } else if (see == 0) {
             107
         } else {
-            scoreLosingCapturesWithWinningHistory(board, ply, i, score, orderedMoves[ply], toSquare)
+            scoreLosingCapturesWithWinningHistory(board, ply, i, orderedMoves[ply], toSquare)
         }
     } else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
         score = 108
@@ -76,15 +76,9 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
     return score
 }
 
-fun Search.scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, i: Int, score: Int, movesForSorting: IntArray, toSquare: Int): Int {
+fun Search.scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, i: Int, movesForSorting: IntArray, toSquare: Int): Int {
     val historyScore = historyScore(board.mover == Colour.WHITE, fromSquare(movesForSorting[i]), toSquare)
-    if (historyScore > 5) {
-        return historyScore
-    } else {
-        for (j in 0 until 2)
-            if (movesForSorting[i] == killerMoves[ply][j]) return 106 - j
-    }
-    return score
+    return if (historyScore > 5) historyScore else scoreKillerMoves(ply, i, movesForSorting)
 }
 
 fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
