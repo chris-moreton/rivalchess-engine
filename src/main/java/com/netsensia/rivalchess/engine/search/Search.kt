@@ -1,11 +1,9 @@
 package com.netsensia.rivalchess.engine.search
 
 import UCI_TIMER_INTERVAL_MILLIS
-import com.netsensia.rivalchess.bitboards.bitFlippedHorizontalAxis
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.consts.BITBOARD_ENEMY
-import com.netsensia.rivalchess.consts.BITBOARD_ENPASSANTSQUARE
 import com.netsensia.rivalchess.consts.FEN_START_POS
 import com.netsensia.rivalchess.engine.board.*
 import com.netsensia.rivalchess.engine.eval.*
@@ -26,16 +24,16 @@ import kotlin.math.abs
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
-    private val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluator()
+    val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluator()
 
-    private val moveOrderStatus = arrayOfNulls<MoveOrder>(MAX_TREE_DEPTH)
+    val moveOrderStatus = arrayOfNulls<MoveOrder>(MAX_TREE_DEPTH)
     private val drawnPositionsAtRoot: MutableList<MutableList<Long>>
     private val drawnPositionsAtRootCount = mutableListOf(0,0)
-    private val mateKiller: MutableList<Int> = ArrayList()
-    private val killerMoves: Array<IntArray>
-    private val historyMovesSuccess = Array(2) { Array(64) { IntArray(64) } }
-    private val historyMovesFail = Array(2) { Array(64) { IntArray(64) } }
-    private val orderedMoves: Array<IntArray>
+    val mateKiller: MutableList<Int> = ArrayList()
+    val killerMoves: Array<IntArray>
+    val historyMovesSuccess = Array(2) { Array(64) { IntArray(64) } }
+    val historyMovesFail = Array(2) { Array(64) { IntArray(64) } }
+    val orderedMoves: Array<IntArray>
     private val searchPath: Array<SearchPath>
 
     private var depthZeroMoveScores = IntArray(MAX_LEGAL_MOVES)
@@ -270,6 +268,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun highScoreMoveSequence(board: EngineBoard, ply: Int, highRankingMove: Int) = sequence {
         while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0);
     }
+
+
 
     private fun pawnExtensions(extensions: Int, board: EngineBoard) =
             if (extensions / FRACTIONAL_EXTENSION_FULL < MAX_EXTENSION_DEPTH && FRACTIONAL_EXTENSION_PAWN > 0 && board.wasPawnPush()) 1 else 0
@@ -520,54 +520,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     @Throws(InvalidMoveException::class)
-    private fun getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
-        if (moveOrderStatus[ply] === MoveOrder.NONE) {
-            if (hashMove != 0) {
-                var c = 0
-                while (orderedMoves[ply][c] != 0) {
-                    if (orderedMoves[ply][c] == hashMove) {
-                        orderedMoves[ply][c] = -1
-                        return hashMove
-                    }
-                    c++
-                }
-            }
-            moveOrderStatus[ply] = MoveOrder.CAPTURES
-            if (scoreFullWidthCaptures(board, ply) == 0) {
-                // no captures, so move to next stage
-                scoreFullWidthMoves(board, ply)
-                moveOrderStatus[ply] = MoveOrder.ALL
-            }
-        }
-        val move = getHighestScoringMoveFromArray(orderedMoves[ply])
-        return if (move == 0 && moveOrderStatus[ply] === MoveOrder.CAPTURES) {
-            // we move into here if we had some captures but they are now used up
-            scoreFullWidthMoves(board, ply)
-            moveOrderStatus[ply] = MoveOrder.ALL
-            getHighestScoringMoveFromArray(orderedMoves[ply])
-        } else move
-    }
-
-    private fun getHighestScoringMoveFromArray(theseMoves: IntArray): Int {
-        var bestIndex = -1
-        var best = Int.MAX_VALUE
-        var c = -1
-        while (theseMoves[++c] != 0) {
-            if (theseMoves[c] != -1 && theseMoves[c] < best && theseMoves[c] shr 24 != 127) {
-                // update best move found so far, but don't consider moves with no score
-                best = theseMoves[c]
-                bestIndex = c
-            }
-        }
-        return if (best == Int.MAX_VALUE) {
-            0
-        } else {
-            theseMoves[bestIndex] = -1
-            moveNoScore(best)
-        }
-    }
-
-    @Throws(InvalidMoveException::class)
     fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
         nodes ++
         var newPath: SearchPath
@@ -621,131 +573,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     .moves
             scoreQuiesceMoves(board, ply, quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
         }
-    }
-
-    private fun adjustedSee(see: Int) = if (see > -Int.MAX_VALUE) (see.toDouble() / VALUE_QUEEN * 10).toInt() else see
-
-    @Throws(InvalidMoveException::class)
-    private fun scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
-        var movesScored = 0
-        var i = -1
-        while (orderedMoves[ply][++i] != 0) {
-            if (orderedMoves[ply][i] != -1 && scoreCaptureMove(ply, i, board) > 0) movesScored++
-        }
-        return movesScored
-    }
-
-    private fun scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
-        var score = 0
-        val toSquare = toSquare(orderedMoves[ply][i])
-        val isCapture = board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE ||
-                (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
-                        board.getBitboardTypeOfPieceOnSquare(fromSquare(orderedMoves[ply][i]), board.mover) in arrayOf(BITBOARD_WP, BITBOARD_BP))
-
-        orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
-        if (orderedMoves[ply][i] == mateKiller[ply]) {
-            score = 126
-        } else if (isCapture) {
-
-            val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, orderedMoves[ply][i]))
-
-            score = if (see > 0) {
-                110 + see
-            } else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
-                109
-            } else if (see == 0) {
-                107
-            } else {
-                scoreLosingCapturesWithWinningHistory(board, ply, i, score, orderedMoves[ply], toSquare)
-            }
-        } else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
-            score = 108
-        }
-        orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)
-        return score
-    }
-
-    private fun scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, i: Int, score: Int, movesForSorting: IntArray, toSquare: Int): Int {
-        val historyScore = historyScore(board.mover == Colour.WHITE, fromSquare(movesForSorting[i]), toSquare)
-        if (historyScore > 5) {
-            return historyScore
-        } else {
-            for (j in 0 until 2)
-                if (movesForSorting[i] == killerMoves[ply][j]) return 106 - j
-        }
-        return score
-    }
-
-    private fun historyScore(isWhite: Boolean, from: Int, to: Int): Int {
-        val colourIndex = if (isWhite) 0 else 1
-        val success = historyMovesSuccess[colourIndex][from][to]
-        val total = success + historyMovesFail[colourIndex][from][to]
-        return if (total > 0) success * 10 / total else 0
-    }
-
-    private fun scoreFullWidthMoves(board: EngineBoard, ply: Int) {
-        var i = 0
-        while (orderedMoves[ply][i] != 0) {
-            if (orderedMoves[ply][i] != -1) {
-                val fromSquare = fromSquare(orderedMoves[ply][i])
-                val toSquare = toSquare(orderedMoves[ply][i])
-                orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
-
-                val killerScore = scoreKillerMoves(ply, i, orderedMoves[ply])
-                val historyScore = scoreHistoryHeuristic(board, killerScore, fromSquare, toSquare)
-
-                val finalScore =
-                        if (historyScore == 0)
-                        (if (board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE) // losing capture
-                            1 else 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2)
-                        else historyScore
-
-                orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - finalScore shl 24)
-            }
-            i++
-        }
-    }
-
-    private fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): Int {
-        val piece = board.getBitboardTypeOfPieceOnSquare(fromSquare, board.mover)
-        val fromAdjusted = if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare]
-        val toAdjusted = if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]
-
-        return when (piece) {
-            BITBOARD_WP, BITBOARD_BP -> linearScale(
-                    if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
-                    PAWN_STAGE_MATERIAL_LOW,
-                    PAWN_STAGE_MATERIAL_HIGH,
-                    PieceSquareTables.pawnEndGame[toAdjusted] - PieceSquareTables.pawnEndGame[fromAdjusted],
-                    PieceSquareTables.pawn[toAdjusted] - PieceSquareTables.pawn[fromAdjusted])
-            BITBOARD_WN, BITBOARD_BN -> linearScale(
-                    if (board.mover == Colour.WHITE) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
-                    KNIGHT_STAGE_MATERIAL_LOW,
-                    KNIGHT_STAGE_MATERIAL_HIGH,
-                    PieceSquareTables.knightEndGame[toAdjusted] - PieceSquareTables.knightEndGame[fromAdjusted],
-                    PieceSquareTables.knight[toAdjusted] - PieceSquareTables.knight[fromAdjusted])
-            BITBOARD_WB, BITBOARD_BB -> PieceSquareTables.bishop[toAdjusted] - PieceSquareTables.bishop[fromAdjusted]
-            BITBOARD_WR, BITBOARD_BR -> PieceSquareTables.rook[toAdjusted] - PieceSquareTables.rook[fromAdjusted]
-            BITBOARD_WQ, BITBOARD_BQ -> PieceSquareTables.queen[toAdjusted] - PieceSquareTables.queen[fromAdjusted]
-            BITBOARD_WK, BITBOARD_BK -> linearScale(
-                    if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
-                    VALUE_ROOK,
-                    OPENING_PHASE_MATERIAL,
-                    PieceSquareTables.kingEndGame[toAdjusted] - PieceSquareTables.kingEndGame[fromAdjusted],
-                    PieceSquareTables.king[toAdjusted] - PieceSquareTables.king[fromAdjusted])
-            else -> 0
-        }
-    }
-
-    private fun scoreHistoryHeuristic(board: EngineBoard, score: Int, fromSquare: Int, toSquare: Int) =
-            if (score == 0 && USE_HISTORY_HEURISTIC && historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
-                90 + historyScore(board.mover == Colour.WHITE, fromSquare, toSquare)
-            } else score
-
-    private fun scoreKillerMoves(ply: Int, i: Int, movesForSorting: IntArray): Int {
-        if (movesForSorting[i] == killerMoves[ply][0]) return 106
-        if (movesForSorting[i] == killerMoves[ply][1]) return 105
-        return 0
     }
 
     val mover: Colour
