@@ -84,6 +84,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             currentPath.setPath((result.path)!!)
             if (result.path!!.score > MATE_SCORE_START) break
         }
+
         setSearchComplete()
     }
 
@@ -92,30 +93,32 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var newLow = low
         var newHigh = high
 
-        path = searchZero(engineBoard, depth, 0, Window(low, high))
+        path = searchZero(engineBoard, depth, 0, low, high)
 
         if (!abortingSearch && path.score <= newLow) {
             newLow = -Int.MAX_VALUE
-            path = searchZero(engineBoard, depth, 0, Window(newLow, high))
+            path = searchZero(engineBoard, depth, 0, newLow, high)
         } else if (!abortingSearch && path.score >= high) {
             newHigh = Int.MAX_VALUE
-            path = searchZero(engineBoard, depth, 0, Window(low, newHigh))
+            path = searchZero(engineBoard, depth, 0, low, newHigh)
         }
 
         if (!abortingSearch && (path.score <= newLow || path.score >= newHigh))
-            path = searchZero(engineBoard, depth, 0, Window(-Int.MAX_VALUE, Int.MAX_VALUE))
+            path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
 
         if (!abortingSearch) {
             currentPath.setPath(path)
             newLow = path.score - ASPIRATION_RADIUS
             newHigh = path.score + ASPIRATION_RADIUS
         }
+
         return AspirationSearchResult(path, newLow, newHigh)
     }
 
     @Throws(InvalidMoveException::class)
-    fun searchZero(board: EngineBoard, depth: Int, ply: Int, window: Window): SearchPath {
+    fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
         nodes ++
+        var low = low
         var numMoves = 0
         var hashEntryType = UPPER
         var bestMoveForHash = 0
@@ -135,12 +138,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = getExtensions(isCheck, board.wasPawnPush())
-                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, window.low, window.high, extensions, isCheck)
+                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, low, high, extensions, isCheck)
 
                 if (abortingSearch) return SearchPath()
 
                 newPath.score = -newPath.score
-                if (newPath.score >= window.high) {
+                if (newPath.score >= high) {
                     board.unMakeMove()
                     engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depth)
                     depthZeroMoveScores[numMoves] = newPath.score
@@ -149,10 +152,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 if (newPath.score > bestPath.score) {
                     bestPath.setPath(move, newPath)
-                    if (newPath.score > window.low) {
+                    if (newPath.score > low) {
                         hashEntryType = EXACT
                         bestMoveForHash = move
-                        window.low = newPath.score
+                        low = newPath.score
                         useScoutSearch = useScoutSearch(depth, extensions)
                         currentPath.setPath(bestPath)
                     }
