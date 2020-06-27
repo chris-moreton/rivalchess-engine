@@ -41,12 +41,14 @@ fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): 
     }
 }
 
+fun moveHasScore(move: Int) = move shr 24 != 127
+
 fun getHighestScoringMoveFromArray(theseMoves: IntArray): Int {
     var bestIndex = -1
     var best = Int.MAX_VALUE
     var c = -1
     while (theseMoves[++c] != 0) {
-        if (theseMoves[c] != -1 && theseMoves[c] < best && theseMoves[c] shr 24 != 127) {
+        if (theseMoves[c] != -1 && theseMoves[c] < best && moveHasScore(theseMoves[c])) {
             // update best move found so far, but don't consider moves with no score
             best = theseMoves[c]
             bestIndex = c

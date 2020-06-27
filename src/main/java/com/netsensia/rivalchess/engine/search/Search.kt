@@ -29,7 +29,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     val moveOrderStatus = arrayOfNulls<MoveOrder>(MAX_TREE_DEPTH)
     private val drawnPositionsAtRoot: MutableList<MutableList<Long>>
     private val drawnPositionsAtRootCount = mutableListOf(0,0)
-    val mateKiller: MutableList<Int> = ArrayList()
+    val mateKiller = IntArray(MAX_TREE_DEPTH)
     val killerMoves: Array<IntArray>
     val historyMovesSuccess = Array(2) { Array(64) { IntArray(64) } }
     val historyMovesFail = Array(2) { Array(64) { IntArray(64) } }
@@ -447,13 +447,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun determineDrawnPositionsAndGenerateDepthZeroMoves() {
-        moveSequence(setDepthZeroMoves()).forEach {
+        orderedMoves[0] = engineBoard.moveGenerator().generateLegalMoves().moves
+        moveSequence(orderedMoves[0]).forEach {
             if (engineBoard.makeMove(it)) {
-                val plyDraw = mutableListOf(false, false)
+                val plyDraw = booleanArrayOf(false, false)
 
                 if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[0] = true
 
-                moveSequence(boardMoves()).forEach {
+                moveSequence(engineBoard.moveGenerator().generateLegalMoves().moves).forEach {
                     if (engineBoard.makeMove(moveNoScore(it))) {
                         if (engineBoard.previousOccurrencesOfThisPosition() == 2) plyDraw[1] = true
                         engineBoard.unMakeMove()
@@ -466,13 +467,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         scoreFullWidthMoves(engineBoard, 0)
     }
-
-    private fun setDepthZeroMoves(): IntArray {
-        orderedMoves[0] = boardMoves()
-        return orderedMoves[0]
-    }
-
-    private fun boardMoves() = engineBoard.moveGenerator().generateLegalMoves().moves
 
     private fun isBookMoveAvailable(): Boolean {
         if (useOpeningBook) {
@@ -593,7 +587,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun setupMateAndKillerMoveTables() {
         for (i in 0 until MAX_TREE_DEPTH) {
-            mateKiller.add(-1)
+            mateKiller[i] = -1
             killerMoves[i][0] = -1
             killerMoves[i][1] = -1
         }

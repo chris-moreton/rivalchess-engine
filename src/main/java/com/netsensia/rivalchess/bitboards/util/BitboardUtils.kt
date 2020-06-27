@@ -9,41 +9,41 @@ import com.netsensia.rivalchess.engine.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
 
-inline fun southFill(bitboard: Long): Long {
+fun southFill(bitboard: Long): Long {
     val a = bitboard or (bitboard ushr 8)
     val b = a or (a ushr 16)
     return b or (b ushr 32)
 }
 
-inline fun northFill(bitboard: Long): Long {
+fun northFill(bitboard: Long): Long {
     val a = bitboard or (bitboard shl 8)
     val b = a or (a shl 16)
     return b or (b shl 32)
 }
 
-inline fun getBlackPassedPawns(whitePawns: Long, blackPawns: Long) =
+fun getBlackPassedPawns(whitePawns: Long, blackPawns: Long) =
     blackPawns and northFill(whitePawns or whitePawnAttacks(whitePawns) or (blackPawns shl 8)).inv()
 
-inline fun getPawnFiles(pawns: Long) = southFill(pawns) and RANK_1
+fun getPawnFiles(pawns: Long) = southFill(pawns) and RANK_1
 
-inline fun getWhitePassedPawns(whitePawns: Long, blackPawns: Long) =
+fun getWhitePassedPawns(whitePawns: Long, blackPawns: Long) =
     whitePawns and southFill(blackPawns or blackPawnAttacks(blackPawns) or (whitePawns ushr 8)).inv()
 
-inline fun getPawnMovesCaptureOfColour(colour: Colour): LongArray =
+fun getPawnMovesCaptureOfColour(colour: Colour): LongArray =
     if (colour == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture
 
-inline fun isBishopAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long) =
+fun isBishopAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long) =
     (MagicBitboards.magicMovesBishop[pieceSquare][getMagicIndexForBishop(pieceSquare, allPieceBitboard)] and (1L shl attackedSquare)) != 0L
 
-inline fun getMagicIndexForBishop(pieceSquare: Int, allPieceBitboard: Long) =
+fun getMagicIndexForBishop(pieceSquare: Int, allPieceBitboard: Long) =
     ((allPieceBitboard and MagicBitboards.occupancyMaskBishop[pieceSquare]) *
             MagicBitboards.magicNumberBishop[pieceSquare] ushr
             MagicBitboards.magicNumberShiftsBishop[pieceSquare]).toInt()
 
-inline fun isRookAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long) =
+fun isRookAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long) =
     (MagicBitboards.magicMovesRook[pieceSquare][getMagicIndexForRook(pieceSquare, allPieceBitboard)] and (1L shl attackedSquare)) != 0L
 
-inline fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long) =
+fun getMagicIndexForRook(pieceSquare: Int, allPieceBitboard: Long) =
     ((allPieceBitboard and MagicBitboards.occupancyMaskRook[pieceSquare]) *
             MagicBitboards.magicNumberRook[pieceSquare] ushr
             MagicBitboards.magicNumberShiftsRook[pieceSquare]).toInt()
@@ -68,6 +68,4 @@ inline fun applyToSquares(bitboard: Long, fn: (Int) -> Unit) {
     }
 }
 
-fun popCount(x: Long): Int {
-    return java.lang.Long.bitCount(x)
-}
+fun popCount(x: Long) = java.lang.Long.bitCount(x)
