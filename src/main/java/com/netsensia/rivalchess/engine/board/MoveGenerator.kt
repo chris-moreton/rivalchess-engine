@@ -191,10 +191,7 @@ class MoveGenerator(
         }
     }
 
-    private fun generatePawnMoves(
-            bitboardMaskForwardPawnMoves: LongArray,
-            bitboardMaskCapturePawnMoves: LongArray
-    ) {
+    private fun generatePawnMoves(bitboardMaskForwardPawnMoves: LongArray, bitboardMaskCapturePawnMoves: LongArray) {
         val emptySquaresBitboard = bitboards[BITBOARD_ALL].inv()
 
         applyToSquares(if (mover == Colour.WHITE) bitboards[BITBOARD_WP] else bitboards[BITBOARD_BP]) {

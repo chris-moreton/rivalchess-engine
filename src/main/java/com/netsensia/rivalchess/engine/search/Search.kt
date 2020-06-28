@@ -52,7 +52,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private var searchTargetEndTime: Long = 0
     private var searchEndTime: Long = 0
     private var finalDepthToSearch = 1
-    var iterativeDeepeningDepth = 1 // current search depth for iterative deepening
+    var iterativeDeepeningDepth = 1
 
     var currentDepthZeroMove = 0
     var currentDepthZeroMoveNumber = 0
@@ -79,7 +79,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             result = aspirationSearch(depth, result.low, result.high)
             reorderDepthZeroMoves()
             if (abortingSearch) break
-            currentPath.setPath((result.path)!!)
+            currentPath.setPath(result.path!!)
             if (result.path!!.score > MATE_SCORE_START) break
         }
 
@@ -116,7 +116,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     @Throws(InvalidMoveException::class)
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
         nodes ++
-        var low = low
+        var myLow = low
         var numMoves = 0
         var hashEntryType = UPPER
         var bestMoveForHash = 0
@@ -136,7 +136,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = getExtensions(isCheck, board.wasPawnPush())
-                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, low, high, extensions, isCheck)
+                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, myLow, high, extensions, isCheck)
 
                 if (abortingSearch) return SearchPath()
 
@@ -150,10 +150,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 if (newPath.score > bestPath.score) {
                     bestPath.setPath(move, newPath)
-                    if (newPath.score > low) {
+                    if (newPath.score > myLow) {
                         hashEntryType = EXACT
                         bestMoveForHash = move
-                        low = newPath.score
+                        myLow = newPath.score
                         useScoutSearch = useScoutSearch(depth, extensions)
                         currentPath.setPath(bestPath)
                     }
@@ -526,34 +526,21 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var newLow = searchPath[ply].score.coerceAtLeast(low)
         setOrderedMovesArrayForQuiesce(isCheck, ply, board, quiescePly)
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
-        var legalMoveCount = 0
+        val startNodes = nodes
         while (move != 0) {
             if (board.makeMove(move)) {
-                legalMoveCount++
-                newPath = quiesce(
-                        board,
-                        depth - 1,
-                        ply + 1,
-                        quiescePly + 1,
-                        -high,
-                        -newLow,
+                newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow,
                         quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover))
                 board.unMakeMove()
                 newPath.score = -newPath.score
-                if (newPath.score > searchPath[ply].score) {
-                    searchPath[ply].setPath(move, newPath)
-                }
-                if (newPath.score >= high) {
-                    return searchPath[ply]
-                }
+                if (newPath.score > searchPath[ply].score) searchPath[ply].setPath(move, newPath)
+                if (newPath.score >= high) return searchPath[ply]
                 newLow = newLow.coerceAtLeast(newPath.score)
             }
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
-        if (isCheck && legalMoveCount == 0) {
-            // all moves have been found to be illegal - delta pruning doesn't occur when in check
-            searchPath[ply].score = -VALUE_MATE
-        }
+        if (isCheck && nodes == startNodes) searchPath[ply].score = -VALUE_MATE
+
         return searchPath[ply]
     }
 

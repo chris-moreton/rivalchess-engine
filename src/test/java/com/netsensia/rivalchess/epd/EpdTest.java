@@ -86,7 +86,7 @@ public class EpdTest {
         runEpdSuite("winAtChess.epd", "WAC.001", false);
     }
 
-    private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InterruptedException, InvalidMoveException {
+    private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InvalidMoveException {
 
         Board board = Board.fromFen(epdItem.getFen());
 
