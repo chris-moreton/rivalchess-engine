@@ -12,9 +12,8 @@ class EvaluateKtTest : TestCase() {
 
     private fun assertTradePawnBonusScore(fen: String, score: Int, flipped: Boolean = true) {
         val ecb = EngineBoard(getBoardModel(fen))
-        val materialValues = MaterialValues(ecb)
-        var materialDifference = materialDifferenceEval(materialValues)
-        assertEquals(score, tradePawnBonusWhenMoreMaterial(materialValues, materialDifference))
+        var materialDifference = materialDifferenceEval(ecb)
+        assertEquals(score, tradePawnBonusWhenMoreMaterial(ecb, materialDifference))
         if (!flipped) {
             assertTradePawnBonusScore(invertFen(fen), -score, true)
         }
