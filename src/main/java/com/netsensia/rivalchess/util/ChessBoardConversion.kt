@@ -7,7 +7,6 @@ import com.netsensia.rivalchess.engine.board.makeMove
 import com.netsensia.rivalchess.engine.board.unMakeMove
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.IllegalFenException
-import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Move
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
@@ -49,7 +48,6 @@ fun getSimpleAlgebraicFromBitRef(bitRef: Int): String {
     return "" + a + (7 - boardRef.yRank + 1)
 }
 
-@Throws(IllegalFenException::class, InvalidMoveException::class)
 fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
     val board = EngineBoard()
     board.setBoard(getBoardModel(fen!!))
@@ -63,9 +61,6 @@ fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
         BITBOARD_WQ, BITBOARD_BQ -> pgnMove = "Q"
         BITBOARD_WB, BITBOARD_BB -> pgnMove = "B"
         BITBOARD_WR, BITBOARD_BR -> pgnMove = "R"
-        BITBOARD_WP, BITBOARD_BP -> {
-        }
-        else -> throw InvalidMoveException("No piece found on source square")
     }
     var qualifier = ' '
     val legalMoves = board.moveGenerator().generateLegalMoves().moves

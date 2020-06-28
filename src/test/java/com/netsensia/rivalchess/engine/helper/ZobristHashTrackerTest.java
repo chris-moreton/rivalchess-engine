@@ -4,9 +4,7 @@ import com.netsensia.rivalchess.consts.BitboardsKt;
 import com.netsensia.rivalchess.engine.board.EngineBoard;
 import com.netsensia.rivalchess.engine.board.MoveGenerator;
 import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator;
-import com.netsensia.rivalchess.engine.hash.ZobristHashTracker;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,7 +51,7 @@ public class ZobristHashTrackerTest {
         assertEquals(3185928038993651253L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("3q3k/2pnbrpp/2Q5/8/1r1PN1b1/8/PP3PPP/R1B2RK1 b - - 2 6"))));
     }
 
-    private void compareCalculatedHashWithTrackedHash(EngineBoard ecb, String move) throws InvalidMoveException {
+    private void compareCalculatedHashWithTrackedHash(EngineBoard ecb, String move) {
         makeMove(ecb, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
         final long originalTrackedHashCode = ecb.boardHashCode();
         final long originalCalculatedHashCode = ZobristHashCalculator.calculateHash(ecb);
@@ -70,7 +68,7 @@ public class ZobristHashTrackerTest {
 
     }
 
-    private void compareCalculatedHashWithTrackedHashOnNullMove(EngineBoard ecb) throws InvalidMoveException {
+    private void compareCalculatedHashWithTrackedHashOnNullMove(EngineBoard ecb) {
 
         makeNullMove(ecb);
         final long originalTrackedHashCode = ecb.boardHashCode();
@@ -89,7 +87,7 @@ public class ZobristHashTrackerTest {
     }
 
     @Test
-    public void zorbristTracker() throws InvalidMoveException {
+    public void zorbristTracker() {
 
         EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
@@ -142,7 +140,7 @@ public class ZobristHashTrackerTest {
     };
 
     @Test
-    public void testTrackerWhenMakeMoveLeavesMoverInCheck() throws InvalidMoveException {
+    public void testTrackerWhenMakeMoveLeavesMoverInCheck() {
         EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         compareCalculatedHashWithTrackedHash(ecb, "e2e4");
@@ -164,7 +162,7 @@ public class ZobristHashTrackerTest {
     }
 
     @Test
-    public void testInterestingFailure() throws InvalidMoveException {
+    public void testInterestingFailure() {
         EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel("8/p4kp1/5p2/2P2QN1/3p3p/3PbK1P/7P/2q5 b - - 2 2"));
 
         makeMove(ecb, getEngineMoveFromSimpleAlgebraic("c1g1").compact, false, true);
@@ -174,7 +172,7 @@ public class ZobristHashTrackerTest {
     }
 
     @Test
-    public void multipleRandomMovesTest() throws InvalidMoveException {
+    public void multipleRandomMovesTest() {
 
         for (int i=0; i<100; i++) {
             EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));

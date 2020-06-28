@@ -4,7 +4,6 @@ import com.netsensia.rivalchess.enums.SearchState;
 import com.netsensia.rivalchess.engine.search.Search;
 import com.netsensia.rivalchess.exception.IllegalEpdItemException;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.Board;
 import com.netsensia.rivalchess.util.EpdItem;
 import com.netsensia.rivalchess.util.EpdReader;
@@ -72,21 +71,21 @@ public class EpdTest {
 
     @Test
     @Ignore
-    public void customPositions() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
+    public void customPositions() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
         runEpdSuite("custom.epd", "RIVAL.001", true);
     }
 
     @Test
-    public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
+    public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
         runEpdSuite("winAtChess.epd", "WAC.001", true);
     }
 
     @Test
-    public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
+    public void winAtChessFails() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
         runEpdSuite("winAtChess.epd", "WAC.001", false);
     }
 
-    private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException, InvalidMoveException {
+    private void testPosition(EpdItem epdItem, boolean expectedToPass) throws IllegalFenException {
 
         Board board = Board.fromFen(epdItem.getFen());
 
@@ -137,7 +136,7 @@ public class EpdTest {
     }
 
     public void runEpdSuite(String filename, String startAtId, boolean expectedToPass)
-            throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException, InvalidMoveException {
+            throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
 
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(Objects.requireNonNull(classLoader.getResource("epd/" + filename)).getFile());
@@ -147,7 +146,7 @@ public class EpdTest {
         runEpdSuite(startAtId, epdReader, expectedToPass);
     }
 
-    private void runEpdSuite(String startAtId, EpdReader epdReader, boolean expectedToPass) throws IllegalFenException, InterruptedException, InvalidMoveException {
+    private void runEpdSuite(String startAtId, EpdReader epdReader, boolean expectedToPass) throws IllegalFenException, InterruptedException {
         boolean processTests = false;
 
         for (EpdItem epdItem : epdReader) {

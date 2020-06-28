@@ -9,9 +9,7 @@ class EngineBitboards() {
     @JvmField
     var pieceBitboards = LongArray(BITBOARD_COUNT)
 
-    init {
-        reset()
-    }
+    init { reset() }
 
     constructor(thoseBitboards: EngineBitboards) : this() {
         for (i in BITBOARD_WP..BITBOARD_ENPASSANTSQUARE) {
@@ -65,13 +63,11 @@ class EngineBitboards() {
             pieceBitboards[BITBOARD_BB] or pieceBitboards[BITBOARD_BQ]
 
     fun isSquareAttackedBy(attackedSquare: Int, attacker: Colour): Boolean {
-        val knights = if (attacker == Colour.WHITE) BITBOARD_WN else BITBOARD_BN
-        val kings = if (attacker == Colour.WHITE) BITBOARD_WK else BITBOARD_BK
-        val pawns = if (attacker == Colour.WHITE) BITBOARD_WP else BITBOARD_BP
 
-        if (pieceBitboards[knights] and knightMoves[attackedSquare] != 0L ||
-                pieceBitboards[kings] and kingMoves[attackedSquare] != 0L ||
-                (pieceBitboards[pawns] and getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L) return true
+        if (pieceBitboards[if (attacker == Colour.WHITE) BITBOARD_WN else BITBOARD_BN] and knightMoves[attackedSquare] != 0L ||
+                pieceBitboards[if (attacker == Colour.WHITE) BITBOARD_WK else BITBOARD_BK] and kingMoves[attackedSquare] != 0L ||
+                (pieceBitboards[if (attacker == Colour.WHITE) BITBOARD_WP else BITBOARD_BP] and
+                        getPawnMovesCaptureOfColour(attacker.opponent())[attackedSquare]) != 0L) return true
 
         applyToSquares(getBishopMovePiecesBitboard(attacker)) {
             if (isBishopAttackingSquare(attackedSquare, it, pieceBitboards[BITBOARD_ALL])) return true

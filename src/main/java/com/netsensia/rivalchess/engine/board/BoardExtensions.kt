@@ -9,7 +9,6 @@ import com.netsensia.rivalchess.consts.BITBOARD_FRIENDLY
 import com.netsensia.rivalchess.engine.eval.VALUE_QUEEN
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.eval.exactlyOneBitSet
-import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
 
@@ -41,7 +40,6 @@ fun EngineBoard.isCheck(colour: Colour) =
         this.engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK) else
         this.engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE)
 
-@Throws(InvalidMoveException::class)
 fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {
     var score = 0
     val promotionMask = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
@@ -58,14 +56,11 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
 }
 
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
-    try {
-        if (makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false)) {
-            unMakeMove(false)
-            return true
-        }
-    } catch (e: InvalidMoveException) {
-        return false
+    if (makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false)) {
+        unMakeMove(false)
+        return true
     }
+
     return false
 }
 

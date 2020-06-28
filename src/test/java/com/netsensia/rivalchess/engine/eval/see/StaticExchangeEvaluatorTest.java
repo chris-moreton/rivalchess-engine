@@ -1,10 +1,7 @@
 package com.netsensia.rivalchess.engine.eval.see;
 
 import com.netsensia.rivalchess.engine.board.EngineBoard;
-import com.netsensia.rivalchess.model.Piece;
-import com.netsensia.rivalchess.engine.board.EngineBoard;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -22,7 +19,7 @@ public class StaticExchangeEvaluatorTest extends TestCase {
     private com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator staticExchangeEvaluator =
             new com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator();
 
-    public void assertSeeScore (final String fen, final String move, final int expectedScore) throws InvalidMoveException {
+    public void assertSeeScore (final String fen, final String move, final int expectedScore) {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(fen));
         assertEquals(expectedScore, staticExchangeEvaluator.staticExchangeEvaluation(
                 engineBoard,
@@ -30,7 +27,7 @@ public class StaticExchangeEvaluatorTest extends TestCase {
     }
 
     @Test
-    public void testStaticExchangeEvaluation() throws IllegalFenException, InvalidMoveException {
+    public void testStaticExchangeEvaluation() throws IllegalFenException {
         assertSeeScore("4k3/p1pprpb1/bnr1p3/3QN1n1/1p1NP1p1/7p/PPPBBPPP/R3K2R w KQ - 0 1", "d5e6",
                 VALUE_PAWN - VALUE_QUEEN);
 

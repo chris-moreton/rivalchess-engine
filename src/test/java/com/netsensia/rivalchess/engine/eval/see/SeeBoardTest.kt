@@ -7,7 +7,6 @@ import com.netsensia.rivalchess.engine.board.makeMove
 import com.netsensia.rivalchess.engine.board.unMakeMove
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.exception.IllegalFenException
-import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Move
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
@@ -18,7 +17,6 @@ import org.junit.Test
 internal class SeeBoardTest {
 
     @Test
-    @Throws(IllegalFenException::class, InvalidMoveException::class)
     fun makeMove() {
         val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
         val seeBoard = SeeBoard(engineBoard)

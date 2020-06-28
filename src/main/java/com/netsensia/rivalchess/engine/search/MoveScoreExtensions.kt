@@ -4,10 +4,8 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.enums.MoveOrder
-import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 
-@Throws(InvalidMoveException::class)
 fun Search.getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
     if (moveOrderStatus[ply] === MoveOrder.NONE) {
         if (hashMove != 0) {
@@ -36,7 +34,6 @@ fun Search.getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
     } else move
 }
 
-@Throws(InvalidMoveException::class)
 fun Search.scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
     var movesScored = 0
     var i = -1

@@ -12,7 +12,6 @@ import com.netsensia.rivalchess.engine.hash.isAlwaysReplaceHashTableEntryValid
 import com.netsensia.rivalchess.engine.hash.isHeightHashTableEntryValid
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.enums.*
-import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
@@ -113,7 +112,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return AspirationSearchResult(path, newLow, newHigh)
     }
 
-    @Throws(InvalidMoveException::class)
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
         nodes ++
         var myLow = low
@@ -498,7 +496,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         engineBoard.boardHashObject.clearHash()
     }
 
-    @Throws(InvalidMoveException::class)
     private fun scoreQuiesceMoves(board: EngineBoard, ply: Int, includeChecks: Boolean) {
         var moveCount = 0
         var i = 0
@@ -513,7 +510,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply][moveCount] = 0
     }
 
-    @Throws(InvalidMoveException::class)
     fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
         nodes ++
         var newPath: SearchPath

@@ -7,13 +7,10 @@ import com.netsensia.rivalchess.engine.board.makeMove
 import com.netsensia.rivalchess.engine.board.unMakeMove
 import com.netsensia.rivalchess.engine.eval.VALUE_KING
 import com.netsensia.rivalchess.engine.search.toSquare
-import com.netsensia.rivalchess.engine.type.EngineMove
-import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 
 class StaticExchangeEvaluator {
 
-    @Throws(InvalidMoveException::class)
     fun staticExchangeEvaluation(board: EngineBoard, compactMove: Int): Int {
         val seeBoard = SeeBoard(board)
 
@@ -30,7 +27,6 @@ class StaticExchangeEvaluator {
         return -Int.MAX_VALUE
     }
 
-    @Throws(InvalidMoveException::class)
     fun seeSearch(seeBoard: SeeBoard, captureSquare: Int, materialBalance: Int): Int {
 
         var bestScore = materialBalance

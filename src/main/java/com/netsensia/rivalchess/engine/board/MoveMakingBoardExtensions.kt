@@ -4,7 +4,6 @@ import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.engine.type.MoveDetail
-import com.netsensia.rivalchess.exception.InvalidMoveException
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 
@@ -22,7 +21,6 @@ fun EngineBoard.unMakeNullMove() {
     isOnNullMove = false
 }
 
-@Throws(InvalidMoveException::class)
 fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateHash: Boolean = true): Boolean {
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
@@ -85,7 +83,6 @@ private fun EngineBoard.updateMaterialAfterPieceCapture(capturePiece: Int, colou
     }
 }
 
-@Throws(InvalidMoveException::class)
 fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     numMovesMade--
     val moveMade = moveHistory[numMovesMade]!!
@@ -174,7 +171,6 @@ private fun EngineBoard.replaceCapturedPiece(toMask: Long, colour: Colour) {
     }
 }
 
-@Throws(InvalidMoveException::class)
 private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Boolean {
     val promotionPiece = moveHistory[numMovesMade]!!.move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     if (promotionPiece != 0) {
@@ -198,7 +194,6 @@ private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Bool
                     engineBitboards.xorPieceBitboard(BITBOARD_WR, toMask)
                     whitePieceValues -= VALUE_ROOK
                 }
-                else -> throw InvalidMoveException("Illegal promotion piece $promotionPiece")
             }
         } else {
             engineBitboards.xorPieceBitboard(BITBOARD_BP, fromMask)
@@ -220,7 +215,6 @@ private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Bool
                     engineBitboards.xorPieceBitboard(BITBOARD_BR, toMask)
                     blackPieceValues -= VALUE_ROOK
                 }
-                else -> throw InvalidMoveException("Invalid promotionPiece $promotionPiece")
             }
         }
         return true
@@ -236,7 +230,6 @@ private fun EngineBoard.replaceMovedPiece(fromSquare: Int, fromMask: Long, toMas
     return movePiece
 }
 
-@Throws(InvalidMoveException::class)
 private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Int, moveTo: Int, compactMove: Int, capturePiece: Int, movePiece: Int) {
     if (mover == Colour.WHITE) {
         if (movePiece == BITBOARD_WP) makeSpecialWhitePawnMoveAdjustments(compactMove)
@@ -252,16 +245,16 @@ private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Int, moveTo:
 }
 
 private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece: Int, moveTo: Int) {
-    val toMask = 1L shl moveTo
 
     moveHistory[numMovesMade]!!.capturePiece = capturePiece
     halfMoveCount = 0
+
+    val toMask = 1L shl moveTo
+
     engineBitboards.xorPieceBitboard(capturePiece, toMask)
     if (capturePiece == BITBOARD_WR) {
-        if (toMask == WHITEKINGSIDEROOKMASK)
-            castlePrivileges = castlePrivileges and CASTLEPRIV_WK.inv()
-        else if (toMask == WHITEQUEENSIDEROOKMASK)
-            castlePrivileges = castlePrivileges and CASTLEPRIV_WQ.inv()
+        if (toMask == WHITEKINGSIDEROOKMASK) castlePrivileges = castlePrivileges and CASTLEPRIV_WK.inv()
+        else if (toMask == WHITEQUEENSIDEROOKMASK) castlePrivileges = castlePrivileges and CASTLEPRIV_WQ.inv()
     }
 }
 
@@ -270,10 +263,8 @@ private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl blackKingSquare
     castlePrivileges = castlePrivileges and CASTLEPRIV_BNONE
-    if (toMask or fromMask == BLACKKINGSIDECASTLEMOVEMASK)
-        engineBitboards.xorPieceBitboard(BITBOARD_BR, BLACKKINGSIDECASTLEROOKMOVE)
-    else if (toMask or fromMask == BLACKQUEENSIDECASTLEMOVEMASK)
-        engineBitboards.xorPieceBitboard(BITBOARD_BR, BLACKQUEENSIDECASTLEROOKMOVE)
+    if (toMask or fromMask == BLACKKINGSIDECASTLEMOVEMASK) engineBitboards.xorPieceBitboard(BITBOARD_BR, BLACKKINGSIDECASTLEROOKMOVE)
+    else if (toMask or fromMask == BLACKQUEENSIDECASTLEMOVEMASK) engineBitboards.xorPieceBitboard(BITBOARD_BR, BLACKQUEENSIDECASTLEROOKMOVE)
 }
 
 private fun EngineBoard.adjustCastlePrivilegesForBlackRookMove(moveFrom: Int) {
@@ -281,7 +272,6 @@ private fun EngineBoard.adjustCastlePrivilegesForBlackRookMove(moveFrom: Int) {
         if (moveFrom == Square.H8.bitRef) castlePrivileges = castlePrivileges and CASTLEPRIV_BK.inv()
 }
 
-@Throws(InvalidMoveException::class)
 private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
@@ -351,7 +341,6 @@ private fun EngineBoard.adjustCastlePrivilegesForWhiteRookMove(moveFrom: Int) {
         castlePrivileges = castlePrivileges and CASTLEPRIV_WK.inv()
 }
 
-@Throws(InvalidMoveException::class)
 private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl (compactMove and 63)
@@ -381,7 +370,6 @@ private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
                 engineBitboards.orPieceBitboard(BITBOARD_WB, toMask)
                 whitePieceValues += VALUE_BISHOP
             }
-            else -> throw InvalidMoveException("compactMove $compactMove produced invalid promotion piece")
         }
         engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask)
     }

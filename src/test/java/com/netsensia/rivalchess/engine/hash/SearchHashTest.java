@@ -2,8 +2,6 @@ package com.netsensia.rivalchess.engine.hash;
 
 import com.netsensia.rivalchess.consts.BitboardsKt;
 import com.netsensia.rivalchess.engine.board.EngineBoard;
-import com.netsensia.rivalchess.engine.board.EngineBoard;
-import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversionKt;
 import junit.framework.TestCase;
@@ -16,7 +14,7 @@ import static com.netsensia.rivalchess.consts.HashValueTypeKt.EXACT;
 
 public class SearchHashTest extends TestCase {
 
-    public void testIsHeightHashTableEntryValid() throws InvalidMoveException {
+    public void testIsHeightHashTableEntryValid() {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
         final com.netsensia.rivalchess.engine.hash.BoardHash boardHash = engineBoard.boardHashObject;
 

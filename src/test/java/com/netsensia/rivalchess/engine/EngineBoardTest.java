@@ -4,7 +4,6 @@ import com.netsensia.rivalchess.consts.BitboardsKt;
 import com.netsensia.rivalchess.engine.board.EngineBoard;
 import com.netsensia.rivalchess.model.Piece;
 import com.netsensia.rivalchess.exception.IllegalFenException;
-import com.netsensia.rivalchess.exception.InvalidMoveException;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 public class EngineBoardTest {
 
     @Test
-    public void canRecognisePreviousPositions() throws IllegalFenException, InvalidMoveException {
+    public void canRecognisePreviousPositions() throws IllegalFenException {
         final EngineBoard board = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         final List<String> moves = new ArrayList<>();
@@ -79,7 +78,7 @@ public class EngineBoardTest {
 
     }
 
-    private void moveKnightsBackAndForth(EngineBoard board, List<String> moves) throws IllegalFenException, InvalidMoveException {
+    private void moveKnightsBackAndForth(EngineBoard board, List<String> moves) throws IllegalFenException {
         moves.add("b1c3");
         moves.add("b8c6");
         moves.add("c3b1");
@@ -93,7 +92,7 @@ public class EngineBoardTest {
     }
 
     @Test
-    public void isGameOver() throws IllegalFenException, InvalidMoveException {
+    public void isGameOver() throws IllegalFenException {
 
         final String SCHOLARS_MATE = "r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4";
         final String STALEMATE = "8/6b1/8/8/8/n7/PP6/K7 w - - 0 4";
@@ -169,7 +168,7 @@ public class EngineBoardTest {
     }
 
     @Test
-    public void getWhitePieceValues() throws IllegalFenException, InvalidMoveException {
+    public void getWhitePieceValues() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         Assert.assertEquals(
@@ -196,7 +195,7 @@ public class EngineBoardTest {
     }
 
     @Test
-    public void getBlackPieceValues() throws IllegalFenException, InvalidMoveException {
+    public void getBlackPieceValues() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         Assert.assertEquals(VALUE_QUEEN + VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2, engineBoard.blackPieceValues);
@@ -212,7 +211,7 @@ public class EngineBoardTest {
     }
 
     @Test
-    public void getFen() throws IllegalFenException, InvalidMoveException {
+    public void getFen() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         Assert.assertEquals(BitboardsKt.FEN_START_POS, com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));

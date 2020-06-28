@@ -46,12 +46,6 @@ class MoveGenerator(
         }
     }
 
-    private fun addMoves(fromSquareMask: Int, bitboard: Long) {
-        applyToSquares(bitboard) {
-            moves[moveCount++] = (fromSquareMask or it)
-        }
-    }
-
     private fun generateKingMoves() {
         if (mover == Colour.WHITE)
             generateCastleMoves(
@@ -64,7 +58,11 @@ class MoveGenerator(
                     BLACKKINGSIDECASTLESQUARES, BLACKQUEENSIDECASTLESQUARES)
 
         val kingSquare = if (mover == Colour.WHITE) whiteKingSquare else blackKingSquare
-        addMoves(kingSquare shl 16, kingMoves[kingSquare] and allSquaresExceptFriendlyPieces)
+
+        val from = kingSquare shl 16
+        applyToSquares(kingMoves[kingSquare] and allSquaresExceptFriendlyPieces) { to ->
+            moves[moveCount++] = (from or to)
+        }
     }
 
     private fun generateCastleMoves(
@@ -112,7 +110,12 @@ class MoveGenerator(
         val enemyKingSquare:Int = (if (mover == Colour.WHITE) blackKingSquare else whiteKingSquare).toInt()
 
         generateQuiesceKnightMoves(generateChecks, enemyKingSquare, knightBitboardForMover)
-        addMoves(kingSquare shl 16, kingMoves[kingSquare] and bitboards[BITBOARD_ENEMY])
+
+        val fromShifted = kingSquare shl 16
+        applyToSquares(kingMoves[kingSquare] and bitboards[BITBOARD_ENEMY]) { to ->
+            moves[moveCount++] = (fromShifted or to)
+        }
+
         generateQuiescePawnMoves(generateChecks,
                 if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
                 if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture,
@@ -169,10 +172,14 @@ class MoveGenerator(
 
         val enemyBitboard = if (generateChecks) checkSquares or bitboards[BITBOARD_ENEMY] else bitboards[BITBOARD_ENEMY]
 
-        applyToSquares(pieceBitboard) {
-            val pieceMoves = magicVars.moves[it][((bitboards[BITBOARD_ALL] and magicVars.mask[it]) *
-                    magicVars.number[it] ushr magicVars.shift[it]).toInt()] and allSquaresExceptFriendlyPieces
-            addMoves(it shl 16, pieceMoves and enemyBitboard)
+        applyToSquares(pieceBitboard) { from ->
+            val pieceMoves = magicVars.moves[from][((bitboards[BITBOARD_ALL] and magicVars.mask[from]) *
+                    magicVars.number[from] ushr magicVars.shift[from]).toInt()] and allSquaresExceptFriendlyPieces
+
+            val from = from shl 16
+            applyToSquares(pieceMoves and enemyBitboard) { to ->
+                moves[moveCount++] = (from or to)
+            }
         }
     }
 
