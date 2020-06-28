@@ -58,7 +58,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     var currentPath: SearchPath
     var isUciMode = false
 
-    val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
+    val engineBoard = EngineBoard(board)
 
     var useOpeningBook = USE_INTERNAL_OPENING_BOOK
         set(useOpeningBook) {
@@ -66,6 +66,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
 
     constructor(board: Board) : this(System.out, board) {}
+
+    init {
+        drawnPositionsAtRoot = ArrayList()
+        drawnPositionsAtRoot.add(ArrayList())
+        drawnPositionsAtRoot.add(ArrayList())
+        this.printStream = printStream
+        millisSetByEngineMonitor = System.currentTimeMillis()
+        currentPath = SearchPath()
+        engineState = SearchState.READY
+        searchPath = Array(MAX_TREE_DEPTH) { SearchPath() }
+        killerMoves = Array(MAX_TREE_DEPTH) { IntArray(2) }
+        for (i in 0 until MAX_TREE_DEPTH) killerMoves[i] = IntArray(2)
+        orderedMoves = Array(MAX_TREE_DEPTH) { IntArray(MAX_LEGAL_MOVES) }
+    }
 
     fun go() {
         initSearchVariables()
@@ -558,8 +572,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun initSearchVariables() {
         engineState = SearchState.SEARCHING
         abortingSearch = false
-        val boardHash = engineBoard.boardHashObject
-        boardHash.incVersion()
+        engineBoard.boardHashObject.incVersion()
         searchStartTime = System.currentTimeMillis()
         searchEndTime = 0
         searchTargetEndTime = searchStartTime + millisToThink - UCI_TIMER_INTERVAL_MILLIS
@@ -693,18 +706,4 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         engineBoard.makeMove(compactMove)
     }
 
-    init {
-        engineBoard.setBoard(board)
-        drawnPositionsAtRoot = ArrayList()
-        drawnPositionsAtRoot.add(ArrayList())
-        drawnPositionsAtRoot.add(ArrayList())
-        this.printStream = printStream
-        millisSetByEngineMonitor = System.currentTimeMillis()
-        currentPath = SearchPath()
-        engineState = SearchState.READY
-        searchPath = Array(MAX_TREE_DEPTH) { SearchPath() }
-        killerMoves = Array(MAX_TREE_DEPTH) { IntArray(2) }
-        for (i in 0 until MAX_TREE_DEPTH) killerMoves[i] = IntArray(2)
-        orderedMoves = Array(MAX_TREE_DEPTH) { IntArray(MAX_LEGAL_MOVES) }
-    }
 }

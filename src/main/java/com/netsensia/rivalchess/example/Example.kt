@@ -6,10 +6,6 @@ import com.netsensia.rivalchess.model.Board
 
 fun main(args: Array<String>) {
 
-    for (i in 0..63) {
-        print("" + (kingMoves[i] or (kingMoves[i] shl 8)) + "L,")
-        if (i%8 == 7) println()
-    }
     val board = Board.fromFen("6k1/6p1/1p2q2p/1p5P/1P3RP1/2PK1B2/1r2N3/8 b - g3 5 56")
     val searcher = Search(board)
     searcher.setMillisToThink(5000)

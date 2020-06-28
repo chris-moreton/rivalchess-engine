@@ -78,14 +78,14 @@ class SeeBoard(board: EngineBoard) {
     }
 
     fun unMakeMove() {
-        val lastIndex = movesMade - 1
+        movesMade--
+        val lastIndex = movesMade
         for (it in moveHistory[lastIndex]!!) {
             if (it[0] == -1L) break
             bitboards.xorPieceBitboard(it[0].toInt(), it[1])
         }
         bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, enPassantHistory[lastIndex])
         mover = mover.opponent()
-        movesMade--
     }
 
     private fun removeFromRelevantBitboard(squareBit: Long, bitboardList: IntArray, deltas: Array<LongArray>): Int {

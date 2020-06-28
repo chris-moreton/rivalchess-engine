@@ -34,14 +34,16 @@ class EngineBitboards() {
         pieceBitboards[type] = bitboard
     }
 
-    fun getWhitePieces() = pieceBitboards[BITBOARD_WK] or
+    fun getWhitePieces() =
+            pieceBitboards[BITBOARD_WK] or
             pieceBitboards[BITBOARD_WN] or
             pieceBitboards[BITBOARD_WQ] or
             pieceBitboards[BITBOARD_WB] or
             pieceBitboards[BITBOARD_WR] or
             pieceBitboards[BITBOARD_WP]
 
-    fun getBlackPieces() = pieceBitboards[BITBOARD_BK] or
+    fun getBlackPieces() =
+            pieceBitboards[BITBOARD_BK] or
             pieceBitboards[BITBOARD_BN] or
             pieceBitboards[BITBOARD_BQ] or
             pieceBitboards[BITBOARD_BB] or
