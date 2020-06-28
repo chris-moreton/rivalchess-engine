@@ -75,11 +75,6 @@ public class ChessBoardConversionTest {
                         3473726, "rnbqkb1r/ppP1pppp/21p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq -"));
     }
 
-    public void getPgnMoveFromCompactMoveIllegalMoveException() throws IllegalFenException {
-        assertEquals("Nf3",
-                ChessBoardConversionKt.getPgnMoveFromCompactMove(1835044, BitboardsKt.FEN_START_POS));
-    }
-
     @Test
     public void getCompactMoveFromSimpleAlgebraic() {
         assertEquals(720923, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("e2e4").compact);

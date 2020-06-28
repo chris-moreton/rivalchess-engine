@@ -11,7 +11,6 @@ import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_KNIGHT;
 import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_PAWN;
 import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_QUEEN;
 import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_ROOK;
-import static com.netsensia.rivalchess.engine.eval.PieceValueKt.pieceValue;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic;
 
 public class StaticExchangeEvaluatorTest extends TestCase {
@@ -55,7 +54,6 @@ public class StaticExchangeEvaluatorTest extends TestCase {
         assertSeeScore("2rr1q1k/pp3pp1/1nn1b2p/3pN2N/2pP4/2P3Q1/PPB4P/R4RK1 w - - 2 2", "g3g7", VALUE_PAWN - VALUE_KNIGHT);
         assertSeeScore("2rr1q2/pp3ppk/1nn1b1Np/3p3N/2pP4/2P3Q1/PPB4P/R4RK1 w - - 4 3", "g6f8", VALUE_QUEEN - VALUE_KNIGHT);
         assertSeeScore("3r3r/ppk2ppp/3q4/2b5/2P2Bn1/3R1Q2/P4PPP/5RK1 w - - 0 5", "d3d6", VALUE_QUEEN - VALUE_ROOK);
-
 
     }
 

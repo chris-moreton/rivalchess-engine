@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.engine.board.getFen
 import com.netsensia.rivalchess.engine.board.makeMove
 import com.netsensia.rivalchess.engine.board.unMakeMove
 import com.netsensia.rivalchess.engine.type.EngineMove
-import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.model.Move
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel

@@ -18,11 +18,6 @@ class SeeBoard(board: EngineBoard) {
     @JvmField
     val bitboards = EngineBitboards(board.engineBitboards)
 
-    private val whiteBitboardIndexes = intArrayOf(BITBOARD_WP, BITBOARD_WQ, BITBOARD_WK, BITBOARD_WN, BITBOARD_WB, BITBOARD_WR)
-    private val blackBitboardIndexes = intArrayOf(BITBOARD_BP, BITBOARD_BQ, BITBOARD_BK, BITBOARD_BN, BITBOARD_BB, BITBOARD_BR)
-
-    private val enPassantHistory = LongArray(20)
-    private val moveHistory = arrayOfNulls<Array<LongArray>>(20)
     private var movesMade = 0
     private var deltaCount = 0
     private var generatedMoveCount = 0
