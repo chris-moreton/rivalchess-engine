@@ -1,11 +1,8 @@
 package com.netsensia.rivalchess.bitboards.util
 
 import com.netsensia.rivalchess.bitboards.MagicBitboards
-import com.netsensia.rivalchess.bitboards.RANK_1
 import com.netsensia.rivalchess.bitboards.blackPawnMovesCapture
 import com.netsensia.rivalchess.bitboards.whitePawnMovesCapture
-import com.netsensia.rivalchess.engine.eval.blackPawnAttacks
-import com.netsensia.rivalchess.engine.eval.whitePawnAttacks
 import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
 
@@ -21,16 +18,8 @@ fun northFill(bitboard: Long): Long {
     return b or (b shl 32)
 }
 
-fun getBlackPassedPawns(whitePawns: Long, blackPawns: Long) =
-    blackPawns and northFill(whitePawns or whitePawnAttacks(whitePawns) or (blackPawns shl 8)).inv()
-
-fun getPawnFiles(pawns: Long) = southFill(pawns) and RANK_1
-
-fun getWhitePassedPawns(whitePawns: Long, blackPawns: Long) =
-    whitePawns and southFill(blackPawns or blackPawnAttacks(blackPawns) or (whitePawns ushr 8)).inv()
-
 fun getPawnMovesCaptureOfColour(colour: Colour): LongArray =
-    if (colour == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture
+        if (colour == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture
 
 fun isBishopAttackingSquare(attackedSquare: Int, pieceSquare: Int, allPieceBitboard: Long) =
     (MagicBitboards.magicMovesBishop[pieceSquare][getMagicIndexForBishop(pieceSquare, allPieceBitboard)] and (1L shl attackedSquare)) != 0L

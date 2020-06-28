@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.bitboards;
 
 import com.netsensia.rivalchess.bitboards.util.BitboardUtilsKt;
+import com.netsensia.rivalchess.engine.eval.PawnEvalKt;
 import com.netsensia.rivalchess.model.Colour;
 import org.junit.Test;
 
@@ -109,7 +110,7 @@ public class BitboardsTest {
                 "00000000" +
                 "11101011", 2).longValue();
 
-        assertEquals(expected, BitboardUtilsKt.getPawnFiles(bitboard));
+        assertEquals(expected, PawnEvalKt.getPawnFiles(bitboard));
     }
 
     @Test
@@ -194,7 +195,7 @@ public class BitboardsTest {
                         "00000000" +
                         "00000000", 2).longValue();
 
-        assertEquals(expected, BitboardUtilsKt.getWhitePassedPawns(whitePawns, blackPawns));
+        assertEquals(expected, PawnEvalKt.getWhitePassedPawns(whitePawns, blackPawns));
     }
 
     @Test
@@ -229,7 +230,7 @@ public class BitboardsTest {
                         "00000000" +
                         "00000000", 2).longValue();
 
-        assertEquals(expected, BitboardUtilsKt.getBlackPassedPawns(whitePawns, blackPawns));
+        assertEquals(expected, PawnEvalKt.getBlackPassedPawns(whitePawns, blackPawns));
     }
 
     @Test

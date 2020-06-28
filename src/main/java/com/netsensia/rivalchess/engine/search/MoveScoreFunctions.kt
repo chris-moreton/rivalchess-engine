@@ -4,10 +4,7 @@ import com.netsensia.rivalchess.bitboards.bitFlippedHorizontalAxis
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
-import com.netsensia.rivalchess.engine.eval.PieceSquareTables
-import com.netsensia.rivalchess.engine.eval.VALUE_QUEEN
-import com.netsensia.rivalchess.engine.eval.VALUE_ROOK
-import com.netsensia.rivalchess.engine.eval.linearScale
+import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.model.Colour
 
 fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): Int {
@@ -20,23 +17,23 @@ fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): 
                 if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
-                PieceSquareTables.pawnEndGame[toAdjusted] - PieceSquareTables.pawnEndGame[fromAdjusted],
-                PieceSquareTables.pawn[toAdjusted] - PieceSquareTables.pawn[fromAdjusted])
-        BITBOARD_WR, BITBOARD_BR -> PieceSquareTables.rook[toAdjusted] - PieceSquareTables.rook[fromAdjusted]
+                pawnEndGamePieceSquareTable[toAdjusted] - pawnEndGamePieceSquareTable[fromAdjusted],
+                pawnPieceSquareTable[toAdjusted] - pawnPieceSquareTable[fromAdjusted])
+        BITBOARD_WR, BITBOARD_BR -> rookPieceSquareTable[toAdjusted] - rookPieceSquareTable[fromAdjusted]
         BITBOARD_WN, BITBOARD_BN -> linearScale(
                 if (board.mover == Colour.WHITE) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
                 KNIGHT_STAGE_MATERIAL_LOW,
                 KNIGHT_STAGE_MATERIAL_HIGH,
-                PieceSquareTables.knightEndGame[toAdjusted] - PieceSquareTables.knightEndGame[fromAdjusted],
-                PieceSquareTables.knight[toAdjusted] - PieceSquareTables.knight[fromAdjusted])
-        BITBOARD_WB, BITBOARD_BB -> PieceSquareTables.bishop[toAdjusted] - PieceSquareTables.bishop[fromAdjusted]
-        BITBOARD_WQ, BITBOARD_BQ -> PieceSquareTables.queen[toAdjusted] - PieceSquareTables.queen[fromAdjusted]
+                knightEndGamePieceSquareTable[toAdjusted] - knightEndGamePieceSquareTable[fromAdjusted],
+                knightPieceSquareTable[toAdjusted] - knightPieceSquareTable[fromAdjusted])
+        BITBOARD_WB, BITBOARD_BB -> bishopPieceSquareTable[toAdjusted] - bishopPieceSquareTable[fromAdjusted]
+        BITBOARD_WQ, BITBOARD_BQ -> queenPieceSquareTable[toAdjusted] - queenPieceSquareTable[fromAdjusted]
         BITBOARD_WK, BITBOARD_BK -> linearScale(
                 if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
-                PieceSquareTables.kingEndGame[toAdjusted] - PieceSquareTables.kingEndGame[fromAdjusted],
-                PieceSquareTables.king[toAdjusted] - PieceSquareTables.king[fromAdjusted])
+                kingEndGamePieceSquareTable[toAdjusted] - kingEndGamePieceSquareTable[fromAdjusted],
+                kingPieceSquareTable[toAdjusted] - kingPieceSquareTable[fromAdjusted])
         else -> 0
     }
 }
