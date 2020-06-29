@@ -40,8 +40,8 @@ fun game(): Int {
         moveList.forEach {
             searcher.makeMove(it)
         }
-        if (searcher.engineBoard.halfMoveCount > 50) return FIFTY_MOVE;
-        if (searcher.engineBoard.previousOccurrencesOfThisPosition() > 2) return THREE_FOLD
+        if (searcher.engineBoard.halfMoveCount > 50) return result(board, FIFTY_MOVE)
+        if (searcher.engineBoard.previousOccurrencesOfThisPosition() > 2) return result(board, THREE_FOLD)
         searcher.clearHash()
         searcher.useOpeningBook = true
         searcher.setMillisToThink(MAX_SEARCH_MILLIS)
@@ -53,9 +53,21 @@ fun game(): Int {
         moveCount ++
 
     }
-    println(board.getFen())
     if (board.isCheck()) {
-        return if (board.sideToMove == Colour.WHITE) BLACK_WIN else WHITE_WIN
+        return result(board, if (board.sideToMove == Colour.WHITE) BLACK_WIN else WHITE_WIN)
     }
-    return STALEMATE
+    return result(board, STALEMATE)
+}
+
+fun result(board: Board, r: Int): Int {
+    when (r) {
+        WHITE_WIN -> println("White wins")
+        BLACK_WIN -> println("Black wins")
+        FIFTY_MOVE -> println("Fifty move rule")
+        THREE_FOLD -> println("Three fold repetition")
+        STALEMATE -> println("Stalemate")
+    }
+    println(board.getFen())
+
+    return r
 }
