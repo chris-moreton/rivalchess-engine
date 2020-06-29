@@ -2,7 +2,6 @@ package com.netsensia.rivalchess.engine.eval.see
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
-import com.netsensia.rivalchess.bitboards.util.popCount
 import com.netsensia.rivalchess.config.MAX_CAPTURES_ON_ONE_SQUARE
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
@@ -17,18 +16,14 @@ const val VALUE_PAWN_PROMOTION_TO_QUEEN = VALUE_QUEEN - VALUE_PAWN
 class SeeBoard(board: EngineBoard) {
     @JvmField
     val bitboards = EngineBitboards(board.engineBitboards)
+    @JvmField
+    var mover = board.mover
 
     private var movesMade = 0
     private var deltaCount = 0
     private var generatedMoveCount = 0
 
-    var mover: Colour
-
     var capturedPieceBitboardType: Int = BITBOARD_NONE
-
-    init {
-        mover = board.mover
-    }
 
     fun makeMove(move: Int): Int {
         val deltas = arrayOf(longArrayOf(-1,-1), longArrayOf(-1,-1), longArrayOf(-1,-1), longArrayOf(-1,-1), longArrayOf(-1,-1))

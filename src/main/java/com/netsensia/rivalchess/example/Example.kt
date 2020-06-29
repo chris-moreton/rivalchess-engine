@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.example
 
-import com.netsensia.rivalchess.bitboards.kingMoves
 import com.netsensia.rivalchess.engine.search.Search
 import com.netsensia.rivalchess.model.Board
 

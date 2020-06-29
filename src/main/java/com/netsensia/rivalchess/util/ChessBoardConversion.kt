@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.engine.board.isCheck
 import com.netsensia.rivalchess.engine.board.makeMove
 import com.netsensia.rivalchess.engine.board.unMakeMove
 import com.netsensia.rivalchess.engine.type.EngineMove
-import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.model.Move
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
@@ -16,7 +15,7 @@ fun getBitRefFromBoardRef(boardRef: Square) = 63 - 8 * boardRef.yRank - boardRef
 
 fun getBitRefFromBoardRef(xFile: Int, yRank: Int) = 63 - 8 * yRank - xFile
 
-fun getMoveRefFromEngineMove(move: Int): Move {
+fun getMoveRefFromCompactMove(move: Int): Move {
     val from = move shr 16 and 63
     val to = move and 63
     val boardRefFrom = Square.fromBitRef(from)
@@ -37,7 +36,7 @@ fun getSimpleAlgebraicMoveFromCompactMove(compactMove: Int): String {
     if (compactMove == 0) return "zero"
     val from = compactMove shr 16 and 63
     val to = compactMove and 63
-    val move = getMoveRefFromEngineMove(compactMove)
+    val move = getMoveRefFromCompactMove(compactMove)
     val pp = if (move.promotedPiece == SquareOccupant.NONE) "" else move.promotedPiece.toChar().toString().trim { it <= ' ' }
     return getSimpleAlgebraicFromBitRef(from) + getSimpleAlgebraicFromBitRef(to) + pp
 }

@@ -4,6 +4,7 @@ import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.model.Colour
 import java.util.*
+import kotlin.collections.copyOf
 
 class EngineBitboards() {
     @JvmField
@@ -12,9 +13,7 @@ class EngineBitboards() {
     init { reset() }
 
     constructor(thoseBitboards: EngineBitboards) : this() {
-        for (i in BITBOARD_WP..BITBOARD_ENPASSANTSQUARE) {
-            pieceBitboards[i] = thoseBitboards.pieceBitboards[i]
-        }
+        pieceBitboards = thoseBitboards.pieceBitboards.copyOf()
     }
 
     fun reset() {

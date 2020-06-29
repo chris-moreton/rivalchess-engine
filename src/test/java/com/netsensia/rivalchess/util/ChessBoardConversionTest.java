@@ -31,16 +31,16 @@ public class ChessBoardConversionTest {
     @Test
     public void getMoveRefFromEngineMove() {
         assertEquals(new Move(Square.fromCoords(4, 6), Square.fromCoords(4, 4)),
-                ChessBoardConversionKt.getMoveRefFromEngineMove(720923));
+                ChessBoardConversionKt.getMoveRefFromCompactMove(720923));
 
         assertNotEquals(new Move(Square.fromCoords(1, 1), Square.fromCoords(1, 0)),
-                ChessBoardConversionKt.getMoveRefFromEngineMove(3539198));
+                ChessBoardConversionKt.getMoveRefFromCompactMove(3539198));
 
         Move move1 = new Move(Square.fromCoords(1, 1), Square.fromCoords(1, 0), SquareOccupant.WQ);
-        assertEquals(move1, ChessBoardConversionKt.getMoveRefFromEngineMove(3539198));
+        assertEquals(move1, ChessBoardConversionKt.getMoveRefFromCompactMove(3539198));
 
         Move move2 = new Move(Square.fromCoords(0, 6), Square.fromCoords(1, 7), SquareOccupant.BN);
-        assertEquals(move2, ChessBoardConversionKt.getMoveRefFromEngineMove(983302));
+        assertEquals(move2, ChessBoardConversionKt.getMoveRefFromCompactMove(983302));
     }
 
     @Test
