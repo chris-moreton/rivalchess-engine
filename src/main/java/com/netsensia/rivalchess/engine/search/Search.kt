@@ -19,7 +19,6 @@ import com.netsensia.rivalchess.openings.OpeningLibrary
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.util.*
-import kotlin.math.abs
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
@@ -226,11 +225,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         val startNodes = nodes
+        val newCheckAndThreatExtensions = checkExtend * FRACTIONAL_EXTENSION_CHECK + threatExtend * FRACTIONAL_EXTENSION_THREAT
+        val maxExtensionsForPly = maxExtensionsForPly(ply)
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
-
-                val newExtensions = extensions + extensions(checkExtend, threatExtend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
+                val newExtensions = extensions +
+                        (newCheckAndThreatExtensions + pawnExtensions(extensions, board) * FRACTIONAL_EXTENSION_PAWN)
+                        .coerceAtMost(maxExtensionsForPly)
 
                 val newPath =
                         scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
@@ -275,8 +277,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun highScoreMoveSequence(board: EngineBoard, ply: Int, highRankingMove: Int) = sequence {
         while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0);
     }
-
-
 
     private fun pawnExtensions(extensions: Int, board: EngineBoard) =
             if (extensions / FRACTIONAL_EXTENSION_FULL < MAX_EXTENSION_DEPTH && FRACTIONAL_EXTENSION_PAWN > 0 && board.wasPawnPush()) 1 else 0
@@ -326,23 +326,16 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return hashMove
     }
 
-    private fun extensions(checkExtend: Int, threatExtend: Int, pawnExtend: Int, maxNewExtensionsInThisPart: Int) =
-            (checkExtend * FRACTIONAL_EXTENSION_CHECK +
-                    threatExtend * FRACTIONAL_EXTENSION_THREAT +
-                    pawnExtend * FRACTIONAL_EXTENSION_PAWN).coerceAtMost(maxNewExtensionsInThisPart)
-
     private fun updateHistoryMoves(mover: Colour, move: Int, depthRemaining: Int, success: Boolean) {
         val historyMovesArray = if (success) historyMovesSuccess else historyMovesFail
         val moverIndex = if (mover == Colour.WHITE) 1 else 0
         val fromSquare = fromSquare(move)
         val toSquare = toSquare(move)
-        if (USE_HISTORY_HEURISTIC) {
-            historyMovesArray[moverIndex][fromSquare][toSquare] += depthRemaining
-            if (historyMovesArray[moverIndex][fromSquare][toSquare] > HISTORY_MAX_VALUE) {
-                for (i in 0..1) for (j in 0..63) for (k in 0..63) {
-                    if (historyMovesSuccess[i][j][k] > 0) historyMovesSuccess[i][j][k] /= 2
-                    if (historyMovesFail[i][j][k] > 0) historyMovesFail[i][j][k] /= 2
-                }
+        historyMovesArray[moverIndex][fromSquare][toSquare] += depthRemaining
+        if (historyMovesArray[moverIndex][fromSquare][toSquare] > HISTORY_MAX_VALUE) {
+            for (i in 0..1) for (j in 0..63) for (k in 0..63) {
+                if (historyMovesSuccess[i][j][k] > 0) historyMovesSuccess[i][j][k] /= 2
+                if (historyMovesFail[i][j][k] > 0) historyMovesFail[i][j][k] /= 2
             }
         }
     }
