@@ -185,7 +185,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return bestPath
     }
 
-    fun search(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, recaptureSquare: Int, isCheck: Boolean): SearchPath {
+    fun search(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean): SearchPath {
 
         nodes++
 
@@ -208,7 +208,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var hashFlag = UPPER
         if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck)
 
-        val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, Window(localLow, localHigh), extensions, recaptureSquare, isCheck)
+        val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, Window(localLow, localHigh), extensions, isCheck)
         searchPathPly.reset()
 
         var bestMoveForHash = 0
@@ -227,18 +227,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         moveOrderStatus[ply] = MoveOrder.NONE
         val startNodes = nodes
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
-            val recaptureExtensionResponse =
-                    recaptureExtensions(extensions,
-                            board.getBitboardTypeOfPieceOnSquare(toSquare(move), board.mover.opponent()),
-                            board.getBitboardTypeOfPieceOnSquare(fromSquare(move), board.mover), board, move, recaptureSquare)
 
             if (board.makeMove(move)) {
 
-                val newExtensions = extensions + extensions(checkExtend, threatExtend, recaptureExtensionResponse.extend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
+                val newExtensions = extensions + extensions(checkExtend, threatExtend, pawnExtensions(extensions, board), maxExtensionsForPly(ply))
 
                 val newPath =
-                        scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions,
-                                recaptureExtensionResponse.captureSquare, board.isCheck(mover)).also {
+                        scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
                             it.score = -it.score
                         }
 
@@ -297,64 +292,43 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun recaptureExtensions(extensions: Int, targetPiece: Int, movePiece: Int, board: EngineBoard, move: Int, recaptureSquare: Int) =
-        if (FRACTIONAL_EXTENSION_RECAPTURE > 0 && extensions / FRACTIONAL_EXTENSION_FULL < MAX_EXTENSION_DEPTH) {
-            var currentSEEValue = -Int.MAX_VALUE
-            var recaptureExtend = 0
-            var newRecaptureSquare = -1
-            if (targetPiece != -1 && pieceValues[movePiece] == pieceValues[targetPiece]) {
-                currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
-                if (abs(currentSEEValue) <= RECAPTURE_EXTENSION_MARGIN) newRecaptureSquare = toSquare(move)
-            }
-            if (toSquare(move) == recaptureSquare) {
-                if (currentSEEValue == -Int.MAX_VALUE) currentSEEValue = staticExchangeEvaluator.staticExchangeEvaluation(board, move)
-                if (abs(currentSEEValue) > getPieceValue(board.getBitboardTypeOfPieceOnSquare(recaptureSquare, board.mover.opponent())) - RECAPTURE_EXTENSION_MARGIN) {
-                    recaptureExtend = 1
-                }
-            }
-            RecaptureExtensionResponse(recaptureExtend, newRecaptureSquare)
-        } else {
-            RecaptureExtensionResponse(-Int.MAX_VALUE, -1)
-        }
-
-    private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, newExtensions: Int, newRecaptureSquare: Int, localIsCheck: Boolean) =
+    private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, newExtensions: Int, localIsCheck: Boolean) =
         if (useScoutSearch) {
-            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low-1, -low, newExtensions, newRecaptureSquare, localIsCheck).also {
+            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low-1, -low, newExtensions, localIsCheck).also {
                 adjustScoreForMateDepth(it)
             }
             if (!abortingSearch && -scoutPath.score > low) {
-                search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, newRecaptureSquare, localIsCheck).also {
+                search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, localIsCheck).also {
                     adjustScoreForMateDepth(it)
                 }
             } else scoutPath
         } else {
-            search(engineBoard, depth - 1, ply + 1, -high, -low, newExtensions, newRecaptureSquare, localIsCheck).also {
+            search(engineBoard, depth - 1, ply + 1, -high, -low, newExtensions, localIsCheck).also {
                 adjustScoreForMateDepth(it)
             }
         }
 
     private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
         if (isDrawnAtRoot()) SearchPath().withScore(0).withPath(move) else
-            scoutSearch(scoutSearch, depth, ply, low, high, extensions, -1, isCheck)
+            scoutSearch(scoutSearch, depth, ply, low, high, extensions, isCheck)
 
     private fun adjustScoreForMateDepth(newPath: SearchPath) {
         newPath.score += if (newPath.score > MATE_SCORE_START) -1 else if (newPath.score < -MATE_SCORE_START) 1 else 0
     }
 
-    private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, window: Window, extensions: Int, recaptureSquare: Int, isCheck: Boolean): Int {
+    private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, window: Window, extensions: Int, isCheck: Boolean): Int {
         if (hashMove == 0 && !board.isOnNullMove && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
             val iidDepth = depth - IID_REDUCE_DEPTH
-            if (iidDepth > 0) search(board, iidDepth, ply, window.low, window.high, extensions, recaptureSquare, isCheck).also {
+            if (iidDepth > 0) search(board, iidDepth, ply, window.low, window.high, extensions, isCheck).also {
                 if (it.height > 0) return it.move[0]
             }
         }
         return hashMove
     }
 
-    private fun extensions(checkExtend: Int, threatExtend: Int, recaptureExtend: Int, pawnExtend: Int, maxNewExtensionsInThisPart: Int) =
+    private fun extensions(checkExtend: Int, threatExtend: Int, pawnExtend: Int, maxNewExtensionsInThisPart: Int) =
             (checkExtend * FRACTIONAL_EXTENSION_CHECK +
                     threatExtend * FRACTIONAL_EXTENSION_THREAT +
-                    recaptureExtend * FRACTIONAL_EXTENSION_RECAPTURE +
                     pawnExtend * FRACTIONAL_EXTENSION_PAWN).coerceAtMost(maxNewExtensionsInThisPart)
 
     private fun updateHistoryMoves(mover: Colour, move: Int, depthRemaining: Int, success: Boolean) {
@@ -435,7 +409,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, low: Int, high: Int, extensions: Int): SearchPath {
         board.makeNullMove()
-        val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, -1, false)
+        val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, false)
         board.unMakeNullMove()
         return newPath
     }
