@@ -176,9 +176,9 @@ class MoveGenerator(
             val pieceMoves = magicVars.moves[from][((bitboards[BITBOARD_ALL] and magicVars.mask[from]) *
                     magicVars.number[from] ushr magicVars.shift[from]).toInt()] and allSquaresExceptFriendlyPieces
 
-            val from = from shl 16
+            val fromShifted = from shl 16
             applyToSquares(pieceMoves and enemyBitboard) { to ->
-                moves[moveCount++] = (from or to)
+                moves[moveCount++] = (fromShifted or to)
             }
         }
     }

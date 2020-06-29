@@ -18,51 +18,63 @@ const val BLACK_WIN = 1
 const val THREE_FOLD = 2
 const val FIFTY_MOVE = 3
 const val STALEMATE = 4
+const val CHAMPION_WIN = 5
+const val CHALLENGER_WIN = 6
 
 val secureRandom = SecureRandom()
 
 fun main(args: Array<String>) {
-    var results= intArrayOf(0,0,0,0,0)
+    var results= intArrayOf(0,0,0,0,0,0,0)
     for (i in 1..100) {
-        results[game()] ++
+        val result = game(i)
+        results[result] ++
+        if (result == WHITE_WIN) results[if (i % 2 == 0) CHAMPION_WIN else CHALLENGER_WIN] ++
+        if (result == BLACK_WIN) results[if (i % 2 == 0) CHALLENGER_WIN else CHAMPION_WIN] ++
         println(Arrays.toString(results))
     }
 }
 
-fun game(): Int {
+fun game(gameNumber: Int): Int {
 
     val moveList = mutableListOf<Int>()
     var board = Board.fromFen(FEN_START_POS)
 
-    var moveCount = 0
+    var moveNumber = 0
     while (board.getLegalMoves().isNotEmpty()) {
-        val searcher = Search(Board.fromFen(FEN_START_POS))
-        moveList.forEach {
-            searcher.makeMove(it)
-        }
-        if (searcher.engineBoard.halfMoveCount > 50) return result(board, FIFTY_MOVE)
-        if (searcher.engineBoard.previousOccurrencesOfThisPosition() > 2) return result(board, THREE_FOLD)
-        searcher.clearHash()
-        searcher.useOpeningBook = true
-        searcher.setMillisToThink(MAX_SEARCH_MILLIS)
-        searcher.setNodesToSearch(50000 + secureRandom.nextInt(50000))
-        searcher.setSearchDepth(MAX_SEARCH_DEPTH)
+        val searcher = getSearcher(gameNumber, moveNumber)
+        moveList.forEach { searcher.makeMove(it) }
+        if (searcher.engineBoard.halfMoveCount > 50) return result(board, FIFTY_MOVE, gameNumber)
+        if (searcher.engineBoard.previousOccurrencesOfThisPosition() > 2) return result(board, THREE_FOLD, gameNumber)
         searcher.go()
         moveList.add(searcher.currentMove)
         board = Board.fromMove(board, getMoveRefFromCompactMove(searcher.currentMove))
-        moveCount ++
+        moveNumber ++
 
     }
     if (board.isCheck()) {
-        return result(board, if (board.sideToMove == Colour.WHITE) BLACK_WIN else WHITE_WIN)
+        return result(board, if (board.sideToMove == Colour.WHITE) BLACK_WIN else WHITE_WIN, gameNumber)
     }
-    return result(board, STALEMATE)
+    return result(board, STALEMATE, gameNumber)
 }
 
-fun result(board: Board, r: Int): Int {
+fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
+    val searcher = Search(Board.fromFen(FEN_START_POS))
+    searcher.useOpeningBook = true
+    searcher.setMillisToThink(MAX_SEARCH_MILLIS)
+    searcher.setSearchDepth(MAX_SEARCH_DEPTH)
+    val isChampionsMove = (gameNumber % 2 == moveNumber % 2)
+    if (isChampionsMove) {
+        searcher.setNodesToSearch(1200000 + secureRandom.nextInt(50000))
+    } else {
+        searcher.setNodesToSearch(1500000 + secureRandom.nextInt(50000))
+    }
+    return searcher
+}
+
+fun result(board: Board, r: Int, gameNumber: Int): Int {
     when (r) {
-        WHITE_WIN -> println("White wins")
-        BLACK_WIN -> println("Black wins")
+        WHITE_WIN -> println((if (gameNumber % 2 == 0) "Champion" else "Challenger") + " wins as white")
+        BLACK_WIN -> println((if (gameNumber % 2 == 0) "Challenger" else "Champion") + " wins as black")
         FIFTY_MOVE -> println("Fifty move rule")
         THREE_FOLD -> println("Three fold repetition")
         STALEMATE -> println("Stalemate")
