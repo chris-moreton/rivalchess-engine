@@ -146,7 +146,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
                 val isCheck = board.isCheck(mover)
-                val extensions = checkExtension(isCheck) + pawnExtensions(engineBoard)
+                val extensions = checkExtension(isCheck)
                 val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, myLow, high, extensions, isCheck)
 
                 if (abortingSearch) return SearchPath()
@@ -225,12 +225,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         val startNodes = nodes
-        val maxExtensionsForPly = maxExtensionsForPly(ply)
+        val moveExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
+        val newExtensions = (extensions + moveExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
-                val moveExtensions = (checkExtend + threatExtend + pawnExtensions(board)).coerceAtMost(maxExtensionsForPly)
-                val newExtensions = (extensions + moveExtensions).coerceAtMost(MAX_EXTENSION_DEPTH * FRACTIONAL_EXTENSION_FULL)
 
                 val newPath =
                         scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
@@ -275,9 +274,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun highScoreMoveSequence(board: EngineBoard, ply: Int, highRankingMove: Int) = sequence {
         while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0);
     }
-
-    private fun pawnExtensions(board: EngineBoard) =
-            if (FRACTIONAL_EXTENSION_PAWN > 0 && board.wasPawnPush()) FRACTIONAL_EXTENSION_PAWN else 0
 
     private fun maxExtensionsForPly(ply: Int) =
             maxNewExtensionsTreePart[(ply / iterativeDeepeningDepth).coerceAtMost(LAST_EXTENSION_LAYER)]

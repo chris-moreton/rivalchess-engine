@@ -24,7 +24,6 @@ import java.util.Objects;
 
 import static com.netsensia.rivalchess.config.LimitKt.MAX_SEARCH_DEPTH;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getPgnMoveFromCompactMove;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -35,7 +34,7 @@ public class EpdTest {
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
-    private static final boolean RECALCULATE_FAILURES = true;
+    private static final boolean RECALCULATE_FAILURES = false;
 
     @BeforeClass
     public static void setup() {
@@ -52,21 +51,22 @@ public class EpdTest {
             "WAC.131", // Fail 6
             "WAC.145", // Fail 7
             "WAC.152", // Fail 8
-            "WAC.163", // Fail 9
-            "WAC.178", // Fail 10
-            "WAC.193", // Fail 11
-            "WAC.213", // Fail 12
-            "WAC.229", // Fail 13
-            "WAC.230", // Fail 14
-            "WAC.237", // Fail 15
-            "WAC.247", // Fail 16
-            "WAC.250", // Fail 17
-            "WAC.261", // Fail 18
-            "WAC.265", // Fail 19
-            "WAC.274", // Fail 20
-            "WAC.291", // Fail 21
-            "WAC.297", // Fail 22
-            "WAC.299" // Fail 23
+            "WAC.157", // Fail 9
+            "WAC.163", // Fail 10
+            "WAC.178", // Fail 11
+            "WAC.193", // Fail 12
+            "WAC.213", // Fail 13
+            "WAC.229", // Fail 14
+            "WAC.230", // Fail 15
+            "WAC.237", // Fail 16
+            "WAC.247", // Fail 17
+            "WAC.250", // Fail 18
+            "WAC.261", // Fail 19
+            "WAC.265", // Fail 20
+            "WAC.274", // Fail 21
+            "WAC.291", // Fail 22
+            "WAC.297", // Fail 23
+            "WAC.299" // Fail 24
     ));
 
     @Test
