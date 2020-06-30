@@ -102,7 +102,7 @@ fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
 }
 
 fun Search.scoreHistoryHeuristic(board: EngineBoard, score: Int, fromSquare: Int, toSquare: Int) =
-        if (score == 0 && USE_HISTORY_HEURISTIC && historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
+        if (score == 0 && historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
             90 + historyScore(board.mover == Colour.WHITE, fromSquare, toSquare)
         } else score
 

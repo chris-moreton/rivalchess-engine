@@ -164,18 +164,15 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     fun wasPawnPush(): Boolean {
         val toSquare = moveHistory[numMovesMade - 1]!!.move and 63
         val movePiece = moveHistory[numMovesMade - 1]!!.movePiece
-        if (movePiece !in intArrayOf(BITBOARD_WP, BITBOARD_BP)) {
-            return false
-        }
+        if (movePiece !in intArrayOf(BITBOARD_WP, BITBOARD_BP)) return false
+
         if (toSquare >= 48 || toSquare <= 15) return true
 
         if (mover == Colour.BLACK) // white made the last move
         {
-            if (toSquare >= 40) return popCount(whitePassedPawnMask[toSquare] and
-                    engineBitboards.pieceBitboards[BITBOARD_BP]) == 0
+            if (toSquare >= 40) return popCount(whitePassedPawnMask[toSquare] and engineBitboards.pieceBitboards[BITBOARD_BP]) == 0
         } else {
-            if (toSquare <= 23) return popCount(blackPassedPawnMask[toSquare] and
-                    engineBitboards.pieceBitboards[BITBOARD_WP]) == 0
+            if (toSquare <= 23) return popCount(blackPassedPawnMask[toSquare] and engineBitboards.pieceBitboards[BITBOARD_WP]) == 0
         }
         return false
     }

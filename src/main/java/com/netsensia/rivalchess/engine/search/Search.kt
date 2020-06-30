@@ -146,7 +146,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
                 val isCheck = board.isCheck(mover)
-                val extensions = getExtensions(isCheck, board.wasPawnPush())
+                val extensions = checkExtension(isCheck) + pawnExtensions(engineBoard)
                 val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, myLow, high, extensions, isCheck)
 
                 if (abortingSearch) return SearchPath()
@@ -202,7 +202,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var localLow = hashProbeResult.window.low
         val localHigh = hashProbeResult.window.high
 
-        val checkExtend = checkExtension(extensions, isCheck)
+        val checkExtend = checkExtension(isCheck)
 
         var hashFlag = UPPER
         if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck)
@@ -225,14 +225,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         val startNodes = nodes
-        val newCheckAndThreatExtensions = checkExtend * FRACTIONAL_EXTENSION_CHECK + threatExtend * FRACTIONAL_EXTENSION_THREAT
         val maxExtensionsForPly = maxExtensionsForPly(ply)
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
-                val newExtensions = extensions +
-                        (newCheckAndThreatExtensions + pawnExtensions(extensions, board) * FRACTIONAL_EXTENSION_PAWN)
-                        .coerceAtMost(maxExtensionsForPly)
+                val moveExtensions = (checkExtend + threatExtend + pawnExtensions(board)).coerceAtMost(maxExtensionsForPly)
+                val newExtensions = (extensions + moveExtensions).coerceAtMost(MAX_EXTENSION_DEPTH * FRACTIONAL_EXTENSION_FULL)
 
                 val newPath =
                         scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
@@ -278,8 +276,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0);
     }
 
-    private fun pawnExtensions(extensions: Int, board: EngineBoard) =
-            if (extensions / FRACTIONAL_EXTENSION_FULL < MAX_EXTENSION_DEPTH && FRACTIONAL_EXTENSION_PAWN > 0 && board.wasPawnPush()) 1 else 0
+    private fun pawnExtensions(board: EngineBoard) =
+            if (FRACTIONAL_EXTENSION_PAWN > 0 && board.wasPawnPush()) FRACTIONAL_EXTENSION_PAWN else 0
 
     private fun maxExtensionsForPly(ply: Int) =
             maxNewExtensionsTreePart[(ply / iterativeDeepeningDepth).coerceAtMost(LAST_EXTENSION_LAYER)]
@@ -345,11 +343,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         currentDepthZeroMoveNumber = arrayIndex
     }
 
-    private fun getExtensions(isCheck: Boolean, wasPawnPush: Boolean) =
-        if (FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) FRACTIONAL_EXTENSION_CHECK
-        else if (FRACTIONAL_EXTENSION_PAWN > 0 && wasPawnPush) FRACTIONAL_EXTENSION_PAWN
-        else 0
-
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
         val boardHash = board.boardHashObject
         var hashMove = 0
@@ -408,10 +401,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun threatExtensions(newPath: SearchPath, extensions: Int) =
-            if (FRACTIONAL_EXTENSION_THREAT > 0 && -newPath.score < -MATE_SCORE_START && extensions / FRACTIONAL_EXTENSION_FULL < MAX_EXTENSION_DEPTH) 1 else 0
+            if (FRACTIONAL_EXTENSION_THREAT > 0 && -newPath.score < -MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
 
-    private fun checkExtension(extensions: Int, isCheck: Boolean) =
-            if (extensions / FRACTIONAL_EXTENSION_FULL < MAX_EXTENSION_DEPTH && FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) 1 else 0
+    private fun checkExtension(isCheck: Boolean) =
+            if (FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) FRACTIONAL_EXTENSION_CHECK else 0
 
     private fun reorderDepthZeroMoves() {
         val moveCount = moveCount(orderedMoves[0])
