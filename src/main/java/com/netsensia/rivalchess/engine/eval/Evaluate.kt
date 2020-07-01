@@ -5,8 +5,10 @@ import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.engine.search.fromSquare
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
+import java.lang.Math.abs
 
 fun evaluate(board: EngineBoard): Int {
 
@@ -398,12 +400,17 @@ fun endGameAdjustment(board: EngineBoard, currentScore: Int) =
             else -> blackWinningEndGameAdjustment(board, currentScore)
         }
 
+fun penaltyForKingNotBeingNearOtherKing(board: EngineBoard) =
+    (abs(xCoordOfSquare(board.whiteKingSquare) - xCoordOfSquare(board.blackKingSquare)) +
+     abs(yCoordOfSquare(board.whiteKingSquare) - yCoordOfSquare(board.blackKingSquare))
+    ) * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING
+
 fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
-        if (blackHasInsufficientMaterial(board)) currentScore + (board.blackPieceValues * endgameSubtractInsufficientMaterialMultiplier).toInt()
+        (if (blackHasInsufficientMaterial(board)) currentScore + (board.blackPieceValues * endgameSubtractInsufficientMaterialMultiplier).toInt()
         else if (probableDrawWhenBlackIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noBlackRooksQueensOrBishops(board) && (blackBishopDrawOnFileA(board) || blackBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.whitePawnValues == 0) blackWinningNoWhitePawnsEndGameAdjustment(board, currentScore)
-        else currentScore
+        else currentScore) + penaltyForKingNotBeingNearOtherKing(board)
 
 fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (blackMoreThanABishopUpInNonPawns(board)) {
@@ -420,11 +427,11 @@ fun blackKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
 }
 
 fun whiteWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
-        if (whiteHasInsufficientMaterial(board)) currentScore - (board.whitePieceValues * endgameSubtractInsufficientMaterialMultiplier).toInt()
+        (if (whiteHasInsufficientMaterial(board)) currentScore - (board.whitePieceValues * endgameSubtractInsufficientMaterialMultiplier).toInt()
         else if (probablyDrawWhenWhiteIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noWhiteRooksQueensOrKnights(board) && (whiteBishopDrawOnFileA(board) || whiteBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.blackPawnValues == 0) whiteWinningNoBlackPawnsEndGameAdjustment(board, currentScore)
-        else currentScore
+        else currentScore) - penaltyForKingNotBeingNearOtherKing(board)
 
 fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (whiteMoreThanABishopUpInNonPawns(board)) {

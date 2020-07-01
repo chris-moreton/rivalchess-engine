@@ -113,7 +113,6 @@ class SeeBoard(board: EngineBoard) {
             bishopCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
             if (moves[0] == 0) rookCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
             if (moves[0] == 0) queenCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
-
             if (moves[0] == 0) kingCaptures(square, moves)
         }
 
@@ -174,6 +173,7 @@ class SeeBoard(board: EngineBoard) {
 
     private fun queenCaptures(square: Int, moves: IntArray, allBitboard: Long, friendlyBitboard: Long) {
         val queenLocations = if (mover == Colour.WHITE) bitboards.pieceBitboards[BITBOARD_WQ] else bitboards.pieceBitboards[BITBOARD_BQ]
+
         generateSliderMoves(
                 queenLocations,
                 MagicBitboards.rookVars,
@@ -182,7 +182,8 @@ class SeeBoard(board: EngineBoard) {
                 square,
                 moves
         )
-        generateSliderMoves(
+
+        if (moves[0] == 0) generateSliderMoves(
                 queenLocations,
                 MagicBitboards.bishopVars,
                 allBitboard,

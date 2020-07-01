@@ -17,12 +17,7 @@ class StaticExchangeEvaluator {
         if (board.makeMove(compactMove, false, updateHash = false)) {
             val materialBalance = materialBalanceFromMoverPerspective(board)
             board.unMakeMove(false)
-
-            return -seeSearch(
-                    seeBoard,
-                    toSquare(compactMove),
-                    -(materialBalance + seeBoard.makeMove(compactMove))
-            ) - materialBalance
+            return -seeSearch(seeBoard, toSquare(compactMove), -(materialBalance + seeBoard.makeMove(compactMove))) - materialBalance
         }
         return -Int.MAX_VALUE
     }
@@ -31,21 +26,19 @@ class StaticExchangeEvaluator {
 
         var bestScore = materialBalance
         val moves = seeBoard.generateCaptureMovesOnSquare(captureSquare)
+        val move = moves[0]
 
-        if (moves.isNotEmpty()) {
-            val move = moves[0]
-            if (move != 0) {
-                val materialGain = seeBoard.makeMove(move)
+        if (move != 0) {
+            val materialGain = seeBoard.makeMove(move)
 
-                if (seeBoard.capturedPieceBitboardType == if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK) {
-                    seeBoard.unMakeMove()
-                    return bestScore + VALUE_KING
-                }
-
-                val seeScore = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain))
+            if (seeBoard.capturedPieceBitboardType == if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK) {
                 seeBoard.unMakeMove()
-                bestScore = seeScore.coerceAtLeast(bestScore)
+                return bestScore + VALUE_KING
             }
+
+            val seeScore = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain))
+            seeBoard.unMakeMove()
+            bestScore = seeScore.coerceAtLeast(bestScore)
         }
 
         return bestScore

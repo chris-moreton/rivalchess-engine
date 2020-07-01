@@ -1,10 +1,8 @@
 package com.netsensia.rivalchess.engine;
 
-import com.netsensia.rivalchess.engine.board.EngineBoard;
 import com.netsensia.rivalchess.engine.search.Search;
 import com.netsensia.rivalchess.exception.IllegalFenException;
 import com.netsensia.rivalchess.model.Board;
-import com.netsensia.rivalchess.model.util.FenUtils;
 
 import static com.netsensia.rivalchess.config.LimitKt.MAX_SEARCH_DEPTH;
 import static com.netsensia.rivalchess.config.LimitKt.MAX_SEARCH_MILLIS;
@@ -19,6 +17,22 @@ import org.junit.Test;
 public class SearchTest {
 
     private static Boolean RECALCULATE = false;
+
+    @Test
+    public void testQueenvKingEndGame() throws IllegalFenException, InterruptedException {
+        assertBestMove("8/8/8/8/5q2/2K5/5k2/8 b - - 0 1", "f2e3", 9991, MAX_SEARCH_DEPTH, 2000); // mate in 5
+        assertBestMove("8/8/8/8/1q6/3k4/8/3K4 b - - 0 1", "b4b1", 9999, MAX_SEARCH_DEPTH, 2000); // checkmate
+        assertBestMove("8/8/8/8/1q6/8/4k3/2K5 b - - 0 1", "e2d3", 9997, MAX_SEARCH_DEPTH, 2000); // mate in 2
+        assertBestMove("8/8/8/8/1q6/4k3/2K5/8 b - - 0 1", "e3e2", 9995, MAX_SEARCH_DEPTH, 2000); // mate in 3
+        assertBestMove("8/8/8/8/1q6/8/2K1k3/8 b - - 0 1", "e2e3", 9995, MAX_SEARCH_DEPTH, 2000); // mate in 3
+        assertBestMove("8/8/8/8/5q2/8/1K2k3/8 b - - 0 1", "f4b4", 9993, MAX_SEARCH_DEPTH, 2000); // mate in 4
+        assertBestMove("8/8/8/4q3/8/3K4/5k2/8 b - - 0 1", "e5f4", 9989, MAX_SEARCH_DEPTH, 2000); // mate in 6
+        assertBestMove("8/8/1K6/4q3/8/7k/8/8 w - - 0 1", "h3g4", 9987, MAX_SEARCH_DEPTH, 2000); // mate in 7
+        assertBestMove("8/8/8/4q3/2K5/8/6k1/8 b - - 0 1", "g2f2", 9987, MAX_SEARCH_DEPTH, 2000); // mate in 7
+        assertBestMove("8/8/8/4q3/1K6/7k/8/8 b - - 0 1", "h3g2", 9985, MAX_SEARCH_DEPTH, 2000); // mate in 8
+        assertBestMove("8/8/8/8/2K5/7k/1q6/8 b - - 0 1", "b2e5", 9983, MAX_SEARCH_DEPTH, 2000); // mate in 9
+        assertBestMove("8/8/8/2K5/8/7k/1q6/8 b - - 0 1", "h3g4", 9981, MAX_SEARCH_DEPTH, 2000); // mate in 9
+    }
 
     @Test
     public void testBestMoves() throws IllegalFenException, InterruptedException {

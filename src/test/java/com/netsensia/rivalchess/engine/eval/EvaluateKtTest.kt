@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.model.util.FenUtils.invertFen
 import junit.framework.TestCase
 import org.junit.Test
-import java.lang.Math.pow
 
 class EvaluateKtTest : TestCase() {
 

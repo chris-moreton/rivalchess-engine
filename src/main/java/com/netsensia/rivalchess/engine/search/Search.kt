@@ -204,7 +204,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val checkExtend = checkExtension(isCheck)
 
         var hashFlag = UPPER
-        if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck)
+        if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck).also {
+            adjustScoreForMateDepth(it)
+        }
 
         val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, localLow, localHigh, extensions, isCheck)
         searchPathPly.reset()
@@ -223,13 +225,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
-        val startNodes = nodes
+        var legalMoveCount = 0
         val moveExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
         val newExtensions = (extensions + moveExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
 
+                legalMoveCount ++
                 val newPath =
                     scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
                         it.score = -it.score
@@ -260,7 +263,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
         }
         if (abortingSearch) return SearchPath()
-        if (nodes == startNodes) {
+        if (legalMoveCount == 0) {
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
             return searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
         }
@@ -480,7 +483,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply][moveCount] = 0
     }
 
-    fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
+    private fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
         nodes ++
         var newPath: SearchPath
         val evalScore = evaluate(board)
@@ -492,9 +495,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var newLow = searchPath[ply].score.coerceAtLeast(low)
         setOrderedMovesArrayForQuiesce(isCheck, ply, board, quiescePly)
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
-        val startNodes = nodes
+        var legalMoveCount = 0
         while (move != 0) {
             if (board.makeMove(move)) {
+                legalMoveCount ++
                 newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow,
                         quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover))
                 board.unMakeMove()
@@ -505,7 +509,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
-        if (isCheck && nodes == startNodes) searchPath[ply].score = -VALUE_MATE
+        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -VALUE_MATE
 
         return searchPath[ply]
     }
