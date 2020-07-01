@@ -102,15 +102,16 @@ class SeeBoard(board: EngineBoard) {
         val moves = IntArray(MAX_CAPTURES_ON_ONE_SQUARE + 1)
         generatedMoveCount = 0
 
-        knightCaptures(square, moves)
-        kingCaptures(square, moves)
         pawnCaptures(square, moves)
+        knightCaptures(square, moves)
 
         val whiteBitboard = bitboards.getWhitePieces()
         val blackBitboard = bitboards.getBlackPieces()
 
-        rookCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
         bishopCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
+        rookCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
+
+        kingCaptures(square, moves)
 
         moves[generatedMoveCount] = 0
         return moves
