@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.eval.see
 
 import com.netsensia.rivalchess.bitboards.*
+import com.netsensia.rivalchess.bitboards.util.applyToFirstSquare
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.config.MAX_CAPTURES_ON_ONE_SQUARE
 import com.netsensia.rivalchess.consts.*
@@ -124,11 +125,11 @@ class SeeBoard(board: EngineBoard) {
         val pawnLocations = bitboards.pieceBitboards[if (mover == Colour.WHITE) BITBOARD_WP else BITBOARD_BP]
         val pawnCaptureMoves = if (mover == Colour.WHITE) blackPawnMovesCapture[square] else whitePawnMovesCapture[square]
         if (square >= 56 || square <= 7)
-            applyToSquares(pawnCaptureMoves and pawnLocations) {
+            applyToFirstSquare(pawnCaptureMoves and pawnLocations) {
                 addMove(moves, ((it shl 16) or square) or PROMOTION_PIECE_TOSQUARE_MASK_QUEEN)
             }
         else
-            applyToSquares(pawnCaptureMoves and pawnLocations) {
+            applyToFirstSquare(pawnCaptureMoves and pawnLocations) {
                 addMove(moves, ((it shl 16) or square))
             }
     }
@@ -144,7 +145,7 @@ class SeeBoard(board: EngineBoard) {
 
     private fun knightCaptures(square: Int, moves: IntArray) {
         val knightLocations = bitboards.pieceBitboards[if (mover == Colour.WHITE) BITBOARD_WN else BITBOARD_BN]
-        applyToSquares(knightMoves[square] and knightLocations) {
+        applyToFirstSquare(knightMoves[square] and knightLocations) {
             addMove(moves, ((it shl 16) or square))
         }
     }
@@ -205,7 +206,10 @@ class SeeBoard(board: EngineBoard) {
             val moveToBitboard = magicVars.moves[it][((allBitboard and magicVars.mask[it]) *
                             magicVars.number[it] ushr magicVars.shift[it]).toInt()] and friendlyBitboardInverted
 
-            if (moveToBitboard and (1L shl toSquare) != 0L) addMove(moves, ((it shl 16) or toSquare))
+            if (moveToBitboard and (1L shl toSquare) != 0L) {
+                addMove(moves, ((it shl 16) or toSquare))
+                return
+            }
         }
     }
 }
