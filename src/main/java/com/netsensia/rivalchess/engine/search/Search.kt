@@ -191,8 +191,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (abortIfTimeIsUp()) return SearchPath()
         val searchPathPly = searchPath[ply].reset()
 
-        if (board.previousOccurrencesOfThisPosition() == 2 || board.halfMoveCount >= 100) return searchPathPly.withScore(DRAW_CONTEMPT)
-        if (board.onlyKingsRemain()) return searchPathPly.withScore(0)
+        if (isDraw()) return searchPathPly.withScore(0)
 
         val depthRemaining = depth + extensions / FRACTIONAL_EXTENSION_FULL
 
@@ -207,7 +206,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var hashFlag = UPPER
         if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck)
 
-        val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, Window(localLow, localHigh), extensions, isCheck)
+        val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, localLow, localHigh, extensions, isCheck)
         searchPathPly.reset()
 
         var bestMoveForHash = 0
@@ -219,7 +218,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (abortingSearch) return SearchPath()
                 adjustScoreForMateDepth(it)
                 if (-it.score >= localHigh) return searchPathPly.withScore(-it.score)
-                else threatExtend = threatExtensions(it, extensions)
+                threatExtend = threatExtensions(it)
             }
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
@@ -232,9 +231,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (board.makeMove(move)) {
 
                 val newPath =
-                        scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
-                            it.score = -it.score
-                        }
+                    scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
+                        it.score = -it.score
+                    }
 
                 if (abortingSearch) return SearchPath()
 
@@ -269,14 +268,15 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
+    private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
+
     private fun onlyOneMoveAndNotOnFixedTime(numLegalMoves: Int) = numLegalMoves == 1 && millisToThink < MAX_SEARCH_MILLIS
 
     private fun highScoreMoveSequence(board: EngineBoard, ply: Int, highRankingMove: Int) = sequence {
         while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0);
     }
 
-    private fun maxExtensionsForPly(ply: Int) =
-            maxNewExtensionsTreePart[(ply / iterativeDeepeningDepth).coerceAtMost(LAST_EXTENSION_LAYER)]
+    private fun maxExtensionsForPly(ply: Int) = maxNewExtensionsTreePart[(ply / iterativeDeepeningDepth).coerceAtMost(LAST_EXTENSION_LAYER)]
 
     private fun updateKillerMoves(enemyBitboard: Long, move: Int, ply: Int, newPath: SearchPath) {
         if (enemyBitboard and toSquare(move).toLong() == 0L || move and PROMOTION_PIECE_TOSQUARE_MASK_FULL == 0) {
@@ -310,10 +310,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         newPath.score += if (newPath.score > MATE_SCORE_START) -1 else if (newPath.score < -MATE_SCORE_START) 1 else 0
     }
 
-    private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, window: Window, extensions: Int, isCheck: Boolean): Int {
+    private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean): Int {
         if (hashMove == 0 && !board.isOnNullMove && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
             val iidDepth = depth - IID_REDUCE_DEPTH
-            if (iidDepth > 0) search(board, iidDepth, ply, window.low, window.high, extensions, isCheck).also {
+            if (iidDepth > 0) search(board, iidDepth, ply, low, high, extensions, isCheck).also {
                 if (it.height > 0) return it.move[0]
             }
         }
@@ -396,11 +396,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return newPath
     }
 
-    private fun threatExtensions(newPath: SearchPath, extensions: Int) =
-            if (FRACTIONAL_EXTENSION_THREAT > 0 && -newPath.score < -MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
+    private fun threatExtensions(newPath: SearchPath) =
+            if (-newPath.score < -MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
 
     private fun checkExtension(isCheck: Boolean) =
-            if (FRACTIONAL_EXTENSION_CHECK > 0 && isCheck) FRACTIONAL_EXTENSION_CHECK else 0
+            if (isCheck) FRACTIONAL_EXTENSION_CHECK else 0
 
     private fun reorderDepthZeroMoves() {
         val moveCount = moveCount(orderedMoves[0])

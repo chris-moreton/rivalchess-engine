@@ -6,7 +6,9 @@ import com.netsensia.rivalchess.consts.*
 fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
 fun fromSquare(move: Int) = (move ushr 16) and 63
+
 fun toSquare(move: Int) = move and 63
+
 fun promotionPiece(move: Int): Int {
     val to = move and 63
     return when (move and PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
@@ -34,8 +36,6 @@ fun swapElements(a: IntArray, i1: Int, i2: Int) {
     a[i1] = a[i2].also{ a[i2] = a[i1] }
 }
 
-fun nullMoveReduceDepth(depthRemaining: Int) =
-        if (depthRemaining > NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE) NULLMOVE_REDUCE_DEPTH + 1 else NULLMOVE_REDUCE_DEPTH
+fun nullMoveReduceDepth(depthRemaining: Int) = NULLMOVE_REDUCE_DEPTH + if (depthRemaining > NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE) 1 else 0
 
-fun useScoutSearch(depth: Int, newExtensions: Int) =
-        USE_PV_SEARCH && depth + (newExtensions / FRACTIONAL_EXTENSION_FULL) >= PV_MINIMUM_DISTANCE_FROM_LEAF
+fun useScoutSearch(depth: Int, newExtensions: Int) = depth + (newExtensions / FRACTIONAL_EXTENSION_FULL) >= PV_MINIMUM_DISTANCE_FROM_LEAF

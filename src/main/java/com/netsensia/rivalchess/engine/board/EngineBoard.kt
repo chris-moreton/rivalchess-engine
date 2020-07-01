@@ -157,9 +157,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         engineBitboards.setPieceBitboard(BITBOARD_ALL, white or black)
     }
 
-    val allPiecesBitboard: Long
-        get() = engineBitboards.pieceBitboards[BITBOARD_ALL]
-
     fun getBitboard(bitboardType: Int) = engineBitboards.pieceBitboards[bitboardType]
 
     fun previousOccurrencesOfThisPosition(): Int {
