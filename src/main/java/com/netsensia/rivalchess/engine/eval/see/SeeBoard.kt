@@ -103,15 +103,18 @@ class SeeBoard(board: EngineBoard) {
         generatedMoveCount = 0
 
         pawnCaptures(square, moves)
-        knightCaptures(square, moves)
+        if (moves[0] == 0) knightCaptures(square, moves)
 
-        val whiteBitboard = bitboards.getWhitePieces()
-        val blackBitboard = bitboards.getBlackPieces()
+        if (moves[0] == 0) {
+            val whiteBitboard = bitboards.getWhitePieces()
+            val blackBitboard = bitboards.getBlackPieces()
 
-        bishopCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
-        rookCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
+            bishopCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
+            if (moves[0] == 0) rookCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
+            if (moves[0] == 0) queenCaptures(square, moves, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard)
 
-        kingCaptures(square, moves)
+            if (moves[0] == 0) kingCaptures(square, moves)
+        }
 
         moves[generatedMoveCount] = 0
         return moves
@@ -148,9 +151,7 @@ class SeeBoard(board: EngineBoard) {
 
     private fun bishopCaptures(square: Int, moves: IntArray, allBitboard: Long, friendlyBitboard: Long) {
         generateSliderMoves(
-                if (mover == Colour.WHITE)
-                    bitboards.pieceBitboards[BITBOARD_WB] or bitboards.pieceBitboards[BITBOARD_WQ] else
-                    bitboards.pieceBitboards[BITBOARD_BB] or bitboards.pieceBitboards[BITBOARD_BQ],
+                if (mover == Colour.WHITE) bitboards.pieceBitboards[BITBOARD_WB] else bitboards.pieceBitboards[BITBOARD_BB],
                 MagicBitboards.bishopVars,
                 allBitboard,
                 friendlyBitboard,
@@ -161,10 +162,28 @@ class SeeBoard(board: EngineBoard) {
 
     private fun rookCaptures(square: Int, moves: IntArray, allBitboard: Long, friendlyBitboard: Long) {
         generateSliderMoves(
-                if (mover == Colour.WHITE)
-                    bitboards.pieceBitboards[BITBOARD_WR] or bitboards.pieceBitboards[BITBOARD_WQ] else
-                    bitboards.pieceBitboards[BITBOARD_BR] or bitboards.pieceBitboards[BITBOARD_BQ],
+                if (mover == Colour.WHITE) bitboards.pieceBitboards[BITBOARD_WR] else bitboards.pieceBitboards[BITBOARD_BR],
                 MagicBitboards.rookVars,
+                allBitboard,
+                friendlyBitboard,
+                square,
+                moves
+        )
+    }
+
+    private fun queenCaptures(square: Int, moves: IntArray, allBitboard: Long, friendlyBitboard: Long) {
+        val queenLocations = if (mover == Colour.WHITE) bitboards.pieceBitboards[BITBOARD_WQ] else bitboards.pieceBitboards[BITBOARD_BQ]
+        generateSliderMoves(
+                queenLocations,
+                MagicBitboards.rookVars,
+                allBitboard,
+                friendlyBitboard,
+                square,
+                moves
+        )
+        generateSliderMoves(
+                queenLocations,
+                MagicBitboards.bishopVars,
                 allBitboard,
                 friendlyBitboard,
                 square,
