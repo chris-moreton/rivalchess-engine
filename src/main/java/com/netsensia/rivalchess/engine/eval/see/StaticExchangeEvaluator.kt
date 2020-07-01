@@ -27,23 +27,25 @@ class StaticExchangeEvaluator {
         return -Int.MAX_VALUE
     }
 
-    fun seeSearch(seeBoard: SeeBoard, captureSquare: Int, materialBalance: Int): Int {
+    private fun seeSearch(seeBoard: SeeBoard, captureSquare: Int, materialBalance: Int): Int {
 
         var bestScore = materialBalance
         val moves = seeBoard.generateCaptureMovesOnSquare(captureSquare)
 
-        for (move in moves) {
-            if (move == 0) break
-            val materialGain = seeBoard.makeMove(move)
+        if (moves.isNotEmpty()) {
+            val move = moves[0]
+            if (move != 0) {
+                val materialGain = seeBoard.makeMove(move)
 
-            if (seeBoard.capturedPieceBitboardType == if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK) {
+                if (seeBoard.capturedPieceBitboardType == if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK) {
+                    seeBoard.unMakeMove()
+                    return bestScore + VALUE_KING
+                }
+
+                val seeScore = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain))
                 seeBoard.unMakeMove()
-                return bestScore + VALUE_KING
+                bestScore = seeScore.coerceAtLeast(bestScore)
             }
-
-            val seeScore = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain))
-            seeBoard.unMakeMove()
-            bestScore = seeScore.coerceAtLeast(bestScore)
         }
 
         return bestScore
