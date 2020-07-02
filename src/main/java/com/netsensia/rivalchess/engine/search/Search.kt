@@ -40,7 +40,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         private set
     private var quit = false
     var nodes = 0
-    var millisSetByEngineMonitor: Long = 0
 
     private var millisToThink = 0
     private var nodesToSearch = Int.MAX_VALUE
@@ -71,7 +70,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         drawnPositionsAtRoot.add(ArrayList())
         drawnPositionsAtRoot.add(ArrayList())
         this.printStream = printStream
-        millisSetByEngineMonitor = System.currentTimeMillis()
         currentPath = SearchPath()
         engineState = SearchState.READY
         searchPath = Array(MAX_TREE_DEPTH) { SearchPath() }
@@ -223,13 +221,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
-        val startNodes = nodes
+        var legalMoveCount = 0
         val moveExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
         val newExtensions = (extensions + moveExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
 
+                legalMoveCount ++
                 val newPath =
                     scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
                         it.score = -it.score
@@ -260,9 +259,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
         }
         if (abortingSearch) return SearchPath()
-        if (nodes == startNodes) {
+        if (legalMoveCount == 0) {
+            searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
-            return searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
+            return searchPathPly
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
@@ -380,7 +380,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun abortIfTimeIsUp(): Boolean {
-        if (millisSetByEngineMonitor > searchTargetEndTime || nodes >= nodesToSearch) abortingSearch = true
+        if (System.currentTimeMillis() > searchTargetEndTime || nodes >= nodesToSearch) abortingSearch = true
         return abortingSearch
     }
 
@@ -483,18 +483,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
         nodes ++
         var newPath: SearchPath
-        val evalScore = evaluate(board)
 
         searchPath[ply].height = 0
-        searchPath[ply].score = if (isCheck) -VALUE_MATE else evalScore
+        val eval = evaluate(board)
+        searchPath[ply].score = if (isCheck) -Int.MAX_VALUE else eval
 
         if (depth == 0 || searchPath[ply].score >= high) return searchPath[ply]
+
         var newLow = searchPath[ply].score.coerceAtLeast(low)
         setOrderedMovesArrayForQuiesce(isCheck, ply, board, quiescePly)
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
-        val startNodes = nodes
+        var legalMoveCount = 0
         while (move != 0) {
             if (board.makeMove(move)) {
+                legalMoveCount ++
                 newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow,
                         quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover))
                 board.unMakeMove()
@@ -505,7 +507,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
-        if (isCheck && nodes == startNodes) searchPath[ply].score = -VALUE_MATE
+
+        if (searchPath[ply].score == -Int.MAX_VALUE) return searchPath[ply].withScore(eval)
+        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -VALUE_MATE
 
         return searchPath[ply]
     }
