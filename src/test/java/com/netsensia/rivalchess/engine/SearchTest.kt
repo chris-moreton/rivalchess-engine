@@ -114,7 +114,7 @@ class SearchTest {
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
-    private fun assertNodeCount(fen: String, expectedNodes: Long) {
+    private fun assertNodeCount(fen: String, expectedNodes: Int) {
         val board = Board.fromFen(fen)
         val search = Search()
         Thread(search).start()
@@ -132,7 +132,7 @@ class SearchTest {
     }
 
     companion object {
-        private const val RECALCULATE = false
+        private const val RECALCULATE = true
         private const val CHECKMATE = 9999
         private const val MATE_2 = 9997
         private const val MATE_3 = 9995
