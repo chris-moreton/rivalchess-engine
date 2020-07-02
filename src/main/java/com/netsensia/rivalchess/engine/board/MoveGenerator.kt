@@ -102,7 +102,7 @@ class MoveGenerator(
         }
     }
 
-    fun generateLegalQuiesceMoves(generateChecks: Boolean): MoveGenerator {
+    fun generateLegalQuiesceMoves(generateChecks: Boolean = false): MoveGenerator {
         moves = IntArray(MAX_LEGAL_MOVES)
         moveCount = 0
         

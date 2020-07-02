@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.engine.hash
 
 import com.netsensia.rivalchess.bitboards.LOW32
 import com.netsensia.rivalchess.config.DEFAULT_SEARCH_HASH_HEIGHT
+import com.netsensia.rivalchess.config.MATE_SCORE_START
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 
@@ -51,12 +52,18 @@ class BoardHash {
     fun storeHashMove(move: Int, board: EngineBoard, score: Int, flag: Int, height: Int) {
         val hashIndex = (board.boardHashCode() % maxHashEntries).toInt() * NUM_HASH_FIELDS
         if (height >= hashTableUseHeight[hashIndex + HASHENTRY_HEIGHT] || hashTableVersion > hashTableUseHeight[hashIndex + HASHENTRY_VERSION]) {
-            if (hashTableVersion == hashTableUseHeight[hashIndex + HASHENTRY_VERSION])
-                copyEntryFromUseHeightToIgnoreHeightTable(hashIndex)
+            if (hashTableVersion == hashTableUseHeight[hashIndex + HASHENTRY_VERSION]) copyEntryFromUseHeightToIgnoreHeightTable(hashIndex)
             storeMoveInHashTable(move, board, score, flag, height, hashIndex, hashTableUseHeight)
         } else {
             storeMoveInHashTable(move, board, score, flag, height, hashIndex, hashTableIgnoreHeight)
         }
+    }
+
+    fun clearHashEntry(hashIndex: Int) {
+        hashTableUseHeight[hashIndex + HASHENTRY_FLAG] = EMPTY
+        hashTableUseHeight[hashIndex + HASHENTRY_HEIGHT] = DEFAULT_SEARCH_HASH_HEIGHT
+        hashTableIgnoreHeight[hashIndex + HASHENTRY_FLAG] = EMPTY
+        hashTableIgnoreHeight[hashIndex + HASHENTRY_HEIGHT] = DEFAULT_SEARCH_HASH_HEIGHT
     }
 
     private fun copyEntryFromUseHeightToIgnoreHeightTable(hashIndex: Int) {

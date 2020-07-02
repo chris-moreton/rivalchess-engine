@@ -8,7 +8,6 @@ import com.netsensia.rivalchess.consts.FEN_START_POS
 import com.netsensia.rivalchess.engine.board.*
 import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
-import com.netsensia.rivalchess.engine.hash.isAlwaysReplaceHashTableEntryValid
 import com.netsensia.rivalchess.engine.hash.isHeightHashTableEntryValid
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.enums.*
@@ -202,9 +201,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val checkExtend = checkExtension(isCheck)
 
         var hashFlag = UPPER
-        if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh, isCheck).also {
-            adjustScoreForMateDepth(it)
-        }
+        if (depthRemaining <= 0) return finalPath(board, ply, localLow, localHigh)
 
         val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, localLow, localHigh, extensions, isCheck)
         searchPathPly.reset()
@@ -346,19 +343,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var hashMove = 0
         val hashIndex = board.boardHashObject.getHashIndex(board)
 
-        if (USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
+        if (isHeightHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
             hashMove = boardHash.useHeight(hashIndex + HASHENTRY_MOVE)
             val flag = boardHash.useHeight(hashIndex + HASHENTRY_FLAG)
             val score = boardHash.useHeight(hashIndex + HASHENTRY_SCORE)
 
-            if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
-        }
-
-        if (USE_ALWAYS_REPLACE_HASH && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
-            hashMove = boardHash.ignoreHeight(hashIndex + HASHENTRY_MOVE)
-            val flag = boardHash.ignoreHeight(hashIndex + HASHENTRY_FLAG)
-            val score = boardHash.ignoreHeight(hashIndex + HASHENTRY_SCORE)
             if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
         }
 
@@ -374,10 +364,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return window.low >= window.high
     }
 
-    private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
-        val bestPath = quiesce(board, MAX_QUIESCE_DEPTH - 1, ply, 0, low, high, isCheck)
+    private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int): SearchPath {
+        val bestPath = quiesce(board, MAX_QUIESCE_DEPTH - 1, ply, 0, low, high)
         val hashFlag = if (bestPath.score < low) UPPER else if (bestPath.score > high) LOWER else EXACT
-        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag,0)
+        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag, 0)
         return bestPath
     }
 
@@ -468,7 +458,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         engineBoard.boardHashObject.clearHash()
     }
 
-    private fun scoreQuiesceMoves(board: EngineBoard, ply: Int, includeChecks: Boolean) {
+    private fun scoreQuiesceMoves(board: EngineBoard, ply: Int, includeChecks: Boolean = false) {
         var moveCount = 0
         var i = 0
         while (orderedMoves[ply][i] != 0) {
@@ -482,24 +472,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply][moveCount] = 0
     }
 
-    private fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
+    private fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int): SearchPath {
         nodes ++
         var newPath: SearchPath
         val evalScore = evaluate(board)
-
-        searchPath[ply].height = 0
-        searchPath[ply].score = if (isCheck) -VALUE_MATE else evalScore
-
+        searchPath[ply].withScore(evalScore).withHeight(0)
         if (depth == 0 || searchPath[ply].score >= high) return searchPath[ply]
         var newLow = searchPath[ply].score.coerceAtLeast(low)
-        setOrderedMovesArrayForQuiesce(isCheck, ply, board, quiescePly)
+        setOrderedMovesArrayForQuiesce(ply, board)
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
             if (board.makeMove(move)) {
                 legalMoveCount ++
-                newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow,
-                        quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover))
+                newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow)
                 board.unMakeMove()
                 newPath.score = -newPath.score
                 if (newPath.score > searchPath[ply].score) searchPath[ply].setPath(move, newPath)
@@ -508,21 +494,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
-        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -VALUE_MATE
 
         return searchPath[ply]
     }
 
-    private fun setOrderedMovesArrayForQuiesce(isCheck: Boolean, ply: Int, board: EngineBoard, quiescePly: Int) {
-        if (isCheck) {
-            orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
-            scoreFullWidthMoves(board, ply)
-        } else {
-            orderedMoves[ply] = board.moveGenerator()
-                    .generateLegalQuiesceMoves(quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
-                    .moves
-            scoreQuiesceMoves(board, ply, quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
-        }
+    private fun setOrderedMovesArrayForQuiesce(ply: Int, board: EngineBoard) {
+        orderedMoves[ply] = board.moveGenerator().generateLegalQuiesceMoves().moves
+        scoreQuiesceMoves(board, ply)
     }
 
     val mover: Colour

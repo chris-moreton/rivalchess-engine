@@ -11,10 +11,3 @@ fun isHeightHashTableEntryValid(depthRemaining: Int, boardHash: BoardHash, hashI
             (boardHash.hashTableVersion - boardHash.useHeight(hashIndex + HASHENTRY_VERSION) <= MAXIMUM_HASH_AGE)
         } else false
 
-
-fun isAlwaysReplaceHashTableEntryValid(depthRemaining: Int, boardHash: BoardHash, hashIndex: Int) =
-        if (boardHash.ignoreHeight(hashIndex + HASHENTRY_HEIGHT) >= depthRemaining && boardHash.ignoreHeight(hashIndex + HASHENTRY_FLAG) !=
-                EMPTY && boardHash.ignoreHeight(hashIndex + HASHENTRY_64BIT1) == (boardHash.trackedHashValue ushr 32).toInt() &&
-                boardHash.ignoreHeight(hashIndex + HASHENTRY_64BIT2) == (boardHash.trackedHashValue and LOW32).toInt()) {
-            boardHash.hashTableVersion - boardHash.useHeight(hashIndex + HASHENTRY_VERSION) <= MAXIMUM_HASH_AGE
-        } else false
