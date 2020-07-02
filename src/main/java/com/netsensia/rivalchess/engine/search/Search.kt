@@ -40,7 +40,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         private set
     private var quit = false
     var nodes = 0
-    var millisSetByEngineMonitor: Long = 0
 
     private var millisToThink = 0
     private var nodesToSearch = Int.MAX_VALUE
@@ -71,7 +70,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         drawnPositionsAtRoot.add(ArrayList())
         drawnPositionsAtRoot.add(ArrayList())
         this.printStream = printStream
-        millisSetByEngineMonitor = System.currentTimeMillis()
         currentPath = SearchPath()
         engineState = SearchState.READY
         searchPath = Array(MAX_TREE_DEPTH) { SearchPath() }
@@ -264,8 +262,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         if (abortingSearch) return SearchPath()
         if (legalMoveCount == 0) {
+            searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
-            return searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
+            return searchPathPly
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
@@ -383,7 +382,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun abortIfTimeIsUp(): Boolean {
-        if (millisSetByEngineMonitor > searchTargetEndTime || nodes >= nodesToSearch) abortingSearch = true
+        if (System.currentTimeMillis() > searchTargetEndTime || nodes >= nodesToSearch) abortingSearch = true
         return abortingSearch
     }
 
