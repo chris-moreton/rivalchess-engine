@@ -287,27 +287,17 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, newExtensions: Int, localIsCheck: Boolean) =
         if (useScoutSearch) {
-            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low-1, -low, newExtensions, localIsCheck).also {
-                adjustScoreForMateDepth(it)
-            }
+            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low-1, -low, newExtensions, localIsCheck)
             if (!abortingSearch && -scoutPath.score > low) {
-                search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, localIsCheck).also {
-                    adjustScoreForMateDepth(it)
-                }
+                search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, localIsCheck)
             } else scoutPath
         } else {
-            search(engineBoard, depth - 1, ply + 1, -high, -low, newExtensions, localIsCheck).also {
-                adjustScoreForMateDepth(it)
-            }
+            search(engineBoard, depth - 1, ply + 1, -high, -low, newExtensions, localIsCheck)
         }
 
     private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
         if (isDrawnAtRoot()) SearchPath().withScore(0).withPath(move) else
             scoutSearch(scoutSearch, depth, ply, low, high, extensions, isCheck)
-
-    private fun adjustScoreForMateDepth(newPath: SearchPath) {
-        //newPath.score += if (newPath.score > MATE_SCORE_START) -1 else if (newPath.score < -MATE_SCORE_START) 1 else 0
-    }
 
     private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean): Int {
         if (hashMove == 0 && !board.isOnNullMove && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
