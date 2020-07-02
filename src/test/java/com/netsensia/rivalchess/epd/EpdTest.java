@@ -50,53 +50,50 @@ public class EpdTest {
             "WAC.071", // Fail 5
             "WAC.091", // Fail 6
             "WAC.092", // Fail 7
-            "WAC.108", // Fail 8
-            "WAC.116", // Fail 9
-            "WAC.118", // Fail 10
-            "WAC.131", // Fail 11
-            "WAC.133", // Fail 12
-            "WAC.141", // Fail 13
-            "WAC.145", // Fail 14
-            "WAC.151", // Fail 15
+            "WAC.100", // Fail 8
+            "WAC.108", // Fail 9
+            "WAC.116", // Fail 10
+            "WAC.118", // Fail 11
+            "WAC.131", // Fail 12
+            "WAC.133", // Fail 13
+            "WAC.141", // Fail 14
+            "WAC.145", // Fail 15
             "WAC.152", // Fail 16
             "WAC.157", // Fail 17
             "WAC.163", // Fail 18
             "WAC.176", // Fail 19
             "WAC.178", // Fail 20
-            "WAC.183", // Fail 21
-            "WAC.193", // Fail 22
-            "WAC.194", // Fail 23
-            "WAC.200", // Fail 24
-            "WAC.207", // Fail 25
-            "WAC.210", // Fail 26
-            "WAC.213", // Fail 27
-            "WAC.222", // Fail 28
-            "WAC.228", // Fail 29
-            "WAC.229", // Fail 30
-            "WAC.230", // Fail 31
-            "WAC.236", // Fail 32
-            "WAC.237", // Fail 33
-            "WAC.239", // Fail 34
-            "WAC.241", // Fail 35
-            "WAC.242", // Fail 36
-            "WAC.244", // Fail 37
-            "WAC.245", // Fail 38
-            "WAC.247", // Fail 39
-            "WAC.248", // Fail 40
-            "WAC.250", // Fail 41
-            "WAC.252", // Fail 42
-            "WAC.257", // Fail 43
-            "WAC.261", // Fail 44
-            "WAC.265", // Fail 45
-            "WAC.266", // Fail 46
-            "WAC.274", // Fail 47
-            "WAC.277", // Fail 48
-            "WAC.283", // Fail 49
-            "WAC.287", // Fail 50
-            "WAC.288", // Fail 51
-            "WAC.291", // Fail 52
-            "WAC.293", // Fail 53
-            "WAC.297" // Fail 54
+            "WAC.193", // Fail 21
+            "WAC.194", // Fail 22
+            "WAC.200", // Fail 23
+            "WAC.207", // Fail 24
+            "WAC.210", // Fail 25
+            "WAC.213", // Fail 26
+            "WAC.222", // Fail 27
+            "WAC.228", // Fail 28
+            "WAC.229", // Fail 29
+            "WAC.230", // Fail 30
+            "WAC.237", // Fail 31
+            "WAC.238", // Fail 32
+            "WAC.241", // Fail 33
+            "WAC.242", // Fail 34
+            "WAC.244", // Fail 35
+            "WAC.245", // Fail 36
+            "WAC.247", // Fail 37
+            "WAC.250", // Fail 38
+            "WAC.252", // Fail 39
+            "WAC.257", // Fail 40
+            "WAC.261", // Fail 41
+            "WAC.265", // Fail 42
+            "WAC.266", // Fail 43
+            "WAC.274", // Fail 44
+            "WAC.277", // Fail 45
+            "WAC.283", // Fail 46
+            "WAC.287", // Fail 47
+            "WAC.288", // Fail 48
+            "WAC.291", // Fail 49
+            "WAC.293", // Fail 50
+            "WAC.297" // Fail 51
     ));
 
     @Test
