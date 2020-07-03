@@ -489,9 +489,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (board.makeMove(move)) {
                 legalMoveCount ++
                 newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow,
-                        quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover))
+                        quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover)).also {
+                    it.score = adjustedMateScore(-it.score)
+                }
                 board.unMakeMove()
-                newPath.score = -newPath.score
                 if (newPath.score > searchPath[ply].score) searchPath[ply].setPath(move, newPath)
                 if (newPath.score >= high) return searchPath[ply]
                 newLow = newLow.coerceAtLeast(newPath.score)
@@ -499,7 +500,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
 
-        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -7500
+        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -VALUE_MATE
 
         return searchPath[ply]
     }
