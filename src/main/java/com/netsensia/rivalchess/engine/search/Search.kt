@@ -215,7 +215,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (performNullMove(board, depthRemaining, isCheck))
             searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply+1, localLow, localHigh, extensions).also {
                 if (abortingSearch) return SearchPath()
-                if (adjustedMateScore(-it.score) >= localHigh) return searchPathPly.withScore(adjustedMateScore(-it.score))
+                if (-it.score >= localHigh) return searchPathPly.withScore(-it.score)
                 threatExtend = threatExtensions(it)
             }
 
@@ -260,15 +260,15 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         if (abortingSearch) return SearchPath()
         if (legalMoveCount == 0) {
-            searchPathPly.withScore(if (board.isCheck(mover)) -(VALUE_MATE-ply) else 0)
-            board.boardHashObject.storeHashMove(0, board, adjustedMateScore(searchPathPly.score), EXACT, MAX_SEARCH_DEPTH)
+            searchPathPly.withScore(if (board.isCheck(mover)) -(VALUE_MATE-0) else 0)
+            board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
             return searchPathPly
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
 
-    private fun adjustedMateScore(score: Int) = score // if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else 0)
+    private fun adjustedMateScore(score: Int) = if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else score)
 
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
@@ -499,7 +499,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
 
-        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -(VALUE_MATE-ply)
+        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -7500
 
         return searchPath[ply]
     }

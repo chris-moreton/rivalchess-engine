@@ -20,36 +20,30 @@ class SearchTest {
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
     fun testMateIn8ToCheckmate_problematic() {
-        // should be mate 5
-        solveForMate("8/8/8/2q5/8/5k2/1K6/8 b - - 0 1", "c5b4", mate(6))
         // should be mate -4
-        solveForMate("8/8/8/2q5/8/2K2k2/8/8 w - - 0 1", "c3d3", mated(8))
-        // should be mate 6
-        solveForMate("8/8/8/3q4/8/2K2k2/8/8 b - - 0 1", "d5c5", mate(7))
+        solveForMate("8/8/8/2q5/8/2K2k2/8/8 w - - 0 1", "c3b2", mated(7))
         // should be mate -6
-        solveForMate("8/8/8/3q4/1K6/5k2/8/8 w - - 0 1", "b4c3", mated(7))
+        solveForMate("8/8/8/3q4/1K6/5k2/8/8 w - - 0 1", "b4a3", mated(7))
         // should be mate 8
-        solveForMate("8/8/8/3q4/K7/7k/8/8 b - - 0 1", "d5c4", mate(16))
+        solveForMate("8/8/8/3q4/K7/7k/8/8 b - - 0 1", "h3g2", mate(7))
         // should be mate -8
-        solveForMate("8/8/8/1K1q4/8/7k/8/8 w - - 0 1", "b5b4", mated(10))
+        solveForMate("8/8/8/1K1q4/8/7k/8/8 w - - 0 1", "b5b6", mated(9))
         // should be mate 8
-        solveForMate("8/8/3q4/1K6/8/7k/8/8 b - - 0 1", "h3g2", mate(10))
+        solveForMate("8/8/3q4/1K6/8/7k/8/8 b - - 0 1", "h3g3", mate(19))
         // should be mate 8
-        solveForMate("8/8/3q4/8/1K6/7k/8/8 w - - 0 1", "b4b5", mated(12))
+        solveForMate("8/8/3q4/8/1K6/7k/8/8 w - - 0 1", "b4b5", mated(9))
         // should be mate -8
-        solveForMate("8/8/8/4q3/1K6/7k/8/8 b - - 0 1", "e5b2", mate(17))
+        solveForMate("8/8/8/4q3/1K6/7k/8/8 b - - 0 1", "h3g3", mate(11))
         // should be mate -9
-        solveForMate("8/8/8/8/2K5/7k/1q6/8 b - - 0 1", "h3g4", mate(17))
-        // should be mate 5
-        solveForMate("8/8/8/8/5q2/2K5/5k2/8 b - - 0 1", "f2e2", mate(6))
+        solveForMate("8/8/8/8/2K5/7k/1q6/8 b - - 0 1", "b2c1", mate(27))
         // should be mate 6
-        solveForMate("8/8/8/4q3/8/3K4/5k2/8 b - - 0 1", "e5c5", mate(8))
+        solveForMate("8/8/8/4q3/8/3K4/5k2/8 b - - 0 1", "e5d5", mate(7))
         // should be mate 7
-        solveForMate("8/8/1K6/4q3/8/7k/8/8 b - - 0 1", "h3g4", mate(10))
+        solveForMate("8/8/1K6/4q3/8/7k/8/8 b - - 0 1", "e5e6", mate(14))
         // should be mate 7
-        solveForMate("8/8/8/4q3/2K5/8/6k1/8 b - - 0 1", "e5e6", mate(22))
+        solveForMate("8/8/8/4q3/2K5/8/6k1/8 b - - 0 1", "g2f3", mate(9))
         // should be mate 9
-        solveForMate("8/8/8/2K5/8/7k/1q6/8 b - - 0 1", "h3g3", mate(14))
+        solveForMate("8/8/8/2K5/8/7k/1q6/8 b - - 0 1", "b2c3", mate(16))
     }
 
     @Test
@@ -67,6 +61,9 @@ class SearchTest {
     fun testQueenVKingEndGameDodgyPositions() {
         solveForMate("8/8/8/8/5q2/K7/3k4/8 b - - 0 1", "d2c2", mate(2))
         solveForMate("8/8/8/8/5q2/1K6/4k3/8 b - - 0 1", "e2d2", mate(4))
+        solveForMate("8/8/8/2q5/8/5k2/1K6/8 b - - 0 1", "c5b5", mate(5))
+        solveForMate("8/8/8/3q4/8/2K2k2/8/8 b - - 0 1", "d5c5", mate(6))
+        solveForMate("8/8/8/8/5q2/2K5/5k2/8 b - - 0 1", "f2e2", mate(5))
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
