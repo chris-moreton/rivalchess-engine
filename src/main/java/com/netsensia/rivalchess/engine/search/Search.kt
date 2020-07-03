@@ -145,7 +145,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = checkExtension(isCheck)
-                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply, myLow, high, extensions, isCheck)
+                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply+1, myLow, high, extensions, isCheck)
 
                 if (abortingSearch) return SearchPath()
 
@@ -212,9 +212,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var threatExtend = 0
 
         if (performNullMove(board, depthRemaining, isCheck))
-            searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply, localLow, localHigh, extensions).also {
+            searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply+1, localLow, localHigh, extensions).also {
                 if (abortingSearch) return SearchPath()
-                if (-it.score >= localHigh) return searchPathPly.withScore(-it.score)
+                if (adjustMateScore(-it.score) >= localHigh) return searchPathPly.withScore(adjustMateScore(-it.score))
                 threatExtend = threatExtensions(it)
             }
 
@@ -229,8 +229,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 legalMoveCount ++
                 val newPath =
-                    scoutSearch(useScoutSearch, depth, ply, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
-                        it.score = -it.score
+                    scoutSearch(useScoutSearch, depth, ply+1, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
+                        it.score = adjustMateScore(-it.score)
                     }
 
                 if (abortingSearch) return SearchPath()
@@ -260,12 +260,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (abortingSearch) return SearchPath()
         if (legalMoveCount == 0) {
             searchPathPly.withScore(if (board.isCheck(mover)) -(VALUE_MATE-ply) else 0)
-            board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
+            board.boardHashObject.storeHashMove(0, board, adjustMateScore(searchPathPly.score), EXACT, MAX_SEARCH_DEPTH)
             return searchPathPly
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
+
+    private fun adjustMateScore(score: Int) = score // if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else 0)
 
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
@@ -287,12 +289,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, newExtensions: Int, localIsCheck: Boolean) =
         if (useScoutSearch) {
-            val scoutPath = search(engineBoard, (depth - 1), ply + 1, -low-1, -low, newExtensions, localIsCheck)
+            val scoutPath = search(engineBoard, (depth - 1), ply, -low-1, -low, newExtensions, localIsCheck)
             if (!abortingSearch && -scoutPath.score > low) {
-                search(engineBoard, (depth - 1), ply + 1, -high, -low, newExtensions, localIsCheck)
+                search(engineBoard, (depth - 1), ply, -high, -low, newExtensions, localIsCheck)
             } else scoutPath
         } else {
-            search(engineBoard, depth - 1, ply + 1, -high, -low, newExtensions, localIsCheck)
+            search(engineBoard, depth - 1, ply, -high, -low, newExtensions, localIsCheck)
         }
 
     private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
@@ -380,7 +382,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, low: Int, high: Int, extensions: Int): SearchPath {
         board.makeNullMove()
-        val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply + 1, -high, -low, extensions, false)
+        val newPath = search(board, (depth - nullMoveReduceDepth - 1), ply, -high, -low, extensions, false)
         board.unMakeNullMove()
         return newPath
     }
