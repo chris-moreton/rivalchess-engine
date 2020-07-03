@@ -44,31 +44,33 @@ public class EpdTest {
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
             "WAC.002", // Fail 1
-            "WAC.058", // Fail 2
-            "WAC.071", // Fail 3
-            "WAC.092", // Fail 4
-            "WAC.100", // Fail 5
+            "WAC.041", // Fail 2
+            "WAC.058", // Fail 3
+            "WAC.071", // Fail 4
+            "WAC.092", // Fail 5
             "WAC.131", // Fail 6
             "WAC.145", // Fail 7
-            "WAC.152", // Fail 8
-            "WAC.157", // Fail 9
-            "WAC.163", // Fail 10
-            "WAC.178", // Fail 11
-            "WAC.194", // Fail 12
-            "WAC.213", // Fail 13
-            "WAC.229", // Fail 14
-            "WAC.230", // Fail 15
-            "WAC.237", // Fail 16
-            "WAC.238", // Fail 17
-            "WAC.243", // Fail 18
-            "WAC.247", // Fail 19
-            "WAC.248", // Fail 20
-            "WAC.250", // Fail 21
-            "WAC.265", // Fail 22
-            "WAC.274", // Fail 23
-            "WAC.291", // Fail 24
-            "WAC.297", // Fail 25
-            "WAC.299" // Fail 26
+            "WAC.151", // Fail 8
+            "WAC.152", // Fail 9
+            "WAC.157", // Fail 10
+            "WAC.163", // Fail 11
+            "WAC.178", // Fail 12
+            "WAC.183", // Fail 13
+            "WAC.210", // Fail 14
+            "WAC.213", // Fail 15
+            "WAC.229", // Fail 16
+            "WAC.230", // Fail 17
+            "WAC.236", // Fail 18
+            "WAC.237", // Fail 19
+            "WAC.243", // Fail 20
+            "WAC.247", // Fail 21
+            "WAC.250", // Fail 22
+            "WAC.261", // Fail 23
+            "WAC.262", // Fail 24
+            "WAC.265", // Fail 25
+            "WAC.274", // Fail 26
+            "WAC.291", // Fail 27
+            "WAC.297" // Fail 28
     ));
 
     @Test
