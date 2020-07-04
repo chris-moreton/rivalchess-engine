@@ -145,11 +145,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = checkExtension(isCheck)
-                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply+1, myLow, high, extensions, isCheck)
+                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply+1, myLow, high, extensions, isCheck).also {
+                    it.score = adjustedMateScore(-it.score)
+                }
 
                 if (abortingSearch) return SearchPath()
 
-                newPath.score = -newPath.score
                 if (newPath.score >= high) {
                     board.unMakeMove()
                     engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depth)
@@ -214,7 +215,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (performNullMove(board, depthRemaining, isCheck))
             searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply+1, localLow, localHigh, extensions).also {
                 if (abortingSearch) return SearchPath()
-                if (adjustMateScore(-it.score) >= localHigh) return searchPathPly.withScore(adjustMateScore(-it.score))
+                if (-it.score >= localHigh) return searchPathPly.withScore(-it.score)
                 threatExtend = threatExtensions(it)
             }
 
@@ -230,7 +231,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 legalMoveCount ++
                 val newPath =
                     scoutSearch(useScoutSearch, depth, ply+1, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
-                        it.score = adjustMateScore(-it.score)
+                        it.score = adjustedMateScore(-it.score)
                     }
 
                 if (abortingSearch) return SearchPath()
@@ -259,15 +260,15 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         if (abortingSearch) return SearchPath()
         if (legalMoveCount == 0) {
-            searchPathPly.withScore(if (board.isCheck(mover)) -(VALUE_MATE-ply) else 0)
-            board.boardHashObject.storeHashMove(0, board, adjustMateScore(searchPathPly.score), EXACT, MAX_SEARCH_DEPTH)
+            searchPathPly.withScore(if (board.isCheck(mover)) -(VALUE_MATE-0) else 0)
+            board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
             return searchPathPly
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
 
-    private fun adjustMateScore(score: Int) = score // if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else 0)
+    private fun adjustedMateScore(score: Int) = if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else score)
 
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
@@ -488,9 +489,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (board.makeMove(move)) {
                 legalMoveCount ++
                 newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow,
-                        quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover))
+                        quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover)).also {
+                    it.score = adjustedMateScore(-it.score)
+                }
                 board.unMakeMove()
-                newPath.score = -newPath.score
                 if (newPath.score > searchPath[ply].score) searchPath[ply].setPath(move, newPath)
                 if (newPath.score >= high) return searchPath[ply]
                 newLow = newLow.coerceAtLeast(newPath.score)
@@ -498,7 +500,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
 
-        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -(VALUE_MATE-ply)
+        if (isCheck && legalMoveCount == 0) searchPath[ply].score = -VALUE_MATE
 
         return searchPath[ply]
     }
