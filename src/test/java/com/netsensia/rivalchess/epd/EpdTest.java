@@ -44,27 +44,30 @@ public class EpdTest {
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
             "WAC.002", // Fail 1
-            "WAC.041", // Fail 2
-            "WAC.071", // Fail 3
-            "WAC.092", // Fail 4
+            "WAC.071", // Fail 2
+            "WAC.092", // Fail 3
+            "WAC.100", // Fail 4
             "WAC.131", // Fail 5
             "WAC.145", // Fail 6
-            "WAC.151", // Fail 7
+            "WAC.152", // Fail 7
             "WAC.157", // Fail 8
             "WAC.163", // Fail 9
-            "WAC.213", // Fail 10
-            "WAC.229", // Fail 11
-            "WAC.230", // Fail 12
-            "WAC.236", // Fail 13
-            "WAC.237", // Fail 14
-            "WAC.238", // Fail 15
-            "WAC.247", // Fail 16
-            "WAC.265", // Fail 17
-            "WAC.269", // Fail 18
-            "WAC.274", // Fail 19
-            "WAC.277", // Fail 20
-            "WAC.287", // Fail 21
-            "WAC.297" // Fail 22
+            "WAC.178", // Fail 10
+            "WAC.194", // Fail 11
+            "WAC.213", // Fail 12
+            "WAC.229", // Fail 13
+            "WAC.230", // Fail 14
+            "WAC.237", // Fail 15
+            "WAC.238", // Fail 16
+            "WAC.243", // Fail 17
+            "WAC.247", // Fail 18
+            "WAC.248", // Fail 19
+            "WAC.250", // Fail 20
+            "WAC.265", // Fail 21
+            "WAC.274", // Fail 22
+            "WAC.291", // Fail 23
+            "WAC.297", // Fail 24
+            "WAC.299" // Fail 25
     ));
 
     @Test
