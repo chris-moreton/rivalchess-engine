@@ -488,8 +488,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         while (move != 0) {
             if (board.makeMove(move)) {
                 legalMoveCount ++
-                newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow,
-                        quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY && board.isCheck(mover)).also {
+                newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow, board.isCheck(mover)).also {
                     it.score = adjustedMateScore(-it.score)
                 }
                 board.unMakeMove()
@@ -511,7 +510,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             scoreFullWidthMoves(board, ply)
         } else {
             orderedMoves[ply] = board.moveGenerator()
-                    .generateLegalQuiesceMoves(quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
+                    .generateLegalQuiesceMoves()
                     .moves
             scoreQuiesceMoves(board, ply, quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
         }
