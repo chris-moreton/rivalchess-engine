@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 public class EpdItem {
 
     private final String fen;
+
     private final List<String> bestMoves;
     private final String id;
     private int maxNodesToSearch = 500000;
@@ -51,6 +52,10 @@ public class EpdItem {
 
     public int getMaxNodesToSearch() {
         return maxNodesToSearch;
+    }
+
+    public void setMaxNodesToSearch(int maxNodesToSearch) {
+        this.maxNodesToSearch = maxNodesToSearch;
     }
 
 }

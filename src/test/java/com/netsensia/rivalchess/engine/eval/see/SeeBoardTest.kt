@@ -94,7 +94,7 @@ internal class SeeBoardTest {
     fun moveGenerationFromStartPosition() {
         val engineBoard = EngineBoard(getBoardModel(FEN_START_POS))
         val seeBoard = SeeBoard(engineBoard)
-        assertEquals(0, size(seeBoard.generateCaptureMovesOnSquare(45).toList()))
+        assertEquals(0, seeBoard.getLvaCaptureMove(45))
     }
 
     private fun size(moves: List<Int>): Int {
@@ -105,18 +105,16 @@ internal class SeeBoardTest {
     fun moveGenerationFromComplexPosition1() {
         val engineBoard = EngineBoard(getBoardModel("2rr3k/pp3pp1/1nnqbN1p/3pN3/2pP4/1PPQ4/P1B4P/R4RK1 w - - 1 6"))
         val seeBoard = SeeBoard(engineBoard)
-        val moves = seeBoard.generateCaptureMovesOnSquare(29).toList()
-        assertEquals(1, size(moves))
-        assertTrue(moves.contains(EngineMove(Move(Square.B3, Square.C4)).compact))
+        val move = seeBoard.getLvaCaptureMove(29)
+        assertEquals(EngineMove(Move(Square.B3, Square.C4)).compact, move)
     }
 
     @Test
     fun moveGenerationFromComplexPosition2() {
         val engineBoard = EngineBoard(getBoardModel("2rr3k/pp3pN1/1nn1b2p/3pq3/2pP4/2P3Q1/PPB4P/R4RK1 b - - 1 6"))
         val seeBoard = SeeBoard(engineBoard)
-        val moves = seeBoard.generateCaptureMovesOnSquare(49).toList()
-        assertEquals(1, size(moves))
-        assertTrue(moves.contains(EngineMove(Move(Square.E5, Square.G7)).compact))
+        val move = seeBoard.getLvaCaptureMove(49)
+        assertEquals(EngineMove(Move(Square.E5, Square.G7)).compact, move)
         seeBoard.makeMove(EngineMove(Move(Square.E5, Square.G7)).compact)
         seeBoard.unMakeMove()
         seeBoard.makeMove(EngineMove(Move(Square.H8, Square.G7)).compact)
@@ -126,47 +124,53 @@ internal class SeeBoardTest {
     fun moveGenerationFromComplexPosition3() {
         val engineBoard = EngineBoard(getBoardModel("2r1r2k/pp2qpp1/1nn1b2p/3pN3/2pP4/2P3Q1/PPB4P/R3R1K1 w - - 1 6"))
         val seeBoard = SeeBoard(engineBoard)
-        val moves = seeBoard.generateCaptureMovesOnSquare(59).toList()
-        assertEquals(0, size(moves))
+        val move = seeBoard.getLvaCaptureMove(59)
+        assertEquals(0, move)
     }
 
     @Test
     fun moveGenerationFromComplexPosition4() {
         val engineBoard = EngineBoard(getBoardModel("2rrq2k/pp3pp1/1nn1b1Bp/3pN3/2pP4/2P3Q1/PP5P/R4RK1 w - - 0 3"))
         val seeBoard = SeeBoard(engineBoard)
-        var moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
-        assertEquals(1, size(moves))
-        (seeBoard.makeMove(EngineMove(Move(Square.E5, Square.F7)).compact))
-        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
-        assertEquals(1, size(moves))
-        (seeBoard.makeMove(EngineMove(Move(Square.E6, Square.F7)).compact))
-        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
-        assertEquals(1, size(moves))
-        (seeBoard.makeMove(EngineMove(Move(Square.F1, Square.F7)).compact))
-        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
-        assertEquals(1, size(moves))
-        (seeBoard.makeMove(EngineMove(Move(Square.E8, Square.F7)).compact))
-        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
-        assertEquals(1, size(moves))
-        (seeBoard.makeMove(EngineMove(Move(Square.G6, Square.F7)).compact))
-        moves = seeBoard.generateCaptureMovesOnSquare(50).toList()
-        assertEquals(0, size(moves))
+
+        var move = seeBoard.getLvaCaptureMove(50)
+        assertEquals(EngineMove(Move(Square.E5, Square.F7)).compact, move)
+        seeBoard.makeMove(move)
+
+        move = seeBoard.getLvaCaptureMove(50)
+        assertEquals(EngineMove(Move(Square.E6, Square.F7)).compact, move)
+        seeBoard.makeMove(move)
+
+        move = seeBoard.getLvaCaptureMove(50)
+        assertEquals(EngineMove(Move(Square.G6, Square.F7)).compact, move)
+        seeBoard.makeMove(move)
+
+        move = seeBoard.getLvaCaptureMove(50)
+        assertEquals(EngineMove(Move(Square.E8, Square.F7)).compact, move)
+        seeBoard.makeMove(move)
+
+        move = seeBoard.getLvaCaptureMove(50)
+        assertEquals(EngineMove(Move(Square.F1, Square.F7)).compact, move)
+        seeBoard.makeMove(move)
+
+        move = seeBoard.getLvaCaptureMove(50)
+        assertEquals(0, move)
     }
 
     @Test
     fun moveGenerationFromComplexPosition5() {
         val engineBoard = EngineBoard(getBoardModel("2rr3k/pp3pp1/1nn1bN1p/3p4/3P4/2PQ4/PPB4q/R4RK1 w - - 0 3"))
         val seeBoard = SeeBoard(engineBoard)
-        val moves = seeBoard.generateCaptureMovesOnSquare(8).toList()
-        assertEquals(1, size(moves))
+        val move = seeBoard.getLvaCaptureMove(8)
+        assertTrue(move != 0)
     }
 
     @Test
     fun moveGenerationFromComplexPosition6() {
         val engineBoard = EngineBoard(getBoardModel("2rr3k/pp3pp1/1n1qbN1p/3pn3/2pP1R2/2P3Q1/PPB4P/R5K1 w - - 0 2"))
         val seeBoard = SeeBoard(engineBoard)
-        val moves = seeBoard.generateCaptureMovesOnSquare(35).toList()
-        assertEquals(1, size(moves))
+        val move = seeBoard.getLvaCaptureMove(35)
+        assertTrue(move != 0)
     }
 
     private fun assertPieceBitboardsMatch(board: EngineBoard, seeBoard: SeeBoard) {

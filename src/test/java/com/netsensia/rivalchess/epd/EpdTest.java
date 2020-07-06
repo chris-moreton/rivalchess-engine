@@ -31,6 +31,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 @SuppressWarnings("squid:S106")
 public class EpdTest {
 
+    private static final int MAX_NODES_TO_SEARCH = 500000;
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
@@ -44,35 +45,37 @@ public class EpdTest {
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
             "WAC.002", // Fail 1
-            "WAC.071", // Fail 2
-            "WAC.092", // Fail 3
-            "WAC.100", // Fail 4
-            "WAC.118", // Fail 5
-            "WAC.131", // Fail 6
-            "WAC.141", // Fail 7
-            "WAC.145", // Fail 8
-            "WAC.147", // Fail 9
-            "WAC.152", // Fail 10
-            "WAC.157", // Fail 11
-            "WAC.163", // Fail 12
-            "WAC.193", // Fail 13
-            "WAC.194", // Fail 14
-            "WAC.200", // Fail 15
-            "WAC.213", // Fail 16
-            "WAC.229", // Fail 17
-            "WAC.230", // Fail 18
-            "WAC.237", // Fail 19
-            "WAC.238", // Fail 20
-            "WAC.247", // Fail 21
-            "WAC.250", // Fail 22
-            "WAC.252", // Fail 23
-            "WAC.265", // Fail 24
-            "WAC.270", // Fail 25
-            "WAC.274", // Fail 26
-            "WAC.277", // Fail 27
-            "WAC.287", // Fail 28
-            "WAC.291", // Fail 29
-            "WAC.297" // Fail 30
+            "WAC.032", // Fail 2
+            "WAC.041", // Fail 3
+            "WAC.071", // Fail 4
+            "WAC.092", // Fail 5
+            "WAC.100", // Fail 6
+            "WAC.118", // Fail 7
+            "WAC.131", // Fail 8
+            "WAC.141", // Fail 9
+            "WAC.145", // Fail 10
+            "WAC.147", // Fail 11
+            "WAC.152", // Fail 12
+            "WAC.157", // Fail 13
+            "WAC.163", // Fail 14
+            "WAC.193", // Fail 15
+            "WAC.194", // Fail 16
+            "WAC.200", // Fail 17
+            "WAC.213", // Fail 18
+            "WAC.229", // Fail 19
+            "WAC.230", // Fail 20
+            "WAC.237", // Fail 21
+            "WAC.238", // Fail 22
+            "WAC.247", // Fail 23
+            "WAC.250", // Fail 24
+            "WAC.252", // Fail 25
+            "WAC.265", // Fail 26
+            "WAC.270", // Fail 27
+            "WAC.274", // Fail 28
+            "WAC.277", // Fail 29
+            "WAC.287", // Fail 30
+            "WAC.291", // Fail 31
+            "WAC.297" // Fail 32
     ));
 
     @Test
@@ -156,6 +159,7 @@ public class EpdTest {
         boolean processTests = false;
 
         for (EpdItem epdItem : epdReader) {
+            epdItem.setMaxNodesToSearch(MAX_NODES_TO_SEARCH);
             processTests = processTests || (epdItem.getId().equals(startAtId));
             if (processTests && (RECALCULATE_FAILURES || expectedToPass != failingPositions.contains(epdItem.getId()))) {
                 testPosition(epdItem, expectedToPass);

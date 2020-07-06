@@ -1,22 +1,19 @@
 package com.netsensia.rivalchess.engine.eval
 
+import com.netsensia.rivalchess.config.KING_DISTANCE_BONUS_ENDGAME
 import com.netsensia.rivalchess.consts.FEN_START_POS
 import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.model.util.FenUtils.invertFen
 import junit.framework.TestCase
 import org.junit.Test
-import java.lang.Math.pow
 
 class EvaluateKtTest : TestCase() {
 
-    private fun assertTradePawnBonusScore(fen: String, score: Int, flipped: Boolean = true) {
-        val ecb = EngineBoard(getBoardModel(fen))
-        var materialDifference = materialDifferenceEval(ecb)
-        assertEquals(score, tradePawnBonusWhenMoreMaterial(ecb, materialDifference))
-        if (!flipped) {
-            assertTradePawnBonusScore(invertFen(fen), -score, true)
-        }
+    @Test
+    fun testDriveLosingKingToCorner() {
+        assertLosingKingBonus("8/8/1K6/4q3/8/7k/8/8 b - - 0 1", -(12 * KING_DISTANCE_BONUS_ENDGAME))
     }
 
     @Test
@@ -47,8 +44,20 @@ class EvaluateKtTest : TestCase() {
     @Test
     fun testExactlyOneBitSet() {
         assertFalse(exactlyOneBitSet(0L))
-        for (i in 0..63) {
-            assertTrue(exactlyOneBitSet(1L shl i))
+        for (i in 0..63) assertTrue(exactlyOneBitSet(1L shl i))
+    }
+
+    private fun assertLosingKingBonus(fen: String, expectedScore: Int) {
+        assertEquals(expectedScore, driveLosingKingToCorner(EngineBoard(Board.fromFen(fen))))
+        assertEquals(-expectedScore, driveLosingKingToCorner(EngineBoard(Board.fromFen(invertFen(fen)))))
+    }
+
+    private fun assertTradePawnBonusScore(fen: String, score: Int, flipped: Boolean = true) {
+        val ecb = EngineBoard(getBoardModel(fen))
+        var materialDifference = materialDifferenceEval(ecb)
+        assertEquals(score, tradePawnBonusWhenMoreMaterial(ecb, materialDifference))
+        if (!flipped) {
+            assertTradePawnBonusScore(invertFen(fen), -score, true)
         }
     }
 }

@@ -22,6 +22,7 @@ fun evaluate(board: EngineBoard): Int {
     val materialDifference = materialDifferenceEval(board)
 
     val eval =  materialDifference +
+            (if (oneSideHasOnlyKingLeft(board)) driveLosingKingToCorner(board) else 0) +
             (twoWhiteRooksTrappingKingEval(board) - twoBlackRooksTrappingKingEval(board)) +
             (doubledRooksEval(board.getBitboard(BITBOARD_WR)) - doubledRooksEval(board.getBitboard(BITBOARD_BR))) +
             (whiteRooksEval(board, whitePieces.inv()) - blackRooksEval(board, blackPieces.inv())) +
@@ -50,6 +51,22 @@ fun materialDifferenceEval(board: EngineBoard) =
 fun exactlyOneBitSet(bitboard: Long) = (bitboard and (bitboard - 1)) == 0L && bitboard != 0L
 
 fun onlyKingsRemain(board: EngineBoard) = exactlyOneBitSet(board.getBitboard(BITBOARD_ENEMY)) and exactlyOneBitSet(board.getBitboard(BITBOARD_FRIENDLY))
+
+fun oneSideHasOnlyKingLeft(board: EngineBoard) = board.whitePieceValues == 0 || board.blackPieceValues == 0
+
+fun driveLosingKingToCorner(board: EngineBoard) : Int {
+    val losingKingSquare = java.lang.Long.numberOfTrailingZeros(board.getBitboard(if (board.whitePieceValues == 0) BITBOARD_WK else BITBOARD_BK))
+    val winningKingSquare = java.lang.Long.numberOfTrailingZeros(board.getBitboard(if (board.whitePieceValues == 0) BITBOARD_BK else BITBOARD_WK))
+    val winningSide = if (board.whitePieceValues == 0) Colour.BLACK else Colour.WHITE
+
+    val loserDistanceToCorner = (14 - kingInCornerPieceSquareTable[losingKingSquare])
+    val loserDistanceFromEnemyKing = abs(xCoordOfSquare(winningKingSquare) - xCoordOfSquare(losingKingSquare)) +
+                                     abs(yCoordOfSquare(winningKingSquare) - yCoordOfSquare(losingKingSquare))
+
+    val loserBonus = (loserDistanceToCorner + loserDistanceFromEnemyKing) * KING_DISTANCE_BONUS_ENDGAME
+
+    return if (winningSide == Colour.WHITE) loserBonus else -loserBonus
+}
 
 fun whiteKingSquareEval(board: EngineBoard) =
         linearScale(

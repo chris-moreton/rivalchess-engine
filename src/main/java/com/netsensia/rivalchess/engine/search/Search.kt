@@ -492,9 +492,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     it.score = adjustedMateScore(-it.score)
                 }
                 board.unMakeMove()
-                if (newPath.score > searchPath[ply].score) searchPath[ply].setPath(move, newPath)
-                if (newPath.score >= high) return searchPath[ply]
-                newLow = newLow.coerceAtLeast(newPath.score)
+                if (newPath.score > searchPath[ply].score) {
+                    searchPath[ply].setPath(move, newPath)
+                    if (newPath.score >= high) return searchPath[ply]
+                    newLow = newLow.coerceAtLeast(newPath.score)
+                }
             }
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
         }
@@ -509,9 +511,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
             scoreFullWidthMoves(board, ply)
         } else {
-            orderedMoves[ply] = board.moveGenerator()
-                    .generateLegalQuiesceMoves()
-                    .moves
+            orderedMoves[ply] = board.moveGenerator().generateLegalQuiesceMoves().moves
             scoreQuiesceMoves(board, ply, quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
         }
     }
