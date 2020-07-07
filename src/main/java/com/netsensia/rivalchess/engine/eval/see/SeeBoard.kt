@@ -3,7 +3,6 @@ package com.netsensia.rivalchess.engine.eval.see
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToFirstSquare
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
-import com.netsensia.rivalchess.config.MAX_CAPTURES_ON_ONE_SQUARE
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.eval.*
@@ -22,7 +21,6 @@ class SeeBoard(board: EngineBoard) {
 
     private var movesMade = 0
     private var deltaCount = 0
-    private var generatedMoveCount = 0
 
     var capturedPieceBitboardType: Int = BITBOARD_NONE
 
@@ -100,8 +98,6 @@ class SeeBoard(board: EngineBoard) {
 
     fun getLvaCaptureMove(square: Int): Int {
 
-        generatedMoveCount = 0
-
         pawnCaptures(square).also { if (it != 0) return it }
 
         knightCaptures(square).also { if (it != 0) return it }
@@ -129,10 +125,6 @@ class SeeBoard(board: EngineBoard) {
                 return ((it shl 16) or square)
             }
         return 0
-    }
-    
-    private fun addMove(moves: IntArray, move: Int) {
-        moves[generatedMoveCount++] = move
     }
 
     private fun kingCaptures(square: Int): Int {

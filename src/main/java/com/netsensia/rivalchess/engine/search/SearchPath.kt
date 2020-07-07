@@ -29,14 +29,15 @@ class SearchPath {
         return this
     }
 
-    fun withHeight(newHeight: Int): SearchPath {
-        height = newHeight
-        return this
-    }
-
     fun withPath(move: Int): SearchPath {
         height = 1
         this.move[0] = move
+        return this
+    }
+
+    fun withMoveAndScore(move: Int, score: Int): SearchPath {
+        this.move[0] = move
+        this.score = score
         return this
     }
 

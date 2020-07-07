@@ -155,7 +155,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     board.unMakeMove()
                     engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depth)
                     depthZeroMoveScores[numMoves] = newPath.score
-                    return bestPath.withPath(move, newPath)
+                    return bestPath.withMoveAndScore(move, newPath.score)
                 }
 
                 if (newPath.score > bestPath.score) {
@@ -241,7 +241,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     board.unMakeMove()
                     board.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depthRemaining)
                     updateKillerMoves(board.getBitboard(BITBOARD_ENEMY), move, ply, newPath)
-                    return searchPathPly.withPath(move, newPath)
+                    return searchPathPly.withMoveAndScore(move, newPath.score)
                 }
 
                 if (newPath.score > searchPathPly.score) {
