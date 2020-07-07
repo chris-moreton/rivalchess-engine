@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.engine.search
 
-import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.enums.MoveOrder
@@ -55,10 +54,10 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
         score = 126
     } else if (isCapture) {
 
-        val see = adjustedSee(staticExchangeEvaluator.staticExchangeEvaluation(board, orderedMoves[ply][i]))
+        val see = staticExchangeEvaluator.staticExchangeEvaluation(board, orderedMoves[ply][i])
 
         score = if (see > 0) {
-            110 + see
+            110 + (see / 100)
         } else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
             109
         } else if (see == 0) {

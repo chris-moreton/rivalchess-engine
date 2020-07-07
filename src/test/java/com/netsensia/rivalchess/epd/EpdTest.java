@@ -72,10 +72,9 @@ public class EpdTest {
             "WAC.265", // Fail 26
             "WAC.270", // Fail 27
             "WAC.274", // Fail 28
-            "WAC.277", // Fail 29
-            "WAC.287", // Fail 30
-            "WAC.291", // Fail 31
-            "WAC.297" // Fail 32
+            "WAC.287", // Fail 29
+            "WAC.291", // Fail 30
+            "WAC.297" // Fail 31
     ));
 
     @Test

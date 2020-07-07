@@ -41,11 +41,6 @@ class SearchPath {
         return this
     }
 
-    fun withPath(compactMove: Int, path: SearchPath): SearchPath {
-        setPath(compactMove, path)
-        return this
-    }
-
     fun setPath(compactMove: Int, path: SearchPath) {
         height = path.height + 1
         move[0] = compactMove

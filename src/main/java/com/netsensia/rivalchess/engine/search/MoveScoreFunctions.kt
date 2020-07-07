@@ -58,5 +58,3 @@ fun getHighestScoringMoveFromArray(theseMoves: IntArray): Int {
         moveNoScore(best)
     }
 }
-
-fun adjustedSee(see: Int) = if (see > -Int.MAX_VALUE) ((see.toDouble() / VALUE_QUEEN) * 10).toInt() else see
