@@ -40,7 +40,7 @@ fun EngineBoard.isCheck(colour: Colour) =
         this.engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK) else
         this.engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE)
 
-fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {
+fun EngineBoard.getScore(move: Int, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {
     var score = 0
     val promotionMask = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     if (isCapture) {
@@ -49,8 +49,6 @@ fun EngineBoard.getScore(move: Int, includeChecks: Boolean, isCapture: Boolean, 
         if (promotionMask == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) score += 9
     } else if (promotionMask == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
         score = 116
-    } else if (includeChecks) {
-        score = 100
     }
     return score
 }

@@ -53,7 +53,6 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
     if (orderedMoves[ply][i] == mateKiller[ply]) {
         score = 126
     } else if (isCapture) {
-
         val see = staticExchangeEvaluator.staticExchangeEvaluation(board, orderedMoves[ply][i])
 
         score = if (see > 0) {

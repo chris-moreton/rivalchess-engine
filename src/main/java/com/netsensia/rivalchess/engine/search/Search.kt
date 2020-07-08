@@ -458,14 +458,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         engineBoard.boardHashObject.clearHash()
     }
 
-    private fun scoreQuiesceMoves(board: EngineBoard, ply: Int, includeChecks: Boolean) {
+    private fun scoreQuiesceMoves(board: EngineBoard, ply: Int) {
         var moveCount = 0
         var i = 0
         while (orderedMoves[ply][i] != 0) {
             var move = orderedMoves[ply][i]
             val isCapture = board.isCapture(move)
             move = moveNoScore(move)
-            val score = board.getScore(move, includeChecks, isCapture, staticExchangeEvaluator)
+            val score = board.getScore(move, isCapture, staticExchangeEvaluator)
             if (score > 0) orderedMoves[ply][moveCount++] = move or (127 - score shl 24)
             i++
         }
@@ -512,7 +512,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             scoreFullWidthMoves(board, ply)
         } else {
             orderedMoves[ply] = board.moveGenerator().generateLegalQuiesceMoves().moves
-            scoreQuiesceMoves(board, ply, quiescePly <= GENERATE_CHECKS_UNTIL_QUIESCE_PLY)
+            scoreQuiesceMoves(board, ply)
         }
     }
 
