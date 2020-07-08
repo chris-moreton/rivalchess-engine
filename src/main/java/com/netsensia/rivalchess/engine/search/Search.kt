@@ -18,6 +18,7 @@ import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
+import java.lang.Math.pow
 import java.util.*
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
@@ -86,7 +87,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         for (depth in 1..finalDepthToSearch) {
             iterativeDeepeningDepth = depth
-            result = aspirationSearch(depth, result.low, result.high)
+            result = aspirationSearch(depth, result.low, result.high, 1)
             reorderDepthZeroMoves()
             if (abortingSearch) break
             currentPath.setPath(result.path!!)
@@ -96,31 +97,29 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setSearchComplete()
     }
 
-    private fun aspirationSearch(depth: Int, low: Int, high: Int): AspirationSearchResult {
+    private fun widenAspirationLow(low: Int, attempt: Int) = (low - (ASPIRATION_RADIUS * pow(2.0, attempt.toDouble()))).toInt()
+
+    private fun widenAspirationHigh(high: Int, attempt: Int) = (high + (ASPIRATION_RADIUS * pow(2.0, attempt.toDouble()))).toInt()
+
+    private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): AspirationSearchResult {
         var path: SearchPath
-        var newLow = low
-        var newHigh = high
 
         path = searchZero(engineBoard, depth, 0, low, high)
 
-        if (!abortingSearch && path.score <= newLow) {
-            newLow = -Int.MAX_VALUE
-            path = searchZero(engineBoard, depth, 0, newLow, high)
-        } else if (!abortingSearch && path.score >= high) {
-            newHigh = Int.MAX_VALUE
-            path = searchZero(engineBoard, depth, 0, low, newHigh)
-        }
+        val newLow = if (path.score <= low) widenAspirationLow(low, attempt) else low
+        val newHigh = if (path.score >= high) widenAspirationHigh(high, attempt) else high
 
-        if (!abortingSearch && (path.score <= newLow || path.score >= newHigh))
+        if (newLow != low || newHigh != high) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
+
+        if (!abortingSearch && (path.score <= low || path.score >= high))
             path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
 
         if (!abortingSearch) {
             currentPath.setPath(path)
-            newLow = path.score - ASPIRATION_RADIUS
-            newHigh = path.score + ASPIRATION_RADIUS
+            return AspirationSearchResult(path, path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
         }
 
-        return AspirationSearchResult(path, newLow, newHigh)
+        return AspirationSearchResult(path, low, high)
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
