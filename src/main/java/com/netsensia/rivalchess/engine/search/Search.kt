@@ -18,7 +18,6 @@ import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
-import java.lang.Math.pow
 import java.util.*
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
@@ -98,15 +97,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
-        var path = searchZero(engineBoard, depth, 0, low, high)
+        val path = searchZero(engineBoard, depth, 0, low, high)
 
-        val newLow = if (path.score <= low) widenAspirationLow(low, attempt) else low
-        val newHigh = if (path.score >= high) widenAspirationHigh(high, attempt) else high
+        if (path.score <= low || path.score >= high) {
+            val newLow = if (path.score <= low) widenAspirationLow(low, attempt) else low
+            val newHigh = if (path.score >= high) widenAspirationHigh(high, attempt) else high
 
-        if (newLow != low || newHigh != high) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
-
-        if (!abortingSearch && (path.score <= low || path.score >= high))
-            path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
+            return aspirationSearch(depth, newLow, newHigh, attempt + 1)
+        }
 
         currentPath.setPath(path)
 
@@ -123,7 +121,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var useScoutSearch = false
         val bestPath = searchPath[0].reset()
 
-        //orderedMoves[0][0] = EngineMove(Move(Square.B4, Square.C3)).compact
         moveSequence(orderedMoves[0]).forEach {
             val move = moveNoScore(it)
 
