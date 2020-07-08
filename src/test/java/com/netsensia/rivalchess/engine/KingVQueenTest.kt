@@ -38,6 +38,7 @@ class KingVQueenTest {
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
+    @Ignore
     fun testMateIn8ToCheckmate_1() {
         solveForMate("8/8/8/8/1q6/3k4/8/3K4 b - - 0 1", "b4b1", willMateIn(1))
         solveForMate("8/8/8/8/1q6/3k4/8/2K5 w - - 0 1", "c1d1", willBeMatedIn(1))

@@ -36,7 +36,6 @@ class SearchPath {
     }
 
     fun withMoveAndScore(move: Int, score: Int): SearchPath {
-        height = 1
         this.move[0] = move
         this.score = score
         return this

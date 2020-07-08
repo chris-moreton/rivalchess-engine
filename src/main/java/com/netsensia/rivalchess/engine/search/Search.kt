@@ -14,15 +14,12 @@ import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.enums.*
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.Move
-import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.lang.Math.pow
 import java.util.*
-import kotlin.math.pow
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
@@ -101,19 +98,19 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
-        val path = searchZero(engineBoard, depth, 0, low, high)
+        var path = searchZero(engineBoard, depth, 0, low, high)
 
         val newLow = if (path.score <= low) widenAspirationLow(low, attempt) else low
         val newHigh = if (path.score >= high) widenAspirationHigh(high, attempt) else high
 
         if (newLow != low || newHigh != high) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
 
-        if (!abortingSearch && (path.score <= low || path.score >= high)) {
-            currentPath.setPath(searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE))
-            return Window(currentPath.score - ASPIRATION_RADIUS, currentPath.score + ASPIRATION_RADIUS)
-        }
+        if (!abortingSearch && (path.score <= low || path.score >= high))
+            path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
 
-        return Window(low, high)
+        currentPath.setPath(path)
+
+        return Window(path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
