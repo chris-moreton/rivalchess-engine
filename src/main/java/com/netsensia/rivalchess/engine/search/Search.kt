@@ -35,7 +35,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     val orderedMoves: Array<IntArray>
     private val searchPath: Array<SearchPath>
 
-    private var depthZeroMoveScores = IntArray(MAX_LEGAL_MOVES)
+    var depthZeroMoveScores = IntArray(MAX_LEGAL_MOVES)
 
     var engineState: SearchState
         private set
@@ -83,15 +83,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         initSearchVariables()
         if (isBookMoveAvailable()) return
         determineDrawnPositionsAndGenerateDepthZeroMoves()
-        var result = AspirationSearchResult(null, -Int.MAX_VALUE, Int.MAX_VALUE)
+        var result = Window(-Int.MAX_VALUE, Int.MAX_VALUE)
 
         for (depth in 1..finalDepthToSearch) {
             iterativeDeepeningDepth = depth
             result = aspirationSearch(depth, result.low, result.high, 1)
             reorderDepthZeroMoves()
             if (abortingSearch) break
-            currentPath.setPath(result.path!!)
-            if (result.path!!.score > MATE_SCORE_START) break
+            if (currentPath.score > MATE_SCORE_START) break
         }
 
         setSearchComplete()
@@ -101,7 +100,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun widenAspirationHigh(high: Int, attempt: Int) = (high + (ASPIRATION_RADIUS * pow(2.0, attempt.toDouble()))).toInt()
 
-    private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): AspirationSearchResult {
+    private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
         var path: SearchPath
 
         path = searchZero(engineBoard, depth, 0, low, high)
@@ -114,12 +113,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (!abortingSearch && (path.score <= low || path.score >= high))
             path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
 
+        currentPath.setPath(path)
+
         if (!abortingSearch) {
             currentPath.setPath(path)
-            return AspirationSearchResult(path, path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
+            return Window(path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
         }
 
-        return AspirationSearchResult(path, low, high)
+        return Window(low, high)
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
