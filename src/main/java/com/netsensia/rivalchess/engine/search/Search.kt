@@ -14,12 +14,15 @@ import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.enums.*
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
+import com.netsensia.rivalchess.model.Move
+import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.lang.Math.pow
 import java.util.*
+import kotlin.math.pow
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
@@ -35,7 +38,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     val orderedMoves: Array<IntArray>
     private val searchPath: Array<SearchPath>
 
-    private var depthZeroMoveScores = IntArray(MAX_LEGAL_MOVES)
+    var depthZeroMoveScores = IntArray(MAX_LEGAL_MOVES)
 
     var engineState: SearchState
         private set
@@ -83,43 +86,34 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         initSearchVariables()
         if (isBookMoveAvailable()) return
         determineDrawnPositionsAndGenerateDepthZeroMoves()
-        var result = AspirationSearchResult(null, -Int.MAX_VALUE, Int.MAX_VALUE)
 
-        for (depth in 1..finalDepthToSearch) {
-            iterativeDeepeningDepth = depth
-            result = aspirationSearch(depth, result.low, result.high, 1)
-            reorderDepthZeroMoves()
-            if (abortingSearch) break
-            currentPath.setPath(result.path!!)
-            if (result.path!!.score > MATE_SCORE_START) break
-        }
+        iterativeDeepening(1, Window(-Int.MAX_VALUE, Int.MAX_VALUE))
 
         setSearchComplete()
     }
 
-    private fun widenAspirationLow(low: Int, attempt: Int) = (low - (ASPIRATION_RADIUS * pow(2.0, attempt.toDouble()))).toInt()
+    private fun iterativeDeepening(depth: Int, aspirationWindow: Window) {
+        iterativeDeepeningDepth = depth
+        val newWindow = aspirationSearch(depth, aspirationWindow.low, aspirationWindow.high, 1)
+        reorderDepthZeroMoves()
+        val mateFound = currentPath.score >= MATE_SCORE_START
+        if (!abortingSearch && !mateFound && depth < finalDepthToSearch) iterativeDeepening(depth + 1, newWindow)
+    }
 
-    private fun widenAspirationHigh(high: Int, attempt: Int) = (high + (ASPIRATION_RADIUS * pow(2.0, attempt.toDouble()))).toInt()
-
-    private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): AspirationSearchResult {
-        var path: SearchPath
-
-        path = searchZero(engineBoard, depth, 0, low, high)
+    private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
+        val path = searchZero(engineBoard, depth, 0, low, high)
 
         val newLow = if (path.score <= low) widenAspirationLow(low, attempt) else low
         val newHigh = if (path.score >= high) widenAspirationHigh(high, attempt) else high
 
         if (newLow != low || newHigh != high) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
 
-        if (!abortingSearch && (path.score <= low || path.score >= high))
-            path = searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE)
-
-        if (!abortingSearch) {
-            currentPath.setPath(path)
-            return AspirationSearchResult(path, path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
+        if (!abortingSearch && (path.score <= low || path.score >= high)) {
+            currentPath.setPath(searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE))
+            return Window(currentPath.score - ASPIRATION_RADIUS, currentPath.score + ASPIRATION_RADIUS)
         }
 
-        return AspirationSearchResult(path, low, high)
+        return Window(low, high)
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
@@ -132,6 +126,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var useScoutSearch = false
         val bestPath = searchPath[0].reset()
 
+        //orderedMoves[0][0] = EngineMove(Move(Square.B4, Square.C3)).compact
         moveSequence(orderedMoves[0]).forEach {
             val move = moveNoScore(it)
 
@@ -267,8 +262,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun adjustedMateScore(score: Int) = if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else score)
-
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
     private fun onlyOneMoveAndNotOnFixedTime(numLegalMoves: Int) = numLegalMoves == 1 && millisToThink < MAX_SEARCH_MILLIS
@@ -325,7 +318,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
+    fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
         currentDepthZeroMove = move
         currentDepthZeroMoveNumber = arrayIndex
     }
@@ -405,7 +398,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun determineDrawnPositionsAndGenerateDepthZeroMoves() {
+    fun determineDrawnPositionsAndGenerateDepthZeroMoves() {
         orderedMoves[0] = engineBoard.moveGenerator().generateLegalMoves().moves
         moveSequence(orderedMoves[0]).forEach {
             if (engineBoard.makeMove(it)) {

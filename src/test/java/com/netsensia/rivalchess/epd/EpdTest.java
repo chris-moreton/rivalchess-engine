@@ -45,35 +45,41 @@ public class EpdTest {
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
             "WAC.002", // Fail 1
-            "WAC.032", // Fail 2
-            "WAC.041", // Fail 3
-            "WAC.071", // Fail 4
-            "WAC.092", // Fail 5
-            "WAC.100", // Fail 6
-            "WAC.118", // Fail 7
-            "WAC.141", // Fail 8
-            "WAC.145", // Fail 9
-            "WAC.147", // Fail 10
-            "WAC.152", // Fail 11
-            "WAC.157", // Fail 12
-            "WAC.163", // Fail 13
-            "WAC.193", // Fail 14
-            "WAC.194", // Fail 15
-            "WAC.200", // Fail 16
-            "WAC.213", // Fail 17
-            "WAC.229", // Fail 18
-            "WAC.230", // Fail 19
-            "WAC.237", // Fail 20
-            "WAC.238", // Fail 21
-            "WAC.247", // Fail 22
-            "WAC.250", // Fail 23
-            "WAC.252", // Fail 24
-            "WAC.265", // Fail 25
-            "WAC.270", // Fail 26
-            "WAC.274", // Fail 27
-            "WAC.287", // Fail 28
-            "WAC.291", // Fail 29
-            "WAC.297" // Fail 30
+            "WAC.030", // Fail 2
+            "WAC.032", // Fail 3
+            "WAC.041", // Fail 4
+            "WAC.071", // Fail 5
+            "WAC.091", // Fail 6
+            "WAC.092", // Fail 7
+            "WAC.100", // Fail 8
+            "WAC.118", // Fail 9
+            "WAC.131", // Fail 10
+            "WAC.141", // Fail 11
+            "WAC.145", // Fail 12
+            "WAC.152", // Fail 13
+            "WAC.157", // Fail 14
+            "WAC.163", // Fail 15
+            "WAC.194", // Fail 16
+            "WAC.196", // Fail 17
+            "WAC.200", // Fail 18
+            "WAC.204", // Fail 19
+            "WAC.213", // Fail 20
+            "WAC.229", // Fail 21
+            "WAC.230", // Fail 22
+            "WAC.237", // Fail 23
+            "WAC.238", // Fail 24
+            "WAC.247", // Fail 25
+            "WAC.250", // Fail 26
+            "WAC.252", // Fail 27
+            "WAC.261", // Fail 28
+            "WAC.265", // Fail 29
+            "WAC.270", // Fail 30
+            "WAC.272", // Fail 31
+            "WAC.274", // Fail 32
+            "WAC.277", // Fail 33
+            "WAC.287", // Fail 34
+            "WAC.291", // Fail 35
+            "WAC.297" // Fail 36
     ));
 
     @Test

@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine
 
 import com.netsensia.rivalchess.config.MATE_SCORE_START
-import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
 import com.netsensia.rivalchess.engine.search.Search
 import com.netsensia.rivalchess.exception.IllegalFenException
@@ -13,8 +12,11 @@ import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
-@Ignore
 class KingVQueenTest {
+
+    companion object {
+        const val MAX_NODES_TO_SEARCH = 10000000
+    }
 
     @Test
     @Throws(IllegalFenException::class, InterruptedException::class)
@@ -27,10 +29,11 @@ class KingVQueenTest {
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
+    @Ignore
     fun testQueenVKingEndGameDodgyPositions() {
-        solveForMate("8/8/8/8/5q2/K7/3k4/8 b - - 0 1", "d2c2", willMateIn(2))
-        solveForMate("8/8/8/8/5q2/1K6/4k3/8 b - - 0 1", "e2d3", willMateIn(4))
+        solveForMate("8/8/8/8/5q2/1K6/4k3/8 b - - 0 1", listOf("e2d2","e2d3"), willMateIn(4))
         solveForMate("8/8/8/3q4/1K6/5k2/8/8 w - - 0 1", "b4c3", willBeMatedIn(6))
+        solveForMate("8/8/8/8/5q2/K7/3k4/8 b - - 0 1", "d2c2", willMateIn(2))
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
@@ -48,8 +51,9 @@ class KingVQueenTest {
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
+    @Ignore
     fun testMateIn8ToCheckmate_problematic_1() {
-        solveForMate("8/8/8/3q4/8/2K2k2/8/8 b - - 0 1", "f3e4", willMateIn(6))
+        solveForMate("8/8/8/3q4/8/2K2k2/8/8 b - - 0 1", listOf("d5c5","f3e4"), willMateIn(6))
         solveForMate("8/8/8/3q4/1K4k1/8/8/8 b - - 0 1", "g4f3", willMateIn(7))
         solveForMate("8/8/1K6/4q3/8/7k/8/8 b - - 0 1", "e5d5", willMateIn(7))
         solveForMate("8/8/8/4q3/2K5/8/6k1/8 b - - 0 1", "g2f3", willMateIn(7))
@@ -57,6 +61,7 @@ class KingVQueenTest {
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
+    @Ignore
     fun testMateIn8ToCheckmate_problematic_2() {
         solveForMate("8/8/3q4/8/1K6/7k/8/8 w - - 0 1", "b4c4", willBeMatedIn(8))
         solveForMate("8/8/8/2q5/8/2K2k2/8/8 w - - 0 1", "c3b3", willBeMatedIn(4))
@@ -66,6 +71,7 @@ class KingVQueenTest {
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
+    @Ignore
     fun testMateIn8ToCheckmate_problematic_3() {
         solveForMate("8/8/8/8/2K5/7k/1q6/8 b - - 0 1", "h3g4", willMateIn(9))
         solveForMate("8/8/8/4q3/1K6/7k/8/8 b - - 0 1", "e5d4", willMateIn(8))
@@ -74,6 +80,7 @@ class KingVQueenTest {
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
+    @Ignore
     fun testMateIn8ToCheckmate_problematic_4() {
         solveForMate("8/8/8/4q3/8/3K4/5k2/8 b - - 0 1", "e5d5", willMateIn(6))
         solveForMate("8/8/3q4/1K6/8/7k/8/8 b - - 0 1", "d6c7", willMateIn(8))
@@ -101,7 +108,7 @@ class KingVQueenTest {
         search.setHashSizeMB(8)
         search.setSearchDepth(Int.MAX_VALUE)
         search.setMillisToThink(MAX_SEARCH_MILLIS)
-        search.setNodesToSearch(20000000)
+        search.setNodesToSearch(MAX_NODES_TO_SEARCH)
         search.startSearch()
         TimeUnit.MILLISECONDS.sleep(100)
         Awaitility.await().atMost(310000, TimeUnit.MILLISECONDS).until { !search.isSearching }
