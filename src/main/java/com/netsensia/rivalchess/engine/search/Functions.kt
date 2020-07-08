@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.engine.search
 
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
+import kotlin.math.pow
 
 fun moveNoScore(move: Int) = move and 0x00FFFFFF
 
@@ -39,3 +40,9 @@ fun swapElements(a: IntArray, i1: Int, i2: Int) {
 fun nullMoveReduceDepth(depthRemaining: Int) = NULLMOVE_REDUCE_DEPTH + if (depthRemaining > NULLMOVE_DEPTH_REMAINING_FOR_RD_INCREASE) 1 else 0
 
 fun useScoutSearch(depth: Int, newExtensions: Int) = depth + (newExtensions / FRACTIONAL_EXTENSION_FULL) >= PV_MINIMUM_DISTANCE_FROM_LEAF
+
+fun widenAspirationLow(low: Int, attempt: Int) = (low - (ASPIRATION_RADIUS * 2.0.pow(attempt.toDouble()))).toInt()
+
+fun widenAspirationHigh(high: Int, attempt: Int) = (high + (ASPIRATION_RADIUS * 2.0.pow(attempt.toDouble()))).toInt()
+
+fun adjustedMateScore(score: Int) = if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else score)

@@ -96,10 +96,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setSearchComplete()
     }
 
-    private fun widenAspirationLow(low: Int, attempt: Int) = (low - (ASPIRATION_RADIUS * pow(2.0, attempt.toDouble()))).toInt()
-
-    private fun widenAspirationHigh(high: Int, attempt: Int) = (high + (ASPIRATION_RADIUS * pow(2.0, attempt.toDouble()))).toInt()
-
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
         var path: SearchPath
 
@@ -115,12 +111,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         currentPath.setPath(path)
 
-        if (!abortingSearch) {
-            currentPath.setPath(path)
-            return Window(path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
-        }
+        return Window(path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
 
-        return Window(low, high)
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
@@ -267,8 +259,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
-
-    private fun adjustedMateScore(score: Int) = if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else score)
 
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
