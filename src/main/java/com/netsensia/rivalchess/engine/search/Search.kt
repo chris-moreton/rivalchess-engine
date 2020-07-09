@@ -93,27 +93,26 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val newWindow = aspirationSearch(depth, aspirationWindow.low, aspirationWindow.high, 1)
         reorderDepthZeroMoves()
         if (currentPath.score >= MATE_SCORE_START) {
-            val matePath = solveForMate(engineBoard, VALUE_MATE - currentPath.score)
-            if (matePath != null) currentPath.setPath(matePath)
+           // val matePath = solveForMate(engineBoard, VALUE_MATE - currentPath.score)
+            //if (matePath != null) currentPath.setPath(matePath)
         }
         else if (!abortingSearch && depth < finalDepthToSearch) iterativeDeepening(depth + 1, newWindow)
 
     }
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
-        val path = searchZero(engineBoard, depth, 0, low, high)
 
-        val newLow = if (path.score <= low) low - widenAspiration(attempt) else low
-        val newHigh = if (path.score >= high) high + widenAspiration(attempt) else high
+        val path: SearchPath = searchZero(engineBoard, depth, 0, low, high)
+
+        val newLow = if (path.score <= low) widenAspirationLow(low, attempt) else low
+        val newHigh = if (path.score >= high) widenAspirationHigh(high, attempt) else high
 
         if (newLow != low || newHigh != high) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
 
-        if (!abortingSearch && (path.score <= low || path.score >= high)) {
-            currentPath.setPath(searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE))
-            return Window(currentPath.score - ASPIRATION_RADIUS, currentPath.score + ASPIRATION_RADIUS)
-        }
+        currentPath.setPath(path)
 
-        return Window(low, high)
+        return Window(path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
+
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
