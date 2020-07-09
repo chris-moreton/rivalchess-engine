@@ -258,9 +258,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun canDeltaPrune(board: EngineBoard, low: Int) =
-        (-evaluate(board) + board.lastCapturePieceValue() + DELTA_PRUNING_MARGIN < low)
-
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
     private fun onlyOneMoveAndNotOnFixedTime(numLegalMoves: Int) = numLegalMoves == 1 && millisToThink < MAX_SEARCH_MILLIS
@@ -468,11 +465,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var newPath: SearchPath
 
         searchPath[ply].height = 0
-        searchPath[ply].score = if (isCheck) low else evaluate(board)
+        // if evaluate doesn't look like it will reach low, then it will stop calculating early and return
+        // am incomplete value. Doesn't matter, because the score will become 'low' in a moment
+        searchPath[ply].score = if (isCheck) low else evaluate(board, low)
 
         if (depth == 0 || searchPath[ply].score >= high) return searchPath[ply]
 
         var newLow = searchPath[ply].score.coerceAtLeast(low)
+
         setOrderedMovesArrayForQuiesce(isCheck, ply, board)
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0

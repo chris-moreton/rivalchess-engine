@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.search
 
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
-import com.netsensia.rivalchess.engine.KingVQueenTest
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.model.Board
