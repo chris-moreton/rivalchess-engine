@@ -218,6 +218,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
             if (board.makeMove(move)) {
 
+                if (canDeltaPrune(board, low)) {
+                    board.unMakeMove()
+                    continue
+                }
+
                 legalMoveCount ++
                 val newPath =
                     scoutSearch(useScoutSearch, depth, ply+1, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
@@ -257,6 +262,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
+
+    private fun canDeltaPrune(board: EngineBoard, low: Int) =
+        (!board.isCheck(board.mover) && (evaluate(board) + board.lastCapturePieceValue() + DELTA_PRUNING_MARGIN) < low)
 
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
