@@ -36,7 +36,7 @@ fun Search.solveForMateSearcher(board: EngineBoard, ply: Int, maxPly: Int): Sear
             numLegalMoves ++
 
             val newPath = solveForMateSearcher(board, ply + 1, maxPly).also { path ->
-                path.score = if (path.score > -MATE_SCORE_START && path.score < MATE_SCORE_START) 0 else adjustedMateScore(-path.score)
+                path.score = adjustedMateScore(-path.score)
             }
 
             if (abortingSearch) return SearchPath()

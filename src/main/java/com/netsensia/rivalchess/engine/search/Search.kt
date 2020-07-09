@@ -106,14 +106,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val newLow = if (path.score <= low) low - widenAspiration(attempt) else low
         val newHigh = if (path.score >= high) high + widenAspiration(attempt) else high
 
-        if (newLow != low || newHigh != high) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
+        if (newLow != low || newHigh != high && !abortingSearch) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
 
-        if (!abortingSearch && (path.score <= low || path.score >= high)) {
-            currentPath.setPath(searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE))
-            return Window(currentPath.score - ASPIRATION_RADIUS, currentPath.score + ASPIRATION_RADIUS)
-        }
+        if (!abortingSearch) currentPath.setPath(path)
+        return Window(currentPath.score - ASPIRATION_RADIUS, currentPath.score + ASPIRATION_RADIUS)
 
-        return Window(low, high)
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
@@ -510,7 +507,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     val mover: Colour
         inline get() = engineBoard.mover
 
-    private fun initSearchVariables() {
+    fun initSearchVariables() {
         engineState = SearchState.SEARCHING
         abortingSearch = false
         engineBoard.boardHashObject.incVersion()
