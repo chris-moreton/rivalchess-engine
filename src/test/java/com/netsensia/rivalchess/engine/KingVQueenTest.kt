@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 class KingVQueenTest {
 
     companion object {
-        const val MAX_NODES_TO_SEARCH = 10000000
+        const val MAX_NODES_TO_SEARCH = 20000000
     }
 
     @Test
@@ -29,25 +29,28 @@ class KingVQueenTest {
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
-    @Ignore
+    fun testQueenVKingLosingEndGames() {
+        solveForMate("8/8/8/8/1q6/3k4/8/2K5 w - - 0 1", "c1d1", willBeMatedIn(1))
+        solveForMate("8/8/8/3q4/1K6/5k2/8/8 w - - 0 1", "b4c3", willBeMatedIn(6))
+        solveForMate("8/8/8/8/1q6/4k3/2K5/8 w - - 0 1", "c2c1", willBeMatedIn(2))
+        solveForMate("8/8/8/1q6/8/2K1k3/8/8 w - - 0 1", "c3c2", willBeMatedIn(3))
+        solveForMate("8/8/8/1q6/8/5k2/1K6/8 w - - 0 1", "b2c2", willBeMatedIn(5))
+    }
+
+    @Throws(IllegalFenException::class, InterruptedException::class)
+    @Test
     fun testQueenVKingEndGameDodgyPositions() {
         solveForMate("8/8/8/8/5q2/1K6/4k3/8 b - - 0 1", listOf("e2d2","e2d3"), willMateIn(4))
-        solveForMate("8/8/8/3q4/1K6/5k2/8/8 w - - 0 1", "b4c3", willBeMatedIn(6))
         solveForMate("8/8/8/8/5q2/K7/3k4/8 b - - 0 1", "d2c2", willMateIn(2))
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
-    @Ignore
     fun testMateIn8ToCheckmate_1() {
-        solveForMate("8/8/8/8/1q6/3k4/8/3K4 b - - 0 1", "b4b1", willMateIn(1))
-        solveForMate("8/8/8/8/1q6/3k4/8/2K5 w - - 0 1", "c1d1", willBeMatedIn(1))
-        solveForMate("8/8/8/8/1q6/4k3/8/2K5 b - - 0 1", "e3d3", willMateIn(2))
-        solveForMate("8/8/8/8/1q6/4k3/2K5/8 w - - 0 1", "c2c1", willBeMatedIn(2))
-        solveForMate("8/8/8/1q6/8/4k3/2K5/8 b - - 0 1", "b5b4", willMateIn(3))
-        solveForMate("8/8/8/1q6/8/2K1k3/8/8 w - - 0 1", "c3c2", willBeMatedIn(3))
         solveForMate("8/8/8/1q6/8/2K2k2/8/8 b - - 0 1", "f3e3", willMateIn(4))
-        solveForMate("8/8/8/1q6/8/5k2/1K6/8 w - - 0 1", "b2c2", willBeMatedIn(5))
+        solveForMate("8/8/8/8/1q6/3k4/8/3K4 b - - 0 1", "b4b1", willMateIn(1))
+        solveForMate("8/8/8/8/1q6/4k3/8/2K5 b - - 0 1", "e3d3", willMateIn(2))
+        solveForMate("8/8/8/1q6/8/4k3/2K5/8 b - - 0 1", "b5b4", willMateIn(3))
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)

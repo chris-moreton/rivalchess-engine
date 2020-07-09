@@ -41,8 +41,6 @@ fun nullMoveReduceDepth(depthRemaining: Int) = NULLMOVE_REDUCE_DEPTH + if (depth
 
 fun useScoutSearch(depth: Int, newExtensions: Int) = depth + (newExtensions / FRACTIONAL_EXTENSION_FULL) >= PV_MINIMUM_DISTANCE_FROM_LEAF
 
-fun widenAspirationLow(low: Int, attempt: Int) = (low - (ASPIRATION_RADIUS * 2.0.pow(attempt.toDouble()))).toInt()
-
-fun widenAspirationHigh(high: Int, attempt: Int) = (high + (ASPIRATION_RADIUS * 2.0.pow(attempt.toDouble()))).toInt()
+fun widenAspiration(attempt: Int) = (ASPIRATION_RADIUS * 2.0.pow(attempt.toDouble())).toInt()
 
 fun adjustedMateScore(score: Int) = if (score > MATE_SCORE_START) score-1 else (if (score < -MATE_SCORE_START) score+1 else score)

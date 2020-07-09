@@ -92,17 +92,20 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         iterativeDeepeningDepth = depth
         val newWindow = aspirationSearch(depth, aspirationWindow.low, aspirationWindow.high, 1)
         reorderDepthZeroMoves()
-        val mateFound = currentPath.score >= MATE_SCORE_START
-        if (!abortingSearch && !mateFound && depth < finalDepthToSearch) iterativeDeepening(depth + 1, newWindow)
+        if (currentPath.score >= MATE_SCORE_START) {
+            val matePath = solveForMate(engineBoard, MATE_SCORE_START - currentPath.score)
+            if (matePath != null) currentPath.setPath(matePath)
+        }
+        else if (!abortingSearch && depth < finalDepthToSearch) iterativeDeepening(depth + 1, newWindow)
+
     }
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
-        val path = searchZero(engineBoard, depth, 0, low, high)
+        var path = searchZero(engineBoard, depth, 0, low, high)
 
         if (path.score <= low || path.score >= high) {
-            val newLow = if (path.score <= low) widenAspirationLow(low, attempt) else low
-            val newHigh = if (path.score >= high) widenAspirationHigh(high, attempt) else high
-
+            val newLow = if (path.score <= low) low - widenAspiration(attempt) else low
+            val newHigh = if (path.score >= high) high + widenAspiration(attempt) else high
             return aspirationSearch(depth, newLow, newHigh, attempt + 1)
         }
 
@@ -133,8 +136,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = checkExtension(isCheck)
-                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply+1, myLow, high, extensions, isCheck).also {
-                    it.score = adjustedMateScore(-it.score)
+                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply+1, myLow, high, extensions, isCheck).also { path ->
+                    path.score = adjustedMateScore(-path.score)
                 }
 
                 if (abortingSearch) return SearchPath()
@@ -357,7 +360,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return bestPath
     }
 
-    private fun abortIfTimeIsUp(): Boolean {
+    fun abortIfTimeIsUp(): Boolean {
         if (System.currentTimeMillis() > searchTargetEndTime || nodes >= nodesToSearch) abortingSearch = true
         return abortingSearch
     }
@@ -468,7 +471,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (depth == 0 || searchPath[ply].score >= high) return searchPath[ply]
 
         var newLow = searchPath[ply].score.coerceAtLeast(low)
-        setOrderedMovesArrayForQuiesce(isCheck, ply, board, quiescePly)
+        setOrderedMovesArrayForQuiesce(isCheck, ply, board)
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
@@ -492,7 +495,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPath[ply]
     }
 
-    private fun setOrderedMovesArrayForQuiesce(isCheck: Boolean, ply: Int, board: EngineBoard, quiescePly: Int) {
+    private fun setOrderedMovesArrayForQuiesce(isCheck: Boolean, ply: Int, board: EngineBoard) {
         if (isCheck) {
             orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
             scoreFullWidthMoves(board, ply)
