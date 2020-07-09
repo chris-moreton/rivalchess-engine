@@ -93,7 +93,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val newWindow = aspirationSearch(depth, aspirationWindow.low, aspirationWindow.high, 1)
         reorderDepthZeroMoves()
         if (currentPath.score >= MATE_SCORE_START) {
-            val matePath = solveForMate(engineBoard, MATE_SCORE_START - currentPath.score)
+            val matePath = solveForMate(engineBoard, VALUE_MATE - currentPath.score)
             if (matePath != null) currentPath.setPath(matePath)
         }
         else if (!abortingSearch && depth < finalDepthToSearch) iterativeDeepening(depth + 1, newWindow)
@@ -101,17 +101,19 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
-        var path = searchZero(engineBoard, depth, 0, low, high)
+        val path = searchZero(engineBoard, depth, 0, low, high)
 
-        if (path.score <= low || path.score >= high) {
-            val newLow = if (path.score <= low) low - widenAspiration(attempt) else low
-            val newHigh = if (path.score >= high) high + widenAspiration(attempt) else high
-            return aspirationSearch(depth, newLow, newHigh, attempt + 1)
+        val newLow = if (path.score <= low) low - widenAspiration(attempt) else low
+        val newHigh = if (path.score >= high) high + widenAspiration(attempt) else high
+
+        if (newLow != low || newHigh != high) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
+
+        if (!abortingSearch && (path.score <= low || path.score >= high)) {
+            currentPath.setPath(searchZero(engineBoard, depth, 0, -Int.MAX_VALUE, Int.MAX_VALUE))
+            return Window(currentPath.score - ASPIRATION_RADIUS, currentPath.score + ASPIRATION_RADIUS)
         }
 
-        currentPath.setPath(path)
-
-        return Window(path.score - ASPIRATION_RADIUS, path.score + ASPIRATION_RADIUS)
+        return Window(low, high)
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {

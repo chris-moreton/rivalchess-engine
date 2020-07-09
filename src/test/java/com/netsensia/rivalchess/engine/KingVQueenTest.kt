@@ -31,7 +31,6 @@ class KingVQueenTest {
     @Test
     fun testQueenVKingLosingEndGames() {
         solveForMate("8/8/8/8/1q6/3k4/8/2K5 w - - 0 1", "c1d1", willBeMatedIn(1))
-        solveForMate("8/8/8/3q4/1K6/5k2/8/8 w - - 0 1", "b4c3", willBeMatedIn(6))
         solveForMate("8/8/8/8/1q6/4k3/2K5/8 w - - 0 1", "c2c1", willBeMatedIn(2))
         solveForMate("8/8/8/1q6/8/2K1k3/8/8 w - - 0 1", "c3c2", willBeMatedIn(3))
         solveForMate("8/8/8/1q6/8/5k2/1K6/8 w - - 0 1", "b2c2", willBeMatedIn(5))
@@ -92,11 +91,11 @@ class KingVQueenTest {
         solveForMate("8/8/8/3q4/K5k1/8/8/8 w - - 0 1", "a4b4", willBeMatedIn(6))
         solveForMate("8/8/8/8/5q2/2K5/5k2/8 b - - 0 1", listOf("f2e2","f2e3"), willMateIn(5))
         solveForMate("8/8/8/2q5/8/5k2/1K6/8 b - - 0 1", "c5b4", willMateIn(5))
-
+        solveForMate("8/8/8/3q4/1K6/5k2/8/8 w - - 0 1", "b4c3", willBeMatedIn(6))
     }
 
-    fun willMateIn(score: Int) = 10000-(score*2)+1
-    fun willBeMatedIn(score: Int) = -10000+(score*2)
+    private fun willMateIn(score: Int) = 10000-(score*2)+1
+    private fun willBeMatedIn(score: Int) = -10000+(score*2)
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     private fun solveForMate(fen: String, expectedMove: String, expectedScore: Int, tolerateScore: Boolean = false) {
