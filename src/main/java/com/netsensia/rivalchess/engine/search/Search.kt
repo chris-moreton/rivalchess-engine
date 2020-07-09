@@ -465,25 +465,34 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var newPath: SearchPath
 
         searchPath[ply].height = 0
-        searchPath[ply].score = if (isCheck) low else evaluate(board)
+        // if evaluate doesn't look like it will reach low, then it will stop calculating early and return
+        // am incomplete value. Doesn't matter, because the score will become 'low' in a moment
+        searchPath[ply].score = if (isCheck) low else evaluate(board, low)
 
         if (depth == 0 || searchPath[ply].score >= high) return searchPath[ply]
 
         var newLow = searchPath[ply].score.coerceAtLeast(low)
+
         setOrderedMovesArrayForQuiesce(isCheck, ply, board)
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0
         while (move != 0) {
-            if (board.makeMove(move)) {
-                legalMoveCount ++
-                newPath = quiesce(board, depth - 1,ply + 1,quiescePly + 1, -high, -newLow, board.isCheck(mover)).also {
-                    it.score = adjustedMateScore(-it.score)
-                }
-                board.unMakeMove()
-                if (newPath.score > searchPath[ply].score) {
-                    searchPath[ply].setPath(move, newPath)
-                    if (newPath.score >= high) return searchPath[ply]
-                    newLow = newLow.coerceAtLeast(newPath.score)
+
+            val movePiece = board.getBitboardTypeOfPieceOnSquare(move ushr 16, mover)
+
+            if (!deltaPrune(isCheck, board, movePiece, move, low)) {
+                if (board.makeMove(move)) {
+                    legalMoveCount++
+
+                    newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -newLow, board.isCheck(mover)).also {
+                        it.score = adjustedMateScore(-it.score)
+                    }
+                    board.unMakeMove()
+                    if (newPath.score > searchPath[ply].score) {
+                        searchPath[ply].setPath(move, newPath)
+                        if (newPath.score >= high) return searchPath[ply]
+                        newLow = newLow.coerceAtLeast(newPath.score)
+                    }
                 }
             }
             move = getHighestScoringMoveFromArray(orderedMoves[ply])
@@ -492,6 +501,16 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (isCheck && legalMoveCount == 0) searchPath[ply].score = -VALUE_MATE
 
         return searchPath[ply]
+    }
+
+    private fun deltaPrune(isCheck: Boolean, board: EngineBoard, movePiece: Int, move: Int, low: Int): Boolean {
+        if (isCheck || (board.whitePieceValues + board.blackPieceValues) < (VALUE_ROOK * 6)) return false
+
+        val delta = (if (movePiece in arrayOf(BITBOARD_WP, BITBOARD_BP) && yCoordOfSquare(move and 63) in arrayOf(0,7))
+            (VALUE_QUEEN - VALUE_PAWN) else 0) +
+            pieceValue(board.getBitboardTypeOfPieceOnSquare(move and 63, mover.opponent()))
+
+        return (delta + DELTA_PRUNING_MARGIN < low)
     }
 
     private fun setOrderedMovesArrayForQuiesce(isCheck: Boolean, ply: Int, board: EngineBoard) {

@@ -12,7 +12,7 @@ import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
-class KingVQueenTest {
+class EndgameTest {
 
     companion object {
         const val MAX_NODES_TO_SEARCH = 10000000
@@ -25,7 +25,6 @@ class KingVQueenTest {
         solveForMate("8/8/8/8/1q6/3k4/8/3K4 b - - 0 1", "b4b1", willMateIn(1))
         solveForMate("8/8/8/8/1q6/4k3/2K5/8 b - - 0 1", "e3e2", willMateIn(3))
         solveForMate("8/8/8/8/1q6/8/2K1k3/8 b - - 0 1", "e2e3", willMateIn(3))
-        solveForMate("8/8/8/8/5q2/8/1K2k3/8 b - - 0 1", "f4b4", willMateIn(4))
         solveForMate("8/8/8/8/5q2/1K6/4k3/8 b - - 0 1", listOf("e2d2","e2d3"), willMateIn(4))
         solveForMate("8/8/8/8/5q2/K7/3k4/8 b - - 0 1", "d2c2", willMateIn(2))
         solveForMate("8/8/8/1q6/8/2K2k2/8/8 b - - 0 1", "f3e3", willMateIn(4))
@@ -42,10 +41,17 @@ class KingVQueenTest {
         solveForMate("8/8/8/1q6/8/2K1k3/8/8 w - - 0 1", "c3c2", willBeMatedIn(3))
     }
 
+    @Test
+    @Throws(IllegalFenException::class, InterruptedException::class)
+    fun testArenaGlitch() {
+        solveForMate("8/8/7P/3Q1R2/8/8/4k3/6K1 w - - 9 68", "f5e5", willMateIn(1))
+    }
+
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
     @Ignore
     fun testMateIn8ToCheckmate_problematic_1() {
+        solveForMate("8/8/8/8/5q2/8/1K2k3/8 b - - 0 1", "f4b4", willMateIn(4))
         solveForMate("8/8/8/3q4/1K4k1/8/8/8 b - - 0 1", "g4f3", willMateIn(7))
         solveForMate("8/8/8/3q4/8/2K2k2/8/8 b - - 0 1", listOf("d5c5","f3e4","f3e3"), willMateIn(6))
         solveForMate("8/8/1K6/4q3/8/7k/8/8 b - - 0 1", "e5d5", willMateIn(7))

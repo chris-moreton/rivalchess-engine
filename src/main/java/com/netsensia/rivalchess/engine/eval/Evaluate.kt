@@ -10,7 +10,12 @@ import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 import java.lang.Math.abs
 
-fun evaluate(board: EngineBoard): Int {
+var bestEval2 = -Int.MAX_VALUE
+var v = 0
+var w = 0
+
+@JvmOverloads
+fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     if (onlyKingsRemain(board)) return 0
 
@@ -21,28 +26,49 @@ fun evaluate(board: EngineBoard): Int {
 
     val materialDifference = materialDifferenceEval(board)
 
-    val eval =  materialDifference +
+    val isEndGame = isEndGame(board)
+
+    val evalPart1 =  materialDifference +
             (if (oneSideHasOnlyKingLeft(board)) driveLosingKingToCorner(board) else 0) +
             (twoWhiteRooksTrappingKingEval(board) - twoBlackRooksTrappingKingEval(board)) +
             (doubledRooksEval(board.getBitboard(BITBOARD_WR)) - doubledRooksEval(board.getBitboard(BITBOARD_BR))) +
             (whiteRooksEval(board, whitePieces.inv()) - blackRooksEval(board, blackPieces.inv())) +
             pawnScore(attacks, board) +
             tradePawnBonusWhenMoreMaterial(board, materialDifference) +
-            (whitePawnsEval(board) - blackPawnsEval(board)) +
-            (whiteBishopEval(board, whitePieces.inv()) - blackBishopsEval(board, blackPieces.inv())) +
-            (whiteKnightsEval(board, attacks) - blackKnightsEval(board, attacks)) +
-            (whiteKingSquareEval(board) - blackKingSquareEval(board)) +
-            tradePieceBonusWhenMoreMaterial(board, materialDifference) +
-            castlingEval(board, board.castlePrivileges) +
-            threatEval(attacks, board) +
-            kingSafetyEval(board, attacks) +
-            (whiteQueensEval(board, whitePieces.inv()) - blackQueensEval(board, blackPieces.inv())) +
-            bishopScore(board, materialDifference)
+            (whitePawnsEval(board) - blackPawnsEval(board))
 
-    val endGameAdjustedScore = if (isEndGame(board)) endGameAdjustment(board, eval) else eval
+    val evalLooksViable = evalLooksViable(evalPart1, minScore, board.mover)
+    val eval = evalPart1 + if (!isEndGame && evalLooksViable)
+                ((whiteBishopEval(board, whitePieces.inv()) - blackBishopsEval(board, blackPieces.inv())) +
+                (whiteKnightsEval(board, attacks) - blackKnightsEval(board, attacks)) +
+                (whiteKingSquareEval(board) - blackKingSquareEval(board)) +
+                tradePieceBonusWhenMoreMaterial(board, materialDifference) +
+                castlingEval(board, board.castlePrivileges) +
+                threatEval(attacks, board) +
+                kingSafetyEval(board, attacks) +
+                (whiteQueensEval(board, whitePieces.inv()) - blackQueensEval(board, blackPieces.inv())) +
+                bishopScore(board, materialDifference)) else 0
+
+//    if (evalPart2 > bestEval2) {
+//        bestEval2 = evalPart2
+//        println(bestEval2)
+//    }
+//
+//    if (!evalLooksViable) {
+//        v++
+//        println("Not viable cuts: $v")
+//    } else {
+//        w++
+//        println("Non cuts: $w")
+//    }
+
+    val endGameAdjustedScore = if (isEndGame) endGameAdjustment(board, eval) else eval
 
     return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
 }
+
+fun evalLooksViable(eval: Int, minScore: Int, mover: Colour) =
+       (if (mover == Colour.WHITE) eval else -eval) + LAZY_EVALUATION_MARGIN > minScore
 
 fun materialDifferenceEval(board: EngineBoard) =
         board.whitePieceValues - board.blackPieceValues +
@@ -61,7 +87,7 @@ fun driveLosingKingToCorner(board: EngineBoard) : Int {
 
     val loserDistanceToCorner = (14 - kingInCornerPieceSquareTable[losingKingSquare])
     val loserDistanceFromEnemyKing = abs(xCoordOfSquare(winningKingSquare) - xCoordOfSquare(losingKingSquare)) +
-                                     abs(yCoordOfSquare(winningKingSquare) - yCoordOfSquare(losingKingSquare))
+            abs(yCoordOfSquare(winningKingSquare) - yCoordOfSquare(losingKingSquare))
 
     val loserBonus = (loserDistanceToCorner + loserDistanceFromEnemyKing) * KING_DISTANCE_BONUS_ENDGAME
 
@@ -296,9 +322,9 @@ fun openFiles(kingShield: Long, pawnBitboard: Long) = southFill(kingShield) and 
 
 fun whiteKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
-        if (whiteKingOnFirstTwoRanks(board)) {
-            combineWhiteKingShieldEval(board, whiteKingShield(board))
-        } else 0
+                if (whiteKingOnFirstTwoRanks(board)) {
+                    combineWhiteKingShieldEval(board, whiteKingShield(board))
+                } else 0
 
 fun combineWhiteKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_WP), board.getBitboard(BITBOARD_BP), kingShield, Long::shl)
@@ -315,9 +341,9 @@ fun openFilesKingShieldEval(openFiles: Long) =
 
 fun blackKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
-        if (blackKingOnFirstTwoRanks(board)) {
-            combineBlackKingShieldEval(board, blackKingShield(board))
-        } else 0
+                if (blackKingOnFirstTwoRanks(board)) {
+                    combineBlackKingShieldEval(board, blackKingShield(board))
+                } else 0
 
 fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_BP), board.getBitboard(BITBOARD_WP), kingShield, Long::ushr)
@@ -418,9 +444,9 @@ fun endGameAdjustment(board: EngineBoard, currentScore: Int) =
         }
 
 fun penaltyForKingNotBeingNearOtherKing(board: EngineBoard) =
-    (abs(xCoordOfSquare(board.whiteKingSquare) - xCoordOfSquare(board.blackKingSquare)) +
-     abs(yCoordOfSquare(board.whiteKingSquare) - yCoordOfSquare(board.blackKingSquare))
-    ) * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING
+        (kotlin.math.abs(xCoordOfSquare(board.whiteKingSquare) - xCoordOfSquare(board.blackKingSquare)) +
+                kotlin.math.abs(yCoordOfSquare(board.whiteKingSquare) - yCoordOfSquare(board.blackKingSquare))
+                ) * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING
 
 fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         (if (blackHasInsufficientMaterial(board)) currentScore + (board.blackPieceValues * endgameSubtractInsufficientMaterialMultiplier).toInt()

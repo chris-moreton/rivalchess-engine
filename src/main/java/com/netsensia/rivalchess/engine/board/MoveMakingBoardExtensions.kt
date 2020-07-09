@@ -147,6 +147,8 @@ private fun EngineBoard.replaceCastledRook(fromMask: Long, toMask: Long, movePie
     }
 }
 
+fun EngineBoard.lastCapturePieceValue() = pieceValue(moveHistory[numMovesMade-1]!!.capturePiece)
+
 private fun EngineBoard.replaceCapturedPiece(toMask: Long, colour: Colour) {
     val capturePiece = moveHistory[numMovesMade]!!.capturePiece
     if (capturePiece != BITBOARD_NONE) {
