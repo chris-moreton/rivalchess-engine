@@ -82,21 +82,25 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         initSearchVariables()
         if (isBookMoveAvailable()) return
         determineDrawnPositionsAndGenerateDepthZeroMoves()
-        var result = AspirationSearchResult(null, -Int.MAX_VALUE, Int.MAX_VALUE)
 
-        for (depth in 1..finalDepthToSearch) {
-            iterativeDeepeningDepth = depth
-            result = aspirationSearch(depth, result.low, result.high)
-            reorderDepthZeroMoves()
-            if (abortingSearch) break
-            currentPath.setPath(result.path!!)
-            if (result.path!!.score > MATE_SCORE_START) break
-        }
+        iterativeDeepening(1, Window(-Int.MAX_VALUE, Int.MAX_VALUE))
 
         setSearchComplete()
     }
 
-    private fun aspirationSearch(depth: Int, low: Int, high: Int): AspirationSearchResult {
+    private fun iterativeDeepening(depth: Int, aspirationWindow: Window) {
+        iterativeDeepeningDepth = depth
+        val newWindow = aspirationSearch(depth, aspirationWindow.low, aspirationWindow.high, 1)
+        reorderDepthZeroMoves()
+        if (currentPath.score >= MATE_SCORE_START) {
+            // val matePath = solveForMate(engineBoard, VALUE_MATE - currentPath.score)
+            //if (matePath != null) currentPath.setPath(matePath)
+        }
+        else if (!abortingSearch && depth < finalDepthToSearch) iterativeDeepening(depth + 1, newWindow)
+
+    }
+
+    private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
         var path: SearchPath
         var newLow = low
         var newHigh = high
@@ -120,7 +124,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             newHigh = path.score + ASPIRATION_RADIUS
         }
 
-        return AspirationSearchResult(path, newLow, newHigh)
+        return Window(newLow, newHigh)
     }
 
     fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {

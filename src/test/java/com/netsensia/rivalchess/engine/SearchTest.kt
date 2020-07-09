@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 
 class SearchTest {
     companion object {
-        private const val RECALCULATE = false
+        private const val RECALCULATE = true
     }
 
     @Test
