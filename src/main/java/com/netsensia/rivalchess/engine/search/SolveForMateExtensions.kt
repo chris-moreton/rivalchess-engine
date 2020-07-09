@@ -4,13 +4,15 @@ import com.netsensia.rivalchess.config.MATE_SCORE_START
 import com.netsensia.rivalchess.config.VALUE_MATE
 import com.netsensia.rivalchess.engine.board.*
 
-fun Search.solveForMate(board: EngineBoard, maxPly: Int): SearchPath {
+fun Search.solveForMate(board: EngineBoard, maxPly: Int): SearchPath? {
     abortingSearch = false
     for (i in 1..maxPly) {
-        val path = solveForMateSearcher(board, 0, i)
-        if (path.score != 0) return path
+        if (!abortingSearch) {
+            val path = solveForMateSearcher(board, 0, i)
+            if (path.score > MATE_SCORE_START) return path
+        }
     }
-    return SearchPath().withScore(0)
+    return null
 }
 
 fun Search.solveForMateSearcher(board: EngineBoard, ply: Int, maxPly: Int): SearchPath {
@@ -22,6 +24,8 @@ fun Search.solveForMateSearcher(board: EngineBoard, ply: Int, maxPly: Int): Sear
     if (ply == maxPly) return SearchPath().withScore(if (board.isGameOver() && board.isCheck(board.mover)) -VALUE_MATE else 0)
 
     val moves = board.moveGenerator().generateLegalMoves().moves
+
+    abortIfTimeIsUp()
 
     moveSequence(moves).forEach {
         val move = moveNoScore(it)
