@@ -35,7 +35,7 @@ public class EpdTest {
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
-    private static final boolean RECALCULATE_FAILURES = true;
+    private static final boolean RECALCULATE_FAILURES = false;
 
     @BeforeClass
     public static void setup() {
@@ -44,46 +44,45 @@ public class EpdTest {
     }
 
     private final List<String> failingPositions = Collections.unmodifiableList(Arrays.asList(
-            "WAC.002", // Fail 1
-            "WAC.041", // Fail 2
-            "WAC.071", // Fail 3
-            "WAC.092", // Fail 4
-            "WAC.100", // Fail 5
-            "WAC.118", // Fail 6
-            "WAC.141", // Fail 7
-            "WAC.145", // Fail 8
-            "WAC.147", // Fail 9
-            "WAC.152", // Fail 10
-            "WAC.157", // Fail 11
-            "WAC.163", // Fail 12
-            "WAC.193", // Fail 13
-            "WAC.194", // Fail 14
-            "WAC.200", // Fail 15
-            "WAC.229", // Fail 16
-            "WAC.230", // Fail 17
-            "WAC.237", // Fail 18
-            "WAC.238", // Fail 19
-            "WAC.247", // Fail 20
-            "WAC.250", // Fail 21
-            "WAC.252", // Fail 22
-            "WAC.265", // Fail 23
-            "WAC.270", // Fail 24
-            "WAC.274", // Fail 25
-            "WAC.287", // Fail 26
-            "WAC.291", // Fail 27
-            "WAC.293", // Fail 28
-            "WAC.297" // Fail 29
+        "WAC.002", // Fail 1
+        "WAC.041", // Fail 2
+        "WAC.071", // Fail 3
+        "WAC.092", // Fail 4
+        "WAC.100", // Fail 5
+        "WAC.118", // Fail 6
+        "WAC.141", // Fail 7
+        "WAC.145", // Fail 8
+        "WAC.147", // Fail 9
+        "WAC.152", // Fail 10
+        "WAC.157", // Fail 11
+        "WAC.163", // Fail 12
+        "WAC.193", // Fail 13
+        "WAC.194", // Fail 14
+        "WAC.200", // Fail 15
+        "WAC.213", // Fail 16
+        "WAC.229", // Fail 17
+        "WAC.230", // Fail 18
+        "WAC.237", // Fail 19
+        "WAC.238", // Fail 20
+        "WAC.247", // Fail 21
+        "WAC.250", // Fail 22
+        "WAC.252", // Fail 23
+        "WAC.265", // Fail 24
+        "WAC.270", // Fail 25
+        "WAC.274", // Fail 26
+        "WAC.287", // Fail 27
+        "WAC.291", // Fail 28
+        "WAC.297" // Fail 29
     ));
 
     @Test
-    @Ignore
     public void customPositions() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
         runEpdSuite("custom.epd", "RIVAL.001", true);
     }
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.001", true);
+        runEpdSuite("winAtChess.epd", "WAC.041", true);
     }
 
     @Test

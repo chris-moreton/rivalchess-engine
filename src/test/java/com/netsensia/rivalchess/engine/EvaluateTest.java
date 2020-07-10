@@ -48,7 +48,7 @@ public class EvaluateTest {
         int actualScore = com.netsensia.rivalchess.engine.eval.EvaluateKt.evaluate(engineBoard, minScore);
 
         if (RECALCULATE) {
-            System.out.println("assertEvaluationScore(\"" + fen + "\", " + actualScore + ", true);");
+            System.out.println("assertEvaluationScore(\"" + fen + "\", " + actualScore + ", true)");
         } else {
             assertEquals(expectedScore, actualScore);
 
