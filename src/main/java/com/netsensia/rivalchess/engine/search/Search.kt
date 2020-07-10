@@ -480,7 +480,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
             val movePiece = board.getBitboardTypeOfPieceOnSquare(move ushr 16, mover)
 
-            if (!deltaPrune(isCheck, board, movePiece, move, newLow)) {
+            if (!deltaPrune(isCheck, board, movePiece, move, searchPath[ply].score)) {
                 if (board.makeMove(move)) {
                     legalMoveCount++
 
@@ -489,7 +489,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     }
 
                     board.unMakeMove()
-                    if (newPath.score > newLow) {
+                    if (newPath.score > searchPath[ply].score) {
                         searchPath[ply].setPath(move, newPath)
                         if (newPath.score >= high) return searchPath[ply]
                         newLow = newLow.coerceAtLeast(newPath.score)
