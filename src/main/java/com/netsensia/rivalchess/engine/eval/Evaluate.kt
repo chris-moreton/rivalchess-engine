@@ -416,7 +416,7 @@ fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (probableDrawWhenBlackIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noBlackRooksQueensOrBishops(board) && (blackBishopDrawOnFileA(board) || blackBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.whitePawnValues == 0) blackWinningNoWhitePawnsEndGameAdjustment(board, currentScore)
-        else currentScore) + penaltyForKingNotBeingNearOtherKing(board) - kingInCornerPieceSquareTable[board.whiteKingSquare]
+        else currentScore) + penaltyForKingNotBeingNearOtherKing(board) - (kingInCornerPieceSquareTable[board.whiteKingSquare] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
 
 fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (blackMoreThanABishopUpInNonPawns(board)) {
@@ -437,7 +437,7 @@ fun whiteWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (probablyDrawWhenWhiteIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noWhiteRooksQueensOrKnights(board) && (whiteBishopDrawOnFileA(board) || whiteBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.blackPawnValues == 0) whiteWinningNoBlackPawnsEndGameAdjustment(board, currentScore)
-        else currentScore) - penaltyForKingNotBeingNearOtherKing(board) + kingInCornerPieceSquareTable[board.blackKingSquare]
+        else currentScore) - penaltyForKingNotBeingNearOtherKing(board) + (kingInCornerPieceSquareTable[board.blackKingSquare] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
 
 fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (whiteMoreThanABishopUpInNonPawns(board)) {
