@@ -28,47 +28,27 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     val isEndGame = isEndGame(board)
 
-    val evalPart1 =  materialDifference +
-            (if (oneSideHasOnlyKingLeft(board)) driveLosingKingToCorner(board) else 0) +
+    val eval =  materialDifference +
             (twoWhiteRooksTrappingKingEval(board) - twoBlackRooksTrappingKingEval(board)) +
             (doubledRooksEval(board.getBitboard(BITBOARD_WR)) - doubledRooksEval(board.getBitboard(BITBOARD_BR))) +
             (whiteRooksEval(board, whitePieces.inv()) - blackRooksEval(board, blackPieces.inv())) +
             pawnScore(attacks, board) +
             tradePawnBonusWhenMoreMaterial(board, materialDifference) +
-            (whitePawnsEval(board) - blackPawnsEval(board))
-
-    val evalLooksViable = evalLooksViable(evalPart1, minScore, board.mover)
-    val eval = evalPart1 + if (!isEndGame && evalLooksViable)
-                ((whiteBishopEval(board, whitePieces.inv()) - blackBishopsEval(board, blackPieces.inv())) +
-                (whiteKnightsEval(board, attacks) - blackKnightsEval(board, attacks)) +
-                (whiteKingSquareEval(board) - blackKingSquareEval(board)) +
-                tradePieceBonusWhenMoreMaterial(board, materialDifference) +
-                castlingEval(board, board.castlePrivileges) +
-                threatEval(attacks, board) +
-                kingSafetyEval(board, attacks) +
-                (whiteQueensEval(board, whitePieces.inv()) - blackQueensEval(board, blackPieces.inv())) +
-                bishopScore(board, materialDifference)) else 0
-
-//    if (evalPart2 > bestEval2) {
-//        bestEval2 = evalPart2
-//        println(bestEval2)
-//    }
-//
-//    if (!evalLooksViable) {
-//        v++
-//        println("Not viable cuts: $v")
-//    } else {
-//        w++
-//        println("Non cuts: $w")
-//    }
+            (whitePawnsEval(board) - blackPawnsEval(board)) +
+            ((whiteBishopEval(board, whitePieces.inv()) - blackBishopsEval(board, blackPieces.inv())) +
+            (whiteKnightsEval(board, attacks) - blackKnightsEval(board, attacks)) +
+            (whiteKingSquareEval(board) - blackKingSquareEval(board)) +
+            tradePieceBonusWhenMoreMaterial(board, materialDifference) +
+            castlingEval(board, board.castlePrivileges) +
+            threatEval(attacks, board) +
+            kingSafetyEval(board, attacks) +
+            (whiteQueensEval(board, whitePieces.inv()) - blackQueensEval(board, blackPieces.inv())) +
+            bishopScore(board, materialDifference))
 
     val endGameAdjustedScore = if (isEndGame) endGameAdjustment(board, eval) else eval
 
     return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
 }
-
-fun evalLooksViable(eval: Int, minScore: Int, mover: Colour) =
-       (if (mover == Colour.WHITE) eval else -eval) + LAZY_EVALUATION_MARGIN > minScore
 
 fun materialDifferenceEval(board: EngineBoard) =
         board.whitePieceValues - board.blackPieceValues +
@@ -77,22 +57,6 @@ fun materialDifferenceEval(board: EngineBoard) =
 fun exactlyOneBitSet(bitboard: Long) = (bitboard and (bitboard - 1)) == 0L && bitboard != 0L
 
 fun onlyKingsRemain(board: EngineBoard) = exactlyOneBitSet(board.getBitboard(BITBOARD_ENEMY)) and exactlyOneBitSet(board.getBitboard(BITBOARD_FRIENDLY))
-
-fun oneSideHasOnlyKingLeft(board: EngineBoard) = board.whitePieceValues == 0 || board.blackPieceValues == 0
-
-fun driveLosingKingToCorner(board: EngineBoard) : Int {
-    val losingKingSquare = java.lang.Long.numberOfTrailingZeros(board.getBitboard(if (board.whitePieceValues == 0) BITBOARD_WK else BITBOARD_BK))
-    val winningKingSquare = java.lang.Long.numberOfTrailingZeros(board.getBitboard(if (board.whitePieceValues == 0) BITBOARD_BK else BITBOARD_WK))
-    val winningSide = if (board.whitePieceValues == 0) Colour.BLACK else Colour.WHITE
-
-    val loserDistanceToCorner = (14 - kingInCornerPieceSquareTable[losingKingSquare])
-    val loserDistanceFromEnemyKing = abs(xCoordOfSquare(winningKingSquare) - xCoordOfSquare(losingKingSquare)) +
-            abs(yCoordOfSquare(winningKingSquare) - yCoordOfSquare(losingKingSquare))
-
-    val loserBonus = (loserDistanceToCorner + loserDistanceFromEnemyKing) * KING_DISTANCE_BONUS_ENDGAME
-
-    return if (winningSide == Colour.WHITE) loserBonus else -loserBonus
-}
 
 fun whiteKingSquareEval(board: EngineBoard) =
         linearScale(
@@ -140,7 +104,6 @@ fun blackRookOpenFilesEval(board: EngineBoard, file: Int) =
         else 0
 
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) = (enemyPawnValues / VALUE_PAWN).coerceAtMost(6)
-fun sameFile(square1: Int, square2: Int) = square1 % 8 == square2 % 8
 
 fun doubledRooksEval(bitboard: Long): Int {
     val files = booleanArrayOf(false,false,false,false,false,false,false,false)
@@ -453,7 +416,7 @@ fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (probableDrawWhenBlackIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noBlackRooksQueensOrBishops(board) && (blackBishopDrawOnFileA(board) || blackBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.whitePawnValues == 0) blackWinningNoWhitePawnsEndGameAdjustment(board, currentScore)
-        else currentScore) + penaltyForKingNotBeingNearOtherKing(board)
+        else currentScore) + penaltyForKingNotBeingNearOtherKing(board) - kingInCornerPieceSquareTable[board.whiteKingSquare]
 
 fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (blackMoreThanABishopUpInNonPawns(board)) {
@@ -474,7 +437,7 @@ fun whiteWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (probablyDrawWhenWhiteIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noWhiteRooksQueensOrKnights(board) && (whiteBishopDrawOnFileA(board) || whiteBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.blackPawnValues == 0) whiteWinningNoBlackPawnsEndGameAdjustment(board, currentScore)
-        else currentScore) - penaltyForKingNotBeingNearOtherKing(board)
+        else currentScore) - penaltyForKingNotBeingNearOtherKing(board) + kingInCornerPieceSquareTable[board.blackKingSquare]
 
 fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (whiteMoreThanABishopUpInNonPawns(board)) {

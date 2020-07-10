@@ -25,7 +25,6 @@ class EndgameTest {
         solveForMate("8/8/8/8/1q6/3k4/8/3K4 b - - 0 1", "b4b1", willMateIn(1))
         solveForMate("8/8/8/8/1q6/4k3/2K5/8 b - - 0 1", "e3e2", willMateIn(3))
         solveForMate("8/8/8/8/1q6/8/2K1k3/8 b - - 0 1", "e2e3", willMateIn(3))
-        solveForMate("8/8/8/8/5q2/1K6/4k3/8 b - - 0 1", listOf("e2d2","e2d3"), willMateIn(4))
         solveForMate("8/8/8/8/5q2/K7/3k4/8 b - - 0 1", "d2c2", willMateIn(2))
         solveForMate("8/8/8/1q6/8/2K2k2/8/8 b - - 0 1", "f3e3", willMateIn(4))
         solveForMate("8/8/8/8/1q6/3k4/8/3K4 b - - 0 1", "b4b1", willMateIn(1))
@@ -70,6 +69,7 @@ class EndgameTest {
         solveForMate("8/8/8/8/5q2/2K5/5k2/8 b - - 0 1", listOf("f2e2","f2e3"), willMateIn(5))
         solveForMate("8/8/8/2q5/8/5k2/1K6/8 b - - 0 1", "c5b4", willMateIn(5))
         solveForMate("8/8/8/3q4/1K6/5k2/8/8 w - - 0 1", "b4c3", willBeMatedIn(6))
+        solveForMate("8/8/8/8/5q2/1K6/4k3/8 b - - 0 1", listOf("e2d2","e2d3"), willMateIn(4))
     }
 
     private fun willMateIn(score: Int) = 10000-(score*2)+1
