@@ -16,6 +16,11 @@ public class EvaluateTest {
     private static Boolean RECALCULATE = false;
 
     @Test
+    public void testLazyEvaluation() {
+        assertEvaluationScore("2kr1r2/B1pq1Npp/1p1p1n2/b2Pp3/4P3/1P5P/NPP2PP1/2KR3R b - - 0 6", 799, true, 785);
+    }
+
+    @Test
     public void testEvaluationScores() throws IllegalFenException {
         assertEvaluationScore("3r2k1/ppp2ppp/6q1/b4n2/3nQB2/2p5/P4PPP/RN3RK1 b - -", 233, true);
         assertEvaluationScore("r3k2r/p1ppqpb1/Bn2Pnp1/4N3/1p2P3/2N2Q2/PPPB1P1P/R3K2r w Qkq - 0 3", -680, true);
@@ -32,12 +37,15 @@ public class EvaluateTest {
     }
 
     private void assertEvaluationScore(String fen, int expectedScore, boolean flip) throws IllegalFenException {
+            assertEvaluationScore(fen, expectedScore, flip, -Integer.MAX_VALUE);
+    }
+    private void assertEvaluationScore(String fen, int expectedScore, boolean flip, int minScore) throws IllegalFenException {
 
         Board board = Board.fromFen(fen);
         EngineBoard engineBoard = new EngineBoard();
         engineBoard.setBoard(board);
 
-        int actualScore = com.netsensia.rivalchess.engine.eval.EvaluateKt.evaluate(engineBoard);
+        int actualScore = com.netsensia.rivalchess.engine.eval.EvaluateKt.evaluate(engineBoard, minScore);
 
         if (RECALCULATE) {
             System.out.println("assertEvaluationScore(\"" + fen + "\", " + actualScore + ", true);");
