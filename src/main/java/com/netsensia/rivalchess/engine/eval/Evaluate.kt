@@ -38,7 +38,7 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
             threatEval(attacks, board)
 
     var adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
-    val viableEval = (adjustedEval + 400 >= minScore)
+    val viableEval = (adjustedEval + 250 >= minScore)
     if (!viableEval && !isEndGame) {
         println ("${savings++}")
     }
