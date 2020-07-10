@@ -13,6 +13,8 @@ import java.lang.System.exit
 var savings = 0
 var nonSavings = 0
 
+const val DEBUG = false
+
 @JvmOverloads
 fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
@@ -38,26 +40,25 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
             threatEval(attacks, board)
 
     var adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
-    val viableEval = (adjustedEval + 250 >= minScore)
-    if (!viableEval && !isEndGame) {
+    val viableEval = (adjustedEval + 200 >= minScore)
+    if (DEBUG && !viableEval && !isEndGame) {
         println ("${savings++}")
     }
-    var eval2 = 0
-    if (isEndGame || true) {
-        eval2 = twoRooksTrappingKingEval(board) +
+    val eval2 = if (isEndGame || true)
+        (twoRooksTrappingKingEval(board) +
                 doubledRooksEval(board) +
                 rooksEval(board, whitePieces, blackPieces) +
                 bishopsEval(board, whitePieces, blackPieces) +
                 knightsEval(board, attacks) +
                 castlingEval(board, board.castlePrivileges) +
                 queensEval(board, whitePieces, blackPieces) +
-                bishopScore(board)
-    }
+                bishopScore(board)) else 0
+
 
     eval += eval2
 
     adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
-    if (!viableEval && adjustedEval >= minScore) {
+    if (DEBUG && !viableEval && adjustedEval >= minScore) {
         println("Incorrect cut off would have occured at " + board.getFen())
         println("Initial eval was ${eval-eval2}, eval 2 was ${eval2}")
         exit(0)
