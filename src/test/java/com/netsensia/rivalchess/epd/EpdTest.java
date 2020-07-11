@@ -82,7 +82,7 @@ public class EpdTest {
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("winAtChess.epd", "WAC.041", true);
+        runEpdSuite("winAtChess.epd", "WAC.001", true);
     }
 
     @Test

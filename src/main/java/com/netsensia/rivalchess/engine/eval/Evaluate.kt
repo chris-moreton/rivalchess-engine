@@ -8,25 +8,37 @@ import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.board.getFen
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
+import java.lang.Math.abs
 import java.lang.System.exit
 
 var savings = 0
+var bigDiff = -Int.MAX_VALUE
+var phase1Cutoffs = 0
+var phase2Cutoffs = 0
+var totalEvals = 0
 
-const val DEBUG = false
+const val DETERMINE_BAD_CUTOFFS = false
+const val EXAMINE_CUTOFFS = false
+const val PHASE1_CUTOFF = 2500
+const val PHASE2_CUTOFF = 255
 
 @JvmOverloads
 fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     if (onlyKingsRemain(board)) return 0
 
+    totalEvals ++
+    val materialDifference = materialDifferenceEval(board)
+    val isEndGame = isEndGame(board)
+
+    val adjustedMaterialDifference = if (board.mover == Colour.WHITE) materialDifference else -materialDifference
+
+    if (phase1LazyCutoffs(isEndGame, adjustedMaterialDifference, minScore)) return adjustedMaterialDifference
+
     val attacks = Attacks(board)
 
     val whitePieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_FRIENDLY) else board.getBitboard(BITBOARD_ENEMY)
     val blackPieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_ENEMY) else board.getBitboard(BITBOARD_FRIENDLY)
-
-    val materialDifference = materialDifferenceEval(board)
-
-    val isEndGame = isEndGame(board)
 
     var eval =
             materialDifference +
@@ -39,9 +51,11 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
             threatEval(attacks, board)
 
     var adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
-    val viableEval = (adjustedEval + 250 >= minScore)
+    val viableEvalForPhase2 = isEndGame || (adjustedEval + PHASE2_CUTOFF >= minScore)
 
-    val eval2 = if (isEndGame || viableEval || DEBUG)
+    if (phase2LazyCutoffs(viableEvalForPhase2)) return adjustedEval
+
+    val eval2 = if (viableEvalForPhase2 || DETERMINE_BAD_CUTOFFS)
         (twoRooksTrappingKingEval(board) +
                 doubledRooksEval(board) +
                 rooksEval(board, whitePieces, blackPieces) +
@@ -53,16 +67,57 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     eval += eval2
 
-    adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
-    if (DEBUG && !viableEval && adjustedEval >= minScore) {
-        println("Incorrect cut off would have occured at " + board.getFen() + " with a minimum score of $minScore but actual score of ${adjustedEval}")
-        println("Initial eval was ${eval-eval2}, eval 2 was ${eval2}")
-        exit(0)
-    }
+    determineBadCutoffs(isEndGame, eval, materialDifference, board, adjustedEval, viableEvalForPhase2, minScore)
 
     val endGameAdjustedScore = if (isEndGame) endGameAdjustment(board, eval) else eval
 
     return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
+}
+
+private fun determineBadCutoffs(isEndGame: Boolean, eval: Int, materialDifference: Int, board: EngineBoard, adjustedEval: Int, viableEvalForPhase2: Boolean, minScore: Int) {
+    var adjustedEval1 = adjustedEval
+    if (DETERMINE_BAD_CUTOFFS && !isEndGame) {
+        val diff = abs(eval - materialDifference)
+        if (diff > bigDiff) {
+            bigDiff = diff
+            if (bigDiff > PHASE1_CUTOFF) {
+                println("Incorrect phase 1 cut off would have occured at " + board.getFen() + " with a difference of $bigDiff")
+                exit(0)
+            }
+        }
+        adjustedEval1 = if (board.mover == Colour.WHITE) eval else -eval
+        if (!viableEvalForPhase2 && adjustedEval1 >= minScore) {
+            println("Incorrect phase 2 cut off would have occured at " + board.getFen() + " with a minimum score of $minScore but actual score of ${adjustedEval1}")
+            exit(0)
+        }
+    }
+}
+
+private fun phase2LazyCutoffs(viableEvalForPhase2: Boolean): Boolean {
+    if (!DETERMINE_BAD_CUTOFFS) {
+        if (!viableEvalForPhase2) {
+            if (EXAMINE_CUTOFFS) {
+                if (phase2Cutoffs++ % 10000 == 0)
+                    println("Phase 2 cutoffs ${phase2Cutoffs} / $totalEvals = ${(phase2Cutoffs / totalEvals.toDouble()) * 100.0}%")
+            }
+            return true
+        }
+    }
+    return false
+}
+
+private fun phase1LazyCutoffs(isEndGame: Boolean, adjustedMaterialDifference: Int, minScore: Int): Boolean {
+    if (!DETERMINE_BAD_CUTOFFS) {
+        val viableEval = isEndGame || (adjustedMaterialDifference + PHASE1_CUTOFF >= minScore)
+        if (!viableEval) {
+            if (EXAMINE_CUTOFFS) {
+                if (phase1Cutoffs++ % 1000 == 0)
+                    println("Phase 1 cutoffs ${phase1Cutoffs} / $totalEvals = ${(phase1Cutoffs / totalEvals.toDouble()) * 100.0}%")
+            }
+            return true
+        }
+    }
+    return false
 }
 
 private inline fun lazyEvalPart(fn: (EngineBoard, Int) -> Int, board: EngineBoard, materialDifference: Int, currentScore: Int, minScore: Int, maxPartScore: Int, isEndGame: Boolean): Int {
