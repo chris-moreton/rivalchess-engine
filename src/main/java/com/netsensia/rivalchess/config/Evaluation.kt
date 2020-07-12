@@ -68,4 +68,3 @@ val pieceValues = listOf(
             VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK
     )
 
-fun getPieceValue(piece: Int) = pieceValues[piece]

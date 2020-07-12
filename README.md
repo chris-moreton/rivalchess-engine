@@ -12,24 +12,16 @@ This is the main library used by the [Rival Chess UCI program](https://github.co
     <dependency>
         <groupId>com.netsensia.rivalchess</groupId>
         <artifactId>rivalchess-engine</artifactId>
-        <version>28.1.0</version>
+        <version>28.1.1</version>
     </dependency>
     
 #### Gradle
 
-    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '28.1.0'
+    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '28.1.1'
     
 ### Testing
     
     ./gradlew test
-    
-### Versions
-
-Starting with version 28.1.0, I will be following Semver a bit more accurately.  Version number changes will signify:
-
-* Major version - A breaking change for any code using this library
-* Minor version - A new search feature or upgrade to the engine
-* Patch version - either a bug fix or a speed increase/code refactoring which breaks no tests
     
 ### Example
 
