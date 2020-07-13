@@ -50,7 +50,7 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
             kingSquareEval(board) +
             threatEval(attacks, board)
 
-    var adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
+    val adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
     val viableEvalForPhase2 = isEndGame || (adjustedEval + PHASE2_CUTOFF >= minScore)
 
     if (phase2LazyCutoffs(viableEvalForPhase2)) return adjustedEval

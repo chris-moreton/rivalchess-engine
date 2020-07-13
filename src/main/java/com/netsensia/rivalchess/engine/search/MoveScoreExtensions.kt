@@ -7,16 +7,7 @@ import com.netsensia.rivalchess.model.Colour
 
 fun Search.getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
     if (moveOrderStatus[ply] === MoveOrder.NONE) {
-        if (hashMove != 0) {
-            var c = 0
-            while (orderedMoves[ply][c] != 0) {
-                if (orderedMoves[ply][c] == hashMove) {
-                    orderedMoves[ply][c] = -1
-                    return hashMove
-                }
-                c++
-            }
-        }
+        if (checkForHashMove(hashMove, ply)) return hashMove
         moveOrderStatus[ply] = MoveOrder.CAPTURES
         if (scoreFullWidthCaptures(board, ply) == 0) {
             // no captures, so move to next stage
@@ -31,6 +22,20 @@ fun Search.getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
         moveOrderStatus[ply] = MoveOrder.ALL
         getHighestScoringMoveFromArray(orderedMoves[ply])
     } else move
+}
+
+private fun Search.checkForHashMove(hashMove: Int, ply: Int): Boolean {
+    if (hashMove != 0) {
+        var c = 0
+        while (orderedMoves[ply][c] != 0) {
+            if (orderedMoves[ply][c] == hashMove) {
+                orderedMoves[ply][c] = -1
+                return true
+            }
+            c++
+        }
+    }
+    return false
 }
 
 fun Search.scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {

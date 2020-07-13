@@ -184,8 +184,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val depthRemaining = depth + extensions / FRACTIONAL_EXTENSION_FULL
 
-        val hashProbeResult = hashProbe(board, depthRemaining, Window(low, high), searchPathPly)
-        if (hashProbeResult.bestPath != null) return searchPathPly
+        val hashProbeResult = hashProbe(board, depthRemaining, Window(low, high), searchPathPly).also {
+            if (it.bestPath != null) return searchPathPly
+        }
 
         var localLow = hashProbeResult.window.low
         val localHigh = hashProbeResult.window.high
@@ -198,7 +199,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val highRankingMove = highRankingMove(board, hashProbeResult.move, depthRemaining, depth, ply, localLow, localHigh, extensions, isCheck)
         searchPathPly.reset()
 
-        var bestMoveForHash = 0
         var useScoutSearch = false
         var threatExtend = 0
 
@@ -212,8 +212,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         var legalMoveCount = 0
-        val moveExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
-        val newExtensions = (extensions + moveExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
+
+        val newExtensions = (extensions +
+                (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply)))
+                    .coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
+
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
@@ -221,10 +224,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 legalMoveCount ++
                 val newPath =
                     scoutSearch(useScoutSearch, depth, ply+1, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
+                        if (abortingSearch) return SearchPath()
                         it.score = adjustedMateScore(-it.score)
                     }
-
-                if (abortingSearch) return SearchPath()
 
                 if (newPath.score >= localHigh) {
                     updateHistoryMoves(board.mover, move, depthRemaining, true)
@@ -238,7 +240,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     searchPathPly.setPath(move, newPath)
                     if (newPath.score > localLow) {
                         hashFlag = EXACT
-                        bestMoveForHash = move
                         localLow = newPath.score
                         useScoutSearch = useScoutSearch(depth, newExtensions)
                     }
@@ -250,11 +251,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         if (abortingSearch) return SearchPath()
         if (legalMoveCount == 0) {
-            searchPathPly.withScore(if (board.isCheck(mover)) -(VALUE_MATE-0) else 0)
+            searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
             return searchPathPly
         }
-        board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
+        board.boardHashObject.storeHashMove(if (hashFlag == EXACT) searchPathPly.move[0] else 0, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
 
@@ -314,7 +315,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
+    private fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
         currentDepthZeroMove = move
         currentDepthZeroMoveNumber = arrayIndex
     }
@@ -376,11 +377,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return newPath
     }
 
-    private fun threatExtensions(newPath: SearchPath) =
-            if (-newPath.score < -MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
+    private fun threatExtensions(newPath: SearchPath) = if (-newPath.score < -MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
 
-    private fun checkExtension(isCheck: Boolean) =
-            if (isCheck) FRACTIONAL_EXTENSION_CHECK else 0
+    private fun checkExtension(isCheck: Boolean) = if (isCheck) FRACTIONAL_EXTENSION_CHECK else 0
 
     private fun reorderDepthZeroMoves() {
         val moveCount = moveCount(orderedMoves[0])
