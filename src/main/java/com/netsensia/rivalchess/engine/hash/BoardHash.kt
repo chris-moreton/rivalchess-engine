@@ -97,7 +97,7 @@ class BoardHash {
         return getHashIndex(engineBoard.boardHashCode())
     }
 
-    fun getHashIndex(hashValue: Long): Int {
+    private fun getHashIndex(hashValue: Long): Int {
         return (hashValue % maxHashEntries).toInt() * NUM_HASH_FIELDS
     }
 

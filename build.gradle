@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "com.netsensia.rivalchess"
-version = '28.1.2'
+version = '28.1.3'
 
 publishing {
     publications {

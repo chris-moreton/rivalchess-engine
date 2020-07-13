@@ -9,16 +9,16 @@ fun Search.getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
     if (moveOrderStatus[ply] === MoveOrder.NONE) {
         if (checkForHashMove(hashMove, ply)) return hashMove
         moveOrderStatus[ply] = MoveOrder.CAPTURES
-        if (scoreFullWidthCaptures(board, ply) == 0) {
+        if (scoreFullWidthCaptures(ply) == 0) {
             // no captures, so move to next stage
-            scoreFullWidthMoves(board, ply)
+            scoreFullWidthMoves(ply)
             moveOrderStatus[ply] = MoveOrder.ALL
         }
     }
     val move = getHighestScoringMoveFromArray(orderedMoves[ply])
     return if (move == 0 && moveOrderStatus[ply] === MoveOrder.CAPTURES) {
         // we move into here if we had some captures but they are now used up
-        scoreFullWidthMoves(board, ply)
+        scoreFullWidthMoves(ply)
         moveOrderStatus[ply] = MoveOrder.ALL
         getHighestScoringMoveFromArray(orderedMoves[ply])
     } else move
@@ -38,27 +38,27 @@ private fun Search.checkForHashMove(hashMove: Int, ply: Int): Boolean {
     return false
 }
 
-fun Search.scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
+fun Search.scoreFullWidthCaptures(ply: Int): Int {
     var movesScored = 0
     var i = -1
     while (orderedMoves[ply][++i] != 0) {
-        if (orderedMoves[ply][i] != -1 && scoreCaptureMove(ply, i, board) > 0) movesScored++
+        if (orderedMoves[ply][i] != -1 && scoreCaptureMove(ply, i) > 0) movesScored++
     }
     return movesScored
 }
 
-fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
+fun Search.scoreCaptureMove(ply: Int, i: Int): Int {
     var score = 0
     val toSquare = toSquare(orderedMoves[ply][i])
-    val isCapture = board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE ||
-            (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
-                    board.getBitboardTypeOfPieceOnSquare(fromSquare(orderedMoves[ply][i]), board.mover) in arrayOf(BITBOARD_WP, BITBOARD_BP))
+    val isCapture = engineBoard.getBitboardTypeOfPieceOnSquare(toSquare, engineBoard.mover.opponent()) != BITBOARD_NONE ||
+            (1L shl toSquare and engineBoard.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
+                    engineBoard.getBitboardTypeOfPieceOnSquare(fromSquare(orderedMoves[ply][i]), engineBoard.mover) in arrayOf(BITBOARD_WP, BITBOARD_BP))
 
     orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
     if (orderedMoves[ply][i] == mateKiller[ply]) {
         score = 126
     } else if (isCapture) {
-        val see = staticExchangeEvaluator.staticExchangeEvaluation(board, orderedMoves[ply][i])
+        val see = staticExchangeEvaluator.staticExchangeEvaluation(engineBoard, orderedMoves[ply][i])
 
         score = if (see > 0) {
             110 + (see / 100)
@@ -67,7 +67,7 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
         } else if (see == 0) {
             107
         } else {
-            scoreLosingCapturesWithWinningHistory(board, ply, i, orderedMoves[ply], toSquare)
+            scoreLosingCapturesWithWinningHistory(ply, i, orderedMoves[ply], toSquare)
         }
     } else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
         score = 108
@@ -76,12 +76,12 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
     return score
 }
 
-fun Search.scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, i: Int, movesForSorting: IntArray, toSquare: Int): Int {
-    val historyScore = historyScore(board.mover == Colour.WHITE, fromSquare(movesForSorting[i]), toSquare)
+fun Search.scoreLosingCapturesWithWinningHistory(ply: Int, i: Int, movesForSorting: IntArray, toSquare: Int): Int {
+    val historyScore = historyScore(engineBoard.mover == Colour.WHITE, fromSquare(movesForSorting[i]), toSquare)
     return if (historyScore > 5) historyScore else scoreKillerMoves(ply, i, movesForSorting)
 }
 
-fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
+fun Search.scoreFullWidthMoves(ply: Int) {
     var i = 0
     while (orderedMoves[ply][i] != 0) {
         if (orderedMoves[ply][i] != -1) {
@@ -90,12 +90,12 @@ fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
             orderedMoves[ply][i] = moveNoScore(orderedMoves[ply][i])
 
             val killerScore = scoreKillerMoves(ply, i, orderedMoves[ply])
-            val historyScore = scoreHistoryHeuristic(board, killerScore, fromSquare, toSquare)
+            val historyScore = scoreHistoryHeuristic(engineBoard, killerScore, fromSquare, toSquare)
 
             val finalScore =
                     if (historyScore == 0)
-                        (if (board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE) // losing capture
-                            1 else 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2)
+                        (if (engineBoard.getBitboardTypeOfPieceOnSquare(toSquare, engineBoard.mover.opponent()) != BITBOARD_NONE) // losing capture
+                            1 else 50 + scorePieceSquareValues(engineBoard, fromSquare, toSquare) / 2)
                     else historyScore
 
             orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - finalScore shl 24)
