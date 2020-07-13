@@ -5,7 +5,7 @@ import com.netsensia.rivalchess.config.DEFAULT_SEARCH_HASH_HEIGHT
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 
-class BoardHash {
+class BoardHash(val engineBoard: EngineBoard) {
 
     private val hashTracker = ZobristHashTracker()
 
@@ -48,14 +48,14 @@ class BoardHash {
         }
     }
 
-    fun storeHashMove(move: Int, board: EngineBoard, score: Int, flag: Int, height: Int) {
-        val hashIndex = (board.boardHashCode() % maxHashEntries).toInt() * NUM_HASH_FIELDS
+    fun storeHashMove(move: Int, score: Int, flag: Int, height: Int) {
+        val hashIndex = (engineBoard.boardHashCode() % maxHashEntries).toInt() * NUM_HASH_FIELDS
         if (height >= hashTableUseHeight[hashIndex + HASHENTRY_HEIGHT] || hashTableVersion > hashTableUseHeight[hashIndex + HASHENTRY_VERSION]) {
             if (hashTableVersion == hashTableUseHeight[hashIndex + HASHENTRY_VERSION])
                 copyEntryFromUseHeightToIgnoreHeightTable(hashIndex)
-            storeMoveInHashTable(move, board, score, flag, height, hashIndex, hashTableUseHeight)
+            storeMoveInHashTable(move, score, flag, height, hashIndex, hashTableUseHeight)
         } else {
-            storeMoveInHashTable(move, board, score, flag, height, hashIndex, hashTableIgnoreHeight)
+            storeMoveInHashTable(move, score, flag, height, hashIndex, hashTableIgnoreHeight)
         }
     }
 
@@ -69,12 +69,12 @@ class BoardHash {
         hashTableIgnoreHeight[hashIndex + HASHENTRY_VERSION] = hashTableUseHeight[hashIndex + HASHENTRY_VERSION]
     }
 
-    private fun storeMoveInHashTable(move: Int, board: EngineBoard, score: Int, flag: Int, height: Int, hashIndex: Int, hashTableUseHeight: IntArray) {
+    private fun storeMoveInHashTable(move: Int, score: Int, flag: Int, height: Int, hashIndex: Int, hashTableUseHeight: IntArray) {
         hashTableUseHeight[hashIndex + HASHENTRY_MOVE] = move
         hashTableUseHeight[hashIndex + HASHENTRY_SCORE] = score
         hashTableUseHeight[hashIndex + HASHENTRY_FLAG] = flag
-        hashTableUseHeight[hashIndex + HASHENTRY_64BIT1] = (board.boardHashCode() ushr 32).toInt()
-        hashTableUseHeight[hashIndex + HASHENTRY_64BIT2] = (board.boardHashCode() and LOW32).toInt()
+        hashTableUseHeight[hashIndex + HASHENTRY_64BIT1] = (engineBoard.boardHashCode() ushr 32).toInt()
+        hashTableUseHeight[hashIndex + HASHENTRY_64BIT2] = (engineBoard.boardHashCode() and LOW32).toInt()
         hashTableUseHeight[hashIndex + HASHENTRY_HEIGHT] = height
         hashTableUseHeight[hashIndex + HASHENTRY_VERSION] = hashTableVersion
     }
@@ -89,11 +89,11 @@ class BoardHash {
         setHashTable()
     }
 
-    fun initialiseHashCode(engineBoard: EngineBoard) {
+    fun initialiseHashCode() {
         hashTracker.initHash(engineBoard)
     }
 
-    fun getHashIndex(engineBoard: EngineBoard): Int {
+    fun getHashIndex(): Int {
         return getHashIndex(engineBoard.boardHashCode())
     }
 
@@ -105,7 +105,7 @@ class BoardHash {
         hashTracker.makeMove(compactMove, movePiece, capturePiece)
     }
 
-    fun unMove(engineBoard: EngineBoard) = hashTracker.unMakeMove(engineBoard.lastMoveMade!!)
+    fun unMove() = hashTracker.unMakeMove(engineBoard.lastMoveMade!!)
 
     fun makeNullMove() = hashTracker.nullMove()
 

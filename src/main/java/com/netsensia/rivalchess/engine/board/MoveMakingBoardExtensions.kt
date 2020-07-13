@@ -95,7 +95,7 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     val toSquare = moveMade.move and 63
     val fromMask = 1L shl fromSquare
     val toMask = 1L shl toSquare
-    if (updateHash) boardHashObject.unMove(this)
+    if (updateHash) boardHashObject.unMove()
 
     // deal with en passants first, they are special moves as well as capture moves, so just get them out of the way
     if (!unMakeEnPassants(fromMask, toMask)) {

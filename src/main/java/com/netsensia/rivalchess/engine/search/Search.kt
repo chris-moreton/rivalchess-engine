@@ -143,7 +143,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 if (newPath.score >= high) {
                     engineBoard.unMakeMove()
-                    engineBoard.boardHashObject.storeHashMove(move, engineBoard, newPath.score, LOWER, depth)
+                    engineBoard.boardHashObject.storeHashMove(move, newPath.score, LOWER, depth)
                     depthZeroMoveScores[numMoves] = newPath.score
                     return bestPath.withMoveAndScore(move, newPath.score)
                 }
@@ -169,7 +169,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         abortingSearch = onlyOneMoveAndNotOnFixedTime(numLegalMoves)
 
-        engineBoard.boardHashObject.storeHashMove(bestMoveForHash, engineBoard, bestPath.score, hashEntryType, depth)
+        engineBoard.boardHashObject.storeHashMove(bestMoveForHash, bestPath.score, hashEntryType, depth)
         return bestPath
     }
 
@@ -184,7 +184,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val depthRemaining = depth + extensions / FRACTIONAL_EXTENSION_FULL
 
-        val hashProbeResult = hashProbe(engineBoard, depthRemaining, Window(low, high), searchPathPly).also {
+        val hashProbeResult = hashProbe(depthRemaining, Window(low, high), searchPathPly).also {
             if (it.bestPath != null) return searchPathPly
         }
 
@@ -217,7 +217,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply)))
                     .coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
 
-        for (move in highScoreMoveSequence(engineBoard, ply, highRankingMove)) {
+        for (move in highScoreMoveSequence(ply, highRankingMove)) {
 
             if (engineBoard.makeMove(move)) {
 
@@ -231,7 +231,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (newPath.score >= localHigh) {
                     updateHistoryMoves(engineBoard.mover, move, depthRemaining, true)
                     engineBoard.unMakeMove()
-                    engineBoard.boardHashObject.storeHashMove(move, engineBoard, newPath.score, LOWER, depthRemaining)
+                    engineBoard.boardHashObject.storeHashMove(move, newPath.score, LOWER, depthRemaining)
                     updateKillerMoves(engineBoard.getBitboard(BITBOARD_ENEMY), move, ply, newPath)
                     return searchPathPly.withMoveAndScore(move, newPath.score)
                 }
@@ -252,10 +252,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (abortingSearch) return SearchPath()
         if (legalMoveCount == 0) {
             searchPathPly.withScore(if (engineBoard.isCheck(mover)) -VALUE_MATE else 0)
-            engineBoard.boardHashObject.storeHashMove(0, engineBoard, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
+            engineBoard.boardHashObject.storeHashMove(0, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
             return searchPathPly
         }
-        engineBoard.boardHashObject.storeHashMove(if (hashFlag == EXACT) searchPathPly.move[0] else 0, engineBoard, searchPathPly.score, hashFlag, depthRemaining)
+        engineBoard.boardHashObject.storeHashMove(if (hashFlag == EXACT) searchPathPly.move[0] else 0, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
 
@@ -263,8 +263,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun onlyOneMoveAndNotOnFixedTime(numLegalMoves: Int) = numLegalMoves == 1 && millisToThink < MAX_SEARCH_MILLIS
 
-    private fun highScoreMoveSequence(board: EngineBoard, ply: Int, highRankingMove: Int) = sequence {
-        while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0);
+    private fun highScoreMoveSequence(ply: Int, highRankingMove: Int) = sequence {
+        while (getHighScoreMove(ply, highRankingMove).also { if (it != 0) yield(it) } != 0);
     }
 
     private fun maxExtensionsForPly(ply: Int) = maxNewExtensionsTreePart[(ply / iterativeDeepeningDepth).coerceAtMost(LAST_EXTENSION_LAYER)]
@@ -320,10 +320,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         currentDepthZeroMoveNumber = arrayIndex
     }
 
-    private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
-        val boardHash = board.boardHashObject
+    private fun hashProbe(depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
+        val boardHash = engineBoard.boardHashObject
         var hashMove = 0
-        val hashIndex = board.boardHashObject.getHashIndex(board)
+        val hashIndex = engineBoard.boardHashObject.getHashIndex()
 
         if (USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
@@ -356,7 +356,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun finalPath(ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
         val bestPath = quiesce(MAX_QUIESCE_DEPTH - 1, ply, 0, low, high, isCheck)
         val hashFlag = if (bestPath.score < low) UPPER else if (bestPath.score > high) LOWER else EXACT
-        engineBoard.boardHashObject.storeHashMove(0, engineBoard, bestPath.score, hashFlag,0)
+        engineBoard.boardHashObject.storeHashMove(0, bestPath.score, hashFlag,0)
         return bestPath
     }
 

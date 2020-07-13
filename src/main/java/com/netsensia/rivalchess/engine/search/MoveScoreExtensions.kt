@@ -5,7 +5,7 @@ import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.enums.MoveOrder
 import com.netsensia.rivalchess.model.Colour
 
-fun Search.getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
+fun Search.getHighScoreMove(ply: Int, hashMove: Int): Int {
     if (moveOrderStatus[ply] === MoveOrder.NONE) {
         if (checkForHashMove(hashMove, ply)) return hashMove
         moveOrderStatus[ply] = MoveOrder.CAPTURES

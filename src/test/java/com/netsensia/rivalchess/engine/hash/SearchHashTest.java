@@ -26,8 +26,7 @@ public class SearchHashTest extends TestCase {
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b8c6").compact, false, true);
 
         boardHash.storeHashMove(
-                ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
-                engineBoard, 2, (byte)EXACT, 4);
+                ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact, 2, (byte)EXACT, 4);
 
         unMakeMove(engineBoard, true);
         unMakeMove(engineBoard, true);
@@ -38,63 +37,55 @@ public class SearchHashTest extends TestCase {
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("b8c6").compact, false, true);
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("g1f3").compact, false, true);
 
-        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
+        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex()));
 
         makeMove(engineBoard, ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("g8f6").compact, false, true);
 
-        assertTrue(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
+        assertTrue(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex()));
 
         // gets correct move from use height hash table
         assertEquals(ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
-                boardHash.useHeight(
-                        boardHash.getHashIndex(engineBoard) + HASHENTRY_MOVE));
+                boardHash.useHeight(boardHash.getHashIndex() + HASHENTRY_MOVE));
 
         // has not been added to always replace table, no need as it was accepted by use height table
         assertFalse(ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact ==
-                boardHash.ignoreHeight(
-                        boardHash.getHashIndex(engineBoard) + HASHENTRY_MOVE));
+                boardHash.ignoreHeight(boardHash.getHashIndex() + HASHENTRY_MOVE));
 
         // entry does not have enough height
-        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(5, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
+        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(5, boardHash, engineBoard.boardHashObject.getHashIndex()));
 
         // try to store another move with lower height
         boardHash.storeHashMove(
-                ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
-                engineBoard, 2, (byte)EXACT, 3);
+                ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("h2h3").compact, 2, (byte)EXACT, 3);
 
         // move from original entry still valid
         assertEquals(ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
-                boardHash.useHeight(
-                        boardHash.getHashIndex(engineBoard) + HASHENTRY_MOVE));
+                boardHash.useHeight(boardHash.getHashIndex() + HASHENTRY_MOVE));
 
         // new move valid in always replace table
         assertEquals(ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
-                boardHash.ignoreHeight(
-                        boardHash.getHashIndex(engineBoard) + HASHENTRY_MOVE));
+                boardHash.ignoreHeight(boardHash.getHashIndex() + HASHENTRY_MOVE));
 
         // try to store another move with heigher height
         boardHash.storeHashMove(
-                ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
-                engineBoard, 2, (byte)EXACT, 6);
+                ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("h2h3").compact, 2, (byte)EXACT, 6);
 
         // move from new entry now valid
         assertEquals(ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("h2h3").compact,
-                boardHash.useHeight(
-                        boardHash.getHashIndex(engineBoard) + HASHENTRY_MOVE));
+                boardHash.useHeight(boardHash.getHashIndex() + HASHENTRY_MOVE));
 
         // old entry has been added to always replace table
         assertEquals(ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic("d2d4").compact,
-                boardHash.ignoreHeight(
-                        boardHash.getHashIndex(engineBoard) + HASHENTRY_MOVE));
+                boardHash.ignoreHeight(boardHash.getHashIndex() + HASHENTRY_MOVE));
 
         for (int i = 0; i < MAXIMUM_HASH_AGE; i++) {
             boardHash.incVersion();
-            assertTrue(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
+            assertTrue(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex()));
         }
 
         boardHash.incVersion();
         // Hash table is too old
-        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex(engineBoard)));
+        assertFalse(com.netsensia.rivalchess.engine.hash.SearchHashKt.isHeightHashTableEntryValid(2, boardHash, engineBoard.boardHashObject.getHashIndex()));
 
     }
 }

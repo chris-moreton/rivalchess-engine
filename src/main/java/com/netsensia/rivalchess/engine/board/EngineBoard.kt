@@ -15,7 +15,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val engineBitboards = EngineBitboards()
 
     @JvmField
-    val boardHashObject = BoardHash()
+    val boardHashObject = BoardHash(this)
 
     @JvmField
     var moveHistory = arrayOfNulls<MoveDetail>(MAX_HALFMOVES_IN_GAME)
@@ -63,7 +63,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         setEngineBoardVars(board)
         boardHashObject.hashTableVersion = 0
         boardHashObject.setHashSizeMB(DEFAULT_HASHTABLE_SIZE_MB)
-        boardHashObject.initialiseHashCode(this)
+        boardHashObject.initialiseHashCode()
     }
 
     fun getBitboardTypeOfPieceOnSquare(bitRef: Int, colour: Colour): Int {
