@@ -97,7 +97,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (matePath != null) currentPath.setPath(matePath)
         }
         else if (!abortingSearch && depth < finalDepthToSearch) iterativeDeepening(depth + 1, newWindow)
-
     }
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
@@ -229,7 +228,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     }
 
                 if (newPath.score >= localHigh) {
-                    updateHistoryMoves(engineBoard.mover, move, depthRemaining, true)
+                    updateHistoryMoves(move, depthRemaining, true)
                     engineBoard.unMakeMove()
                     engineBoard.boardHashObject.storeHashMove(move, newPath.score, LOWER, depthRemaining)
                     updateKillerMoves(engineBoard.getBitboard(BITBOARD_ENEMY), move, ply, newPath)
@@ -245,7 +244,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     }
                 }
 
-                updateHistoryMoves(engineBoard.mover, move, depthRemaining, false)
+                updateHistoryMoves(move, depthRemaining, false)
                 engineBoard.unMakeMove()
             }
         }
@@ -301,9 +300,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return hashMove
     }
 
-    private fun updateHistoryMoves(mover: Colour, move: Int, depthRemaining: Int, success: Boolean) {
+    private fun updateHistoryMoves(move: Int, depthRemaining: Int, success: Boolean) {
         val historyMovesArray = if (success) historyMovesSuccess else historyMovesFail
-        val moverIndex = if (mover == Colour.WHITE) 1 else 0
+        val moverIndex = if (engineBoard.mover == Colour.WHITE) 1 else 0
         val fromSquare = fromSquare(move)
         val toSquare = toSquare(move)
         historyMovesArray[moverIndex][fromSquare][toSquare] += depthRemaining
