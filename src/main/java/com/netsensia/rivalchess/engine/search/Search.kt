@@ -212,20 +212,29 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         var legalMoveCount = 0
-        val plyExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
-        val updatedExtensions = (extensions + plyExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
+
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
 
                 legalMoveCount ++
 
-                val isCheck = board.isCheck(mover)
-                val adjustedDepth = depth - lateMoveReductions(depthRemaining, legalMoveCount, isCheck, extensions, updatedExtensions)
-                val newPath =
-                    scoutSearch(useScoutSearch, adjustedDepth, ply+1, localLow, localHigh, updatedExtensions, isCheck).also {
+                val plyExtensions = (checkExtend + threatExtend + pawnPushExtension()).coerceAtMost(maxExtensionsForPly(ply))
+                val updatedExtensions = (extensions + plyExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
+
+                val moveGivesCheck = board.isCheck(mover)
+                val lmr = lateMoveReductions(depthRemaining, legalMoveCount, moveGivesCheck, extensions, updatedExtensions)
+                val adjustedDepth = depth - lmr
+                val firstPath =
+                    scoutSearch(useScoutSearch, adjustedDepth, ply+1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
                         it.score = adjustedMateScore(-it.score)
                     }
+
+                // LMR didn't fail low, need to research
+                val newPath = if (lmr > 0 && firstPath.score > localLow)
+                    scoutSearch(useScoutSearch, depth, ply+1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
+                        it.score = adjustedMateScore(-it.score)
+                    } else firstPath
 
                 if (abortingSearch) return SearchPath()
 
@@ -261,11 +270,23 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, check: Boolean, extensions: Int, updatedExtensions: Int): Int {
-        if (depthRemaining <= 3 || check || extensions != updatedExtensions || legalMoveCount < 8) return 0
-        if (engineBoard.moveHistory[engineBoard.numMovesMade-1]!!.capturePiece != BITBOARD_NONE) return 0
-        return 1
+    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extensions: Int, updatedExtensions: Int): Int {
+        return if (depthRemaining <= 3 ||
+                moveGivesCheck ||
+                extensions != updatedExtensions ||
+                legalMoveCount < 4)
+            0 else 1
     }
+
+    private fun wasPawnPush(): Boolean {
+        val lastMove = engineBoard.moveHistory[engineBoard.numMovesMade-1]!!
+        val lastMovedPiece = lastMove.movePiece
+        val lastMoveTo = toSquare(lastMove.move)
+        return (engineBoard.mover == Colour.WHITE && lastMovedPiece == BITBOARD_BP && lastMoveTo <= 15) ||
+                (engineBoard.mover == Colour.BLACK && lastMovedPiece == BITBOARD_WP && lastMoveTo >= 48)
+    }
+
+    private fun wasCapture() = engineBoard.moveHistory[engineBoard.numMovesMade-1]!!.capturePiece != BITBOARD_NONE
 
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
@@ -285,14 +306,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, newExtensions: Int, localIsCheck: Boolean) =
+    private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, newExtensions: Int, isCheck: Boolean) =
         if (useScoutSearch) {
-            val scoutPath = search(engineBoard, (depth - 1), ply, -low-1, -low, newExtensions, localIsCheck)
+            val scoutPath = search(engineBoard, (depth - 1), ply, -low-1, -low, newExtensions, isCheck)
             if (!abortingSearch && -scoutPath.score > low) {
-                search(engineBoard, (depth - 1), ply, -high, -low, newExtensions, localIsCheck)
+                search(engineBoard, (depth - 1), ply, -high, -low, newExtensions, isCheck)
             } else scoutPath
         } else {
-            search(engineBoard, depth - 1, ply, -high, -low, newExtensions, localIsCheck)
+            search(engineBoard, depth - 1, ply, -high, -low, newExtensions, isCheck)
         }
 
     private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
@@ -385,11 +406,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return newPath
     }
 
-    private fun threatExtensions(newPath: SearchPath) =
-            if (-newPath.score < -MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
-
-    private fun checkExtension(isCheck: Boolean) =
-            if (isCheck) FRACTIONAL_EXTENSION_CHECK else 0
+    private fun threatExtensions(newPath: SearchPath) = if (-newPath.score < -MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
+    private fun checkExtension(isCheck: Boolean) = if (isCheck) FRACTIONAL_EXTENSION_CHECK else 0
+    private fun pawnPushExtension() = if (wasPawnPush()) FRACTIONAL_EXTENSION_PAWNPUSH else 0
 
     private fun reorderDepthZeroMoves() {
         val moveCount = moveCount(orderedMoves[0])
