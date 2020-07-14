@@ -35,7 +35,7 @@ public class EpdTest {
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
-    private static final boolean RECALCULATE_FAILURES = true;
+    private static final boolean RECALCULATE_FAILURES = false;
 
     @BeforeClass
     public static void setup() {
@@ -73,6 +73,7 @@ public class EpdTest {
     ));
 
     @Test
+    @Ignore
     public void customPositions() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
         runEpdSuite("custom.epd", "RIVAL.001", true);
     }
