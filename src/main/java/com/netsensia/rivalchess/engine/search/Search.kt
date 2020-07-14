@@ -212,15 +212,18 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         var legalMoveCount = 0
-        val moveExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
-        val newExtensions = (extensions + moveExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
+        val plyExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
+        val updatedExtensions = (extensions + plyExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
 
                 legalMoveCount ++
+
+                val isCheck = board.isCheck(mover)
+                val adjustedDepth = depth - lateMoveReductions(legalMoveCount, isCheck, extensions, updatedExtensions)
                 val newPath =
-                    scoutSearch(useScoutSearch, depth, ply+1, localLow, localHigh, newExtensions, board.isCheck(mover)).also {
+                    scoutSearch(useScoutSearch, adjustedDepth, ply+1, localLow, localHigh, updatedExtensions, isCheck).also {
                         it.score = adjustedMateScore(-it.score)
                     }
 
@@ -240,7 +243,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         hashFlag = EXACT
                         bestMoveForHash = move
                         localLow = newPath.score
-                        useScoutSearch = useScoutSearch(depth, newExtensions)
+                        useScoutSearch = useScoutSearch(depth, updatedExtensions)
                     }
                 }
 
@@ -256,6 +259,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
+    }
+
+    private fun lateMoveReductions(legalMoveCount: Int, check: Boolean, extensions: Int, updatedExtensions: Int): Int {
+        if (extensions != updatedExtensions) return 0
+        if (check) return 0
+        if (legalMoveCount < 8) return 0
+        if (engineBoard.moveHistory[engineBoard.numMovesMade-1]!!.capturePiece != BITBOARD_NONE) return 0
+        return 1
     }
 
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
