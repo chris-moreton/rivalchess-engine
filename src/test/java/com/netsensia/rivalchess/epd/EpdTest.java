@@ -35,7 +35,7 @@ public class EpdTest {
     private static final int MAX_SEARCH_SECONDS = 1000;
     private static Search search;
     private static int fails = 0;
-    private static final boolean RECALCULATE_FAILURES = false;
+    private static final boolean RECALCULATE_FAILURES = true;
 
     @BeforeClass
     public static void setup() {
@@ -50,30 +50,26 @@ public class EpdTest {
             "WAC.080", // Fail 4
             "WAC.092", // Fail 5
             "WAC.100", // Fail 6
-            "WAC.118", // Fail 7
-            "WAC.141", // Fail 8
-            "WAC.145", // Fail 9
-            "WAC.152", // Fail 10
-            "WAC.155", // Fail 11
-            "WAC.163", // Fail 12
-            "WAC.178", // Fail 13
-            "WAC.199", // Fail 14
-            "WAC.200", // Fail 15
-            "WAC.213", // Fail 16
-            "WAC.229", // Fail 17
-            "WAC.230", // Fail 18
-            "WAC.237", // Fail 19
-            "WAC.242", // Fail 20
-            "WAC.247", // Fail 21
-            "WAC.248", // Fail 22
-            "WAC.250", // Fail 23
-            "WAC.252", // Fail 24
-            "WAC.265", // Fail 25
-            "WAC.269", // Fail 26
-            "WAC.270", // Fail 27
-            "WAC.274", // Fail 28
-            "WAC.287", // Fail 29
-            "WAC.297" // Fail 30
+            "WAC.141", // Fail 7
+            "WAC.145", // Fail 8
+            "WAC.152", // Fail 9
+            "WAC.157", // Fail 10
+            "WAC.163", // Fail 11
+            "WAC.178", // Fail 12
+            "WAC.200", // Fail 13
+            "WAC.213", // Fail 14
+            "WAC.229", // Fail 15
+            "WAC.230", // Fail 16
+            "WAC.237", // Fail 17
+            "WAC.243", // Fail 18
+            "WAC.247", // Fail 19
+            "WAC.252", // Fail 20
+            "WAC.265", // Fail 21
+            "WAC.270", // Fail 22
+            "WAC.274", // Fail 23
+            "WAC.291", // Fail 24
+            "WAC.297", // Fail 25
+            "WAC.299" // Fail 26
     ));
 
     @Test

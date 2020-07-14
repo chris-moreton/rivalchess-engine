@@ -221,7 +221,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 legalMoveCount ++
 
                 val isCheck = board.isCheck(mover)
-                val adjustedDepth = depth - lateMoveReductions(legalMoveCount, isCheck, extensions, updatedExtensions)
+                val adjustedDepth = depth - lateMoveReductions(depthRemaining, legalMoveCount, isCheck, extensions, updatedExtensions)
                 val newPath =
                     scoutSearch(useScoutSearch, adjustedDepth, ply+1, localLow, localHigh, updatedExtensions, isCheck).also {
                         it.score = adjustedMateScore(-it.score)
@@ -261,10 +261,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun lateMoveReductions(legalMoveCount: Int, check: Boolean, extensions: Int, updatedExtensions: Int): Int {
-        if (extensions != updatedExtensions) return 0
-        if (check) return 0
-        if (legalMoveCount < 8) return 0
+    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, check: Boolean, extensions: Int, updatedExtensions: Int): Int {
+        if (depthRemaining <= 3 || check || extensions != updatedExtensions || legalMoveCount < 8) return 0
         if (engineBoard.moveHistory[engineBoard.numMovesMade-1]!!.capturePiece != BITBOARD_NONE) return 0
         return 1
     }
