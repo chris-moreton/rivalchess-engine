@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 import java.lang.Math.abs
 import java.lang.System.exit
+import kotlin.system.exitProcess
 
 var savings = 0
 var bigDiff = -Int.MAX_VALUE
@@ -40,7 +41,7 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     val whitePieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_FRIENDLY) else board.getBitboard(BITBOARD_ENEMY)
     val blackPieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_ENEMY) else board.getBitboard(BITBOARD_FRIENDLY)
 
-    var eval =
+    val positionalEvalPart1 =
             materialDifference +
             pawnScore(attacks, board) +
             tradePawnBonusWhenMoreMaterial(board, materialDifference) +
@@ -50,12 +51,12 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
             kingSquareEval(board) +
             threatEval(attacks, board)
 
-    var adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
+    val adjustedEval = if (board.mover == Colour.WHITE) positionalEvalPart1 else -positionalEvalPart1
     val viableEvalForPhase2 = isEndGame || (adjustedEval + PHASE2_CUTOFF >= minScore)
 
     if (phase2LazyCutoffs(viableEvalForPhase2)) return adjustedEval
 
-    val eval2 = if (viableEvalForPhase2 || DETERMINE_BAD_CUTOFFS)
+    val positionalEval = positionalEvalPart1 + (if (viableEvalForPhase2 || DETERMINE_BAD_CUTOFFS)
         (twoRooksTrappingKingEval(board) +
                 doubledRooksEval(board) +
                 rooksEval(board, whitePieces, blackPieces) +
@@ -63,32 +64,29 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
                 knightsEval(board, attacks) +
                 castlingEval(board, board.castlePrivileges) +
                 queensEval(board, whitePieces, blackPieces) +
-                bishopScore(board, materialDifference)) else 0
+                bishopScore(board, materialDifference)) else 0)
 
-    eval += eval2
+    determineBadCutoffs(isEndGame, positionalEval, materialDifference, board, adjustedEval, viableEvalForPhase2, minScore)
 
-    determineBadCutoffs(isEndGame, eval, materialDifference, board, adjustedEval, viableEvalForPhase2, minScore)
-
-    val endGameAdjustedScore = if (isEndGame) endGameAdjustment(board, eval) else eval
+    val endGameAdjustedScore = if (isEndGame) endGameAdjustment(board, positionalEval) else positionalEval
 
     return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
 }
 
 private fun determineBadCutoffs(isEndGame: Boolean, eval: Int, materialDifference: Int, board: EngineBoard, adjustedEval: Int, viableEvalForPhase2: Boolean, minScore: Int) {
-    var adjustedEval1 = adjustedEval
     if (DETERMINE_BAD_CUTOFFS && !isEndGame) {
         val diff = abs(eval - materialDifference)
         if (diff > bigDiff) {
             bigDiff = diff
             if (bigDiff > PHASE1_CUTOFF) {
-                println("Incorrect phase 1 cut off would have occured at " + board.getFen() + " with a difference of $bigDiff")
+                println("Incorrect phase 1 cut off would have occurred at " + board.getFen() + " with a difference of $bigDiff")
                 exit(0)
             }
         }
-        adjustedEval1 = if (board.mover == Colour.WHITE) eval else -eval
-        if (!viableEvalForPhase2 && adjustedEval1 >= minScore) {
-            println("Incorrect phase 2 cut off would have occured at " + board.getFen() + " with a minimum score of $minScore but actual score of ${adjustedEval1}")
-            exit(0)
+        val adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
+        if (!viableEvalForPhase2 && adjustedEval >= minScore) {
+            println("Incorrect phase 2 cut off would have occured at " + board.getFen() + " with a minimum score of $minScore but actual score of ${adjustedEval}")
+            exitProcess(0)
         }
     }
 }

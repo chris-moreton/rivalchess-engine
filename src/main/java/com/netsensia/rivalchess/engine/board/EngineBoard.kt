@@ -74,7 +74,8 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     fun getBitboardTypeOfPieceOnSquare(bitRef: Int): Int {
         val bitMask = 1L shl bitRef
-        for (type in allBitboardTypes) if (engineBitboards.pieceBitboards[type] and bitMask != 0L) return type
+        for (type in allBitboardTypes)
+            if (engineBitboards.pieceBitboards[type] and bitMask != 0L) return type
         return BITBOARD_NONE
     }
 
@@ -122,9 +123,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     private fun setEnPassantBitboard(board: Board) {
         val ep = board.enPassantFile
-        if (ep == -1)
-            engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
-        else
+        if (ep == -1) engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0) else
             if (board.sideToMove == Colour.WHITE)
                 engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 1L shl 40 + (7 - ep))
             else

@@ -43,6 +43,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private var millisToThink = 0
     private var nodesToSearch = Int.MAX_VALUE
+
     @JvmField
     var abortingSearch = true
     private var searchStartTime: Long = -1
@@ -230,7 +231,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                         it.score = adjustedMateScore(-it.score)
                     }
 
-                // LMR didn't fail low, need to research
+                // If we used LMR and it didn't fail low, research
                 val newPath = if (lmr > 0 && firstPath.score > localLow)
                     scoutSearch(useScoutSearch, depth, ply+1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
                         it.score = adjustedMateScore(-it.score)
@@ -270,13 +271,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extensions: Int, updatedExtensions: Int): Int {
-        return if (depthRemaining <= 3 ||
-                moveGivesCheck ||
-                extensions != updatedExtensions ||
-                legalMoveCount < 4)
-            0 else 1
-    }
+    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extensions: Int, updatedExtensions: Int) =
+        if (depthRemaining <= 3 || moveGivesCheck || extensions != updatedExtensions || legalMoveCount < 4) 0 else 1
 
     private fun wasPawnPush(): Boolean {
         val lastMove = engineBoard.moveHistory[engineBoard.numMovesMade-1]!!
