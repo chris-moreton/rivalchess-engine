@@ -29,6 +29,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.hasItem;
 
 @SuppressWarnings("squid:S106")
+@Ignore
 public class WacTest {
 
     private static final int MAX_NODES_TO_SEARCH = 500000;

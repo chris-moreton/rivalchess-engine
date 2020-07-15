@@ -8,9 +8,11 @@ import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import org.awaitility.Awaitility
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
+@Ignore
 class SearchTest {
     companion object {
         private const val RECALCULATE = false
