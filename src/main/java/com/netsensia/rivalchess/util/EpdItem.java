@@ -13,7 +13,10 @@ public class EpdItem {
 
     private final List<String> bestMoves;
     private final String id;
-    private int maxNodesToSearch = 500000;
+
+    private int maxNodesToSearch;
+    private int minScore;
+    private int maxScore;
 
     public EpdItem(String line) throws IllegalEpdItemException {
         final String[] parts = line.split("bm|;");
@@ -30,16 +33,31 @@ public class EpdItem {
             throw new IllegalEpdItemException("Could not parse EPD test item id " + line);
         }
 
-        pattern = Pattern.compile("nodes (.*);");
-        matcher = pattern.matcher(line);
+        maxNodesToSearch = Integer.parseInt(getValue("nodes", line, "500000"));
+        final String[] scoreRange = getValue("cp", line, "-10000 10000").split(" ");
+        minScore = Integer.parseInt(scoreRange[0]);
+        maxScore = Integer.parseInt(scoreRange[1]);
+    }
 
-        if (matcher.find()) {
-            maxNodesToSearch = Integer.parseInt(matcher.group(1));
-        }
+    private String getValue(final String key, final String line, final String defaultValue) {
+        Pattern pattern = Pattern.compile(key + " (.*?);");
+        Matcher matcher = pattern.matcher(line);
+
+        if (matcher.find()) return matcher.group(1);
+
+        return defaultValue;
     }
 
     public String getFen() {
         return fen;
+    }
+
+    public int getMinScore() {
+        return minScore;
+    }
+
+    public int getMaxScore() {
+        return maxScore;
     }
 
     public List<String> getBestMoves() {

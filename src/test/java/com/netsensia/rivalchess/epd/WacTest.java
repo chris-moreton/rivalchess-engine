@@ -29,7 +29,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.hasItem;
 
 @SuppressWarnings("squid:S106")
-public class EpdTest {
+public class WacTest {
 
     private static final int MAX_NODES_TO_SEARCH = 500000;
     private static final int MAX_SEARCH_SECONDS = 1000;
@@ -71,12 +71,6 @@ public class EpdTest {
             "WAC.287", // Fail 25
             "WAC.297" // Fail 26
     ));
-
-    @Test
-    @Ignore
-    public void customPositions() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
-        runEpdSuite("custom.epd", "RIVAL.001", true);
-    }
 
     @Test
     public void winAtChess() throws IOException, IllegalEpdItemException, IllegalFenException, InterruptedException {
