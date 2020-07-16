@@ -56,7 +56,7 @@ class WacDetailedTest {
         search!!.startSearch()
         val dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
         val now = LocalDateTime.now()
-        println(epdItem.id + " " + dtf.format(now))
+        println(epdItem.id + " " + dtf.format(now) + " " + epdItem.fen)
         try {
             Awaitility.await().atMost(MAX_SEARCH_SECONDS.toLong(), TimeUnit.SECONDS).until { !search!!.isSearching }
         } catch (e: ConditionTimeoutException) {
@@ -70,7 +70,7 @@ class WacDetailedTest {
 
         println("Looking for " + move + " with score $score in " + epdItem.bestMoves + " with score range (${epdItem.minScore},${epdItem.maxScore})")
         val correctMove = epdItem.bestMoves.contains(move)
-        val correctScore = epdItem.minScore < score && epdItem.maxScore > score
+        val correctScore = epdItem.minScore <= score && epdItem.maxScore >= score
         Assert.assertTrue(correctMove && correctScore)
     }
 
