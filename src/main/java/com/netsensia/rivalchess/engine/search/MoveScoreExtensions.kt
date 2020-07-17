@@ -66,9 +66,29 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
         }
     } else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
         score = 108
+    } else if (moveGivesCheck(orderedMoves[ply][i])) {
+        score = 99
     }
     orderedMoves[ply][i] = orderedMoves[ply][i] or (127 - score shl 24)
     return score
+}
+
+fun Search.moveGivesCheck(move: Int): Boolean {
+    val toSquare = toSquare(move)
+    val fromSquare = fromSquare(move)
+    val capturePiece = engineBoard.getBitboardTypeOfPieceOnSquare(toSquare)
+    val movePiece =  engineBoard.getBitboardTypeOfPieceOnSquare(fromSquare)
+    val toMask = 1L shl toSquare
+    val fromMask = 1L shl fromSquare
+    if (capturePiece != BITBOARD_NONE) engineBoard.engineBitboards.xorPieceBitboard(capturePiece, toMask)
+    engineBoard.engineBitboards.xorPieceBitboard(movePiece, toMask)
+    engineBoard.engineBitboards.xorPieceBitboard(movePiece, fromMask)
+    val enemyKing = if (engineBoard.mover == Colour.WHITE) engineBoard.blackKingSquare else engineBoard.whiteKingSquare
+    val moveGivesCheck = (engineBoard.engineBitboards.isSquareAttackedBy(enemyKing, engineBoard.mover))
+    if (capturePiece != BITBOARD_NONE) engineBoard.engineBitboards.xorPieceBitboard(capturePiece, toMask)
+    engineBoard.engineBitboards.xorPieceBitboard(movePiece, toMask)
+    engineBoard.engineBitboards.xorPieceBitboard(movePiece, fromMask)
+    return moveGivesCheck
 }
 
 fun Search.scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, i: Int, movesForSorting: IntArray, toSquare: Int): Int {

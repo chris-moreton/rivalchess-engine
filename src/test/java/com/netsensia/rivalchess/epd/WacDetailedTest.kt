@@ -67,7 +67,7 @@ class WacDetailedTest {
         val move = getPgnMoveFromCompactMove(search!!.currentMove, epdItem.fen)
         val score = search!!.currentPath.score
 
-        if (assert) println("Looking for " + move + " with score $score in " + epdItem.bestMoves + " with score range (${epdItem.minScore},${epdItem.maxScore})")
+        if (assert) println("Looking for " + move + " with score $score in " + epdItem.bestMoves + " with score range (${epdItem.minScore},${epdItem.maxScore}). Depth was ${search!!.currentPath.height}.")
         val correctMove = epdItem.bestMoves.contains(move)
         val correctScore = epdItem.minScore <= score && epdItem.maxScore >= score
         if (assert) Assert.assertTrue(correctMove && correctScore) else
