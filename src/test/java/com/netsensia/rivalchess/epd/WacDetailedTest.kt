@@ -11,7 +11,6 @@ import com.netsensia.rivalchess.util.EpdReader
 import com.netsensia.rivalchess.util.getPgnMoveFromCompactMove
 import org.awaitility.Awaitility
 import org.awaitility.core.ConditionTimeoutException
-import org.hamcrest.CoreMatchers
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -42,7 +41,7 @@ class WacDetailedTest {
     }
 
     @Throws(IllegalFenException::class)
-    private fun testPosition(epdItem: EpdItem) {
+    private fun testPosition(epdItem: EpdItem, assert: Boolean = true): Boolean {
         val board = Board.fromFen(epdItem.fen)
 
         search!!.quit()
@@ -56,7 +55,7 @@ class WacDetailedTest {
         search!!.startSearch()
         val dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
         val now = LocalDateTime.now()
-        println(epdItem.id + " " + dtf.format(now) + " " + epdItem.fen)
+        if (assert) println(epdItem.id + " " + dtf.format(now) + " " + epdItem.fen)
         try {
             Awaitility.await().atMost(MAX_SEARCH_SECONDS.toLong(), TimeUnit.SECONDS).until { !search!!.isSearching }
         } catch (e: ConditionTimeoutException) {
@@ -68,10 +67,17 @@ class WacDetailedTest {
         val move = getPgnMoveFromCompactMove(search!!.currentMove, epdItem.fen)
         val score = search!!.currentPath.score
 
-        println("Looking for " + move + " with score $score in " + epdItem.bestMoves + " with score range (${epdItem.minScore},${epdItem.maxScore})")
+        if (assert) println("Looking for " + move + " with score $score in " + epdItem.bestMoves + " with score range (${epdItem.minScore},${epdItem.maxScore})")
         val correctMove = epdItem.bestMoves.contains(move)
         val correctScore = epdItem.minScore <= score && epdItem.maxScore >= score
-        Assert.assertTrue(correctMove && correctScore)
+        if (assert) Assert.assertTrue(correctMove && correctScore) else
+            if (correctMove && correctScore) {
+                println("Also passed with ${epdItem.maxNodesToSearch} nodes")
+                return true
+            } else {
+                return false
+            }
+        return correctMove && correctScore
     }
 
     @Throws(IOException::class, IllegalEpdItemException::class, IllegalFenException::class, InterruptedException::class)
@@ -85,7 +91,12 @@ class WacDetailedTest {
     @Throws(IllegalFenException::class, InterruptedException::class)
     private fun runEpdSuite(epdReader: EpdReader) {
         for (epdItem in epdReader) {
-            testPosition(epdItem)
+            var assert = true
+            while (testPosition(epdItem, assert) && epdItem.maxNodesToSearch > 1000) {
+                epdItem.maxNodesToSearch = ((epdItem.maxNodesToSearch * 0.9).toInt() / 1000) * 1000
+                assert = false
+            }
+            println("========================================================================================")
         }
     }
 
