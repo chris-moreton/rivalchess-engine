@@ -22,7 +22,7 @@ public class EpdItemTest {
 
     @Test
     public void testEpdItemPartsWithThreeBestMoves() throws IllegalEpdItemException {
-        final String epdString = "3r3k/1r3p1p/p1pB1p2/8/p1qNP1Q1/P6P/1P4P1/3R3K w - - bm Bf8 Nf5 Qf4; id \"WAC.294\";";
+        final String epdString = "3r3k/1r3p1p/p1pB1p2/8/p1qNP1Q1/P6P/1P4P1/3R3K w - - bm Bf8,Nf5,Qf4; id \"WAC.294\";";
 
         EpdItem epdItem = new EpdItem(epdString);
 
