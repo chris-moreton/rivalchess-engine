@@ -293,11 +293,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             107
                         } else {
                             val historyScore = historyScore(engineBoard.mover == Colour.WHITE, fromSquare(move), toSquare)
-                            if (historyScore > 5) historyScore else {
+                            if (historyScore > 5) historyScore else
                                 if (move == killerMoves[ply][0]) 106 else
-                                    if (move == killerMoves[ply][1]) 105 else
-                                        0
-                            }
+                                    if (move == killerMoves[ply][1]) 105 else 1
                         }
                     } else if (move and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) {
                         108
@@ -306,16 +304,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     } else {
                         val fromSquare = fromSquare(move)
 
-                        val nonCaptureScore = if (move == killerMoves[ply][0]) 106 else
-                            if (move == killerMoves[ply][1]) 105 else {
-                                val historyScore = historyScore(engineBoard.mover == Colour.WHITE, fromSquare(move), toSquare)
-                                if (historyScore == 0)
-                                    (if (engineBoard.getBitboardTypeOfPieceOnSquare(toSquare, engineBoard.mover.opponent()) != BITBOARD_NONE) // losing capture
-                                        1 else 50 + scorePieceSquareValues(engineBoard, fromSquare, toSquare) / 2)
-                                else historyScore
+                        val nonCaptureScore = if (move == killerMoves[ply][0]) 66 else
+                            if (move == killerMoves[ply][1]) 65 else {
+                                val historyScore = historyScore(engineBoard.mover == Colour.WHITE, fromSquare, toSquare)
+                                if (historyScore != 0) historyScore else (50 + scorePieceSquareValues(engineBoard, fromSquare, toSquare) / 2)
                             }
 
-                        nonCaptureScore - 60
+                        nonCaptureScore / 2
                     }
                 })
             movesToSort.add(move or ((127 - score) shl 24))

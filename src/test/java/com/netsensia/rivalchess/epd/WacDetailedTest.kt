@@ -92,6 +92,7 @@ class WacDetailedTest {
     private fun runEpdSuite(epdReader: EpdReader) {
         for (epdItem in epdReader) {
             var assert = true
+            epdItem.maxNodesToSearch = epdItem.maxNodesToSearch.coerceAtLeast(10000000)
             while (testPosition(epdItem, assert) && epdItem.maxNodesToSearch > 1000) {
                 epdItem.maxNodesToSearch = ((epdItem.maxNodesToSearch * 0.9).toInt() / 1000) * 1000
                 assert = false
