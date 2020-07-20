@@ -23,7 +23,10 @@ import java.util.concurrent.TimeUnit
 
 class WacDetailedTest {
 
+    val recalcs = mutableMapOf<String, Int>()
+
     companion object {
+        private const val RECALCULATE = true
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
     }
@@ -41,7 +44,7 @@ class WacDetailedTest {
     }
 
     @Throws(IllegalFenException::class)
-    private fun testPosition(epdItem: EpdItem, assert: Boolean = true): Boolean {
+    private fun testPosition(epdItem: EpdItem, nodesToSearch: Int, tryFewerNodes: Boolean = true, tryMoreNodes: Boolean = true) {
         val board = Board.fromFen(epdItem.fen)
 
         search!!.quit()
@@ -50,12 +53,12 @@ class WacDetailedTest {
         search!!.setBoard(board)
         search!!.setSearchDepth(MAX_SEARCH_DEPTH - 2)
         search!!.setMillisToThink(MAX_SEARCH_SECONDS * 1000)
-        search!!.setNodesToSearch(epdItem.maxNodesToSearch)
+        search!!.setNodesToSearch(nodesToSearch)
         search!!.clearHash()
         search!!.startSearch()
         val dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
         val now = LocalDateTime.now()
-        if (assert) println(epdItem.id + " " + dtf.format(now) + " " + epdItem.fen)
+        if (!RECALCULATE) println(epdItem.id + " " + dtf.format(now) + " " + epdItem.fen)
         try {
             Awaitility.await().atMost(MAX_SEARCH_SECONDS.toLong(), TimeUnit.SECONDS).until { !search!!.isSearching }
         } catch (e: ConditionTimeoutException) {
@@ -67,17 +70,19 @@ class WacDetailedTest {
         val move = getPgnMoveFromCompactMove(search!!.currentMove, epdItem.fen)
         val score = search!!.currentPath.score
 
-        if (assert) println("Looking for " + move + " with score $score in " + epdItem.bestMoves + " with score range (${epdItem.minScore},${epdItem.maxScore}). Depth was ${search!!.currentPath.height}.")
-        val correctMove = epdItem.bestMoves.contains(move)
-        val correctScore = epdItem.minScore <= score && epdItem.maxScore >= score
-        if (assert) Assert.assertTrue(correctMove && correctScore) else
-            if (correctMove && correctScore) {
-                println("Also passed with ${epdItem.maxNodesToSearch} nodes")
-                return true
+        if (!RECALCULATE) println("Looking for " + move + " with score $score in " + epdItem.bestMoves + " with score range (${epdItem.minScore},${epdItem.maxScore}). Depth was ${search!!.currentPath.height}. Nodes was $nodesToSearch.")
+        val passed = epdItem.bestMoves.contains(move) && epdItem.minScore <= score && epdItem.maxScore >= score
+
+        if (RECALCULATE) {
+            if (passed) {
+                recalcs.put(epdItem.id, nodesToSearch - epdItem.maxNodesToSearch)
+                if (nodesToSearch > 1000 && tryFewerNodes) testPosition(epdItem, ((nodesToSearch * 0.9).toInt() / 1000) * 1000, tryFewerNodes = true, tryMoreNodes = false)
             } else {
-                return false
+                if (tryMoreNodes) testPosition(epdItem, ((nodesToSearch * 1.1111).toInt() / 1000) * 1000 + 1000, tryMoreNodes = true, tryFewerNodes = false)
             }
-        return correctMove && correctScore
+        } else {
+            Assert.assertTrue(passed)
+        }
     }
 
     @Throws(IOException::class, IllegalEpdItemException::class, IllegalFenException::class, InterruptedException::class)
@@ -90,14 +95,35 @@ class WacDetailedTest {
 
     @Throws(IllegalFenException::class, InterruptedException::class)
     private fun runEpdSuite(epdReader: EpdReader) {
+
+        var sum = 0
+        var better = 0
+        var worse = 0
+        var same = 0
+        var totalRatio = 0.0
+        var count = 0
+
         for (epdItem in epdReader) {
-            var assert = true
-            while (testPosition(epdItem, assert) && epdItem.maxNodesToSearch > 1000) {
-                epdItem.maxNodesToSearch = ((epdItem.maxNodesToSearch * 0.9).toInt() / 1000) * 1000
-                assert = false
+            testPosition(epdItem, epdItem.maxNodesToSearch)
+            if (RECALCULATE) {
+                val nodeDifference = recalcs.get(epdItem.id)
+                if (nodeDifference != null) {
+                    count ++
+                    if (nodeDifference == 0) same++ else if (nodeDifference < 0) better++ else worse++
+                    val passFail = if (nodeDifference <= 0) "passed" else "failed"
+                    val passNodes = epdItem.maxNodesToSearch + nodeDifference
+                    val ratio = passNodes / epdItem.maxNodesToSearch.toDouble()
+                    totalRatio += ratio
+                    println("${epdItem.id} $passFail in $passNodes nodes, node difference is $nodeDifference")
+                    val averageRatio = totalRatio / count
+                    println("Node difference = $sum, better = $better, worse = $worse, same = $same, ratio = $averageRatio")
+                    sum += nodeDifference
+                }
+            } else {
+                println("========================================================================================")
             }
-            println("========================================================================================")
         }
+
     }
 
 }

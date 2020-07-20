@@ -224,7 +224,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val updatedExtensions = (extensions + plyExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
 
                 val moveGivesCheck = board.isCheck(mover)
-                val lmr = lateMoveReductions(depthRemaining, legalMoveCount, moveGivesCheck, extensions, updatedExtensions)
+
+                val lmr = lateMoveReductions(depthRemaining, legalMoveCount, moveGivesCheck, extensions, updatedExtensions, ply)
+
                 val adjustedDepth = depth - lmr
                 val firstPath =
                     scoutSearch(useScoutSearch, adjustedDepth, ply+1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
@@ -263,7 +265,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         if (abortingSearch) return SearchPath()
         if (legalMoveCount == 0) {
-            searchPathPly.withScore(if (board.isCheck(mover)) -(VALUE_MATE-0) else 0)
+            searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
             return searchPathPly
         }
@@ -271,7 +273,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extensions: Int, updatedExtensions: Int) =
+    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extensions: Int, updatedExtensions: Int, ply: Int) =
         if (depthRemaining <= 3 || moveGivesCheck || extensions != updatedExtensions || legalMoveCount < 4) 0 else 1
 
     private fun wasPawnPush(): Boolean {
