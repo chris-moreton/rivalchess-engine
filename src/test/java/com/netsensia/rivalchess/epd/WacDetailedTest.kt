@@ -23,10 +23,11 @@ import java.util.concurrent.TimeUnit
 
 class WacDetailedTest {
 
-    val recalcs = mutableMapOf<String, Int>()
+    private val epdStats = mutableMapOf<String, Int>()
 
     companion object {
-        private const val RECALCULATE = true
+        private const val RECALCULATE = false
+        private const val REWRITE_EPD_FILE = true
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
     }
@@ -75,7 +76,7 @@ class WacDetailedTest {
 
         if (RECALCULATE) {
             if (passed) {
-                recalcs.put(epdItem.id, nodesToSearch - epdItem.maxNodesToSearch)
+                epdStats.put(epdItem.id, nodesToSearch - epdItem.maxNodesToSearch)
                 if (nodesToSearch > 1000 && tryFewerNodes) testPosition(epdItem, ((nodesToSearch * 0.9).toInt() / 1000) * 1000, tryFewerNodes = true, tryMoreNodes = false)
             } else {
                 if (tryMoreNodes) testPosition(epdItem, ((nodesToSearch * 1.1111).toInt() / 1000) * 1000 + 1000, tryMoreNodes = true, tryFewerNodes = false)
@@ -88,7 +89,7 @@ class WacDetailedTest {
     @Throws(IOException::class, IllegalEpdItemException::class, IllegalFenException::class, InterruptedException::class)
     fun runEpdSuite(filename: String) {
         val classLoader = javaClass.classLoader
-        val file = File(Objects.requireNonNull(classLoader.getResource("epd/$filename")).file)
+        val file = File(classLoader.getResource("epd/$filename").file)
         val epdReader = EpdReader(file.absolutePath)
         runEpdSuite(epdReader)
     }
@@ -103,10 +104,13 @@ class WacDetailedTest {
         var totalRatio = 0.0
         var count = 0
 
+        val file = File("newfile.epd")
+        file.writeText("")
+
         for (epdItem in epdReader) {
             testPosition(epdItem, epdItem.maxNodesToSearch)
             if (RECALCULATE) {
-                val nodeDifference = recalcs.get(epdItem.id)
+                val nodeDifference = epdStats.get(epdItem.id)
                 if (nodeDifference != null) {
                     count ++
                     if (nodeDifference == 0) same++ else if (nodeDifference < 0) better++ else worse++
@@ -118,6 +122,9 @@ class WacDetailedTest {
                     val averageRatio = totalRatio / count
                     println("Node difference = $sum, better = $better, worse = $worse, same = $same, ratio = $averageRatio")
                     sum += nodeDifference
+                    if (REWRITE_EPD_FILE)
+                        file.appendText("${epdItem.fen} bm ${epdItem.bestMoves.toTypedArray().joinToString(",")}; " +
+                                        "cp ${epdItem.minScore} ${epdItem.maxScore}; nodes ${(epdItem.maxNodesToSearch + epdStats.get(epdItem.id)!!)}; id \"${epdItem.id}\";\n")
                 }
             } else {
                 println("========================================================================================")

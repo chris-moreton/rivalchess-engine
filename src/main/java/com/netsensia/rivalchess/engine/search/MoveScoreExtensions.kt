@@ -79,7 +79,7 @@ fun Search.moveGivesCheck(move: Int): Boolean {
 }
 
 fun Search.scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, move: Int, toSquare: Int): Int {
-    val historyScore = historyScore(board.mover == Colour.WHITE, fromSquare(move), toSquare)
+    val historyScore = historyScore(board.mover, fromSquare(move), toSquare)
     return if (historyScore > 5) historyScore else scoreKillerMoves(ply, move)
 }
 
@@ -109,7 +109,7 @@ fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
 
 fun Search.scoreHistoryHeuristic(board: EngineBoard, score: Int, fromSquare: Int, toSquare: Int) =
         if (score == 0 && historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
-            90 + historyScore(board.mover == Colour.WHITE, fromSquare, toSquare)
+            90 + historyScore(board.mover, fromSquare, toSquare)
         } else score
 
 fun Search.scoreKillerMoves(ply: Int, move: Int): Int {
@@ -118,8 +118,8 @@ fun Search.scoreKillerMoves(ply: Int, move: Int): Int {
     return 0
 }
 
-fun Search.historyScore(isWhite: Boolean, from: Int, to: Int): Int {
-    val colourIndex = if (isWhite) 0 else 1
+fun Search.historyScore(mover: Colour, from: Int, to: Int): Int {
+    val colourIndex = if (mover == Colour.WHITE) 0 else 1
     val success = historyMovesSuccess[colourIndex][from][to]
     val total = success + historyMovesFail[colourIndex][from][to]
 

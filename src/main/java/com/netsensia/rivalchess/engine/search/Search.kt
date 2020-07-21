@@ -225,7 +225,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val moveGivesCheck = board.isCheck(mover)
 
-                val lmr = lateMoveReductions(depthRemaining, legalMoveCount, moveGivesCheck, extensions, updatedExtensions, ply)
+                val lmr = lateMoveReductions(depthRemaining, legalMoveCount, moveGivesCheck, extensions != updatedExtensions, ply, move)
 
                 val adjustedDepth = depth - lmr
                 val firstPath =
@@ -242,7 +242,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (abortingSearch) return SearchPath()
 
                 if (newPath.score >= localHigh) {
-                    updateHistoryMoves(board.mover, move, depthRemaining, true)
+                    updateHistoryMoves(board.mover.opponent(), move, depthRemaining, true)
                     board.unMakeMove()
                     board.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depthRemaining)
                     updateKillerMoves(board.getBitboard(BITBOARD_ENEMY), move, ply, newPath)
@@ -259,8 +259,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     }
                 }
 
-                updateHistoryMoves(board.mover, move, depthRemaining, false)
                 board.unMakeMove()
+                updateHistoryMoves(board.mover, move, depthRemaining, false)
             }
         }
         if (abortingSearch) return SearchPath()
@@ -273,8 +273,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extensions: Int, updatedExtensions: Int, ply: Int) =
-        if (depthRemaining <= 3 || moveGivesCheck || extensions != updatedExtensions || legalMoveCount < 4) 0 else 1
+    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, ply: Int, move: Int) =
+        if (moveGivesCheck || extended || legalMoveCount < (4 + depthRemaining.coerceAtMost(0)) ||
+                historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5) 0 else 1
 
     private fun wasPawnPush(): Boolean {
         val lastMove = engineBoard.moveHistory[engineBoard.numMovesMade-1]!!
@@ -330,7 +331,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun updateHistoryMoves(mover: Colour, move: Int, depthRemaining: Int, success: Boolean) {
         val historyMovesArray = if (success) historyMovesSuccess else historyMovesFail
-        val moverIndex = if (mover == Colour.WHITE) 1 else 0
+        val moverIndex = if (mover == Colour.WHITE) 0 else 1
         val fromSquare = fromSquare(move)
         val toSquare = toSquare(move)
         historyMovesArray[moverIndex][fromSquare][toSquare] += depthRemaining
