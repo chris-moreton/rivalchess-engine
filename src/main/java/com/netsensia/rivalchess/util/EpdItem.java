@@ -22,7 +22,7 @@ public class EpdItem {
         final String[] parts = line.split("bm|;");
 
         fen = parts[0].trim();
-        bestMoves = Arrays.asList(parts[1].trim().split(","));
+        bestMoves = Arrays.asList(parts[1].trim().split(",| "));
 
         Pattern pattern = Pattern.compile("id \"(.*?)\"");
         Matcher matcher = pattern.matcher(line);

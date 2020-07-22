@@ -274,7 +274,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, ply: Int, move: Int) =
-        if (moveGivesCheck || extended || legalMoveCount < (4 + depthRemaining.coerceAtMost(0)) ||
+        if (moveGivesCheck || extended || legalMoveCount < 4 ||
                 historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5) 0 else 1
 
     private fun wasPawnPush(): Boolean {

@@ -45,37 +45,23 @@ fun Search.scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
 fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
     var score = 0
     val toSquare = toSquare(orderedMoves[ply][i])
-    val isCapture = board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE ||
-            (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
-                    board.getBitboardTypeOfPieceOnSquare(fromSquare(orderedMoves[ply][i]), board.mover) in arrayOf(BITBOARD_WP, BITBOARD_BP))
-
     val move = moveNoScore(orderedMoves[ply][i])
+
     if (move == mateKiller[ply]) score = 126
-    else if (isCapture) staticExchangeEvaluator.staticExchangeEvaluation(board, move).also {
-            score = if (it > 0) (110 + (it / 100)) else if (it == 0) 107 else scoreLosingCapturesWithWinningHistory(board, ply, move, toSquare)
-        }
+    else if (isCapture(board, move)) staticExchangeEvaluator.staticExchangeEvaluation(board, move).also {
+        score = if (it > 0) (110 + (it / 100)) else if (it == 0) 107 else scoreLosingCapturesWithWinningHistory(board, ply, move, toSquare)
+    }
     else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) score = 108
 
     orderedMoves[ply][i] = move or (127 - score shl 24)
     return score
 }
 
-fun Search.moveGivesCheck(move: Int): Boolean {
+private fun isCapture(board: EngineBoard, move: Int): Boolean {
     val toSquare = toSquare(move)
-    val fromSquare = fromSquare(move)
-    val capturePiece = engineBoard.getBitboardTypeOfPieceOnSquare(toSquare)
-    val movePiece =  engineBoard.getBitboardTypeOfPieceOnSquare(fromSquare)
-    val toMask = 1L shl toSquare
-    val fromMask = 1L shl fromSquare
-    if (capturePiece != BITBOARD_NONE) engineBoard.engineBitboards.xorPieceBitboard(capturePiece, toMask)
-    engineBoard.engineBitboards.xorPieceBitboard(movePiece, toMask)
-    engineBoard.engineBitboards.xorPieceBitboard(movePiece, fromMask)
-    val enemyKing = if (engineBoard.mover == Colour.WHITE) engineBoard.blackKingSquare else engineBoard.whiteKingSquare
-    val moveGivesCheck = (engineBoard.engineBitboards.isSquareAttackedBy(enemyKing, engineBoard.mover))
-    if (capturePiece != BITBOARD_NONE) engineBoard.engineBitboards.xorPieceBitboard(capturePiece, toMask)
-    engineBoard.engineBitboards.xorPieceBitboard(movePiece, toMask)
-    engineBoard.engineBitboards.xorPieceBitboard(movePiece, fromMask)
-    return moveGivesCheck
+    return board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE ||
+            (1L shl toSquare and board.getBitboard(BITBOARD_ENPASSANTSQUARE) != 0L &&
+                    board.getBitboardTypeOfPieceOnSquare(fromSquare(move), board.mover) in arrayOf(BITBOARD_WP, BITBOARD_BP))
 }
 
 fun Search.scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, move: Int, toSquare: Int): Int {
@@ -93,12 +79,11 @@ fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
             val toSquare = toSquare(move)
 
             val killerScore = scoreKillerMoves(ply, move)
-            val historyScore = scoreHistoryHeuristic(board, killerScore, fromSquare, toSquare)
+            val historyScore = if (killerScore == 0 && hasHistorySuccess(board, fromSquare, toSquare))
+                90 + historyScore(board.mover, fromSquare, toSquare) else killerScore
 
             val finalScore =
-                    (if (historyScore == 0)
-                        (if (board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE) // losing capture
-                            1 else 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2)
+                    (if (historyScore == 0) 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2
                     else historyScore)
 
             orderedMoves[ply][i] = move or (127 - finalScore shl 24)
@@ -107,10 +92,10 @@ fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
     }
 }
 
-fun Search.scoreHistoryHeuristic(board: EngineBoard, score: Int, fromSquare: Int, toSquare: Int) =
-        if (score == 0 && historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0) {
-            90 + historyScore(board.mover, fromSquare, toSquare)
-        } else score
+private fun Search.hasHistorySuccess(board: EngineBoard, fromSquare: Int, toSquare: Int): Boolean {
+    val hasHistorySuccess = historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0
+    return hasHistorySuccess
+}
 
 fun Search.scoreKillerMoves(ply: Int, move: Int): Int {
     if (move == killerMoves[ply][0]) return 106

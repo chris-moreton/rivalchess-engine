@@ -27,7 +27,7 @@ class WacDetailedTest {
 
     companion object {
         private const val RECALCULATE = false
-        private const val REWRITE_EPD_FILE = true
+        private const val REWRITE_EPD_FILE = false
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
     }
