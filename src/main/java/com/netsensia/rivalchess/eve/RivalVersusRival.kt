@@ -1,8 +1,9 @@
-package com.netsensia.rivalchess
+package com.netsensia.rivalchess.eve
 
 import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
 import com.netsensia.rivalchess.consts.FEN_START_POS
+import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.engine.search.Search
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
@@ -24,8 +25,8 @@ const val CHALLENGER_WIN = 6
 val secureRandom = SecureRandom()
 
 fun main(args: Array<String>) {
-    var results= intArrayOf(0,0,0,0,0,0,0)
-    for (i in 1..100) {
+    val results= intArrayOf(0,0,0,0,0,0,0)
+    for (i in 1..10000) {
         val result = game(i)
         results[result] ++
         if (result == WHITE_WIN) results[if (i % 2 == 0) CHAMPION_WIN else CHALLENGER_WIN] ++
@@ -49,11 +50,9 @@ fun game(gameNumber: Int): Int {
         moveList.add(searcher.currentMove)
         board = Board.fromMove(board, getMoveRefFromCompactMove(searcher.currentMove))
         moveNumber ++
+    }
+    if (board.isCheck()) return result(board, if (board.sideToMove == Colour.WHITE) BLACK_WIN else WHITE_WIN, gameNumber)
 
-    }
-    if (board.isCheck()) {
-        return result(board, if (board.sideToMove == Colour.WHITE) BLACK_WIN else WHITE_WIN, gameNumber)
-    }
     return result(board, STALEMATE, gameNumber)
 }
 
@@ -63,11 +62,23 @@ fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
     searcher.setMillisToThink(MAX_SEARCH_MILLIS)
     searcher.setSearchDepth(MAX_SEARCH_DEPTH)
     val isChampionsMove = (gameNumber % 2 == moveNumber % 2)
+    searcher.setNodesToSearch(10000 + secureRandom.nextInt(5000))
     if (isChampionsMove) {
-        searcher.setNodesToSearch(1200000 + secureRandom.nextInt(50000))
+//        VALUE_PAWN = 100
+//        VALUE_KNIGHT = 390
+//        VALUE_BISHOP = 390
+//        VALUE_ROOK = 595
+//        VALUE_KING = 30000
+//        VALUE_QUEEN = 1175
     } else {
-        searcher.setNodesToSearch(1500000 + secureRandom.nextInt(50000))
+//        VALUE_PAWN = 100
+//        VALUE_KNIGHT = 550
+//        VALUE_BISHOP = 600
+//        VALUE_ROOK = 1000
+//        VALUE_KING = 30000
+//        VALUE_QUEEN = 2000
     }
+
     return searcher
 }
 

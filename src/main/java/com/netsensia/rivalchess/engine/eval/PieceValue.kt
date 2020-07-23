@@ -3,11 +3,11 @@ package com.netsensia.rivalchess.engine.eval
 import com.netsensia.rivalchess.consts.*
 
 const val VALUE_PAWN = 100
-const val VALUE_KNIGHT = 390
-const val VALUE_BISHOP = 390
-const val VALUE_ROOK = 595
+const val VALUE_KNIGHT = 550
+const val VALUE_BISHOP = 600
+const val VALUE_ROOK = 1000
 const val VALUE_KING = 30000
-const val VALUE_QUEEN = 1175
+const val VALUE_QUEEN = 2000
 
 fun pieceValue(bitboardType: Int): Int {
     return when (bitboardType) {

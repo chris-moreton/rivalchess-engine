@@ -11,7 +11,7 @@ import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.model.*
 import java.lang.Long.numberOfTrailingZeros
 
-const val VALUE_PAWN_PROMOTION_TO_QUEEN = VALUE_QUEEN - VALUE_PAWN
+val VALUE_PAWN_PROMOTION_TO_QUEEN = VALUE_QUEEN - VALUE_PAWN
 
 class SeeBoard(board: EngineBoard) {
     @JvmField

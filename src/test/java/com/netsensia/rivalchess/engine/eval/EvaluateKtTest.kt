@@ -22,16 +22,16 @@ class EvaluateKtTest : TestCase() {
         assertTradePawnBonusScore("rnbqkbnr/pppppppp/8/8/8/8/PPPP4/1NBQ3- w KQ - 0 1", 0)
 
         // bonus for white for each missing black pawn as black is winning in material
-        assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP1PPP/1NBQK3 w KQ - 0 1", 167)
-        assertTradePawnBonusScore("rnbqkbnr/5pppp/8/8/8/8/PPPP2PP/1NBQK3 w KQ - 0 1", 251)
-        assertTradePawnBonusScore("rnbqkbnr/6pppp/8/8/8/8/PPPP3P/1NBQK3 w KQ - 0 1", 334)
-        assertTradePawnBonusScore("rnbqkbnr/7pppp/8/8/8/8/PPPP4/1NBQ3- w KQ - 0 1", 418)
-        assertTradePawnBonusScore("rnbqkbnr/8/8/8/8/8/PPPP4/1NBQ3- w KQ - 0 1", 471)
+        assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP1PPP/1NBQK3 w KQ - 0 1", 285)
+        assertTradePawnBonusScore("rnbqkbnr/5pppp/8/8/8/8/PPPP2PP/1NBQK3 w KQ - 0 1", 428)
+        assertTradePawnBonusScore("rnbqkbnr/6pppp/8/8/8/8/PPPP3P/1NBQK3 w KQ - 0 1", 570)
+        assertTradePawnBonusScore("rnbqkbnr/7pppp/8/8/8/8/PPPP4/1NBQ3- w KQ - 0 1", 713)
+        assertTradePawnBonusScore("rnbqkbnr/8/8/8/8/8/PPPP4/1NBQ3- w KQ - 0 1", 825)
 
         // the more black is winning by in material, the higher the bonus
-        assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP1PPP/4K3 w KQ - 0 1", 363)
-        assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP2PP/3QK3 w KQ - 0 1", 255)
-        assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP3P/2BQK3 w KQ - 0 1", 226)
+        assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP1PPP/4K3 w KQ - 0 1", 600)
+        assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP2PP/3QK3 w KQ - 0 1", 410)
+        assertTradePawnBonusScore("rnbqkbnr/4pppp/8/8/8/8/PPPP3P/2BQK3 w KQ - 0 1", 360)
     }
 
     @Test
