@@ -9,7 +9,7 @@ private const val INDEX_ROOK = 3
 private const val INDEX_QUEEN = 4
 private const val INDEX_KING = 5
 
-var pieceValues = intArrayOf(0, 550, 600, 1000, 2000, 30000)
+var pieceValues = intArrayOf(100, 550, 600, 1000, 2000, 30000)
 
 fun pieceValue(bitboardType: Int): Int {
     return when (bitboardType) {
