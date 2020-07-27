@@ -66,14 +66,14 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
                 queensEval(board, whitePieces, blackPieces) +
                 bishopScore(board, materialDifference)) else 0)
 
-    determineBadCutoffs(isEndGame, positionalEval, materialDifference, board, adjustedEval, viableEvalForPhase2, minScore)
+    determineBadCutoffs(isEndGame, positionalEval, materialDifference, board, viableEvalForPhase2, minScore)
 
     val endGameAdjustedScore = if (isEndGame) endGameAdjustment(board, positionalEval) else positionalEval
 
     return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
 }
 
-private fun determineBadCutoffs(isEndGame: Boolean, eval: Int, materialDifference: Int, board: EngineBoard, adjustedEval: Int, viableEvalForPhase2: Boolean, minScore: Int) {
+private fun determineBadCutoffs(isEndGame: Boolean, eval: Int, materialDifference: Int, board: EngineBoard, viableEvalForPhase2: Boolean, minScore: Int) {
     if (DETERMINE_BAD_CUTOFFS && !isEndGame) {
         val diff = abs(eval - materialDifference)
         if (diff > bigDiff) {

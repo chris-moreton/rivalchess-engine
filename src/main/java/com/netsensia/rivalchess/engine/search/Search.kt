@@ -225,7 +225,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val moveGivesCheck = board.isCheck(mover)
 
-                val lmr = lateMoveReductions(depthRemaining, legalMoveCount, moveGivesCheck, extensions != updatedExtensions, ply, move)
+                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move)
 
                 val adjustedDepth = depth - lmr
                 val firstPath =
@@ -273,7 +273,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun lateMoveReductions(depthRemaining: Int, legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, ply: Int, move: Int) =
+    private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int) =
         if (moveGivesCheck || extended || legalMoveCount < 4 ||
                 historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5) 0 else 1
 
