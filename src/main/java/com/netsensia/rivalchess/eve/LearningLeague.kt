@@ -25,7 +25,7 @@ class Player(var pieceValues: IntArray, var points: Int) {
 
 class LearningLeague {
 
-    private val numPlayers = 16
+    private val numPlayers = 32
     private val nodesToSearch = 5000
     private val numGenerations = 2000
 
@@ -54,13 +54,13 @@ class LearningLeague {
         val sortedPlayers = players.sortedBy { -it.points }
         val totalPoints: Int = players.map { it.points }.sum()
 
-        players = mutableListOf(sortedPlayers[0])
+        players = mutableListOf(Player(sortedPlayers[0].pieceValues.copyOf(), 0))
         for (i in 1 until numPlayers) {
             val newPlayer = getPlayer(totalPoints, sortedPlayers)
 
             for (k in 0 until 5) {
-                if (secureRandom.nextInt(3) == 0) {
-                    var adjustment = (newPlayer.pieceValues[k]).toDouble() * (secureRandom.nextInt(5).toDouble() / 100.0)
+                if ((0..3).random() == 0) {
+                    var adjustment = (newPlayer.pieceValues[k]).toDouble() * ((1..5).random().toDouble() / 100.0)
                     if (secureRandom.nextInt(2) == 0) adjustment = -adjustment
                     newPlayer.pieceValues[k] += adjustment.toInt()
                 }
@@ -82,7 +82,7 @@ class LearningLeague {
         for (white in 0 until numPlayers) {
             print("$white ")
             for (black in 0 until numPlayers) {
-                if (white != black) {
+                if (white != black && (0..2).random() == 0) {
                     val result = playGame(players.get(white), players.get(black))
                     when (result) {
                         WHITE_WIN -> players.get(white).points += 2
