@@ -25,7 +25,7 @@ class Player(var pieceValues: IntArray, var points: Int) {
 
 class LearningLeague {
 
-    private val numPlayers = 30
+    private val numPlayers = 32
     private val nodesToSearch = 5000
     private val numGenerations = 2000
 
@@ -54,8 +54,8 @@ class LearningLeague {
         val sortedPlayers = players.sortedBy { -it.points }
         val totalPoints: Int = players.map { it.points }.sum()
 
-        players = mutableListOf()
-        for (i in 0 until numPlayers) {
+        players = mutableListOf(sortedPlayers[0])
+        for (i in 1 until numPlayers) {
             val newPlayer = getPlayer(totalPoints, sortedPlayers)
 
             for (k in 1 until 5) {
@@ -69,7 +69,10 @@ class LearningLeague {
             players.add(newPlayer)
         }
         println("".padStart(50, '='))
-        println("The Next Generation")
+        println("The Next Generation:")
+        println("".padStart(50, '='))
+        println ("Current Champion:")
+        println(sortedPlayers[0])
         println("".padStart(50, '='))
         players.forEach { println(it) }
     }
@@ -77,10 +80,9 @@ class LearningLeague {
     private fun roundRobin() {
         println()
         for (white in 0 until numPlayers) {
-            print(white)
+            print("$white ")
             for (black in 0 until numPlayers) {
                 if (white != black) {
-                    print(".")
                     val result = playGame(players.get(white), players.get(black))
                     when (result) {
                         WHITE_WIN -> players.get(white).points += 2
@@ -106,7 +108,7 @@ class LearningLeague {
     private fun createGenerationZero() {
         for (i in 0 until numPlayers) {
             players.add(Player(intArrayOf(
-                    100,
+                    100 + secureRandom.nextInt(1500),
                     100 + secureRandom.nextInt(1500),
                     100 + secureRandom.nextInt(1500),
                     100 + secureRandom.nextInt(1500),
