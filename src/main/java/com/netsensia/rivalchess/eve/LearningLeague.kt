@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.eve
 
+import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
 import com.netsensia.rivalchess.consts.FEN_START_POS
 import com.netsensia.rivalchess.engine.eval.pieceValues
@@ -15,19 +16,17 @@ fun main(args: Array<String>) {
     learningLeague.go()
 }
 
-class Player(var pieceValues: IntArray, var wins: Int, var played: Int) {
+class Player(var pieceValues: IntArray, var points: Int) {
 
     override fun toString(): String {
-        return pieceValues.take(5).joinToString(" ", transform = { it.toString().padStart(6)} )
+        return pieceValues.take(5).joinToString(" ", transform = { it.toString().padStart(6) } )
     }
 }
 
 class LearningLeague {
 
-    private val numPlayers = 3
-    private var generation = 0
+    private val numPlayers = 30
     private val numGenerations = 2000
-    private val nextGenRepresentation = intArrayOf(2,1,0)
 
     var players: MutableList<Player> = mutableListOf()
 
@@ -35,26 +34,38 @@ class LearningLeague {
         createGenerationZero()
         for (generation in 0 until numGenerations) {
             roundRobin()
-            displayResults(players.sortedBy { it.wins })
+            displayResults(players.sortedBy { -it.points }, generation)
             createNewGeneration()
         }
     }
 
+    private fun getPlayer(totalPoints: Int, sortedPlayers: List<Player>): Player {
+        var cum = 0
+        val r = secureRandom.nextInt(totalPoints)
+        for (j in 0 until numPlayers) {
+            cum += sortedPlayers[j].points
+            if (cum >= r) return Player(sortedPlayers[j].pieceValues.copyOf(), 0)
+        }
+        throw Exception("Error getting player for new generation")
+    }
+
     private fun createNewGeneration() {
-        val sortedPlayers = players.sortedBy { it.wins }
+        val sortedPlayers = players.sortedBy { -it.points }
+        val totalPoints: Int = players.map { it.points }.sum()
+
         players = mutableListOf()
         for (i in 0 until numPlayers) {
-            for (j in 0 until nextGenRepresentation[i]) {
-                players.add(Player(sortedPlayers[i].pieceValues.copyOf(), 0, 0))
-                for (k in 1 until 5) {
-                    if (secureRandom.nextInt(5) == 0) {
-                        val percentage = secureRandom.nextInt(15) / 100.0
-                        var adjustment = (sortedPlayers[i].pieceValues[k]).toDouble() * percentage
-                        if (secureRandom.nextInt(2) == 0) adjustment = -adjustment
-                        players[j].pieceValues[k] += adjustment.toInt()
-                    }
+            val newPlayer = getPlayer(totalPoints, sortedPlayers)
+
+            for (k in 1 until 5) {
+                if (secureRandom.nextInt(3) == 0) {
+                    var adjustment = (newPlayer.pieceValues[k]).toDouble() * (secureRandom.nextInt(5).toDouble() / 100.0)
+                    if (secureRandom.nextInt(2) == 0) adjustment = -adjustment
+                    newPlayer.pieceValues[k] += adjustment.toInt()
                 }
             }
+
+            players.add(newPlayer)
         }
         println("".padStart(50, '='))
         println("The Next Generation")
@@ -65,21 +76,26 @@ class LearningLeague {
     private fun roundRobin() {
         println()
         for (white in 0 until numPlayers) {
+            print(white)
             for (black in 0 until numPlayers) {
-                print(".")
-                val result = playGame(players.get(white), players.get(black))
-                when (result) {
-                    WHITE_WIN -> players.get(white).wins++
-                    BLACK_WIN -> players.get(black).wins++
+                if (white != black) {
+                    print(".")
+                    val result = playGame(players.get(white), players.get(black))
+                    when (result) {
+                        WHITE_WIN -> players.get(white).points += 2
+                        BLACK_WIN -> players.get(black).points += 2
+                        else -> {
+                            players.get(white).points++
+                            players.get(black).points++
+                        }
+                    }
                 }
-                players.get(white).played++
-                players.get(black).played++
             }
         }
         println()
     }
 
-    private fun displayResults(players: List<Player>) {
+    private fun displayResults(players: List<Player>, generation: Int) {
         println("".padStart(50, '='))
         println("Generation $generation Results")
         println("".padStart(50, '='))
@@ -87,7 +103,7 @@ class LearningLeague {
     }
 
     private fun createGenerationZero() {
-        for (i in 0..numPlayers-1) {
+        for (i in 0 until numPlayers) {
             players.add(Player(intArrayOf(
                     100,
                     100 + secureRandom.nextInt(1500),
@@ -95,7 +111,7 @@ class LearningLeague {
                     100 + secureRandom.nextInt(1500),
                     100 + secureRandom.nextInt(1500),
                     30000
-            ), 0, 0))
+            ), 0))
         }
     }
 
@@ -124,8 +140,8 @@ class LearningLeague {
         val searcher = Search(Board.fromFen(FEN_START_POS))
         searcher.useOpeningBook = true
         searcher.setMillisToThink(MAX_SEARCH_MILLIS)
-        searcher.setSearchDepth(2)
-        searcher.setNodesToSearch(Int.MAX_VALUE)
+        searcher.setSearchDepth(MAX_SEARCH_DEPTH)
+        searcher.setNodesToSearch(5000)
         pieceValues = player.pieceValues
 
         return searcher

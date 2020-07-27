@@ -39,7 +39,7 @@ class Attacks(board: EngineBoard) {
 
     private inline fun attackList(board: EngineBoard, squaresBitboard: Long, fn: (EngineBoard, Int) -> Long, colour: Colour): LongArray {
         var count = 0
-        val a = longArrayOf(-1L,-1L,-1L,-1L)
+        val a = longArrayOf(-1L,-1L,-1L,-1L,-1L,-1L,-1L)
         applyToSquares(squaresBitboard) {
             val attacksForSquare = fn(board, it)
             a[count++] = attacksForSquare
