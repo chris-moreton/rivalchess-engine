@@ -2,21 +2,23 @@ package com.netsensia.rivalchess.engine.eval
 
 import com.netsensia.rivalchess.consts.*
 
-const val VALUE_PAWN = 100
-const val VALUE_KNIGHT = 550
-const val VALUE_BISHOP = 600
-const val VALUE_ROOK = 1000
-const val VALUE_KING = 30000
-const val VALUE_QUEEN = 2000
+private const val INDEX_PAWN = 0
+private const val INDEX_KNIGHT = 1
+private const val INDEX_BISHOP = 2
+private const val INDEX_ROOK = 3
+private const val INDEX_QUEEN = 4
+private const val INDEX_KING = 5
+
+var pieceValues = intArrayOf(100, 550, 600, 1000, 2000, 30000)
 
 fun pieceValue(bitboardType: Int): Int {
     return when (bitboardType) {
-        BITBOARD_WP, BITBOARD_BP -> VALUE_PAWN
-        BITBOARD_WN, BITBOARD_BN -> VALUE_KNIGHT
-        BITBOARD_WB, BITBOARD_BB -> VALUE_BISHOP
-        BITBOARD_WR, BITBOARD_BR -> VALUE_ROOK
-        BITBOARD_WK, BITBOARD_BK -> VALUE_KING
-        BITBOARD_WQ, BITBOARD_BQ -> VALUE_QUEEN
+        BITBOARD_WP, BITBOARD_BP -> pieceValues[INDEX_PAWN]
+        BITBOARD_WN, BITBOARD_BN -> pieceValues[INDEX_KNIGHT]
+        BITBOARD_WB, BITBOARD_BB -> pieceValues[INDEX_BISHOP]
+        BITBOARD_WR, BITBOARD_BR -> pieceValues[INDEX_ROOK]
+        BITBOARD_WQ, BITBOARD_BQ -> pieceValues[INDEX_QUEEN]
+        BITBOARD_WK, BITBOARD_BK -> pieceValues[INDEX_KING]
         else -> 0
     }
 }

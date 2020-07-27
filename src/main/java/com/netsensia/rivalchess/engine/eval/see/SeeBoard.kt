@@ -5,13 +5,13 @@ import com.netsensia.rivalchess.bitboards.util.applyToFirstSquare
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
-import com.netsensia.rivalchess.engine.eval.*
+import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.search.fromSquare
 import com.netsensia.rivalchess.engine.search.toSquare
-import com.netsensia.rivalchess.model.*
+import com.netsensia.rivalchess.model.Colour
 import java.lang.Long.numberOfTrailingZeros
 
-val VALUE_PAWN_PROMOTION_TO_QUEEN = VALUE_QUEEN - VALUE_PAWN
+val VALUE_PAWN_PROMOTION_TO_QUEEN = pieceValue(BITBOARD_WQ) - pieceValue(BITBOARD_WP)
 
 class SeeBoard(board: EngineBoard) {
     @JvmField
@@ -43,7 +43,7 @@ class SeeBoard(board: EngineBoard) {
                 if (movedPieceBitboardType == BITBOARD_WP) togglePiece(1L shl (moveTo - 8), BITBOARD_BP, deltas)
                 else if (movedPieceBitboardType == BITBOARD_BP) togglePiece(1L shl (moveTo + 8), BITBOARD_WP, deltas)
             }
-            VALUE_PAWN
+            pieceValue(BITBOARD_WP)
         } else pieceValue(capturedPieceBitboardType)
 
         togglePiece(toBit, movedPieceBitboardType, deltas)

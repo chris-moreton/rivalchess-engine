@@ -5,7 +5,7 @@ import com.netsensia.rivalchess.consts.BITBOARD_WK
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.board.makeMove
 import com.netsensia.rivalchess.engine.board.unMakeMove
-import com.netsensia.rivalchess.engine.eval.VALUE_KING
+import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.model.Colour
 
@@ -32,7 +32,7 @@ class StaticExchangeEvaluator {
 
                if (seeBoard.capturedPieceBitboardType == if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK) {
                    seeBoard.unMakeMove()
-                   return bestScore + VALUE_KING
+                   return bestScore + pieceValue(BITBOARD_WK)
                }
 
                val seeScore = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain))

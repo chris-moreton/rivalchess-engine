@@ -15,13 +15,13 @@ import java.util.List;
 import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_BK;
 import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_BQ;
 import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_NONE;
+import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WB;
 import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WK;
+import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WN;
 import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WQ;
+import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WR;
 import static com.netsensia.rivalchess.engine.board.MoveMakingBoardExtensionsKt.makeMove;
-import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_BISHOP;
-import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_KNIGHT;
-import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_QUEEN;
-import static com.netsensia.rivalchess.engine.eval.PieceValueKt.VALUE_ROOK;
+import static com.netsensia.rivalchess.engine.eval.PieceValueKt.pieceValue;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -172,10 +172,10 @@ public class EngineBoardTest {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
         Assert.assertEquals(
-                VALUE_QUEEN,
-                + VALUE_KNIGHT * 2
-                + VALUE_BISHOP * 2
-                + VALUE_ROOK * 2,
+                pieceValue(BITBOARD_WQ),
+                + pieceValue(BITBOARD_WN) * 2
+                + pieceValue(BITBOARD_WB) * 2
+                + pieceValue(BITBOARD_WR) * 2,
                 engineBoard.whitePieceValues);
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false, true);
@@ -186,10 +186,10 @@ public class EngineBoardTest {
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5").compact, false, true);
 
         Assert.assertEquals(
-                VALUE_QUEEN
-                        + VALUE_KNIGHT
-                        + VALUE_BISHOP * 2
-                        + VALUE_ROOK * 2,
+                pieceValue(BITBOARD_WQ)
+                        + pieceValue(BITBOARD_WN)
+                        + pieceValue(BITBOARD_WB) * 2
+                        + pieceValue(BITBOARD_WR) * 2,
                 engineBoard.whitePieceValues);
 
     }
@@ -198,7 +198,7 @@ public class EngineBoardTest {
     public void getBlackPieceValues() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
 
-        Assert.assertEquals(VALUE_QUEEN + VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2, engineBoard.blackPieceValues);
+        Assert.assertEquals(pieceValue(BITBOARD_WQ) + pieceValue(BITBOARD_WN) * 2 + pieceValue(BITBOARD_WB) * 2 + pieceValue(BITBOARD_WR) * 2, engineBoard.blackPieceValues);
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false, true);
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6").compact, false, true);
@@ -207,7 +207,7 @@ public class EngineBoardTest {
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5").compact, false, true);
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5").compact, false, true);
 
-        Assert.assertEquals(VALUE_QUEEN + VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2, engineBoard.blackPieceValues);
+        Assert.assertEquals(pieceValue(BITBOARD_WQ) + pieceValue(BITBOARD_WN) * 2 + pieceValue(BITBOARD_WB) * 2 + pieceValue(BITBOARD_WR) * 2, engineBoard.blackPieceValues);
     }
 
     @Test

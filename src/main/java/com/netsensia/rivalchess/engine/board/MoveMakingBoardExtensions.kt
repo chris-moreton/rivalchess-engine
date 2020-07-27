@@ -2,7 +2,7 @@ package com.netsensia.rivalchess.engine.board
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.consts.*
-import com.netsensia.rivalchess.engine.eval.*
+import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
@@ -66,19 +66,19 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
 private fun EngineBoard.updateMaterialAfterPieceCapture(capturePiece: Int, colour: Colour) {
     if (colour == Colour.WHITE) {
         when (capturePiece) {
-            BITBOARD_WP -> whitePawnValues -= VALUE_PAWN
-            BITBOARD_WN -> whitePieceValues -= VALUE_KNIGHT
-            BITBOARD_WB -> whitePieceValues -= VALUE_BISHOP
-            BITBOARD_WR -> whitePieceValues -= VALUE_ROOK
-            BITBOARD_WQ -> whitePieceValues -= VALUE_QUEEN
+            BITBOARD_WP -> whitePawnValues -= pieceValue(BITBOARD_WP)
+            BITBOARD_WN -> whitePieceValues -= pieceValue(BITBOARD_WN)
+            BITBOARD_WB -> whitePieceValues -= pieceValue(BITBOARD_WB)
+            BITBOARD_WR -> whitePieceValues -= pieceValue(BITBOARD_WR)
+            BITBOARD_WQ -> whitePieceValues -= pieceValue(BITBOARD_WQ)
         }
     } else {
         when (capturePiece) {
-            BITBOARD_BP -> blackPawnValues -= VALUE_PAWN
-            BITBOARD_BN -> blackPieceValues -= VALUE_KNIGHT
-            BITBOARD_BB -> blackPieceValues -= VALUE_BISHOP
-            BITBOARD_BR -> blackPieceValues -= VALUE_ROOK
-            BITBOARD_BQ -> blackPieceValues -= VALUE_QUEEN
+            BITBOARD_BP -> blackPawnValues -= pieceValue(BITBOARD_WP)
+            BITBOARD_BN -> blackPieceValues -= pieceValue(BITBOARD_WN)
+            BITBOARD_BB -> blackPieceValues -= pieceValue(BITBOARD_WB)
+            BITBOARD_BR -> blackPieceValues -= pieceValue(BITBOARD_WR)
+            BITBOARD_BQ -> blackPieceValues -= pieceValue(BITBOARD_WQ)
         }
     }
 }
@@ -121,12 +121,12 @@ private fun EngineBoard.unMakeEnPassants(fromMask: Long, toMask: Long): Boolean 
         if (moveHistory[numMovesMade]!!.movePiece == BITBOARD_WP) {
             engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask or fromMask)
             engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask ushr 8)
-            blackPawnValues += VALUE_PAWN
+            blackPawnValues += pieceValue(BITBOARD_WP)
             return true
         } else if (moveHistory[numMovesMade]!!.movePiece == BITBOARD_BP) {
             engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask or fromMask)
             engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask shl 8)
-            whitePawnValues += VALUE_PAWN
+            whitePawnValues += pieceValue(BITBOARD_WP)
             return true
         }
     }
@@ -155,19 +155,19 @@ private fun EngineBoard.replaceCapturedPiece(toMask: Long, colour: Colour) {
         engineBitboards.xorPieceBitboard(capturePiece, toMask)
         if (colour == Colour.WHITE) {
             when (capturePiece) {
-                BITBOARD_WP -> whitePawnValues += VALUE_PAWN
-                BITBOARD_WN -> whitePieceValues += VALUE_KNIGHT
-                BITBOARD_WB -> whitePieceValues += VALUE_BISHOP
-                BITBOARD_WR -> whitePieceValues += VALUE_ROOK
-                BITBOARD_WQ -> whitePieceValues += VALUE_QUEEN
+                BITBOARD_WP -> whitePawnValues += pieceValue(BITBOARD_WP)
+                BITBOARD_WN -> whitePieceValues += pieceValue(BITBOARD_WN)
+                BITBOARD_WB -> whitePieceValues += pieceValue(BITBOARD_WB)
+                BITBOARD_WR -> whitePieceValues += pieceValue(BITBOARD_WR)
+                BITBOARD_WQ -> whitePieceValues += pieceValue(BITBOARD_WQ)
             }
         } else {
             when (capturePiece) {
-                BITBOARD_BP -> blackPawnValues += VALUE_PAWN
-                BITBOARD_BN -> blackPieceValues += VALUE_KNIGHT
-                BITBOARD_BB -> blackPieceValues += VALUE_BISHOP
-                BITBOARD_BR -> blackPieceValues += VALUE_ROOK
-                BITBOARD_BQ -> blackPieceValues += VALUE_QUEEN
+                BITBOARD_BP -> blackPawnValues += pieceValue(BITBOARD_WP)
+                BITBOARD_BN -> blackPieceValues += pieceValue(BITBOARD_WN)
+                BITBOARD_BB -> blackPieceValues += pieceValue(BITBOARD_WB)
+                BITBOARD_BR -> blackPieceValues += pieceValue(BITBOARD_WR)
+                BITBOARD_BQ -> blackPieceValues += pieceValue(BITBOARD_WQ)
             }
         }
     }
@@ -178,44 +178,44 @@ private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Bool
     if (promotionPiece != 0) {
         if (mover == Colour.WHITE) {
             engineBitboards.xorPieceBitboard(BITBOARD_WP, fromMask)
-            whitePawnValues += VALUE_PAWN
+            whitePawnValues += pieceValue(BITBOARD_WP)
             when (promotionPiece) {
                 PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
                     engineBitboards.xorPieceBitboard(BITBOARD_WQ, toMask)
-                    whitePieceValues -= VALUE_QUEEN
+                    whitePieceValues -= pieceValue(BITBOARD_WQ)
                 }
                 PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
                     engineBitboards.xorPieceBitboard(BITBOARD_WB, toMask)
-                    whitePieceValues -= VALUE_BISHOP
+                    whitePieceValues -= pieceValue(BITBOARD_WB)
                 }
                 PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
                     engineBitboards.xorPieceBitboard(BITBOARD_WN, toMask)
-                    whitePieceValues -= VALUE_KNIGHT
+                    whitePieceValues -= pieceValue(BITBOARD_WN)
                 }
                 PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
                     engineBitboards.xorPieceBitboard(BITBOARD_WR, toMask)
-                    whitePieceValues -= VALUE_ROOK
+                    whitePieceValues -= pieceValue(BITBOARD_WR)
                 }
             }
         } else {
             engineBitboards.xorPieceBitboard(BITBOARD_BP, fromMask)
-            blackPawnValues += VALUE_PAWN
+            blackPawnValues += pieceValue(BITBOARD_WP)
             when (promotionPiece) {
                 PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
                     engineBitboards.xorPieceBitboard(BITBOARD_BQ, toMask)
-                    blackPieceValues -= VALUE_QUEEN
+                    blackPieceValues -= pieceValue(BITBOARD_WQ)
                 }
                 PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
                     engineBitboards.xorPieceBitboard(BITBOARD_BB, toMask)
-                    blackPieceValues -= VALUE_BISHOP
+                    blackPieceValues -= pieceValue(BITBOARD_WB)
                 }
                 PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
                     engineBitboards.xorPieceBitboard(BITBOARD_BN, toMask)
-                    blackPieceValues -= VALUE_KNIGHT
+                    blackPieceValues -= pieceValue(BITBOARD_WN)
                 }
                 PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
                     engineBitboards.xorPieceBitboard(BITBOARD_BR, toMask)
-                    blackPieceValues -= VALUE_ROOK
+                    blackPieceValues -= pieceValue(BITBOARD_WR)
                 }
             }
         }
@@ -285,26 +285,26 @@ private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
     } else if (toMask == moveHistory[numMovesMade]!!.enPassantBitboard) {
         engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask shl 8)
         moveHistory[numMovesMade]!!.capturePiece = BITBOARD_WP
-        whitePawnValues -= VALUE_PAWN
+        whitePawnValues -= pieceValue(BITBOARD_WP)
     } else if (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL != 0) {
         val promotionPieceMask = compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL
-        blackPawnValues -= VALUE_PAWN
+        blackPawnValues -= pieceValue(BITBOARD_WP)
         when (promotionPieceMask) {
             PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
                 engineBitboards.orPieceBitboard(BITBOARD_BQ, toMask)
-                blackPieceValues += VALUE_QUEEN
+                blackPieceValues += pieceValue(BITBOARD_WQ)
             }
             PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
                 engineBitboards.orPieceBitboard(BITBOARD_BR, toMask)
-                blackPieceValues += VALUE_ROOK
+                blackPieceValues += pieceValue(BITBOARD_WR)
             }
             PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
                 engineBitboards.orPieceBitboard(BITBOARD_BN, toMask)
-                blackPieceValues += VALUE_KNIGHT
+                blackPieceValues += pieceValue(BITBOARD_WN)
             }
             PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
                 engineBitboards.orPieceBitboard(BITBOARD_BB, toMask)
-                blackPieceValues += VALUE_BISHOP
+                blackPieceValues += pieceValue(BITBOARD_WB)
             }
         }
         engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask)
@@ -352,25 +352,25 @@ private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
     } else if (toMask == moveHistory[numMovesMade]!!.enPassantBitboard) {
         engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask ushr 8)
         moveHistory[numMovesMade]!!.capturePiece = BITBOARD_BP
-        blackPawnValues -= VALUE_PAWN
+        blackPawnValues -= pieceValue(BITBOARD_WP)
     } else if (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL != 0) {
-        whitePawnValues -= VALUE_PAWN
+        whitePawnValues -= pieceValue(BITBOARD_WP)
         when (compactMove and PROMOTION_PIECE_TOSQUARE_MASK_FULL) {
             PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
                 engineBitboards.orPieceBitboard(BITBOARD_WQ, toMask)
-                whitePieceValues += VALUE_QUEEN
+                whitePieceValues += pieceValue(BITBOARD_WQ)
             }
             PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
                 engineBitboards.orPieceBitboard(BITBOARD_WR, toMask)
-                whitePieceValues += VALUE_ROOK
+                whitePieceValues += pieceValue(BITBOARD_WR)
             }
             PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
                 engineBitboards.orPieceBitboard(BITBOARD_WN, toMask)
-                whitePieceValues += VALUE_KNIGHT
+                whitePieceValues += pieceValue(BITBOARD_WN)
             }
             PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
                 engineBitboards.orPieceBitboard(BITBOARD_WB, toMask)
-                whitePieceValues += VALUE_BISHOP
+                whitePieceValues += pieceValue(BITBOARD_WB)
             }
         }
         engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask)
