@@ -25,7 +25,7 @@ class Player(var pieceValues: IntArray, var points: Int) {
 
 class LearningLeague {
 
-    private val numPlayers = 32
+    private val numPlayers = 16
     private val nodesToSearch = 5000
     private val numGenerations = 2000
 
@@ -58,7 +58,7 @@ class LearningLeague {
         for (i in 1 until numPlayers) {
             val newPlayer = getPlayer(totalPoints, sortedPlayers)
 
-            for (k in 1 until 5) {
+            for (k in 0 until 5) {
                 if (secureRandom.nextInt(3) == 0) {
                     var adjustment = (newPlayer.pieceValues[k]).toDouble() * (secureRandom.nextInt(5).toDouble() / 100.0)
                     if (secureRandom.nextInt(2) == 0) adjustment = -adjustment
@@ -71,10 +71,10 @@ class LearningLeague {
         println("".padStart(50, '='))
         println("The Next Generation:")
         println("".padStart(50, '='))
+        players.forEach { println(it) }
         println ("Current Champion:")
         println(sortedPlayers[0])
         println("".padStart(50, '='))
-        players.forEach { println(it) }
     }
 
     private fun roundRobin() {
