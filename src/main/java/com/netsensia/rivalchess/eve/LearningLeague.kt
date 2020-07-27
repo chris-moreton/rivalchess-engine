@@ -26,6 +26,7 @@ class Player(var pieceValues: IntArray, var points: Int) {
 class LearningLeague {
 
     private val numPlayers = 30
+    private val nodesToSearch = 5000
     private val numGenerations = 2000
 
     var players: MutableList<Player> = mutableListOf()
@@ -141,7 +142,7 @@ class LearningLeague {
         searcher.useOpeningBook = true
         searcher.setMillisToThink(MAX_SEARCH_MILLIS)
         searcher.setSearchDepth(MAX_SEARCH_DEPTH)
-        searcher.setNodesToSearch(5000)
+        searcher.setNodesToSearch(nodesToSearch + secureRandom.nextInt(nodesToSearch))
         pieceValues = player.pieceValues
 
         return searcher
