@@ -1,10 +1,14 @@
 package com.netsensia.rivalchess.config
 
-import com.netsensia.rivalchess.engine.eval.*
+const val VALUE_PAWN = 100
+const val VALUE_KNIGHT = 550
+const val VALUE_BISHOP = 600
+const val VALUE_ROOK = 1000
+const val VALUE_QUEEN = 2000
 
 const val TOTAL_PIECE_VALUE_PER_SIDE_AT_START = VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2 + VALUE_QUEEN
 const val OPENING_PHASE_MATERIAL = (TOTAL_PIECE_VALUE_PER_SIDE_AT_START * 0.8).toInt()
-const val PAWN_TRADE_BONUS_MAX = 600 // (600) when == 1, +7 fails
+const val PAWN_TRADE_BONUS_MAX = 600
 const val WRONG_COLOUR_BISHOP_PENALTY_DIVISOR = 2
 const val WRONG_COLOUR_BISHOP_MATERIAL_LOW = VALUE_BISHOP * 2
 const val WRONG_COLOUR_BISHOP_MATERIAL_HIGH = VALUE_QUEEN * 2 + VALUE_ROOK * 2 + VALUE_BISHOP * 2
@@ -63,8 +67,4 @@ val VALUE_PASSED_PAWN_BONUS = intArrayOf(-1, 24, 26, 30, 36, 44, 56, -1)
 
 const val endgameSubtractInsufficientMaterialMultiplier = 0.9
 
-val pieceValues = listOf(
-            VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK,
-            VALUE_PAWN, VALUE_KNIGHT, VALUE_BISHOP, VALUE_QUEEN, VALUE_KING, VALUE_ROOK
-    )
 

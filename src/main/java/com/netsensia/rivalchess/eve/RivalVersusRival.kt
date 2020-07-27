@@ -3,7 +3,7 @@ package com.netsensia.rivalchess.eve
 import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
 import com.netsensia.rivalchess.consts.FEN_START_POS
-import com.netsensia.rivalchess.engine.eval.*
+import com.netsensia.rivalchess.engine.eval.pieceValues
 import com.netsensia.rivalchess.engine.search.Search
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
@@ -64,26 +64,16 @@ fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
     val isChampionsMove = (gameNumber % 2 == moveNumber % 2)
     searcher.setNodesToSearch(10000 + secureRandom.nextInt(5000))
     if (isChampionsMove) {
-//        VALUE_PAWN = 100
-//        VALUE_KNIGHT = 390
-//        VALUE_BISHOP = 390
-//        VALUE_ROOK = 595
-//        VALUE_KING = 30000
-//        VALUE_QUEEN = 1175
+        pieceValues = intArrayOf(100,550,600,1000,2000,30000)
     } else {
-//        VALUE_PAWN = 100
-//        VALUE_KNIGHT = 550
-//        VALUE_BISHOP = 600
-//        VALUE_ROOK = 1000
-//        VALUE_KING = 30000
-//        VALUE_QUEEN = 2000
+        pieceValues = intArrayOf(100,550,600,1000,2000,30000)
     }
 
     return searcher
 }
 
-fun result(board: Board, r: Int, gameNumber: Int): Int {
-    when (r) {
+fun result(board: Board, result: Int, gameNumber: Int): Int {
+    when (result) {
         WHITE_WIN -> println((if (gameNumber % 2 == 0) "Champion" else "Challenger") + " wins as white")
         BLACK_WIN -> println((if (gameNumber % 2 == 0) "Challenger" else "Champion") + " wins as black")
         FIFTY_MOVE -> println("Fifty move rule")
@@ -92,5 +82,5 @@ fun result(board: Board, r: Int, gameNumber: Int): Int {
     }
     println(board.getFen())
 
-    return r
+    return result
 }

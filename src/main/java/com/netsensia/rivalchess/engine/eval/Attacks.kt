@@ -1,6 +1,9 @@
 package com.netsensia.rivalchess.engine.eval
 
-import com.netsensia.rivalchess.bitboards.*
+import com.netsensia.rivalchess.bitboards.FILE_A
+import com.netsensia.rivalchess.bitboards.FILE_H
+import com.netsensia.rivalchess.bitboards.MagicBitboards
+import com.netsensia.rivalchess.bitboards.knightMoves
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.config.THREAT_SCORE_DIVISOR
 import com.netsensia.rivalchess.consts.*
@@ -74,17 +77,15 @@ fun blackAttackScore(attacks: Attacks, board: EngineBoard): Int {
     return acc
 }
 
-fun whiteAttacksBitboard(board: EngineBoard, attacks: Attacks) =
-        (attacks.whitePieceAttacks or attacks.whitePawns) and blackPieceBitboard(board)
+fun whiteAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.whitePieceAttacks or attacks.whitePawns) and blackPieceBitboard(board)
 
-fun blackAttacksBitboard(board: EngineBoard, attacks: Attacks) =
-        (attacks.blackPieceAttacks or attacks.blackPawns) and whitePieceBitboard(board)
+fun blackAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.blackPieceAttacks or attacks.blackPawns) and whitePieceBitboard(board)
 
 fun threatEval(attacks: Attacks, board: EngineBoard) =
         (adjustedAttackScore(whiteAttackScore(attacks, board)) -
                 adjustedAttackScore(blackAttackScore(attacks, board))) / THREAT_SCORE_DIVISOR
 
-fun adjustedAttackScore(attackScore: Int) = attackScore + attackScore * (attackScore / VALUE_QUEEN)
+fun adjustedAttackScore(attackScore: Int) = attackScore + attackScore * (attackScore / pieceValue(BITBOARD_WQ))
 
 fun rookAttacks(board: EngineBoard, sq: Int) : Long =
         MagicBitboards.magicMovesRook[sq][
