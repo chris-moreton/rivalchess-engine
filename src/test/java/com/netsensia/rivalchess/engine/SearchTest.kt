@@ -8,7 +8,6 @@ import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import org.awaitility.Awaitility
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
@@ -20,6 +19,9 @@ class SearchTest {
     @Test
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun testBestMoves() {
+        // These two threw an exception during G.A.
+        assertBestMove("r1bq1rk1/ppp1ppbp/3p1np1/3P4/1nPQP3/2N1BP2/PP4PP/R3KBNR b - - 0 1", "b4c2", 1594)
+        assertBestMove("r1bqk2r/ppp2ppp/2p2n2/4p3/2P5/2N2N1P/PP1PPKP1/R1B2B1R b - - 0 1", "e5e4", 1033)
         assertBestMove("8/4k3/8/8/2p2P2/8/2P5/5K2 b - - 0 1", "e7e6", -234)
         assertBestMove("k7/5RP1/1P6/1K6/6r1/8/8/8 b - -", "a8b8", -2102)
         assertBestMove("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", "f7e6", -705)
