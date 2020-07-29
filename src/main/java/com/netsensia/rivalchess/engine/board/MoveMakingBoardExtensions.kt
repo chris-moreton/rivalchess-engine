@@ -50,7 +50,7 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
     } catch (e: Exception) {
         println(e)
         println("Board: $this")
-        println("Move: " + EngineMove(compactMove))
+        println("Move: $compactMove = " + EngineMove(compactMove))
         println("Piece Values: " + pieceValue(BITBOARD_WP) + "," +
                 "" + pieceValue(BITBOARD_WN) + "," +
                 "" + pieceValue(BITBOARD_WB) + "," +
