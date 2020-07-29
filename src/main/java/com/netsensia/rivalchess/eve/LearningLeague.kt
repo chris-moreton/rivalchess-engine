@@ -157,6 +157,7 @@ class LearningLeague {
     }
 
     private fun displayResults(players: List<Player>, generation: Int) {
+        outln()
         outln("".padStart(50, '='))
         outln("Generation $generation Results")
         outln("".padStart(50, '='))
