@@ -21,6 +21,7 @@ const val FIFTY_MOVE = 3
 const val STALEMATE = 4
 const val CHAMPION_WIN = 5
 const val CHALLENGER_WIN = 6
+const val GAME_TOO_LONG = 7
 
 val secureRandom = SecureRandom()
 

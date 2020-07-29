@@ -3,9 +3,11 @@ package com.netsensia.rivalchess.engine.board
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.pieceValue
+import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
+import kotlin.system.exitProcess
 
 fun EngineBoard.makeNullMove() {
     boardHashObject.makeNullMove()
@@ -42,7 +44,23 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
     isOnNullMove = false
     halfMoveCount++
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
-    engineBitboards.movePiece(movePiece, compactMove)
+
+    try {
+        engineBitboards.movePiece(movePiece, compactMove)
+    } catch (e: Exception) {
+        println(e)
+        println("Board: $this")
+        println("Move: $compactMove = " + EngineMove(compactMove))
+        println("Piece Values: " + pieceValue(BITBOARD_WP) + "," +
+                "" + pieceValue(BITBOARD_WN) + "," +
+                "" + pieceValue(BITBOARD_WB) + "," +
+                "" + pieceValue(BITBOARD_WR) + "," +
+                "" + pieceValue(BITBOARD_WQ) + "," +
+                "" + pieceValue(BITBOARD_WK) + ","
+        )
+        println("Moves: " + this.moveGenerator().generateLegalMoves().moves.joinToString { "," })
+        exitProcess(1)
+    }
 
     updateMaterialAfterPieceCapture(capturePiece, mover.opponent())
 

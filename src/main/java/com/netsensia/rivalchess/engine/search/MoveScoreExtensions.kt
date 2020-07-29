@@ -53,7 +53,7 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
     }
     else if (orderedMoves[ply][i] and PROMOTION_PIECE_TOSQUARE_MASK_FULL == PROMOTION_PIECE_TOSQUARE_MASK_QUEEN) score = 108
 
-    orderedMoves[ply][i] = move or (127 - score shl 24)
+    orderedMoves[ply][i] = move or ((127 - score).coerceAtMost(0) shl 24)
     return score
 }
 
@@ -86,15 +86,14 @@ fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
                     (if (historyScore == 0) 50 + scorePieceSquareValues(board, fromSquare, toSquare) / 2
                     else historyScore)
 
-            orderedMoves[ply][i] = move or (127 - finalScore shl 24)
+            orderedMoves[ply][i] = move or ((127 - finalScore).coerceAtMost(0) shl 24)
         }
         i++
     }
 }
 
 private fun Search.hasHistorySuccess(board: EngineBoard, fromSquare: Int, toSquare: Int): Boolean {
-    val hasHistorySuccess = historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0
-    return hasHistorySuccess
+    return historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0
 }
 
 fun Search.scoreKillerMoves(ply: Int, move: Int): Int {
