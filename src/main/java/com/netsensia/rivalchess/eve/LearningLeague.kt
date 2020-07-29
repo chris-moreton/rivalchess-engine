@@ -34,7 +34,7 @@ class LearningLeague {
     private val numPlayers = 32
     private val nodesToSearch = 5000
     private val numGenerations = 2000
-    private val file = File("ga " + currentTimeMillis() + ".txt")
+    private val file = File("log/ga " + currentTimeMillis() + ".txt")
     private val rng = Random(21)
     private val sampleEvery = 10
 
