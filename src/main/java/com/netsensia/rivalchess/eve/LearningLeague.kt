@@ -31,7 +31,7 @@ class Player(var pieceValues: IntArray, var points: Int) {
 class LearningLeague {
 
     private var longestGame = 0
-    private val numPlayers = 64
+    private val numPlayers = 32
     private val nodesToSearch = 5000
     private val numGenerations = 2000
     private val file = File("ga " + currentTimeMillis() + ".txt")
@@ -93,8 +93,12 @@ class LearningLeague {
             val newPlayer = getPlayer(totalPoints, sortedPlayers)
 
             for (k in 0 until 5) {
-                if ((0..4).random(rng) == 0) {
-                    var adjustment = (newPlayer.pieceValues[k]).toDouble() * ((1..25).random(rng).toDouble() / 100.0)
+                if ((0..3).random(rng) == 0) {
+                    // 1 or 2 per generation may have a mutation of up to 20 percent,
+                    // other mutations will be up to 5 percent
+                    val randSize = if ((0 until numPlayers).random() == 0) 20 else 5
+                    var adjustment = (newPlayer.pieceValues[k]).toDouble() * (
+                            (1..randSize).random(rng).toDouble() / 100.0)
                     if ((0..1).random(rng) == 0) adjustment = -adjustment
                     newPlayer.pieceValues[k] += adjustment.toInt()
                 }
