@@ -1,13 +1,14 @@
 package com.netsensia.rivalchess.engine.board
 
-import com.netsensia.rivalchess.bitboards.*
-import com.netsensia.rivalchess.bitboards.util.popCount
+import com.netsensia.rivalchess.bitboards.EngineBitboards
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
-import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.engine.hash.BoardHash
 import com.netsensia.rivalchess.engine.type.MoveDetail
-import com.netsensia.rivalchess.model.*
+import com.netsensia.rivalchess.model.Board
+import com.netsensia.rivalchess.model.Colour
+import com.netsensia.rivalchess.model.Square
+import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {

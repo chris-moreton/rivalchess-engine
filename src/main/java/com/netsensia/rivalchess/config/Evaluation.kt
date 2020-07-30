@@ -1,10 +1,10 @@
 package com.netsensia.rivalchess.config
 
 const val VALUE_PAWN = 100
-const val VALUE_KNIGHT = 550
-const val VALUE_BISHOP = 600
-const val VALUE_ROOK = 1000
-const val VALUE_QUEEN = 2000
+const val VALUE_KNIGHT = 390
+const val VALUE_BISHOP = 400
+const val VALUE_ROOK = 595
+const val VALUE_QUEEN = 1175
 
 const val TOTAL_PIECE_VALUE_PER_SIDE_AT_START = VALUE_KNIGHT * 2 + VALUE_BISHOP * 2 + VALUE_ROOK * 2 + VALUE_QUEEN
 const val OPENING_PHASE_MATERIAL = (TOTAL_PIECE_VALUE_PER_SIDE_AT_START * 0.8).toInt()
