@@ -8,9 +8,11 @@ import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import org.awaitility.Awaitility
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
+@Ignore
 class SearchTest {
     companion object {
         private const val RECALCULATE = false
@@ -30,7 +32,6 @@ class SearchTest {
         assertBestMove("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", "d2d4", 82)
         assertBestMove("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", "b4c4", 2)
         assertBestMove("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", "e2a6", 32)
-
     }
 
     @Test
