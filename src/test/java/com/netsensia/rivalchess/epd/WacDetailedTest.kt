@@ -22,7 +22,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-@Ignore
 class WacDetailedTest {
 
     private val epdStats = mutableMapOf<String, Int>()
