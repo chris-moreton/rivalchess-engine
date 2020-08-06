@@ -1,6 +1,6 @@
 r4rk1/5ppp/p3q1n1/2p2NQ1/4n3/P3P3/1B3PPP/1R3RK1 w - - bm Qh6; cp 9000 10000; nodes 4000; id "WAC.203";
 r3q1kr/ppp5/3p2pQ/8/3PP1b1/5R2/PPP3P1/5RK1 w - - bm Rf8+; cp 9000 10000; nodes 1000; id "WAC.057";
-rnbqkb1r/1p3ppp/5N2/1p2p1B1/2P5/8/PP2PPPP/R2QKB1R b KQkq - bm Qxf6; cp 350 450; nodes 1000; id "WAC.113";
+rnbqkb1r/1p3ppp/5N2/1p2p1B1/2P5/8/PP2PPPP/R2QKB1R b KQkq - bm Qxf6; cp 150 450; nodes 1000; id "WAC.113";
 3RNbk1/pp3p2/4rQpp/8/1qr5/7P/P4P2/3R2K1 w - - bm Qg7+; cp 9000 10000; nodes 2000; id "WAC.188";
 4r3/p4r1p/R1p2pp1/1p1bk3/4pNPP/2P1K3/2P2P2/3R4 w - - bm Rxd5+; cp 9000 10000; nodes 2000; id "WAC.295";
 7k/1p4p1/7p/3P1n2/4Q3/2P2P2/PP3qRP/7K b - - bm Qf1+; cp 9000 10000; nodes 2000; id "WAC.197";

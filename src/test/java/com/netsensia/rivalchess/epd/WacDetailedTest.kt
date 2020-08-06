@@ -19,15 +19,15 @@ import java.io.File
 import java.io.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 import java.util.concurrent.TimeUnit
 
+@Ignore
 class WacDetailedTest {
 
     private val epdStats = mutableMapOf<String, Int>()
 
     companion object {
-        private const val RECALCULATE = false
+        private const val RECALCULATE = true
         private const val REWRITE_EPD_FILE = true
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
@@ -115,11 +115,11 @@ class WacDetailedTest {
                 if (nodeDifference != null) {
                     count ++
                     if (nodeDifference == 0) same++ else if (nodeDifference < 0) better++ else worse++
-                    val passFail = if (nodeDifference <= 0) "passed" else "failed"
+                    val passFail = if (nodeDifference <= 0) "passed in time" else "eventually passed"
                     val passNodes = epdItem.maxNodesToSearch + nodeDifference
                     val ratio = passNodes / epdItem.maxNodesToSearch.toDouble()
                     totalRatio += ratio
-                    println("${epdItem.id} $passFail in $passNodes nodes, node difference is $nodeDifference")
+                    println("${epdItem.id} $passFail using $passNodes nodes, node difference is $nodeDifference")
                     val averageRatio = totalRatio / count
                     println("Node difference = $sum, better = $better, worse = $worse, same = $same, ratio = $averageRatio")
                     sum += nodeDifference
