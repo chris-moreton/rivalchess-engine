@@ -5,7 +5,6 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.*
 import com.netsensia.rivalchess.engine.eval.evaluate
-import com.netsensia.rivalchess.engine.eval.isEndGame
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.eval.yCoordOfSquare
