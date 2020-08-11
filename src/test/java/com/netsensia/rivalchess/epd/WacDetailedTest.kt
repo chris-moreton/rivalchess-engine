@@ -121,8 +121,8 @@ class WacDetailedTest {
                     totalRatio += ratio
                     println("${epdItem.id} $passFail using $passNodes nodes, node difference is $nodeDifference")
                     val averageRatio = totalRatio / count
-                    println("Node difference = $sum, better = $better, worse = $worse, same = $same, ratio = $averageRatio")
                     sum += nodeDifference
+                    println("Node difference = $sum, better = $better, worse = $worse, same = $same, ratio = $averageRatio")
                     if (REWRITE_EPD_FILE)
                         file.appendText("${epdItem.fen} bm ${epdItem.bestMoves.toTypedArray().joinToString(",")}; " +
                                         "cp ${epdItem.minScore} ${epdItem.maxScore}; nodes ${(epdItem.maxNodesToSearch + epdStats.get(epdItem.id)!!)}; id \"${epdItem.id}\";\n")

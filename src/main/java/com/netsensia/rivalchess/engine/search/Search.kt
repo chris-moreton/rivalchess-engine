@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.*
 import com.netsensia.rivalchess.engine.eval.evaluate
+import com.netsensia.rivalchess.engine.eval.isEndGame
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.eval.yCoordOfSquare
@@ -214,6 +215,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         var legalMoveCount = 0
+        var evaluationScore = -Int.MAX_VALUE
 
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
@@ -229,6 +231,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move)
 
                 val adjustedDepth = depth - lmr
+
+                if (adjustedDepth == 1) {
+                    if (evaluationScore == -Int.MAX_VALUE) evaluationScore = -evaluate(board)
+                    if (canFutilityPrune(evaluationScore, localLow, legalMoveCount)) {
+                        board.unMakeMove()
+                        continue
+                    }
+                }
 
                 val firstPath =
                     scoutSearch(useScoutSearch, adjustedDepth, ply+1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
@@ -273,6 +283,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
+    }
+
+    private fun canFutilityPrune(evaluation: Int, target: Int, legalMoveCount: Int): Boolean {
+        return (legalMoveCount > 1 && !wasCapture() && !wasPawnPush() && !isEndGame(engineBoard) && evaluation + 600 < target)
     }
 
     private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int) =
