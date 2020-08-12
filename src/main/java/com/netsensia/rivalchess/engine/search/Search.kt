@@ -231,10 +231,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move)
 
                 val adjustedDepth = depth - lmr
+                val adjustedDepthRemaining = adjustedDepth + updatedExtensions / FRACTIONAL_EXTENSION_FULL
 
-                if (adjustedDepth == 1) {
+                if (adjustedDepthRemaining in (1..3) && !isCheck && !moveGivesCheck && legalMoveCount > 1 && !wasCapture() && !wasPawnPush() && !isEndGame(engineBoard)) {
                     if (evaluationScore == -Int.MAX_VALUE) evaluationScore = -evaluate(board)
-                    if (canFutilityPrune(evaluationScore, localLow, legalMoveCount)) {
+                    if (evaluationScore + FUTILITY_MARGIN[adjustedDepthRemaining-1] < localLow) {
                         board.unMakeMove()
                         continue
                     }
@@ -283,10 +284,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
         board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
-    }
-
-    private fun canFutilityPrune(evaluation: Int, target: Int, legalMoveCount: Int): Boolean {
-        return (legalMoveCount > 1 && !wasCapture() && !wasPawnPush() && !isEndGame(engineBoard) && evaluation + 600 < target)
     }
 
     private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int) =
