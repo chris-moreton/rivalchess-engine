@@ -27,7 +27,7 @@ class WacDetailedTest {
     private val epdStats = mutableMapOf<String, Int>()
 
     companion object {
-        private const val RECALCULATE = true
+        private const val RECALCULATE = false
         private const val REWRITE_EPD_FILE = true
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null

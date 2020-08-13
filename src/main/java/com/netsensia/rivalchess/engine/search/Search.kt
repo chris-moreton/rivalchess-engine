@@ -204,6 +204,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var bestMoveForHash = 0
         var useScoutSearch = false
         var threatExtend = 0
+        var doNotFutilityPrune = false
 
         if (performNullMove(board, depthRemaining, isCheck))
             searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply+1, localLow, localHigh, extensions).also {
@@ -211,11 +212,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (-it.score >= localHigh) return searchPathPly.withScore(-it.score)
                 threatExtend = threatExtensions(it)
             }
+        else {
+            // don't prune, because we don't know about potential mate threats
+            doNotFutilityPrune = true
+        }
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         var legalMoveCount = 0
-        var evaluationScore = -Int.MAX_VALUE
 
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
@@ -233,9 +237,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val adjustedDepth = depth - lmr
                 val adjustedDepthRemaining = adjustedDepth + updatedExtensions / FRACTIONAL_EXTENSION_FULL
 
-                if (adjustedDepthRemaining in (1..3) && !isCheck && !moveGivesCheck && legalMoveCount > 1 && !wasCapture() && !wasPawnPush() && !isEndGame(engineBoard)) {
-                    if (evaluationScore == -Int.MAX_VALUE) evaluationScore = -evaluate(board)
-                    if (evaluationScore + FUTILITY_MARGIN[adjustedDepthRemaining-1] < localLow) {
+                if (adjustedDepthRemaining in (1..1) && !doNotFutilityPrune && updatedExtensions == extensions && !isCheck && !moveGivesCheck && !wasCapture() && !wasPawnPush() && !isEndGame(engineBoard)) {
+                    if (-evaluate(board) + FUTILITY_MARGIN[adjustedDepthRemaining-1] < localLow) {
                         board.unMakeMove()
                         continue
                     }
