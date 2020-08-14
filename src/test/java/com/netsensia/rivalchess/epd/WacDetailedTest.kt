@@ -13,7 +13,6 @@ import org.awaitility.Awaitility
 import org.awaitility.core.ConditionTimeoutException
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import java.io.IOException
@@ -21,14 +20,16 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
-@Ignore
+//@Ignore
 class WacDetailedTest {
 
     private val epdStats = mutableMapOf<String, Int>()
 
     companion object {
-        private const val RECALCULATE = false
-        private const val REWRITE_EPD_FILE = true
+        private const val f = false
+        private const val t = true
+        private const val RECALCULATE = t
+        private const val REWRITE_EPD_FILE = t
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
     }
@@ -120,6 +121,9 @@ class WacDetailedTest {
                     val ratio = passNodes / epdItem.maxNodesToSearch.toDouble()
                     totalRatio += ratio
                     println("${epdItem.id} $passFail using $passNodes nodes, node difference is $nodeDifference")
+                    if (ratio > 2) {
+                        Assert.assertTrue(false)
+                    }
                     val averageRatio = totalRatio / count
                     sum += nodeDifference
                     println("Node difference = $sum, better = $better, worse = $worse, same = $same, ratio = $averageRatio")

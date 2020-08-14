@@ -237,7 +237,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val adjustedDepth = depth - lmr
                 val adjustedDepthRemaining = adjustedDepth + updatedExtensions / FRACTIONAL_EXTENSION_FULL
 
-                if (adjustedDepthRemaining in (1..1) && !doNotFutilityPrune && updatedExtensions == extensions && !isCheck && !moveGivesCheck && !wasCapture() && !wasPawnPush() && !isEndGame(engineBoard)) {
+                if (adjustedDepthRemaining in (1..3) && !doNotFutilityPrune && updatedExtensions == extensions && !isCheck && !moveGivesCheck && !wasCapture() && !wasPawnPush() && !isEndGame(engineBoard)) {
                     if (-evaluate(board) + FUTILITY_MARGIN[adjustedDepthRemaining-1] < localLow) {
                         board.unMakeMove()
                         continue
