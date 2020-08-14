@@ -421,7 +421,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return newPath
     }
 
-    private fun threatExtensions(newPath: SearchPath) = if (-newPath.score < -MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
+    private fun threatExtensions(newPath: SearchPath) = if (newPath.score > MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
     private fun checkExtension(isCheck: Boolean) = if (isCheck) FRACTIONAL_EXTENSION_CHECK else 0
     private fun pawnPushExtension() = if (wasPawnPush()) FRACTIONAL_EXTENSION_PAWNPUSH else 0
 

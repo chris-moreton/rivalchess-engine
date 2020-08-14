@@ -29,7 +29,7 @@ class WacDetailedTest {
         private const val f = false
         private const val t = true
         private const val RECALCULATE = t
-        private const val REWRITE_EPD_FILE = t
+        private const val REWRITE_EPD_FILE = f
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
     }
@@ -73,7 +73,9 @@ class WacDetailedTest {
         val move = getPgnMoveFromCompactMove(search!!.currentMove, epdItem.fen)
         val score = search!!.currentPath.score
 
-        if (!RECALCULATE) println("Looking for " + move + " with score $score in " + epdItem.bestMoves + " with score range (${epdItem.minScore},${epdItem.maxScore}). Depth was ${search!!.currentPath.height}. Nodes was $nodesToSearch.")
+        if (!RECALCULATE) println("Looking for " + move + " with score $score in " + epdItem.bestMoves +
+                " with score range (${epdItem.minScore},${epdItem.maxScore}). Depth was ${search!!.iterativeDeepeningDepth}." +
+                " Nodes: $nodesToSearch. Actual Nodes: ${search!!.nodes}")
         val passed = epdItem.bestMoves.contains(move) && epdItem.minScore <= score && epdItem.maxScore >= score
 
         if (RECALCULATE) {
@@ -84,6 +86,7 @@ class WacDetailedTest {
                 if (tryMoreNodes) testPosition(epdItem, ((nodesToSearch * 1.1111).toInt() / 1000) * 1000 + 1000, tryMoreNodes = true, tryFewerNodes = false)
             }
         } else {
+            println(search!!.currentPath)
             Assert.assertTrue(passed)
         }
     }
