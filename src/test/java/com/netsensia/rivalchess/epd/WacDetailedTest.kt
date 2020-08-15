@@ -29,7 +29,7 @@ class WacDetailedTest {
         private const val f = false
         private const val t = true
         private const val RECALCULATE = t
-        private const val REWRITE_EPD_FILE = f
+        private const val REWRITE_EPD_FILE = t
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
     }

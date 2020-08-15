@@ -220,6 +220,16 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         var legalMoveCount = 0
+        val plyExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
+        var canFutilityPrune = false
+        var futilityScore = 0
+        val adjustedDepthForFutilityCalculation = (depthRemaining + plyExtensions / FRACTIONAL_EXTENSION_FULL)
+        if (adjustedDepthForFutilityCalculation in (1..3) && !doNotFutilityPrune && !isCheck && !isEndGame(engineBoard)) {
+            futilityScore = evaluate(board) + FUTILITY_MARGIN[adjustedDepthForFutilityCalculation - 1]
+            if (futilityScore < localLow) {
+                canFutilityPrune = true
+            }
+        }
 
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
@@ -227,21 +237,18 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 legalMoveCount ++
 
-                val plyExtensions = (checkExtend + threatExtend + pawnPushExtension()).coerceAtMost(maxExtensionsForPly(ply))
-                val updatedExtensions = (extensions + plyExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
+                val moveExtensions = (pawnPushExtension() + plyExtensions).coerceAtMost(maxExtensionsForPly(ply))
+                val updatedExtensions = (extensions + moveExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
 
                 val moveGivesCheck = board.isCheck(mover)
 
                 val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move)
 
                 val adjustedDepth = depth - lmr
-                val adjustedDepthRemaining = adjustedDepth + updatedExtensions / FRACTIONAL_EXTENSION_FULL
 
-                if (adjustedDepthRemaining in (1..3) && !doNotFutilityPrune && updatedExtensions == extensions && !isCheck && !moveGivesCheck && !wasCapture() && !wasPawnPush() && !isEndGame(engineBoard)) {
-                    if (-evaluate(board) + FUTILITY_MARGIN[adjustedDepthRemaining-1] < localLow) {
-                        board.unMakeMove()
-                        continue
-                    }
+                if (canFutilityPrune && !moveGivesCheck && !wasCapture() && !wasPawnPush()) {
+                    board.unMakeMove()
+                    continue
                 }
 
                 val firstPath =
