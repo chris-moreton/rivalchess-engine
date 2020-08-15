@@ -1,3 +1,4 @@
 ## Fails
 5rk1/2p4p/2p4r/3P4/4p1b1/1Q2NqPp/PP3P1K/R4R2 b - - bm Qg2+; cp 9000 10000; nodes 100000; id "WAC.163";
 3r1r1k/1b4pp/ppn1p3/4Pp1R/Pn5P/3P4/4QP2/1qB1NKR1 w - - bm Rxh7+; cp 9000 10000; nodes 50000000; id "WAC.213";
+8/k1b5/P4p2/1Pp2p1p/K1P2P1P/8/3B4/8 w - - bm Be3,b6+; cp 700 2000; nodes 44690000; id "WAC.100";

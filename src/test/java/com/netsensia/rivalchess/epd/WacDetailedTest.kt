@@ -26,6 +26,7 @@ class WacDetailedTest {
     private val epdStats = mutableMapOf<String, Int>()
 
     companion object {
+        private const val RATIO_MAX = 10
         private const val f = false
         private const val t = true
         private const val RECALCULATE = t
@@ -124,7 +125,7 @@ class WacDetailedTest {
                     val ratio = passNodes / epdItem.maxNodesToSearch.toDouble()
                     totalRatio += ratio
                     println("${epdItem.id} $passFail using $passNodes nodes, node difference is $nodeDifference")
-                    if (ratio > 2) {
+                    if (ratio > RATIO_MAX) {
                         Assert.assertTrue(false)
                     }
                     val averageRatio = totalRatio / count

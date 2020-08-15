@@ -5,7 +5,6 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.*
 import com.netsensia.rivalchess.engine.eval.evaluate
-import com.netsensia.rivalchess.engine.eval.isEndGame
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.eval.yCoordOfSquare
@@ -204,32 +203,26 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var bestMoveForHash = 0
         var useScoutSearch = false
         var threatExtend = 0
-        var doNotFutilityPrune = false
+        var canFutilityPrune = false
 
-        if (performNullMove(board, depthRemaining, isCheck))
-            searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply+1, localLow, localHigh, extensions).also {
+        if (canPerformNullMove(board, depthRemaining, isCheck)) {
+            searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply + 1, localLow, localHigh, extensions).also {
                 if (abortingSearch) return SearchPath()
                 if (-it.score >= localHigh) return searchPathPly.withScore(-it.score)
                 threatExtend = threatExtensions(it)
             }
-        else {
-            // don't prune, because we don't know about potential mate threats
-            doNotFutilityPrune = true
         }
+
+        if (depthRemaining in (1..3) && !isCheck && threatExtend == 0) {
+            val futilityScore = evaluate(board) + FUTILITY_MARGIN[depthRemaining - 1]
+            if (futilityScore < localLow) canFutilityPrune = true
+        }
+
+        val plyExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
         var legalMoveCount = 0
-        val plyExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
-        var canFutilityPrune = false
-        var futilityScore = 0
-        val adjustedDepthForFutilityCalculation = (depthRemaining + plyExtensions / FRACTIONAL_EXTENSION_FULL)
-        if (adjustedDepthForFutilityCalculation in (1..3) && !doNotFutilityPrune && !isCheck && !isEndGame(engineBoard)) {
-            futilityScore = evaluate(board) + FUTILITY_MARGIN[adjustedDepthForFutilityCalculation - 1]
-            if (futilityScore < localLow) {
-                canFutilityPrune = true
-            }
-        }
 
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
@@ -242,14 +235,15 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val moveGivesCheck = board.isCheck(mover)
 
-                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move)
-
-                val adjustedDepth = depth - lmr
-
-                if (canFutilityPrune && !moveGivesCheck && !wasCapture() && !wasPawnPush()) {
+                if (canFutilityPrune && moveExtensions == 0 && !moveGivesCheck && !wasCapture()) {
                     board.unMakeMove()
+                    updateHistoryMoves(board.mover, move, depthRemaining, false)
+                    searchPathPly.score = localLow
                     continue
                 }
+
+                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move)
+                val adjustedDepth = depth - lmr
 
                 val firstPath =
                     scoutSearch(useScoutSearch, adjustedDepth, ply+1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
@@ -359,10 +353,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         val toSquare = toSquare(move)
         historyMovesArray[moverIndex][fromSquare][toSquare] += depthRemaining
         if (historyMovesArray[moverIndex][fromSquare][toSquare] > HISTORY_MAX_VALUE) {
-            for (i in 0..1) for (j in 0..63) for (k in 0..63) {
-                if (historyMovesSuccess[i][j][k] > 0) historyMovesSuccess[i][j][k] /= 2
-                if (historyMovesFail[i][j][k] > 0) historyMovesFail[i][j][k] /= 2
-            }
+            for (i in 0..1)
+                for (j in 0..63)
+                    for (k in 0..63) {
+                        historyMovesSuccess[i][j][k] /= 2
+                        historyMovesFail[i][j][k] /= 2
+                    }
         }
     }
 
@@ -416,7 +412,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return abortingSearch
     }
 
-    private fun performNullMove(board: EngineBoard, depthRemaining: Int, isCheck: Boolean) =
+    private fun canPerformNullMove(board: EngineBoard, depthRemaining: Int, isCheck: Boolean) =
             ((USE_NULL_MOVE_PRUNING && !isCheck && !board.isOnNullMove && depthRemaining > 1) &&
                     ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES &&
                             (if (board.mover == Colour.WHITE) board.whitePawnValues else board.blackPawnValues) > 0))
