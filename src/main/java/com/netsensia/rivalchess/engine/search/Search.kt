@@ -213,12 +213,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
         }
 
-        if (depthRemaining in (1..3) && !isCheck && threatExtend == 0) {
+        if (depthRemaining in (1..3)) {
             val futilityScore = evaluate(board) + FUTILITY_MARGIN[depthRemaining - 1]
             if (futilityScore < localLow) canFutilityPrune = true
         }
 
-        val plyExtensions = (checkExtend + threatExtend).coerceAtMost(maxExtensionsForPly(ply))
+        val plyExtensions = checkExtend + threatExtend
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
@@ -230,12 +230,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 legalMoveCount ++
 
-                val moveExtensions = (pawnPushExtension() + plyExtensions).coerceAtMost(maxExtensionsForPly(ply))
+                val wasPawnPush = wasPawnPush()
+                val moveExtensions = (pawnPushExtension(wasPawnPush) + plyExtensions).coerceAtMost(maxExtensionsForPly(ply))
                 val updatedExtensions = (extensions + moveExtensions).coerceAtMost(MAX_FRACTIONAL_EXTENSIONS)
 
                 val moveGivesCheck = board.isCheck(mover)
 
-                if (canFutilityPrune && moveExtensions == 0 && !moveGivesCheck && !wasCapture()) {
+                if (canFutilityPrune && !moveGivesCheck && !wasCapture() && !wasPawnPush) {
                     board.unMakeMove()
                     updateHistoryMoves(board.mover, move, depthRemaining, false)
                     searchPathPly.score = localLow
@@ -246,13 +247,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 val adjustedDepth = depth - lmr
 
                 val firstPath =
-                    scoutSearch(useScoutSearch, adjustedDepth, ply+1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
+                    scoutSearch(useScoutSearch, adjustedDepth, ply + 1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
                         it.score = adjustedMateScore(-it.score)
                     }
 
                 // If we used LMR and it didn't fail low, research
                 val newPath = if (lmr > 0 && firstPath.score > localLow)
-                    scoutSearch(useScoutSearch, depth, ply+1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
+                    scoutSearch(useScoutSearch, depth, ply + 1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
                         it.score = adjustedMateScore(-it.score)
                     } else firstPath
 
@@ -426,7 +427,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun threatExtensions(newPath: SearchPath) = if (newPath.score > MATE_SCORE_START) FRACTIONAL_EXTENSION_THREAT else 0
     private fun checkExtension(isCheck: Boolean) = if (isCheck) FRACTIONAL_EXTENSION_CHECK else 0
-    private fun pawnPushExtension() = if (wasPawnPush()) FRACTIONAL_EXTENSION_PAWNPUSH else 0
+    private fun pawnPushExtension(wasPawnPush: Boolean) = if (wasPawnPush) FRACTIONAL_EXTENSION_PAWNPUSH else 0
 
     private fun reorderDepthZeroMoves() {
         val moveCount = moveCount(orderedMoves[0])
