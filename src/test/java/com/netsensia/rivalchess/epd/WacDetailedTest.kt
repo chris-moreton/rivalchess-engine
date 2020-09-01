@@ -13,6 +13,7 @@ import org.awaitility.Awaitility
 import org.awaitility.core.ConditionTimeoutException
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import java.io.IOException
@@ -20,17 +21,15 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
-//@Ignore
+@Ignore
 class WacDetailedTest {
 
     private val epdStats = mutableMapOf<String, Int>()
 
     companion object {
         private const val RATIO_MAX = 10
-        private const val f = false
-        private const val t = true
-        private const val RECALCULATE = t
-        private const val REWRITE_EPD_FILE = t
+        private const val RECALCULATE = true
+        private const val REWRITE_EPD_FILE = true
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
     }

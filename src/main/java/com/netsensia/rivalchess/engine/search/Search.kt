@@ -214,7 +214,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
 
         if (depthRemaining in (1..3)) {
-            val futilityScore = evaluate(board) + FUTILITY_MARGIN[depthRemaining - 1]
+            val futilityScore = evaluate(board, localLow) + FUTILITY_MARGIN[depthRemaining - 1]
             if (futilityScore < localLow) canFutilityPrune = true
         }
 
@@ -297,10 +297,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun wasPawnPush(): Boolean {
         val lastMove = engineBoard.moveHistory[engineBoard.numMovesMade-1]!!
-        val lastMovedPiece = lastMove.movePiece
         val lastMoveTo = toSquare(lastMove.move)
-        return (engineBoard.mover == Colour.WHITE && lastMovedPiece == BITBOARD_BP && lastMoveTo <= 15) ||
-                (engineBoard.mover == Colour.BLACK && lastMovedPiece == BITBOARD_WP && lastMoveTo >= 48)
+        return (engineBoard.mover == Colour.WHITE && lastMove.movePiece == BITBOARD_BP && lastMoveTo <= 15) ||
+                (engineBoard.mover == Colour.BLACK && lastMove.movePiece == BITBOARD_WP && lastMoveTo >= 48)
     }
 
     private fun wasCapture() = engineBoard.moveHistory[engineBoard.numMovesMade-1]!!.capturePiece != BITBOARD_NONE
@@ -363,7 +362,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         }
     }
 
-    fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
+    private fun updateCurrentDepthZeroMove(move: Int, arrayIndex: Int) {
         currentDepthZeroMove = move
         currentDepthZeroMoveNumber = arrayIndex
     }
