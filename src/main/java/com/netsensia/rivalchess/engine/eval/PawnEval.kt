@@ -1,7 +1,10 @@
 package com.netsensia.rivalchess.engine.eval
 
 import com.netsensia.rivalchess.bitboards.*
-import com.netsensia.rivalchess.bitboards.util.*
+import com.netsensia.rivalchess.bitboards.util.applyToSquares
+import com.netsensia.rivalchess.bitboards.util.northFill
+import com.netsensia.rivalchess.bitboards.util.popCount
+import com.netsensia.rivalchess.bitboards.util.southFill
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.BITBOARD_BP
 import com.netsensia.rivalchess.consts.BITBOARD_WP
@@ -13,9 +16,9 @@ private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour 
 
 inline fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShield: Long, shifter: Long.(Int) -> Long) =
         (KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * popCount(friendlyPawns and friendlyPawnShield)
-                - KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * popCount(enemyPawns and (friendlyPawnShield or shifter(friendlyPawnShield,8)))
-                + KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * popCount(friendlyPawns and shifter(friendlyPawnShield,8))
-                - KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * popCount(enemyPawns and shifter(friendlyPawnShield,16)))
+                - KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * popCount(enemyPawns and (friendlyPawnShield or shifter(friendlyPawnShield, 8)))
+                + KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * popCount(friendlyPawns and shifter(friendlyPawnShield, 8))
+                - KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * popCount(enemyPawns and shifter(friendlyPawnShield, 16)))
 
 fun whitePawnsEval(board: EngineBoard): Int {
     var acc = 0
@@ -47,10 +50,44 @@ fun blackPawnsEval(board: EngineBoard): Int {
     return acc
 }
 
+class PawnHash(val whitePawns: Long, val blackPawns: Long, val score: Int)
+
+const val DEFAULT_PAWN_HASHTABLE_SIZE_MB = 32
+val BYTES_PER_MB = 1024 * 1024
+val INT_BYTES = 4
+val LONG_BYTES = 8
+val PAWN_HASH_INDEX_MAX = DEFAULT_PAWN_HASHTABLE_SIZE_MB * BYTES_PER_MB / (LONG_BYTES * 2 + INT_BYTES)
+val pawnHashMap = HashMap<Int, PawnHash>()
+var clashes = 0
+var hits = 0
+
+private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long): Int {
+    var hash = 23L
+    hash = hash * 31L + whitePawnBitboard
+    hash = hash * 31L + blackPawnBitboard
+
+    return (hash % PAWN_HASH_INDEX_MAX).toInt()
+}
+
+fun Double.format(digits: Int) = "%.${digits}f".format(this)
+
 fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
 
     val whitePawnBitboard = board.getBitboard(BITBOARD_WP)
     val blackPawnBitboard = board.getBitboard(BITBOARD_BP)
+
+    val pawnHashIndex = pawnHashIndex(whitePawnBitboard, blackPawnBitboard)
+
+    if (pawnHashMap.containsKey(pawnHashIndex)) {
+        if (pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard) {
+            hits++
+            return pawnHashMap[pawnHashIndex]!!.score
+        } else {
+            clashes++
+            val total = clashes + hits
+            println("Pawn Hash Clashes = $clashes / $total = ${((clashes.toDouble() / total) * 100.0).format(2)}%")
+        }
+    }
 
     val whitePawnFiles = getPawnFiles(whitePawnBitboard)
     val blackPawnFiles = getPawnFiles(blackPawnBitboard)
@@ -79,7 +116,7 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
         return popCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
     }
 
-    return  popCount(blackIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
+    val score =  popCount(blackIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
             popCount(whiteIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
             (if (whiteIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) +
             (if (blackIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) -
@@ -113,6 +150,10 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
                         blackPassedPawnsBitboard,
                         board.mover)
             else 0)
+
+    pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, score)
+
+    return score
 }
 
 fun calculateLowMaterialPawnBonus(
@@ -131,7 +172,7 @@ fun calculateLowMaterialPawnBonus(
     val lowMaterialSidePieceValues = if (lowMaterialColour == Colour.WHITE) board.whitePieceValues else board.blackPieceValues
 
     var acc = 0
-    applyToSquares (if (lowMaterialColour == Colour.WHITE) blackPassedPawnsBitboard else whitePassedPawnsBitboard) {
+    applyToSquares(if (lowMaterialColour == Colour.WHITE) blackPassedPawnsBitboard else whitePassedPawnsBitboard) {
         val pawnDistance = pawnDistanceFromPromotion(lowMaterialColour, it).coerceAtMost(5)
         val kingXDistanceFromPawn = difference(kingX, it)
         val kingYDistanceFromPawn = difference(colourAdjustedYRank(lowMaterialColour, kingY), it)

@@ -12,7 +12,7 @@ import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
-@Ignore
+//@Ignore
 class SearchTest {
     companion object {
         private const val RECALCULATE = false

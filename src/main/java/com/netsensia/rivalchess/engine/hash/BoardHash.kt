@@ -83,7 +83,7 @@ class BoardHash {
         if (hashSizeMB < 1) {
             setMaxHashEntries(1)
         } else {
-            val mainHashTableSize = hashSizeMB * 1024 * 1024 / 14 * 6 // two of these
+            val mainHashTableSize = hashSizeMB * 1024 * 1024 / 14 * 6 // two of these / 14 * 7 would be exactly half
             setMaxHashEntries(mainHashTableSize / HASH_POSITION_SIZE_BYTES)
         }
         setHashTable()

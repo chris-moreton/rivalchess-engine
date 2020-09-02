@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
-@Ignore
+//@Ignore
 class WacDetailedTest {
 
     private val epdStats = mutableMapOf<String, Int>()
