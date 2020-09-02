@@ -53,13 +53,11 @@ fun blackPawnsEval(board: EngineBoard): Int {
 class PawnHash(val whitePawns: Long, val blackPawns: Long, val score: Int)
 
 const val DEFAULT_PAWN_HASHTABLE_SIZE_MB = 32
-val BYTES_PER_MB = 1024 * 1024
-val INT_BYTES = 4
-val LONG_BYTES = 8
-val PAWN_HASH_INDEX_MAX = DEFAULT_PAWN_HASHTABLE_SIZE_MB * BYTES_PER_MB / (LONG_BYTES * 2 + INT_BYTES)
+const val BYTES_PER_MB = 1024 * 1024
+const val INT_BYTES = 4
+const val LONG_BYTES = 8
+const val PAWN_HASH_INDEX_MAX = DEFAULT_PAWN_HASHTABLE_SIZE_MB * BYTES_PER_MB / (LONG_BYTES * 2 + INT_BYTES)
 val pawnHashMap = HashMap<Int, PawnHash>()
-var clashes = 0
-var hits = 0
 
 private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long): Int {
     var hash = 23L
@@ -68,8 +66,6 @@ private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long): Int
 
     return (hash % PAWN_HASH_INDEX_MAX).toInt()
 }
-
-fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
 fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
 
@@ -80,12 +76,7 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
 
     if (pawnHashMap.containsKey(pawnHashIndex)) {
         if (pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard) {
-            hits++
             return pawnHashMap[pawnHashIndex]!!.score
-        } else {
-            clashes++
-            val total = clashes + hits
-            println("Pawn Hash Clashes = $clashes / $total = ${((clashes.toDouble() / total) * 100.0).format(2)}%")
         }
     }
 
