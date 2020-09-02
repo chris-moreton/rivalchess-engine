@@ -11,6 +11,7 @@ import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import kotlin.math.abs
+import kotlin.system.exitProcess
 
 private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
 
@@ -50,21 +51,24 @@ fun blackPawnsEval(board: EngineBoard): Int {
     return acc
 }
 
-class PawnHash(val whitePawns: Long, val blackPawns: Long, val score: Int)
+class PawnHash(val whitePawns: Long, val blackPawns: Long, val whiteKingSquare: Int, val blackKingSquare: Int, val mover: Colour, val score: Int)
 
 const val DEFAULT_PAWN_HASHTABLE_SIZE_MB = 32
 const val BYTES_PER_MB = 1024 * 1024
 const val INT_BYTES = 4
 const val LONG_BYTES = 8
-const val PAWN_HASH_INDEX_MAX = DEFAULT_PAWN_HASHTABLE_SIZE_MB * BYTES_PER_MB / (LONG_BYTES * 2 + INT_BYTES)
+const val PAWN_HASH_INDEX_MAX = DEFAULT_PAWN_HASHTABLE_SIZE_MB * BYTES_PER_MB / (LONG_BYTES * 2 + INT_BYTES * 3)
 val pawnHashMap = HashMap<Int, PawnHash>()
 
-private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long): Int {
+private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long, whiteKingSquare: Int, blackKingSquare: Int, mover: Colour): Int {
     var hash = 23L
     hash = hash * 31L + whitePawnBitboard
     hash = hash * 31L + blackPawnBitboard
+    hash = hash * 31L + whiteKingSquare
+    hash = hash * 31L + blackKingSquare
+    hash = hash * 31L + if (mover == Colour.WHITE) 1 else 0
 
-    return (hash % PAWN_HASH_INDEX_MAX).toInt()
+    return (Math.abs(hash) % PAWN_HASH_INDEX_MAX).toInt()
 }
 
 fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
@@ -72,11 +76,14 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     val whitePawnBitboard = board.getBitboard(BITBOARD_WP)
     val blackPawnBitboard = board.getBitboard(BITBOARD_BP)
 
-    val pawnHashIndex = pawnHashIndex(whitePawnBitboard, blackPawnBitboard)
+    val pawnHashIndex = pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover)
 
+    var checkScore = -9999
     if (pawnHashMap.containsKey(pawnHashIndex)) {
-        if (pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard) {
-            return pawnHashMap[pawnHashIndex]!!.score
+        if (pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard
+                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.whiteKingSquare && pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.blackKingSquare
+                && pawnHashMap[pawnHashIndex]!!.mover == board.mover) {
+            checkScore = pawnHashMap[pawnHashIndex]!!.score
         }
     }
 
@@ -118,33 +125,39 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
             VALUE_DOUBLED_PAWN_PENALTY * (board.whitePawnValues / 100 - popCount(whiteOccupiedFileMask)) -
             popCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
             VALUE_DOUBLED_PAWN_PENALTY * (board.blackPawnValues / 100 - popCount(blackOccupiedFileMask)) +
-            popCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
-            (linearScale(board.blackPieceValues, 0, PAWN_ADJUST_MAX_MATERIAL, whitePassedPawnScore() * 2, whitePassedPawnScore())) -
-            (linearScale(board.whitePieceValues, 0, PAWN_ADJUST_MAX_MATERIAL, blackPassedPawnScore() * 2, blackPassedPawnScore())) +
-            (if (board.blackPieceValues < PAWN_ADJUST_MAX_MATERIAL)
-                calculateLowMaterialPawnBonus(
-                        Colour.BLACK,
-                        board.whiteKingSquare,
-                        board.blackKingSquare,
-                        board,
-                        whitePassedPawnsBitboard,
-                        blackPassedPawnsBitboard,
-                        board.mover)
-            else 0) +
-            (if (board.whitePieceValues < PAWN_ADJUST_MAX_MATERIAL)
-                calculateLowMaterialPawnBonus(
-                        Colour.WHITE,
-                        board.whiteKingSquare,
-                        board.blackKingSquare,
-                        board,
-                        whitePassedPawnsBitboard,
-                        blackPassedPawnsBitboard,
-                        board.mover)
-            else 0)
+            popCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY
 
-    pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, score)
+    if (checkScore != -9999 && checkScore != score) {
+        println("WTF $checkScore != $score for index $pawnHashIndex ($whitePawnBitboard, $blackPawnBitboard, ${board.whiteKingSquare}, ${board.blackKingSquare}, ${board.mover})")
+        exitProcess(1)
+    }
+    pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover, score)
 
-    return score
+    val impureScore =
+        (linearScale(board.blackPieceValues, 0, PAWN_ADJUST_MAX_MATERIAL, whitePassedPawnScore() * 2, whitePassedPawnScore())) -
+                (linearScale(board.whitePieceValues, 0, PAWN_ADJUST_MAX_MATERIAL, blackPassedPawnScore() * 2, blackPassedPawnScore())) +
+                (if (board.blackPieceValues < PAWN_ADJUST_MAX_MATERIAL)
+                    calculateLowMaterialPawnBonus(
+                            Colour.BLACK,
+                            board.whiteKingSquare,
+                            board.blackKingSquare,
+                            board,
+                            whitePassedPawnsBitboard,
+                            blackPassedPawnsBitboard,
+                            board.mover)
+                else 0) +
+                (if (board.whitePieceValues < PAWN_ADJUST_MAX_MATERIAL)
+                    calculateLowMaterialPawnBonus(
+                            Colour.WHITE,
+                            board.whiteKingSquare,
+                            board.blackKingSquare,
+                            board,
+                            whitePassedPawnsBitboard,
+                            blackPassedPawnsBitboard,
+                            board.mover)
+                else 0)
+
+    return score + impureScore
 }
 
 fun calculateLowMaterialPawnBonus(
