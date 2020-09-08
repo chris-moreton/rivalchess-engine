@@ -57,7 +57,7 @@ const val BYTES_PER_MB = 1024 * 1024
 const val INT_BYTES = 4
 const val LONG_BYTES = 8
 const val PAWN_HASH_INDEX_MAX = DEFAULT_PAWN_HASHTABLE_SIZE_MB * BYTES_PER_MB / (LONG_BYTES * 2 + INT_BYTES * 3)
-const val USE_PAWN_HASH = true
+const val USE_PAWN_HASH = false
 
 val pawnHashMap = HashMap<Int, PawnHash>()
 
@@ -94,7 +94,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     val whiteGuardedPassedPawns = whitePassedPawnsBitboard and attacks.whitePawns
     val blackGuardedPassedPawns = blackPassedPawnsBitboard and attacks.blackPawns
 
-    val pawnHashIndex = pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover)
+    val pawnHashIndex = if (USE_PAWN_HASH) 
+        pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover) else 0
 
     val hashedScore = if (USE_PAWN_HASH && pawnHashMap.containsKey(pawnHashIndex) &&
             pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard

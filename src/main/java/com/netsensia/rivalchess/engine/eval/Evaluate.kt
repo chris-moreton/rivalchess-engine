@@ -24,7 +24,6 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     val adjustedMaterialDifference = if (board.mover == Colour.WHITE) materialDifference else -materialDifference
 
     val viableEvalForPhase1 = isEndGame || (adjustedMaterialDifference + PHASE1_CUTOFF >= minScore)
-
     if (!viableEvalForPhase1) return adjustedMaterialDifference
 
     val attacks = Attacks(board)
@@ -74,8 +73,7 @@ private fun knightsEval(board: EngineBoard, attacks: Attacks) =
 private fun bishopsEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) =
         (whiteBishopEval(board, whitePieces.inv()) - blackBishopsEval(board, blackPieces.inv()))
 
-private fun pawnPieceSquareEval(board: EngineBoard) =
-        (whitePawnsEval(board) - blackPawnsEval(board))
+private fun pawnPieceSquareEval(board: EngineBoard) = whitePawnsEval(board) - blackPawnsEval(board)
 
 private fun rooksEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) =
         (whiteRooksEval(board, whitePieces.inv()) - blackRooksEval(board, blackPieces.inv()))
@@ -141,11 +139,11 @@ fun blackRookOpenFilesEval(board: EngineBoard, file: Int) =
 
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) = (enemyPawnValues / VALUE_PAWN).coerceAtMost(6)
 
-fun doubledRooksEval(bitboard: Long): Int {
+fun doubledRooksEval(rookBitboard: Long): Int {
     val files = booleanArrayOf(false,false,false,false,false,false,false,false)
-    applyToSquares(bitboard) {
-        if (files[it % 8]) return VALUE_ROOKS_ON_SAME_FILE
-        files[it % 8] = true
+    applyToSquares(rookBitboard) { square ->
+        if (files[square % 8]) return VALUE_ROOKS_ON_SAME_FILE
+        files[square % 8] = true
     }
     return 0
 }

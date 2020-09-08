@@ -62,7 +62,7 @@ class SearchTest {
         search.setMillisToThink(searchMillis)
         search.setNodesToSearch(searchNodes)
         search.startSearch()
-        TimeUnit.MILLISECONDS.sleep(100)
+        TimeUnit.MILLISECONDS.sleep(500)
         Awaitility.await().atMost(searchMillis.toLong() + 1000, TimeUnit.MILLISECONDS).until { !search.isSearching }
 
         if (RECALCULATE) {

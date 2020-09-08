@@ -103,7 +103,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
-        val path = searchZero(engineBoard, depth, 0, low, high)
+        val path = searchZero(engineBoard, depth, low, high)
 
         val newLow = if (path.score <= low) low - widenAspiration(attempt) else low
         val newHigh = if (path.score >= high) high + widenAspiration(attempt) else high
@@ -115,7 +115,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     }
 
-    fun searchZero(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int): SearchPath {
+    private fun searchZero(board: EngineBoard, depth: Int, low: Int, high: Int): SearchPath {
         nodes ++
         var myLow = low
         var numMoves = 0
@@ -137,7 +137,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = checkExtension(isCheck)
-                val newPath = getPathFromSearch(move, useScoutSearch, depth, ply+1, myLow, high, extensions, isCheck).also { path ->
+                val newPath = getPathFromSearch(move, useScoutSearch, depth, 1, myLow, high, extensions, isCheck).also { path ->
                     path.score = adjustedMateScore(-path.score)
                 }
 
@@ -203,7 +203,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var bestMoveForHash = 0
         var useScoutSearch = false
         var threatExtend = 0
-        var canFutilityPrune = false
 
         if (canPerformNullMove(board, depthRemaining, isCheck)) {
             searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply + 1, localLow, localHigh, extensions).also {
@@ -213,11 +212,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             }
         }
 
-        if (depthRemaining in (1..3)) {
-            val futilityScore = evaluate(board, localLow) + FUTILITY_MARGIN[depthRemaining - 1]
-            canFutilityPrune = (futilityScore < localLow)
-        }
-
+        val canFutilityPrune = canFutilityPrune(depthRemaining, board, localLow)
         val plyExtensions = checkExtend + threatExtend
 
         orderedMoves[ply] = board.moveGenerator().generateLegalMoves().moves
@@ -285,11 +280,14 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (legalMoveCount == 0) {
             searchPathPly.withScore(if (board.isCheck(mover)) -VALUE_MATE else 0)
             board.boardHashObject.storeHashMove(0, board, searchPathPly.score, EXACT, MAX_SEARCH_DEPTH)
-            return searchPathPly
+        } else {
+            board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         }
-        board.boardHashObject.storeHashMove(bestMoveForHash, board, searchPathPly.score, hashFlag, depthRemaining)
         return searchPathPly
     }
+
+    private fun canFutilityPrune(depthRemaining: Int, board: EngineBoard, localLow: Int) =
+        depthRemaining in (1..3) && (evaluate(board, localLow) + FUTILITY_MARGIN[depthRemaining - 1] < localLow)
 
     private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int) =
         if (moveGivesCheck || extended || legalMoveCount < 4 ||
@@ -309,7 +307,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun onlyOneMoveAndNotOnFixedTime(numLegalMoves: Int) = numLegalMoves == 1 && millisToThink < MAX_SEARCH_MILLIS
 
     private fun highScoreMoveSequence(board: EngineBoard, ply: Int, highRankingMove: Int) = sequence {
-        while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0);
+        while (getHighScoreMove(board, ply, highRankingMove).also { if (it != 0) yield(it) } != 0) {
+            // no body required
+        }
     }
 
     private fun maxExtensionsForPly(ply: Int) = maxNewExtensionsTreePart[(ply / iterativeDeepeningDepth).coerceAtMost(LAST_EXTENSION_LAYER)]
