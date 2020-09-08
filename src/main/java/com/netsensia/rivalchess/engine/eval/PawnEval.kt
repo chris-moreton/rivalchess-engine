@@ -11,7 +11,6 @@ import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import kotlin.math.abs
-import kotlin.system.exitProcess
 
 private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
 
@@ -58,6 +57,8 @@ const val BYTES_PER_MB = 1024 * 1024
 const val INT_BYTES = 4
 const val LONG_BYTES = 8
 const val PAWN_HASH_INDEX_MAX = DEFAULT_PAWN_HASHTABLE_SIZE_MB * BYTES_PER_MB / (LONG_BYTES * 2 + INT_BYTES * 3)
+const val USE_PAWN_HASH = true
+
 val pawnHashMap = HashMap<Int, PawnHash>()
 
 private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long, whiteKingSquare: Int, blackKingSquare: Int, mover: Colour): Int {
@@ -71,71 +72,75 @@ private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long, whit
     return (Math.abs(hash) % PAWN_HASH_INDEX_MAX).toInt()
 }
 
+fun whitePassedPawnScore(whitePassedPawnsBitboard: Long, whiteGuardedPassedPawns: Long): Int {
+    var acc = 0
+    applyToSquares(whitePassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[yCoordOfSquare(it)] }
+    return popCount(whiteGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
+}
+
+fun blackPassedPawnScore(blackPassedPawnsBitboard: Long, blackGuardedPassedPawns: Long): Int {
+    var acc = 0
+    applyToSquares(blackPassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[7 - yCoordOfSquare(it)] }
+    return popCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
+}
+
 fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
 
     val whitePawnBitboard = board.getBitboard(BITBOARD_WP)
     val blackPawnBitboard = board.getBitboard(BITBOARD_BP)
 
-    val pawnHashIndex = pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover)
-
-    var checkScore = -9999
-    if (pawnHashMap.containsKey(pawnHashIndex)) {
-        if (pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard
-                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.whiteKingSquare && pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.blackKingSquare
-                && pawnHashMap[pawnHashIndex]!!.mover == board.mover) {
-            checkScore = pawnHashMap[pawnHashIndex]!!.score
-        }
-    }
-
-    val whitePawnFiles = getPawnFiles(whitePawnBitboard)
-    val blackPawnFiles = getPawnFiles(blackPawnBitboard)
-
     val whitePassedPawnsBitboard = getWhitePassedPawns(whitePawnBitboard, blackPawnBitboard)
     val blackPassedPawnsBitboard = getBlackPassedPawns(whitePawnBitboard, blackPawnBitboard)
     val whiteGuardedPassedPawns = whitePassedPawnsBitboard and attacks.whitePawns
     val blackGuardedPassedPawns = blackPassedPawnsBitboard and attacks.blackPawns
-    val whiteBackwardPawns = getWhiteBackwardPawns(whitePawnBitboard, blackPawnBitboard, attacks.whitePawns, attacks.blackPawns, blackPawnFiles)
-    val blackBackwardPawns = getBlackBackwardPawns(blackPawnBitboard, whitePawnBitboard, attacks.blackPawns, attacks.whitePawns, whitePawnFiles)
-    val whiteIsolatedPawns = whitePawnFiles and (whitePawnFiles shl 1).inv() and (whitePawnFiles ushr 1).inv()
-    val blackIsolatedPawns = blackPawnFiles and (blackPawnFiles shl 1).inv() and (blackPawnFiles ushr 1).inv()
 
-    val whiteOccupiedFileMask = southFill(whitePawnBitboard) and RANK_1
-    val blackOccupiedFileMask = southFill(blackPawnBitboard) and RANK_1
+    val pawnHashIndex = pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover)
 
-    fun whitePassedPawnScore(): Int {
-        var acc = 0
-        applyToSquares(whitePassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[yCoordOfSquare(it)] }
-        return popCount(whiteGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
+    val hashedScore = if (USE_PAWN_HASH && pawnHashMap.containsKey(pawnHashIndex) &&
+            pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard
+                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.whiteKingSquare && pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.blackKingSquare
+                && pawnHashMap[pawnHashIndex]!!.mover == board.mover) {
+            pawnHashMap[pawnHashIndex]!!.score
+        } else -9999
+
+    val score = if (USE_PAWN_HASH && hashedScore != -9999) hashedScore
+    else
+    {
+        val whitePawnFiles = getPawnFiles(whitePawnBitboard)
+        val blackPawnFiles = getPawnFiles(blackPawnBitboard)
+
+        val whiteBackwardPawns = getWhiteBackwardPawns(whitePawnBitboard, blackPawnBitboard, attacks.whitePawns, attacks.blackPawns, blackPawnFiles)
+        val blackBackwardPawns = getBlackBackwardPawns(blackPawnBitboard, whitePawnBitboard, attacks.blackPawns, attacks.whitePawns, whitePawnFiles)
+        val whiteIsolatedPawns = whitePawnFiles and (whitePawnFiles shl 1).inv() and (whitePawnFiles ushr 1).inv()
+        val blackIsolatedPawns = blackPawnFiles and (blackPawnFiles shl 1).inv() and (blackPawnFiles ushr 1).inv()
+
+        val whiteOccupiedFileMask = southFill(whitePawnBitboard) and RANK_1
+        val blackOccupiedFileMask = southFill(blackPawnBitboard) and RANK_1
+
+        popCount(blackIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
+        popCount(whiteIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
+        (if (whiteIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) +
+        (if (blackIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) -
+        popCount(whiteBackwardPawns) * VALUE_BACKWARD_PAWN_PENALTY +
+        popCount(blackBackwardPawns) * VALUE_BACKWARD_PAWN_PENALTY -
+        ((popCount(whitePawnBitboard and FILE_A) + popCount(whitePawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) +
+        ((popCount(blackPawnBitboard and FILE_A) + popCount(blackPawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) -
+        VALUE_DOUBLED_PAWN_PENALTY * (board.whitePawnValues / 100 - popCount(whiteOccupiedFileMask)) -
+        popCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
+        VALUE_DOUBLED_PAWN_PENALTY * (board.blackPawnValues / 100 - popCount(blackOccupiedFileMask)) +
+        popCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY
     }
 
-    fun blackPassedPawnScore(): Int {
-        var acc = 0
-        applyToSquares(blackPassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[7 - yCoordOfSquare(it)] }
-        return popCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
+    if (USE_PAWN_HASH) {
+        pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover, score)
     }
 
-    val score =  popCount(blackIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
-            popCount(whiteIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
-            (if (whiteIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) +
-            (if (blackIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) -
-            popCount(whiteBackwardPawns) * VALUE_BACKWARD_PAWN_PENALTY +
-            popCount(blackBackwardPawns) * VALUE_BACKWARD_PAWN_PENALTY -
-            ((popCount(whitePawnBitboard and FILE_A) + popCount(whitePawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) +
-            ((popCount(blackPawnBitboard and FILE_A) + popCount(blackPawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) -
-            VALUE_DOUBLED_PAWN_PENALTY * (board.whitePawnValues / 100 - popCount(whiteOccupiedFileMask)) -
-            popCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
-            VALUE_DOUBLED_PAWN_PENALTY * (board.blackPawnValues / 100 - popCount(blackOccupiedFileMask)) +
-            popCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY
-
-    if (checkScore != -9999 && checkScore != score) {
-        println("WTF $checkScore != $score for index $pawnHashIndex ($whitePawnBitboard, $blackPawnBitboard, ${board.whiteKingSquare}, ${board.blackKingSquare}, ${board.mover})")
-        exitProcess(1)
-    }
-    pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover, score)
+    val whitePassedPawnScore = whitePassedPawnScore(whitePassedPawnsBitboard, whiteGuardedPassedPawns)
+    val blackPassedPawnScore = blackPassedPawnScore(blackPassedPawnsBitboard, blackGuardedPassedPawns)
 
     val impureScore =
-        (linearScale(board.blackPieceValues, 0, PAWN_ADJUST_MAX_MATERIAL, whitePassedPawnScore() * 2, whitePassedPawnScore())) -
-                (linearScale(board.whitePieceValues, 0, PAWN_ADJUST_MAX_MATERIAL, blackPassedPawnScore() * 2, blackPassedPawnScore())) +
+        (linearScale(board.blackPieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,whitePassedPawnScore * 2, whitePassedPawnScore)) -
+                (linearScale(board.whitePieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,blackPassedPawnScore * 2, blackPassedPawnScore)) +
                 (if (board.blackPieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.BLACK,

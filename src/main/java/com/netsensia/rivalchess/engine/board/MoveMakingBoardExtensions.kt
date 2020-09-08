@@ -68,25 +68,18 @@ private fun EngineBoard.updateMaterialAfterPieceCapture(capturePiece: Int, colou
     if (colour == Colour.WHITE) {
         when (capturePiece) {
             BITBOARD_WP -> whitePawnValues -= pieceValue(BITBOARD_WP)
-            BITBOARD_WN -> whitePieceValues -= pieceValue(BITBOARD_WN)
-            BITBOARD_WB -> whitePieceValues -= pieceValue(BITBOARD_WB)
-            BITBOARD_WR -> whitePieceValues -= pieceValue(BITBOARD_WR)
-            BITBOARD_WQ -> whitePieceValues -= pieceValue(BITBOARD_WQ)
+            else -> whitePieceValues -= pieceValue(capturePiece)
         }
     } else {
         when (capturePiece) {
             BITBOARD_BP -> blackPawnValues -= pieceValue(BITBOARD_WP)
-            BITBOARD_BN -> blackPieceValues -= pieceValue(BITBOARD_WN)
-            BITBOARD_BB -> blackPieceValues -= pieceValue(BITBOARD_WB)
-            BITBOARD_BR -> blackPieceValues -= pieceValue(BITBOARD_WR)
-            BITBOARD_BQ -> blackPieceValues -= pieceValue(BITBOARD_WQ)
+            else -> blackPieceValues -= pieceValue(capturePiece)
         }
     }
 }
 
 fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
-    numMovesMade--
-    val moveMade = moveHistory[numMovesMade]!!
+    val moveMade = moveHistory[--numMovesMade]!!
     halfMoveCount = moveMade.halfMoveCount
     mover = mover.opponent()
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveMade.enPassantBitboard)

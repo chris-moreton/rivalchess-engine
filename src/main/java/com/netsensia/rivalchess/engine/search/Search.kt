@@ -215,7 +215,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         if (depthRemaining in (1..3)) {
             val futilityScore = evaluate(board, localLow) + FUTILITY_MARGIN[depthRemaining - 1]
-            if (futilityScore < localLow) canFutilityPrune = true
+            canFutilityPrune = (futilityScore < localLow)
         }
 
         val plyExtensions = checkExtend + threatExtend
