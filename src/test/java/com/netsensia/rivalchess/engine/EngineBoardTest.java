@@ -20,6 +20,7 @@ import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WK;
 import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WN;
 import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WQ;
 import static com.netsensia.rivalchess.consts.BitboardsKt.BITBOARD_WR;
+import static com.netsensia.rivalchess.consts.GameKt.FEN_START_POS;
 import static com.netsensia.rivalchess.engine.board.MoveMakingBoardExtensionsKt.makeMove;
 import static com.netsensia.rivalchess.engine.eval.PieceValueKt.pieceValue;
 import static com.netsensia.rivalchess.util.ChessBoardConversionKt.getEngineMoveFromSimpleAlgebraic;
@@ -31,14 +32,14 @@ public class EngineBoardTest {
 
     @Test
     public void canRecognisePreviousPositions() throws IllegalFenException {
-        final EngineBoard board = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        final EngineBoard board = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         final List<String> moves = new ArrayList<>();
 
         moves.add("e2e4");
         moves.add("e7e5");
 
-        board.setBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        board.setBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         for (String move : moves) {
             makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
@@ -54,7 +55,7 @@ public class EngineBoardTest {
 
         assertEquals(2, board.previousOccurrencesOfThisPosition());
 
-        board.setBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        board.setBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         moves.add("b1c3");
         moves.add("b8a6");
@@ -65,7 +66,7 @@ public class EngineBoardTest {
 
         assertEquals(0, board.previousOccurrencesOfThisPosition());
 
-        board.setBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        board.setBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         moves.add("c3b1");
         moves.add("a6b8");
@@ -84,7 +85,7 @@ public class EngineBoardTest {
         moves.add("c3b1");
         moves.add("c6b8");
 
-        board.setBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        board.setBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         for (String move : moves) {
             makeMove(board, getEngineMoveFromSimpleAlgebraic(move).compact, false, true);
@@ -98,7 +99,7 @@ public class EngineBoardTest {
         final String STALEMATE = "8/6b1/8/8/8/n7/PP6/K7 w - - 0 4";
         final String NOT_STALEMATE = "8/6k1/8/8/8/n7/PP6/K7 b - - 0 4";
 
-        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
         
         assertFalse(com.netsensia.rivalchess.engine.board.BoardExtensionsKt.isGameOver(engineBoard));
 
@@ -114,7 +115,7 @@ public class EngineBoardTest {
 
     @Test
     public void getSquareOccupant() throws IllegalFenException {
-        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         assertEquals(BITBOARD_WK, engineBoard.getBitboardTypeOfPieceOnSquare(3));
         assertEquals(BITBOARD_WQ, engineBoard.getBitboardTypeOfPieceOnSquare(4));
@@ -127,7 +128,7 @@ public class EngineBoardTest {
 
     @Test
     public void getPiece() throws IllegalFenException {
-        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         Assert.assertEquals(Piece.KING, com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getPiece(engineBoard, 3));
         Assert.assertEquals(Piece.QUEEN, com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getPiece(engineBoard, 4));
@@ -153,7 +154,7 @@ public class EngineBoardTest {
         final String SILLY_CHECK = "rnbqkbnr/pppp1ppp/8/8/8/8/PPPP1PPP/RNBKQBNR b KQkq - 0 4";
         final String STALEMATE = "8/6b1/8/8/8/n7/PP6/K7 w - - 0 4";
 
-        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         assertFalse(com.netsensia.rivalchess.engine.board.BoardExtensionsKt.isCheck(engineBoard, engineBoard.mover));
 
@@ -169,7 +170,7 @@ public class EngineBoardTest {
 
     @Test
     public void getWhitePieceValues() throws IllegalFenException {
-        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         Assert.assertEquals(
                 pieceValue(BITBOARD_WQ),
@@ -196,7 +197,7 @@ public class EngineBoardTest {
 
     @Test
     public void getBlackPieceValues() throws IllegalFenException {
-        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         Assert.assertEquals(pieceValue(BITBOARD_WQ) + pieceValue(BITBOARD_WN) * 2 + pieceValue(BITBOARD_WB) * 2 + pieceValue(BITBOARD_WR) * 2, engineBoard.blackPieceValues);
 
@@ -212,9 +213,9 @@ public class EngineBoardTest {
 
     @Test
     public void getFen() throws IllegalFenException {
-        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
-        Assert.assertEquals(BitboardsKt.FEN_START_POS, com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
+        Assert.assertEquals(FEN_START_POS, com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false, true);
         Assert.assertEquals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(engineBoard));

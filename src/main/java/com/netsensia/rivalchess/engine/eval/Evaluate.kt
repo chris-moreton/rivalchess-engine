@@ -5,21 +5,9 @@ import com.netsensia.rivalchess.bitboards.util.*
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
-import com.netsensia.rivalchess.engine.board.getFen
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
-import java.lang.Math.abs
-import java.lang.System.exit
-import kotlin.system.exitProcess
 
-var savings = 0
-var bigDiff = -Int.MAX_VALUE
-var phase1Cutoffs = 0
-var phase2Cutoffs = 0
-var totalEvals = 0
-
-const val DETERMINE_BAD_CUTOFFS = false
-const val EXAMINE_CUTOFFS = false
 const val PHASE1_CUTOFF = 2500
 const val PHASE2_CUTOFF = 255
 
@@ -28,13 +16,13 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     if (onlyKingsRemain(board)) return 0
 
-    totalEvals ++
     val materialDifference = materialDifferenceEval(board)
     val isEndGame = isEndGame(board)
 
     val adjustedMaterialDifference = if (board.mover == Colour.WHITE) materialDifference else -materialDifference
 
-    if (phase1LazyCutoffs(isEndGame, adjustedMaterialDifference, minScore)) return adjustedMaterialDifference
+    val viableEvalForPhase1 = isEndGame || (adjustedMaterialDifference + PHASE1_CUTOFF >= minScore)
+    if (!viableEvalForPhase1) return adjustedMaterialDifference
 
     val attacks = Attacks(board)
 
@@ -54,9 +42,9 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     val adjustedEval = if (board.mover == Colour.WHITE) positionalEvalPart1 else -positionalEvalPart1
     val viableEvalForPhase2 = isEndGame || (adjustedEval + PHASE2_CUTOFF >= minScore)
 
-    if (phase2LazyCutoffs(viableEvalForPhase2)) return adjustedEval
+    if (!viableEvalForPhase2) return adjustedEval
 
-    val positionalEval = positionalEvalPart1 + (if (viableEvalForPhase2 || DETERMINE_BAD_CUTOFFS)
+    val positionalEval = positionalEvalPart1 + (if (viableEvalForPhase2)
         (twoRooksTrappingKingEval(board) +
                 doubledRooksEval(board) +
                 rooksEval(board, whitePieces, blackPieces) +
@@ -66,62 +54,9 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
                 queensEval(board, whitePieces, blackPieces) +
                 bishopScore(board, materialDifference)) else 0)
 
-    determineBadCutoffs(isEndGame, positionalEval, materialDifference, board, viableEvalForPhase2, minScore)
-
     val endGameAdjustedScore = if (isEndGame) endGameAdjustment(board, positionalEval) else positionalEval
 
     return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
-}
-
-private fun determineBadCutoffs(isEndGame: Boolean, eval: Int, materialDifference: Int, board: EngineBoard, viableEvalForPhase2: Boolean, minScore: Int) {
-    if (DETERMINE_BAD_CUTOFFS && !isEndGame) {
-        val diff = abs(eval - materialDifference)
-        if (diff > bigDiff) {
-            bigDiff = diff
-            if (bigDiff > PHASE1_CUTOFF) {
-                println("Incorrect phase 1 cut off would have occurred at " + board.getFen() + " with a difference of $bigDiff")
-                exit(0)
-            }
-        }
-        val adjustedEval = if (board.mover == Colour.WHITE) eval else -eval
-        if (!viableEvalForPhase2 && adjustedEval >= minScore) {
-            println("Incorrect phase 2 cut off would have occured at " + board.getFen() + " with a minimum score of $minScore but actual score of ${adjustedEval}")
-            exitProcess(0)
-        }
-    }
-}
-
-private fun phase2LazyCutoffs(viableEvalForPhase2: Boolean): Boolean {
-    if (!DETERMINE_BAD_CUTOFFS) {
-        if (!viableEvalForPhase2) {
-            if (EXAMINE_CUTOFFS) {
-                if (phase2Cutoffs++ % 10000 == 0)
-                    println("Phase 2 cutoffs ${phase2Cutoffs} / $totalEvals = ${(phase2Cutoffs / totalEvals.toDouble()) * 100.0}%")
-            }
-            return true
-        }
-    }
-    return false
-}
-
-private fun phase1LazyCutoffs(isEndGame: Boolean, adjustedMaterialDifference: Int, minScore: Int): Boolean {
-    if (!DETERMINE_BAD_CUTOFFS) {
-        val viableEval = isEndGame || (adjustedMaterialDifference + PHASE1_CUTOFF >= minScore)
-        if (!viableEval) {
-            if (EXAMINE_CUTOFFS) {
-                if (phase1Cutoffs++ % 1000 == 0)
-                    println("Phase 1 cutoffs ${phase1Cutoffs} / $totalEvals = ${(phase1Cutoffs / totalEvals.toDouble()) * 100.0}%")
-            }
-            return true
-        }
-    }
-    return false
-}
-
-private inline fun lazyEvalPart(fn: (EngineBoard, Int) -> Int, board: EngineBoard, materialDifference: Int, currentScore: Int, minScore: Int, maxPartScore: Int, isEndGame: Boolean): Int {
-    val adjustedScore = if (board.mover == Colour.WHITE) currentScore else -currentScore
-    return if (isEndGame || (adjustedScore + maxPartScore >= minScore)) fn(board, materialDifference)
-    else 0
 }
 
 private fun queensEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) =
@@ -136,8 +71,7 @@ private fun knightsEval(board: EngineBoard, attacks: Attacks) =
 private fun bishopsEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) =
         (whiteBishopEval(board, whitePieces.inv()) - blackBishopsEval(board, blackPieces.inv()))
 
-private fun pawnPieceSquareEval(board: EngineBoard) =
-        (whitePawnsEval(board) - blackPawnsEval(board))
+private fun pawnPieceSquareEval(board: EngineBoard) = whitePawnsEval(board) - blackPawnsEval(board)
 
 private fun rooksEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) =
         (whiteRooksEval(board, whitePieces.inv()) - blackRooksEval(board, blackPieces.inv()))
@@ -203,11 +137,11 @@ fun blackRookOpenFilesEval(board: EngineBoard, file: Int) =
 
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) = (enemyPawnValues / VALUE_PAWN).coerceAtMost(6)
 
-fun doubledRooksEval(bitboard: Long): Int {
+fun doubledRooksEval(rookBitboard: Long): Int {
     val files = booleanArrayOf(false,false,false,false,false,false,false,false)
-    applyToSquares(bitboard) {
-        if (files[it % 8]) return VALUE_ROOKS_ON_SAME_FILE
-        files[it % 8] = true
+    applyToSquares(rookBitboard) { square ->
+        if (files[square % 8]) return VALUE_ROOKS_ON_SAME_FILE
+        files[square % 8] = true
     }
     return 0
 }

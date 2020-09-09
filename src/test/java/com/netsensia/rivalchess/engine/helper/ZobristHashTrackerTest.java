@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.util.Random;
 
+import static com.netsensia.rivalchess.consts.GameKt.FEN_START_POS;
 import static com.netsensia.rivalchess.engine.board.MoveMakingBoardExtensionsKt.makeMove;
 import static com.netsensia.rivalchess.engine.board.MoveMakingBoardExtensionsKt.makeNullMove;
 import static com.netsensia.rivalchess.engine.board.MoveMakingBoardExtensionsKt.unMakeMove;
@@ -89,7 +90,7 @@ public class ZobristHashTrackerTest {
     @Test
     public void zorbristTracker() {
 
-        EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         compareCalculatedHashWithTrackedHash(ecb, "e2e4");
         compareCalculatedHashWithTrackedHash(ecb, "c7c5");
@@ -120,7 +121,7 @@ public class ZobristHashTrackerTest {
 
         Assert.assertEquals("5b1r/pN1k1ppp/3q1n2/2p5/2B3b1/8/PPP2PPP/RNB1qRK1 w - - 0 14", com.netsensia.rivalchess.engine.board.BoardExtensionsKt.getFen(ecb));
 
-        ecb = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        ecb = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         compareCalculatedHashWithTrackedHash(ecb, "e2e4");
         compareCalculatedHashWithTrackedHash(ecb, "e7e5");
@@ -141,7 +142,7 @@ public class ZobristHashTrackerTest {
 
     @Test
     public void testTrackerWhenMakeMoveLeavesMoverInCheck() {
-        EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+        EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
         compareCalculatedHashWithTrackedHash(ecb, "e2e4");
         compareCalculatedHashWithTrackedHash(ecb, "e7e5");
@@ -175,7 +176,7 @@ public class ZobristHashTrackerTest {
     public void multipleRandomMovesTest() {
 
         for (int i=0; i<100; i++) {
-            EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(BitboardsKt.FEN_START_POS));
+            EngineBoard ecb = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
             Random r = new Random();
             r.setSeed(i);

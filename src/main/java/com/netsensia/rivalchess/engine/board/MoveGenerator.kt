@@ -25,10 +25,11 @@ class MoveGenerator(
 
         generateKnightMoves()
         generateKingMoves()
-        generatePawnMoves(
-                if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
-                if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture
-        )
+
+        if (mover == Colour.WHITE)
+            generatePawnMoves(whitePawnMovesForward, whitePawnMovesCapture) else
+            generatePawnMoves(blackPawnMovesForward, blackPawnMovesCapture)
+
         generateSliderMoves(BITBOARD_WR, BITBOARD_BR, MagicBitboards.rookVars)
         generateSliderMoves(BITBOARD_WB, BITBOARD_BB, MagicBitboards.bishopVars)
 
@@ -51,7 +52,8 @@ class MoveGenerator(
             generateCastleMoves(
                     3, 4, Colour.BLACK,
                     CASTLEPRIV_WK, CASTLEPRIV_WQ,
-                    WHITEKINGSIDECASTLESQUARES, WHITEQUEENSIDECASTLESQUARES) else
+                    WHITEKINGSIDECASTLESQUARES, WHITEQUEENSIDECASTLESQUARES)
+        else
             generateCastleMoves(
                     59, 60, Colour.WHITE,
                     CASTLEPRIV_BK, CASTLEPRIV_BQ,
@@ -115,11 +117,10 @@ class MoveGenerator(
             moves[moveCount++] = (fromShifted or to)
         }
 
-        generateQuiescePawnMoves(
-                if (mover == Colour.WHITE) whitePawnMovesForward else blackPawnMovesForward,
-                if (mover == Colour.WHITE) whitePawnMovesCapture else blackPawnMovesCapture,
-                if (mover == Colour.WHITE) bitboards[BITBOARD_WP] else bitboards[BITBOARD_BP]
-        )
+        if (mover == Colour.WHITE)
+            generateQuiescePawnMoves(whitePawnMovesForward, whitePawnMovesCapture, bitboards[BITBOARD_WP])
+        else
+            generateQuiescePawnMoves(blackPawnMovesForward, blackPawnMovesCapture, bitboards[BITBOARD_BP])
 
         generateQuiesceSliderMoves(MagicBitboards.rookVars, BITBOARD_WR, BITBOARD_BR)
         generateQuiesceSliderMoves(MagicBitboards.bishopVars, BITBOARD_WB, BITBOARD_BB)
@@ -175,15 +176,16 @@ class MoveGenerator(
 
     private fun addPawnMoves(fromSquareMoveMask: Int, bitboard: Long, queenCapturesOnly: Boolean) {
         applyToSquares(bitboard) {
+            val compactMove = fromSquareMoveMask or it
             if (it >= 56 || it <= 7) {
-                moves[moveCount++] = (fromSquareMoveMask or it or PROMOTION_PIECE_TOSQUARE_MASK_QUEEN)
+                moves[moveCount++] = (compactMove or PROMOTION_PIECE_TOSQUARE_MASK_QUEEN)
                 if (!queenCapturesOnly) {
-                    moves[moveCount++] = (fromSquareMoveMask or it or PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT)
-                    moves[moveCount++] = (fromSquareMoveMask or it or PROMOTION_PIECE_TOSQUARE_MASK_ROOK)
-                    moves[moveCount++] = (fromSquareMoveMask or it or PROMOTION_PIECE_TOSQUARE_MASK_BISHOP)
+                    moves[moveCount++] = (compactMove or PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT)
+                    moves[moveCount++] = (compactMove or PROMOTION_PIECE_TOSQUARE_MASK_ROOK)
+                    moves[moveCount++] = (compactMove or PROMOTION_PIECE_TOSQUARE_MASK_BISHOP)
                 }
             } else {
-                moves[moveCount++] = (fromSquareMoveMask or it)
+                moves[moveCount++] = compactMove
             }
         }
     }
