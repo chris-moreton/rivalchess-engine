@@ -1,7 +1,5 @@
 package com.netsensia.rivalchess.consts
 
-const val FEN_START_POS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
 const val BITBOARD_NONE = -1
 const val BITBOARD_WP = 0
 const val BITBOARD_WN = 1

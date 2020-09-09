@@ -8,8 +8,6 @@ import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 
-var savings = 0
-
 const val PHASE1_CUTOFF = 2500
 const val PHASE2_CUTOFF = 255
 

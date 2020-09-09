@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.model.Square;
 import com.netsensia.rivalchess.model.SquareOccupant;
 import org.junit.Test;
 
+import static com.netsensia.rivalchess.consts.GameKt.FEN_START_POS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -67,9 +68,9 @@ public class ChessBoardConversionTest {
     @Test
     public void getPgnMoveFromCompactMove() throws IllegalFenException {
         assertEquals("e4",
-                ChessBoardConversionKt.getPgnMoveFromCompactMove(720923, BitboardsKt.FEN_START_POS));
+                ChessBoardConversionKt.getPgnMoveFromCompactMove(720923, FEN_START_POS));
         assertEquals("Nf3",
-                ChessBoardConversionKt.getPgnMoveFromCompactMove(65554, BitboardsKt.FEN_START_POS));
+                ChessBoardConversionKt.getPgnMoveFromCompactMove(65554, FEN_START_POS));
         assertEquals("cxb8=N",
                 ChessBoardConversionKt.getPgnMoveFromCompactMove(
                         3473726, "rnbqkb1r/ppP1pppp/21p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq -"));

@@ -137,7 +137,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 val isCheck = board.isCheck(mover)
                 val extensions = checkExtension(isCheck)
-                val newPath = getPathFromSearch(move, useScoutSearch, depth, 1, myLow, high, extensions, isCheck).also { path ->
+                val newPath = pathForDepthZeroMove(move, useScoutSearch, depth, myLow, high, extensions, isCheck).also { path ->
                     path.score = adjustedMateScore(-path.score)
                 }
 
@@ -332,9 +332,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             search(engineBoard, depth - 1, ply, -high, -low, newExtensions, isCheck)
         }
 
-    private fun getPathFromSearch(move: Int, scoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
+    private fun pathForDepthZeroMove(move: Int, scoutSearch: Boolean, depth: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean) =
         if (isDrawnAtRoot()) SearchPath().withScore(0).withPath(move) else
-            scoutSearch(scoutSearch, depth, ply, low, high, extensions, isCheck)
+            scoutSearch(scoutSearch, depth, 1, low, high, extensions, isCheck)
 
     private fun highRankingMove(board: EngineBoard, hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean): Int {
         if (hashMove == 0 && !board.isOnNullMove && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
