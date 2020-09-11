@@ -1,3 +1,3 @@
 package com.netsensia.rivalchess.config
 
-val FUTILITY_MARGIN = intArrayOf(50, 500, 1000)
+val FUTILITY_MARGIN = intArrayOf(75, 500, 1000)
