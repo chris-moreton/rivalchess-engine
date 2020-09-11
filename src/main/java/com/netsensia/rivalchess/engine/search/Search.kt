@@ -684,18 +684,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (engineState === SearchState.REQUESTED) {
                 go()
                 if (isUciMode) {
-                    val s1 = "info" +
-                            " currmove " + getSimpleAlgebraicMoveFromCompactMove(currentDepthZeroMove) +
-                            " currmovenumber " + currentDepthZeroMoveNumber +
-                            " depth " + iterativeDeepeningDepth +
-                            " score " + currentScoreHuman +
-                            " pv " + currentPath.toString() +
-                            " time " + searchDuration +
-                            " nodes " + nodes +
-                            " nps " + nodesPerSecond
-                    val s2 = "bestmove " + getSimpleAlgebraicMoveFromCompactMove(currentMove)
-                    printStream.println(s1)
-                    printStream.println(s2)
+                    printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(currentMove))
                 }
             }
         }
