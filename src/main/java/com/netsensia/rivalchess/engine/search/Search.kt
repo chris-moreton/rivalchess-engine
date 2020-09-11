@@ -107,7 +107,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val newLow = if (path.score <= low) low - widenAspiration(attempt) else low
         val newHigh = if (path.score >= high) high + widenAspiration(attempt) else high
-
         if (newLow != low || newHigh != high && !abortingSearch) return aspirationSearch(depth, newLow, newHigh, attempt + 1)
 
         if (!abortingSearch) currentPath.setPath(path)
@@ -207,7 +206,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (canPerformNullMove(board, depthRemaining, isCheck)) {
             searchNullMove(board, depth, nullMoveReduceDepth(depthRemaining), ply + 1, localLow, localHigh, extensions).also {
                 if (abortingSearch) return SearchPath()
-                if (-it.score >= localHigh) return searchPathPly.withScore(-it.score)
+                if (-it.score >= localHigh) return searchPathPly.withScore(-it.score).withHeight(0)
                 threatExtend = threatExtensions(it)
             }
         }

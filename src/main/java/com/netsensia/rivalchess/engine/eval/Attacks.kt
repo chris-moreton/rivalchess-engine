@@ -37,17 +37,18 @@ class Attacks(board: EngineBoard) {
         knightAttackList(board.getBitboard(BITBOARD_BN), Colour.BLACK)
     }
 
-    private inline fun attackList(board: EngineBoard, squaresBitboard: Long, fn: (EngineBoard, Int) -> Long, colour: Colour): LongArray {
+    private inline fun attackList(board: EngineBoard, squaresBitboard: Long, pieceAttacksFn: (EngineBoard, Int) -> Long, colour: Colour): LongArray {
         var count = 0
-        val a = longArrayOf(-1L,-1L,-1L,-1L,-1L,-1L,-1L)
+        val squareAttacks = longArrayOf(-1L,-1L,-1L,-1L,-1L,-1L,-1L)
         applyToSquares(squaresBitboard) {
-            val attacksForSquare = fn(board, it)
-            a[count++] = attacksForSquare
-            if (colour == Colour.WHITE) whitePieceAttacks = whitePieceAttacks or attacksForSquare else
+            val attacksForSquare = pieceAttacksFn(board, it)
+            squareAttacks[count++] = attacksForSquare
+            if (colour == Colour.WHITE)
+                whitePieceAttacks = whitePieceAttacks or attacksForSquare else
                 blackPieceAttacks = blackPieceAttacks or attacksForSquare
             if (count == 4) return@applyToSquares
         }
-        return a
+        return squareAttacks
     }
 
     private fun knightAttackList(squaresBitboard: Long, colour: Colour) {
