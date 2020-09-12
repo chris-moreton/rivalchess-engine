@@ -18,82 +18,63 @@ class SeeBoard(board: EngineBoard) {
     val bitboards = EngineBitboards(board.engineBitboards)
     @JvmField
     var mover = board.mover
-
-    private var movesMade = 0
-    private var deltaCount = 0
-
+    
     var capturedPieceBitboardType: Int = BITBOARD_NONE
 
     fun makeMove(move: Int): Int {
-        val deltas = arrayOf(longArrayOf(-1,-1), longArrayOf(-1,-1), longArrayOf(-1,-1), longArrayOf(-1,-1), longArrayOf(-1,-1))
-        deltaCount = 0
-
-        enPassantHistory[movesMade] = bitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
 
         val moveFrom = fromSquare(move)
         val moveTo = toSquare(move)
         val fromBit = 1L shl moveFrom
         val toBit = 1L shl moveTo
 
-        val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackBitboardIndexes else whiteBitboardIndexes, deltas)
-        capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteBitboardIndexes else blackBitboardIndexes, deltas)
+        val movedPieceBitboardType = removeFromRelevantBitboard(fromBit, if (mover == Colour.BLACK) blackBitboardIndexes else whiteBitboardIndexes)
+        capturedPieceBitboardType = removeFromRelevantBitboard(toBit, if (mover == Colour.BLACK) whiteBitboardIndexes else blackBitboardIndexes)
 
         var materialGain = if (capturedPieceBitboardType == BITBOARD_NONE) {
             if ((moveTo - moveFrom) % 2 != 0) {
-                if (movedPieceBitboardType == BITBOARD_WP) togglePiece(1L shl (moveTo - 8), BITBOARD_BP, deltas)
-                else if (movedPieceBitboardType == BITBOARD_BP) togglePiece(1L shl (moveTo + 8), BITBOARD_WP, deltas)
+                if (movedPieceBitboardType == BITBOARD_WP) togglePiece(1L shl (moveTo - 8), BITBOARD_BP)
+                else if (movedPieceBitboardType == BITBOARD_BP) togglePiece(1L shl (moveTo + 8), BITBOARD_WP)
             }
             pieceValue(BITBOARD_WP)
         } else pieceValue(capturedPieceBitboardType)
 
-        togglePiece(toBit, movedPieceBitboardType, deltas)
+        togglePiece(toBit, movedPieceBitboardType)
 
         bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
 
         if (movedPieceBitboardType == BITBOARD_WP) {
             if (moveTo - moveFrom == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shr 8)
             else if (moveTo >= 56) {
-                togglePiece(1L shl moveTo, BITBOARD_WP, deltas)
-                togglePiece(1L shl moveTo, BITBOARD_WQ, deltas)
+                togglePiece(1L shl moveTo, BITBOARD_WP)
+                togglePiece(1L shl moveTo, BITBOARD_WQ)
                 materialGain += VALUE_PAWN_PROMOTION_TO_QUEEN
             }
         } else if (movedPieceBitboardType == BITBOARD_BP) {
             if (moveFrom - moveTo == 16) bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, toBit shl 8)
             else if (moveTo <= 7) {
-                togglePiece(1L shl moveTo, BITBOARD_BP, deltas)
-                togglePiece(1L shl moveTo, BITBOARD_BQ, deltas)
+                togglePiece(1L shl moveTo, BITBOARD_BP)
+                togglePiece(1L shl moveTo, BITBOARD_BQ)
                 materialGain += VALUE_PAWN_PROMOTION_TO_QUEEN
             }
         }
 
         mover = mover.opponent()
-        moveHistory[movesMade++] = deltas
         return materialGain
     }
 
-    fun unMakeMove() {
-        movesMade--
-        val lastIndex = movesMade
-        for (it in moveHistory[lastIndex]!!) {
-            if (it[0] == -1L) break
-            bitboards.xorPieceBitboard(it[0].toInt(), it[1])
-        }
-        bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, enPassantHistory[lastIndex])
-        mover = mover.opponent()
-    }
-
-    private fun removeFromRelevantBitboard(squareBit: Long, bitboardList: IntArray, deltas: Array<LongArray>): Int {
+    private fun removeFromRelevantBitboard(squareBit: Long, bitboardList: IntArray): Int {
         for (it in bitboardList) {
             if (bitboards.pieceBitboards[it] and squareBit == squareBit) {
-            togglePiece(squareBit, it, deltas)
-            return it
-        } }
+                togglePiece(squareBit, it)
+                return it
+            }
+        }
         return BITBOARD_NONE
     }
 
-    private fun togglePiece(squareBit: Long, bitboardType: Int, deltas: Array<LongArray>) {
+    private fun togglePiece(squareBit: Long, bitboardType: Int) {
         bitboards.xorPieceBitboard(bitboardType, squareBit)
-        deltas[deltaCount++] = longArrayOf(bitboardType.toLong(), squareBit)
     }
 
     fun getLvaCaptureMove(square: Int): Int {

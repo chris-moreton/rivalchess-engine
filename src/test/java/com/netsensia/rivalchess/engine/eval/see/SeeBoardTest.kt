@@ -34,31 +34,11 @@ internal class SeeBoardTest {
         makeMove(engineBoard, seeBoard, "e7f8Q")
         makeMove(engineBoard, seeBoard, "e8f8")
         makeMove(engineBoard, seeBoard, "f1b5")
-
-        unMakeMove(engineBoard, seeBoard)
-        makeMove(engineBoard, seeBoard, "f1b5")
-
-        unMakeMove(engineBoard, seeBoard)
-        unMakeMove(engineBoard, seeBoard)
-
-        makeMove(engineBoard, seeBoard, "e8f8")
-        makeMove(engineBoard, seeBoard, "f1b5")
-
         makeMove(engineBoard, seeBoard, "d8d2")
         makeMove(engineBoard, seeBoard, "d1d2")
         makeMove(engineBoard, seeBoard, "f7f5")
         makeMove(engineBoard, seeBoard, "b1c3")
         makeMove(engineBoard, seeBoard, "f5f4")
-        makeMove(engineBoard, seeBoard, "g2g4")
-        makeMove(engineBoard, seeBoard, "f4g3")
-
-        unMakeMove(engineBoard, seeBoard)
-
-        makeMove(engineBoard, seeBoard, "f4g3")
-
-        unMakeMove(engineBoard, seeBoard)
-        unMakeMove(engineBoard, seeBoard)
-
         makeMove(engineBoard, seeBoard, "g2g4")
         makeMove(engineBoard, seeBoard, "f4g3")
     }
@@ -70,24 +50,6 @@ internal class SeeBoardTest {
         seeBoard.makeMove(move)
         assertPieceBitboardsMatch(board, seeBoard)
         assertEquals(board.mover, seeBoard.mover)
-
-        board.unMakeMove()
-        seeBoard.unMakeMove()
-        assertPieceBitboardsMatch(board, seeBoard)
-        assertEquals(board.mover, seeBoard.mover)
-
-        board.makeMove(getEngineMoveFromSimpleAlgebraic(moveString).compact.also { move = it } )
-        seeBoard.makeMove(move)
-        assertEquals(board.mover, seeBoard.mover)
-    }
-
-    private fun unMakeMove(board: EngineBoard, seeBoard: SeeBoard) {
-
-        board.unMakeMove()
-        seeBoard.unMakeMove()
-        assertPieceBitboardsMatch(board, seeBoard)
-        assertEquals(board.mover, seeBoard.mover)
-
     }
 
     @Test
@@ -115,9 +77,6 @@ internal class SeeBoardTest {
         val seeBoard = SeeBoard(engineBoard)
         val move = seeBoard.getLvaCaptureMove(49)
         assertEquals(EngineMove(Move(Square.E5, Square.G7)).compact, move)
-        seeBoard.makeMove(EngineMove(Move(Square.E5, Square.G7)).compact)
-        seeBoard.unMakeMove()
-        seeBoard.makeMove(EngineMove(Move(Square.H8, Square.G7)).compact)
     }
 
     @Test
