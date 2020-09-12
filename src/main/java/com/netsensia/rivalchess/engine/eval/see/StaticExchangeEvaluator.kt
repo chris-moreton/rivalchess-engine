@@ -5,6 +5,8 @@ import com.netsensia.rivalchess.consts.BITBOARD_WK
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.board.makeMove
 import com.netsensia.rivalchess.engine.board.unMakeMove
+import com.netsensia.rivalchess.engine.eval.ALLOW_PIECE_VALUE_MODIFICATIONS
+import com.netsensia.rivalchess.engine.eval.DEFAULT_VALUE_KING
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.model.Colour
@@ -12,12 +14,11 @@ import com.netsensia.rivalchess.model.Colour
 class StaticExchangeEvaluator {
 
     fun staticExchangeEvaluation(board: EngineBoard, compactMove: Int): Int {
-        val seeBoard = SeeBoard(board)
 
         if (board.makeMove(compactMove, false, updateHash = false)) {
             val materialBalance = materialBalanceFromMoverPerspective(board)
             board.unMakeMove(false)
-
+            val seeBoard = SeeBoard(board)
             return -seeSearch(seeBoard, toSquare(compactMove), -(materialBalance + seeBoard.makeMove(compactMove))) - materialBalance
         }
         return -Int.MAX_VALUE
@@ -30,13 +31,12 @@ class StaticExchangeEvaluator {
            if (it != 0) {
                val materialGain = seeBoard.makeMove(it)
 
-               if (seeBoard.capturedPieceBitboardType == if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK) {
-                   seeBoard.unMakeMove()
-                   return bestScore + pieceValue(BITBOARD_WK)
+               val opposingKingBitboard = if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK
+               if (seeBoard.capturedPieceBitboardType == opposingKingBitboard) {
+                   return bestScore + if (ALLOW_PIECE_VALUE_MODIFICATIONS) pieceValue(BITBOARD_WK) else DEFAULT_VALUE_KING
                }
 
                val seeScore = -seeSearch(seeBoard, captureSquare, -(materialBalance + materialGain))
-               seeBoard.unMakeMove()
                bestScore = seeScore.coerceAtLeast(bestScore)
            }
         }
