@@ -10,9 +10,9 @@ import com.netsensia.rivalchess.model.Square
 fun EngineBoard.makeNullMove() {
     boardHashObject.makeNullMove()
     mover = mover.opponent()
-    val t = engineBitboards.pieceBitboards[BITBOARD_FRIENDLY]
+    val friendlyHolder = engineBitboards.pieceBitboards[BITBOARD_FRIENDLY]
     engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY, engineBitboards.pieceBitboards[BITBOARD_ENEMY])
-    engineBitboards.setPieceBitboard(BITBOARD_ENEMY, t)
+    engineBitboards.setPieceBitboard(BITBOARD_ENEMY, friendlyHolder)
     isOnNullMove = true
 }
 
@@ -140,8 +140,6 @@ private fun EngineBoard.replaceCastledRook(fromMask: Long, toMask: Long, movePie
             engineBitboards.xorPieceBitboard(BITBOARD_BR, BLACKQUEENSIDECASTLEROOKMOVE)
     }
 }
-
-fun EngineBoard.lastCapturePieceValue() = pieceValue(moveHistory[numMovesMade-1]!!.capturePiece)
 
 private fun EngineBoard.replaceCapturedPiece(toMask: Long, colour: Colour) {
     val capturePiece = moveHistory[numMovesMade]!!.capturePiece

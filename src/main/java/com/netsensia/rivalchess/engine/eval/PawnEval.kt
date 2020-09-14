@@ -23,13 +23,13 @@ inline fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShi
 fun whitePawnsEval(board: EngineBoard): Int {
     var acc = 0
     val blackPieceValues = board.blackPieceValues
-    applyToSquares(board.getBitboard(BITBOARD_WP)) {
+    applyToSquares(board.getBitboard(BITBOARD_WP)) { pawnSquare ->
         acc += linearScale(
                 blackPieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
-                pawnEndGamePieceSquareTable[it],
-                pawnPieceSquareTable[it]
+                pawnEndGamePieceSquareTable[pawnSquare],
+                pawnPieceSquareTable[pawnSquare]
         )
     }
     return acc

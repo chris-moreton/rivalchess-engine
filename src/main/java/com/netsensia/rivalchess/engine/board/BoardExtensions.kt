@@ -50,14 +50,10 @@ fun EngineBoard.getScore(move: Int, isCapture: Boolean, staticExchangeEvaluator:
     return score
 }
 
-fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int): Boolean {
-    if (makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false)) {
-        unMakeMove(false)
-        return true
+fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int) =
+    makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false).also {
+        if (it) unMakeMove(false)
     }
-
-    return false
-}
 
 fun EngineBoard.getCharBoard(): CharArray {
         val board = CharArray(64){'0'}

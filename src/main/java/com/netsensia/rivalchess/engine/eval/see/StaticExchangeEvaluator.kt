@@ -27,9 +27,9 @@ class StaticExchangeEvaluator {
     private fun seeSearch(seeBoard: SeeBoard, captureSquare: Int, materialBalance: Int): Int {
 
         var bestScore = materialBalance
-        seeBoard.getLvaCaptureMove(captureSquare).also {
-           if (it != 0) {
-               val materialGain = seeBoard.makeMove(it)
+        seeBoard.getLvaCaptureMove(captureSquare).also { captureMove ->
+            if (captureMove != 0) {
+               val materialGain = seeBoard.makeMove(captureMove)
 
                val opposingKingBitboard = if (seeBoard.mover == Colour.WHITE) BITBOARD_WK else BITBOARD_BK
                if (seeBoard.capturedPieceBitboardType == opposingKingBitboard) {

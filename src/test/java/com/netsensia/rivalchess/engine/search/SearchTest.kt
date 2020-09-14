@@ -49,8 +49,13 @@ class SearchTest {
         assertNodeCount("4r3/1Q1qk2p/p4pp1/3Pb3/P7/6PP/5P2/4R1K1 w - -", 17313);
         assertNodeCount("k7/5RP1/1P6/1K6/6r1/8/8/8 b - -", 5743);
         assertNodeCount("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", 20052);
+    }
 
-
+    @Test
+    @Ignore
+    @Throws(IllegalFenException::class, InterruptedException::class)
+    fun testNodeCountDeep() {
+        assertNodeCount("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 10477423, 14);
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
@@ -77,12 +82,12 @@ class SearchTest {
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
-    private fun assertNodeCount(fen: String, expectedNodes: Int) {
+    private fun assertNodeCount(fen: String, expectedNodes: Int, searchDepth: Int = 6) {
         val board = Board.fromFen(fen)
         val search = Search()
         Thread(search).start()
         search.setBoard(board)
-        search.setSearchDepth(6)
+        search.setSearchDepth(searchDepth)
         search.setMillisToThink(MAX_SEARCH_MILLIS)
         search.startSearch()
         TimeUnit.SECONDS.sleep(1)

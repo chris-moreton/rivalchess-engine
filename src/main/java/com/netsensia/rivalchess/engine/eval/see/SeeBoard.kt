@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.eval.pieceValue
+import com.netsensia.rivalchess.engine.eval.whiteWinningNoBlackPawnsEndGameAdjustment
 import com.netsensia.rivalchess.engine.search.fromSquare
 import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.model.Colour
@@ -64,10 +65,10 @@ class SeeBoard(board: EngineBoard) {
     }
 
     private fun removeFromRelevantBitboard(squareBit: Long, bitboardList: IntArray): Int {
-        for (it in bitboardList) {
-            if (bitboards.pieceBitboards[it] and squareBit == squareBit) {
-                togglePiece(squareBit, it)
-                return it
+        for (bitboard in bitboardList) {
+            if (bitboards.pieceBitboards[bitboard] and squareBit == squareBit) {
+                togglePiece(squareBit, bitboard)
+                return bitboard
             }
         }
         return BITBOARD_NONE
@@ -80,15 +81,16 @@ class SeeBoard(board: EngineBoard) {
     fun getLvaCaptureMove(square: Int): Int {
 
         pawnCaptures(square).also { if (it != 0) return it }
-
         knightCaptures(square).also { if (it != 0) return it }
 
         val whiteBitboard = bitboards.getWhitePieces()
         val blackBitboard = bitboards.getBlackPieces()
+        val allBitboard = whiteBitboard or blackBitboard
+        val moverBitboard = if (mover == Colour.WHITE) whiteBitboard else blackBitboard
 
-        bishopCaptures(square, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard).also { if (it != 0) return it }
-        rookCaptures(square, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard).also { if (it != 0) return it }
-        queenCaptures(square, whiteBitboard or blackBitboard, if (mover == Colour.WHITE) whiteBitboard else blackBitboard).also { if (it != 0) return it }
+        bishopCaptures(square, allBitboard, moverBitboard).also { if (it != 0) return it }
+        rookCaptures(square, allBitboard, moverBitboard).also { if (it != 0) return it }
+        queenCaptures(square, allBitboard, moverBitboard).also { if (it != 0) return it }
         kingCaptures(square).also { if (it != 0) return it }
 
         return 0
@@ -116,8 +118,8 @@ class SeeBoard(board: EngineBoard) {
 
     private fun knightCaptures(square: Int): Int {
         val knightLocations = bitboards.pieceBitboards[if (mover == Colour.WHITE) BITBOARD_WN else BITBOARD_BN]
-        applyToFirstSquare(knightMoves[square] and knightLocations) {
-            return ((it shl 16) or square)
+        applyToFirstSquare(knightMoves[square] and knightLocations) { capturingKnightSquare ->
+            return ((capturingKnightSquare shl 16) or square)
         }
         return 0
     }

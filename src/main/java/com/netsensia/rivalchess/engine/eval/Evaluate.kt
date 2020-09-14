@@ -26,9 +26,6 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     val attacks = Attacks(board)
 
-    val whitePieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_FRIENDLY) else board.getBitboard(BITBOARD_ENEMY)
-    val blackPieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_ENEMY) else board.getBitboard(BITBOARD_FRIENDLY)
-
     val positionalEvalPart1 =
             materialDifference +
             pawnScore(attacks, board) +
@@ -44,9 +41,11 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     if (!viableEvalForPhase2) return adjustedEval
 
+    val whitePieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_FRIENDLY) else board.getBitboard(BITBOARD_ENEMY)
+    val blackPieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_ENEMY) else board.getBitboard(BITBOARD_FRIENDLY)
+
     val positionalEval = positionalEvalPart1 + (if (viableEvalForPhase2)
-        (twoRooksTrappingKingEval(board) +
-                doubledRooksEval(board) +
+        (       doubledRooksEval(board) +
                 rooksEval(board, whitePieces, blackPieces) +
                 bishopsEval(board, whitePieces, blackPieces) +
                 knightsEval(board, attacks) +
@@ -78,9 +77,6 @@ private fun rooksEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) 
 
 private fun doubledRooksEval(board: EngineBoard) =
         (doubledRooksEval(board.getBitboard(BITBOARD_WR)) - doubledRooksEval(board.getBitboard(BITBOARD_BR)))
-
-private fun twoRooksTrappingKingEval(board: EngineBoard) =
-        (twoWhiteRooksTrappingKingEval(board) - twoBlackRooksTrappingKingEval(board))
 
 fun materialDifferenceEval(board: EngineBoard) =
         board.whitePieceValues - board.blackPieceValues +
@@ -114,14 +110,6 @@ fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
             x > max -> b
             else -> a + (x - min) * (b - a) / (max - min)
         }
-
-fun twoWhiteRooksTrappingKingEval(board: EngineBoard) =
-        if (popCount(board.getBitboard(BITBOARD_WR) and RANK_7) > 1 && board.getBitboard(BITBOARD_BK) and RANK_8 != 0L)
-            VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING else 0
-
-fun twoBlackRooksTrappingKingEval(board: EngineBoard) =
-        if (popCount(board.getBitboard(BITBOARD_BR) and RANK_2) > 1 && board.getBitboard(BITBOARD_WK) and RANK_1 != 0L)
-            VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING else 0
 
 fun whiteRookOpenFilesEval(board: EngineBoard, file: Int) =
         if (FILES[file] and board.getBitboard(BITBOARD_WP) == 0L)
