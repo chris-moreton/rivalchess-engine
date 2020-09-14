@@ -11,7 +11,6 @@ import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import kotlin.math.abs
-import com.netsensia.rivalchess.engine.eval.Native.linearScale
 
 private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
 
@@ -25,7 +24,7 @@ fun whitePawnsEval(board: EngineBoard): Int {
     var acc = 0
     val blackPieceValues = board.blackPieceValues
     applyToSquares(board.getBitboard(BITBOARD_WP)) { pawnSquare ->
-        acc += linearScale(
+        acc += RivalLibrary.linearScale(
                 blackPieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
@@ -40,7 +39,7 @@ fun blackPawnsEval(board: EngineBoard): Int {
     var acc = 0
     val whitePieceValues = board.whitePieceValues
     applyToSquares(board.getBitboard(BITBOARD_BP)) {
-        acc += linearScale(
+        acc += RivalLibrary.linearScale(
                 whitePieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
@@ -141,8 +140,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     val blackPassedPawnScore = blackPassedPawnScore(blackPassedPawnsBitboard, blackGuardedPassedPawns)
 
     val impureScore =
-        (linearScale(board.blackPieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,whitePassedPawnScore * 2, whitePassedPawnScore)) -
-                (linearScale(board.whitePieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,blackPassedPawnScore * 2, blackPassedPawnScore)) +
+        (RivalLibrary.linearScale(board.blackPieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,whitePassedPawnScore * 2, whitePassedPawnScore)) -
+                (RivalLibrary.linearScale(board.whitePieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,blackPassedPawnScore * 2, blackPassedPawnScore)) +
                 (if (board.blackPieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.BLACK,
@@ -191,7 +190,7 @@ fun calculateLowMaterialPawnBonus(
 
         val moverAdjustment = if (lowMaterialColour == mover) 1 else 0
 
-        val scoreAdjustment = linearScale(
+        val scoreAdjustment = RivalLibrary.linearScale(
                 lowMaterialSidePieceValues,
                 0,
                 PAWN_ADJUST_MAX_MATERIAL,
