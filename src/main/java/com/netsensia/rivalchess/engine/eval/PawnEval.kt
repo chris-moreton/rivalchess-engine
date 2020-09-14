@@ -11,6 +11,7 @@ import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import kotlin.math.abs
+import com.netsensia.rivalchess.engine.eval.Native.linearScale
 
 private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
 

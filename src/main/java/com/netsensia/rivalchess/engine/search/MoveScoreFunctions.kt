@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.model.Colour
+import com.netsensia.rivalchess.engine.eval.Native.linearScale
 
 fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): Int {
     val piece = board.getBitboardTypeOfPieceOnSquare(fromSquare, board.mover)

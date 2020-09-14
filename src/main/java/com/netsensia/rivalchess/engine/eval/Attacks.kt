@@ -39,9 +39,9 @@ class Attacks(board: EngineBoard) {
 
     private inline fun attackList(board: EngineBoard, squaresBitboard: Long, pieceAttacksFn: (EngineBoard, Int) -> Long, colour: Colour): LongArray {
         var count = 0
-        val squareAttacks = longArrayOf(-1L,-1L,-1L,-1L,-1L,-1L,-1L)
-        applyToSquares(squaresBitboard) {
-            val attacksForSquare = pieceAttacksFn(board, it)
+        val squareAttacks = longArrayOf(-1L,-1L,-1L,-1L)
+        applyToSquares(squaresBitboard) { attackingPieceSquare ->
+            val attacksForSquare = pieceAttacksFn(board, attackingPieceSquare)
             squareAttacks[count++] = attacksForSquare
             if (colour == Colour.WHITE)
                 whitePieceAttacks = whitePieceAttacks or attacksForSquare else

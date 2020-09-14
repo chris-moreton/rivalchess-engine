@@ -1,7 +1,10 @@
 package com.netsensia.rivalchess.engine.eval
 
+import com.netsensia.rivalchess.engine.eval.Native.linearScale
 import com.netsensia.rivalchess.bitboards.*
-import com.netsensia.rivalchess.bitboards.util.*
+import com.netsensia.rivalchess.bitboards.util.applyToSquares
+import com.netsensia.rivalchess.bitboards.util.popCount
+import com.netsensia.rivalchess.bitboards.util.southFill
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
@@ -10,6 +13,13 @@ import com.netsensia.rivalchess.model.Square
 
 const val PHASE1_CUTOFF = 2500
 const val PHASE2_CUTOFF = 255
+
+//fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
+//        when {
+//            x < min -> a
+//            x > max -> b
+//            else -> a + (x - min) * (b - a) / (max - min)
+//        }
 
 @JvmOverloads
 fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
@@ -104,13 +114,6 @@ fun blackKingSquareEval(board: EngineBoard) =
                 kingPieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquare]]
         )
 
-fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
-        when {
-            x < min -> a
-            x > max -> b
-            else -> a + (x - min) * (b - a) / (max - min)
-        }
-
 fun whiteRookOpenFilesEval(board: EngineBoard, file: Int) =
         if (FILES[file] and board.getBitboard(BITBOARD_WP) == 0L)
             if (FILES[file] and board.getBitboard(BITBOARD_BP) == 0L) VALUE_ROOK_ON_OPEN_FILE
@@ -126,7 +129,7 @@ fun blackRookOpenFilesEval(board: EngineBoard, file: Int) =
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) = (enemyPawnValues / VALUE_PAWN).coerceAtMost(6)
 
 fun doubledRooksEval(rookBitboard: Long): Int {
-    val files = booleanArrayOf(false,false,false,false,false,false,false,false)
+    val files = booleanArrayOf(false, false, false, false, false, false, false, false)
     applyToSquares(rookBitboard) { square ->
         if (files[square % 8]) return VALUE_ROOKS_ON_SAME_FILE
         files[square % 8] = true
