@@ -29,3 +29,25 @@ Java_RivalCLibrary_getHighestScoringMoveFromArrayC(JNIEnv *env, jobject obj, jin
         return best & 0x00FFFFFF;
     }
 }
+
+unsigned long southFill(unsigned long bitboard) {
+    unsigned long a = bitboard | (bitboard >> 8);
+    unsigned long b = a | (a >> 16);
+    return b | (b >> 32);
+}
+
+unsigned long openFiles(unsigned long kingShield, unsigned long pawnBitboard) {
+   return southFill(kingShield) & ~southFill(pawnBitboard) & 0x00000000000000FF;
+}
+
+JNIEXPORT jint JNICALL
+Java_RivalCLibrary_openFilesKingShieldEvalC(JNIEnv *env, jobject obj, jlong kingShield, jlong pawnBitboard)
+{
+    unsigned long openFilesBitboard = openFiles(kingShield, pawnBitboard);
+    if (openFilesBitboard != 0) {
+        return 25 * __builtin_popcount(openFilesBitboard & 0xE7) +
+                10 * __builtin_popcount(openFilesBitboard & 0x18);
+    }
+    return 0;
+}
+

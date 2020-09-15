@@ -4,6 +4,7 @@ import RivalCLibrary
 import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
 import com.netsensia.rivalchess.engine.eval.linearScaleKotlin
+import com.netsensia.rivalchess.engine.eval.openFilesKingShieldEval
 import com.netsensia.rivalchess.eve.secureRandom
 import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.model.Board
@@ -60,18 +61,14 @@ class SearchTest {
     }
 
     @Test
-    @Ignore
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun c() {
         val h = RivalCLibrary()
-        var total = 0
-        val ia = intArrayOf(
-                1360789523,1360789524,1427898389,-1,1176109090,0,0,0,
-                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+        var total1 = 0
         for (i in (0..100000000)) {
-            total += h.getHighestScoringMoveFromArrayC(ia)
+            total1 += openFilesKingShieldEval(21321312, 345234523452)
         }
-        println(total)
+
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
