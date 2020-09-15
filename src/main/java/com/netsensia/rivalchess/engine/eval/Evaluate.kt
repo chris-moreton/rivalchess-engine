@@ -307,10 +307,7 @@ fun whiteKingShieldEval(board: EngineBoard) =
 fun combineWhiteKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_WP), board.getBitboard(BITBOARD_BP), kingShield, Long::shl)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
-                uncastledTrappedWhiteRookEval(board) -
-                openFilesKingShieldEval(kingShield, board.getBitboard(BITBOARD_WP)) -
-                openFilesKingShieldEval(kingShield, board.getBitboard(BITBOARD_BP))
-
+                uncastledTrappedWhiteRookEval(board)
 
 fun blackKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
@@ -321,9 +318,7 @@ fun blackKingShieldEval(board: EngineBoard) =
 fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_BP), board.getBitboard(BITBOARD_WP), kingShield, Long::ushr)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
-                uncastledTrappedBlackRookEval(board) -
-                openFilesKingShieldEval(kingShield, board.getBitboard(BITBOARD_WP)) -
-                openFilesKingShieldEval(kingShield, board.getBitboard(BITBOARD_BP))
+                uncastledTrappedBlackRookEval(board)
 
 fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.whiteKingSquare) < 2
 
