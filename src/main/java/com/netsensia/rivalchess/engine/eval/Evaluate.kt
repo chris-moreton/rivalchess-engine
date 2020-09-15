@@ -9,18 +9,17 @@ import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
-import RivalLibrary
 
 const val PHASE1_CUTOFF = 2500
 const val PHASE2_CUTOFF = 255
 
 
-//fun RivalLibrary.linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
-//        when {
-//            x < min -> a
-//            x > max -> b
-//            else -> a + (x - min) * (b - a) / (max - min)
-//        }
+fun linearScaleKotlin(x: Int, min: Int, max: Int, a: Int, b: Int) =
+        when {
+            x < min -> a
+            x > max -> b
+            else -> a + (x - min) * (b - a) / (max - min)
+        }
 
 @JvmOverloads
 fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
@@ -98,7 +97,7 @@ fun exactlyOneBitSet(bitboard: Long) = (bitboard and (bitboard - 1)) == 0L && bi
 fun onlyKingsRemain(board: EngineBoard) = exactlyOneBitSet(board.getBitboard(BITBOARD_ENEMY)) and exactlyOneBitSet(board.getBitboard(BITBOARD_FRIENDLY))
 
 fun whiteKingSquareEval(board: EngineBoard) =
-        RivalLibrary.linearScale(
+        linearScaleKotlin(
                 board.blackPieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
@@ -107,7 +106,7 @@ fun whiteKingSquareEval(board: EngineBoard) =
         )
 
 fun blackKingSquareEval(board: EngineBoard) =
-        RivalLibrary.linearScale(
+        linearScaleKotlin(
                 board.whitePieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
@@ -150,7 +149,7 @@ fun kingAttackCount(dangerZone: Long, attacks: LongArray): Int {
 }
 
 fun tradePieceBonusWhenMoreMaterial(board: EngineBoard, materialDifference: Int) =
-        RivalLibrary.linearScale(
+        linearScaleKotlin(
                 if (materialDifference > 0)
                     board.blackPieceValues + board.blackPawnValues else
                     board.whitePieceValues + board.whitePawnValues,
@@ -160,7 +159,7 @@ fun tradePieceBonusWhenMoreMaterial(board: EngineBoard, materialDifference: Int)
                 0)
 
 fun tradePawnBonusWhenMoreMaterial(board: EngineBoard, materialDifference: Int) =
-        RivalLibrary.linearScale(
+        linearScaleKotlin(
                 if (materialDifference > 0) board.whitePawnValues else board.blackPawnValues,
                 0,
                 PAWN_TRADE_BONUS_MAX,
@@ -186,7 +185,7 @@ fun oppositeColourBishopsEval(board: EngineBoard, materialDifference: Int): Int 
         val maxPenalty = materialDifference / WRONG_COLOUR_BISHOP_PENALTY_DIVISOR // mostly pawns as material is identical
 
         // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
-        return -RivalLibrary.linearScale(
+        return -linearScaleKotlin(
                 board.whitePieceValues + board.blackPieceValues,
                 WRONG_COLOUR_BISHOP_MATERIAL_LOW,
                 WRONG_COLOUR_BISHOP_MATERIAL_HIGH,
@@ -261,7 +260,7 @@ fun kingSafetyEval(board: EngineBoard, attacks: Attacks): Int {
     val whiteKingSafety: Int = whiteKingShieldEval(board)
     val blackKingSafety: Int = blackKingShieldEval(board)
 
-    return RivalLibrary.linearScale(
+    return linearScaleKotlin(
             averagePiecesPerSide,
             KINGSAFETY_MIN_PIECE_BALANCE,
             KINGSAFETY_MAX_PIECE_BALANCE,
@@ -413,7 +412,7 @@ fun maxCastleValue(pieceValues: Int) =
         kingSquareBonusScaled(pieceValues, kingSquareBonusEndGame(), kingSquareBonusMiddleGame()) + rookSquareBonus()
 
 fun kingSquareBonusScaled(pieceValues: Int, kingSquareBonusEndGame: Int, kingSquareBonusMiddleGame: Int) =
-        RivalLibrary.linearScale(
+        linearScaleKotlin(
                 pieceValues,
                 CASTLE_BONUS_LOW_MATERIAL,
                 CASTLE_BONUS_HIGH_MATERIAL,
@@ -563,7 +562,7 @@ fun blockedKnightLandingSquares(square: Int, enemyPawnAttacks: Long, friendlyPaw
 fun blackKnightsEval(board: EngineBoard, attacks: Attacks) : Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BN)) {
-        acc += RivalLibrary.linearScale(
+        acc += linearScaleKotlin(
                 board.whitePieceValues + board.whitePawnValues,
                 KNIGHT_STAGE_MATERIAL_LOW,
                 KNIGHT_STAGE_MATERIAL_HIGH,
@@ -578,7 +577,7 @@ fun whiteKnightsEval(board: EngineBoard, attacks: Attacks) : Int {
 
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_WN)) {
-        acc += RivalLibrary.linearScale(board.blackPieceValues + board.blackPawnValues,
+        acc += linearScaleKotlin(board.blackPieceValues + board.blackPawnValues,
                 KNIGHT_STAGE_MATERIAL_LOW,
                 KNIGHT_STAGE_MATERIAL_HIGH,
                 knightEndGamePieceSquareTable[it],

@@ -1,8 +1,8 @@
 package com.netsensia.rivalchess.engine.search
 
+import HelloWorld
 import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
-import com.netsensia.rivalchess.engine.search.Search
 import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
@@ -56,6 +56,13 @@ class SearchTest {
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun testNodeCountDeep() {
         assertNodeCount("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 10477423, 14);
+    }
+
+    @Test
+    @Throws(IllegalFenException::class, InterruptedException::class)
+    fun c() {
+        val h = HelloWorld()
+        print(h.printy())
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)

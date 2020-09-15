@@ -11,7 +11,10 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'java-library'
-    id 'org.bytedeco.gradle-javacpp-build' version "1.5.4"
+}
+
+ext {
+    javacppPlatform = 'linux-x86_64' // or any other platform, defaults to Loader.getPlatform()
 }
 
 group = "com.netsensia.rivalchess"
@@ -29,6 +32,7 @@ publishing {
 }
 
 apply plugin: 'kotlin'
+apply plugin: 'c'
 
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
@@ -46,7 +50,6 @@ dependencies {
     compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '7.0.4'
     implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '1.3.5'
     compile group: 'com.ea.async', name: 'ea-async', version: '1.2.3'
-    api "org.bytedeco:javacpp:1.5.4"
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.awaitility:awaitility:4.0.2'
 
@@ -56,6 +59,7 @@ test {
     useJUnit()
     maxHeapSize = '1G'
     testLogging.showStandardStreams = true
+    systemProperty "java.library.path", file("${buildDir}/libs/hello/shared").absolutePath
 }
 
 task createProperties(dependsOn: processResources) {
@@ -144,15 +148,36 @@ uploadArchives {
     }
 }
 
-tasks.withType(org.bytedeco.gradle.javacpp.BuildTask) {
-    // set here default values for all build tasks below, typically just includePath and linkPath
+model {
+    platforms {
+        x64 {
+            architecture "x64"
+        }
+    }
+
+    components {
+        hello(NativeLibrarySpec) {
+            binaries.all {
+                if (targetPlatform.operatingSystem.macOsX) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"
+                    cCompiler.args '-mmacosx-version-min=10.4'
+                    linker.args '-mmacosx-version-min=10.4'
+                } else if (targetPlatform.operatingSystem.linux) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
+                    cCompiler.args '-D_FILE_OFFSET_BITS=64'
+                } else if (targetPlatform.operatingSystem.windows) {
+                    cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32"
+                    linker.args "Shlwapi.lib", "Advapi32.lib"
+                } else if (targetPlatform.operatingSystem.freeBSD) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/freebsd"
+                }
+            }
+        }
+    }
 }
-javacppBuildCommand {
-    // typically set here the buildCommand to the script that fills up includePath and linkPath
-}
-javacppBuildParser {
-    // typically set here the classOrPackageNames to class names implementing InfoMap
-}
-javacppBuildCompiler {
-    // typically set here boolean flags like copyLibs
-}
+
+test.dependsOn 'helloSharedLibrary'

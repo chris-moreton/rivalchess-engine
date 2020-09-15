@@ -24,7 +24,7 @@ fun whitePawnsEval(board: EngineBoard): Int {
     var acc = 0
     val blackPieceValues = board.blackPieceValues
     applyToSquares(board.getBitboard(BITBOARD_WP)) { pawnSquare ->
-        acc += RivalLibrary.linearScale(
+        acc += linearScaleKotlin(
                 blackPieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
@@ -39,7 +39,7 @@ fun blackPawnsEval(board: EngineBoard): Int {
     var acc = 0
     val whitePieceValues = board.whitePieceValues
     applyToSquares(board.getBitboard(BITBOARD_BP)) {
-        acc += RivalLibrary.linearScale(
+        acc += linearScaleKotlin(
                 whitePieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
@@ -140,8 +140,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     val blackPassedPawnScore = blackPassedPawnScore(blackPassedPawnsBitboard, blackGuardedPassedPawns)
 
     val impureScore =
-        (RivalLibrary.linearScale(board.blackPieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,whitePassedPawnScore * 2, whitePassedPawnScore)) -
-                (RivalLibrary.linearScale(board.whitePieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,blackPassedPawnScore * 2, blackPassedPawnScore)) +
+        (linearScaleKotlin(board.blackPieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,whitePassedPawnScore * 2, whitePassedPawnScore)) -
+                (linearScaleKotlin(board.whitePieceValues, 0, PAWN_ADJUST_MAX_MATERIAL,blackPassedPawnScore * 2, blackPassedPawnScore)) +
                 (if (board.blackPieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.BLACK,
@@ -190,7 +190,7 @@ fun calculateLowMaterialPawnBonus(
 
         val moverAdjustment = if (lowMaterialColour == mover) 1 else 0
 
-        val scoreAdjustment = RivalLibrary.linearScale(
+        val scoreAdjustment = linearScaleKotlin(
                 lowMaterialSidePieceValues,
                 0,
                 PAWN_ADJUST_MAX_MATERIAL,

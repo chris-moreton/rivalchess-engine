@@ -13,14 +13,14 @@ fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): 
     val toAdjusted = if (board.mover == Colour.WHITE) toSquare else bitFlippedHorizontalAxis[toSquare]
 
     return when (piece) {
-        BITBOARD_WP, BITBOARD_BP -> RivalLibrary.linearScale(
+        BITBOARD_WP, BITBOARD_BP -> linearScaleKotlin(
                 if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
                 PAWN_STAGE_MATERIAL_LOW,
                 PAWN_STAGE_MATERIAL_HIGH,
                 pawnEndGamePieceSquareTable[toAdjusted] - pawnEndGamePieceSquareTable[fromAdjusted],
                 pawnPieceSquareTable[toAdjusted] - pawnPieceSquareTable[fromAdjusted])
         BITBOARD_WR, BITBOARD_BR -> rookPieceSquareTable[toAdjusted] - rookPieceSquareTable[fromAdjusted]
-        BITBOARD_WN, BITBOARD_BN -> RivalLibrary.linearScale(
+        BITBOARD_WN, BITBOARD_BN -> linearScaleKotlin(
                 if (board.mover == Colour.WHITE) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
                 KNIGHT_STAGE_MATERIAL_LOW,
                 KNIGHT_STAGE_MATERIAL_HIGH,
@@ -28,7 +28,7 @@ fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): 
                 knightPieceSquareTable[toAdjusted] - knightPieceSquareTable[fromAdjusted])
         BITBOARD_WB, BITBOARD_BB -> bishopPieceSquareTable[toAdjusted] - bishopPieceSquareTable[fromAdjusted]
         BITBOARD_WQ, BITBOARD_BQ -> queenPieceSquareTable[toAdjusted] - queenPieceSquareTable[fromAdjusted]
-        BITBOARD_WK, BITBOARD_BK -> RivalLibrary.linearScale(
+        BITBOARD_WK, BITBOARD_BK -> linearScaleKotlin(
                 if (board.mover == Colour.WHITE) board.blackPieceValues else board.whitePieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
