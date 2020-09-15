@@ -59,7 +59,7 @@ test {
     useJUnit()
     maxHeapSize = '1G'
     testLogging.showStandardStreams = true
-    systemProperty "java.library.path", file("${buildDir}/libs/hello/shared").absolutePath
+    systemProperty "java.library.path", file("${buildDir}/libs/rival/shared").absolutePath
 }
 
 task createProperties(dependsOn: processResources) {
@@ -156,7 +156,7 @@ model {
     }
 
     components {
-        hello(NativeLibrarySpec) {
+        rival(NativeLibrarySpec) {
             binaries.all {
                 if (targetPlatform.operatingSystem.macOsX) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
@@ -180,4 +180,4 @@ model {
     }
 }
 
-test.dependsOn 'helloSharedLibrary'
+test.dependsOn 'rivalSharedLibrary'

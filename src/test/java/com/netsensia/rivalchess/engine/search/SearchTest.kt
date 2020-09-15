@@ -1,8 +1,10 @@
 package com.netsensia.rivalchess.engine.search
 
-import HelloWorld
+import RivalCLibrary
 import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
+import com.netsensia.rivalchess.engine.eval.linearScaleKotlin
+import com.netsensia.rivalchess.eve.secureRandom
 import com.netsensia.rivalchess.exception.IllegalFenException
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
@@ -61,8 +63,11 @@ class SearchTest {
     @Test
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun c() {
-        val h = HelloWorld()
-        print(h.printy())
+        val h = RivalCLibrary()
+        var total = 0
+        for (i in (0..100000000)) {
+            total += h.linearScaleC(i,20,30,40,50)
+        }
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
