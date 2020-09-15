@@ -54,7 +54,6 @@ class SearchTest {
     }
 
     @Test
-    @Ignore
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun testNodeCountDeep() {
         assertNodeCount("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 10477423, 14);

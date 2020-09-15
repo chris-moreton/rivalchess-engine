@@ -242,12 +242,11 @@ fun isEndGame(board: EngineBoard) =
 
 fun kingSafetyEval(board: EngineBoard, attacks: Attacks): Int {
 
+    val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
+    if (averagePiecesPerSide <= KINGSAFETY_MIN_PIECE_BALANCE) return 0
+
     val whiteKingAttackedCount = whiteKingAttackCount(whiteKingDangerZone[board.whiteKingSquare], attacks)
     val blackKingAttackedCount = blackKingAttackCount(blackKingDangerZone[board.blackKingSquare], attacks)
-
-    val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
-
-    if (averagePiecesPerSide <= KINGSAFETY_MIN_PIECE_BALANCE) return 0
 
     val whiteKingSafety: Int = whiteKingShieldEval(board)
     val blackKingSafety: Int = blackKingShieldEval(board)
@@ -294,8 +293,6 @@ fun uncastledTrappedBlackRookEval(board: EngineBoard) =
             KINGSAFETY_UNCASTLED_TRAPPED_ROOK
         else 0)
 
-fun openFiles(kingShield: Long, pawnBitboard: Long) = southFill(kingShield) and southFill(pawnBitboard).inv() and RANK_1
-
 fun whiteKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
                 if (whiteKingOnFirstTwoRanks(board)) {
@@ -306,14 +303,9 @@ fun combineWhiteKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_WP), board.getBitboard(BITBOARD_BP), kingShield, Long::shl)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
                 uncastledTrappedWhiteRookEval(board) -
-                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
-                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
+                openFilesKingShieldEval(kingShield, board.getBitboard(BITBOARD_WP)) -
+                openFilesKingShieldEval(kingShield, board.getBitboard(BITBOARD_BP))
 
-fun openFilesKingShieldEval(openFiles: Long) =
-        if (openFiles != 0L) {
-            KINGSAFTEY_HALFOPEN_MIDFILE * popCount(openFiles and MIDDLE_FILES_8_BIT) +
-                    KINGSAFTEY_HALFOPEN_NONMIDFILE * popCount(openFiles and NONMID_FILES_8_BIT)
-        } else 0
 
 fun blackKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
@@ -325,8 +317,8 @@ fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_BP), board.getBitboard(BITBOARD_WP), kingShield, Long::ushr)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
                 uncastledTrappedBlackRookEval(board) -
-                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
-                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
+                openFilesKingShieldEval(kingShield, board.getBitboard(BITBOARD_WP)) -
+                openFilesKingShieldEval(kingShield, board.getBitboard(BITBOARD_BP))
 
 fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.whiteKingSquare) < 2
 
