@@ -61,13 +61,18 @@ class SearchTest {
     }
 
     @Test
+    @Ignore
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun c() {
         val h = RivalCLibrary()
         var total = 0
+        val ia = intArrayOf(
+                1360789523,1360789524,1427898389,-1,1176109090,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
         for (i in (0..100000000)) {
-            total += h.linearScaleC(i,20,30,40,50)
+            total += h.getHighestScoringMoveFromArrayC(ia)
         }
+        println(total)
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)

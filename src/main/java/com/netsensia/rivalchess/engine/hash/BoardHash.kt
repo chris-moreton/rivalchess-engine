@@ -105,7 +105,7 @@ class BoardHash {
         hashTracker.makeMove(compactMove, movePiece, capturePiece)
     }
 
-    fun unMove(engineBoard: EngineBoard) = hashTracker.unMakeMove(engineBoard.lastMoveMade!!)
+    fun unMove(engineBoard: EngineBoard) = hashTracker.unMakeMove(engineBoard.moveHistory[engineBoard.numMovesMade]!!)
 
     fun makeNullMove() = hashTracker.nullMove()
 

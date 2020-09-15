@@ -13,14 +13,6 @@ import com.netsensia.rivalchess.model.Square
 const val PHASE1_CUTOFF = 2500
 const val PHASE2_CUTOFF = 255
 
-
-fun linearScaleKotlin(x: Int, min: Int, max: Int, a: Int, b: Int) =
-        when {
-            x < min -> a
-            x > max -> b
-            else -> a + (x - min) * (b - a) / (max - min)
-        }
-
 @JvmOverloads
 fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
@@ -557,8 +549,6 @@ fun blockedKnightPenaltyEval(square: Int, enemyPawnAttacks: Long, friendlyPawns:
 fun blockedKnightLandingSquares(square: Int, enemyPawnAttacks: Long, friendlyPawns: Long) =
         knightMoves[square] and (enemyPawnAttacks or friendlyPawns)
 
-
-
 fun blackKnightsEval(board: EngineBoard, attacks: Attacks) : Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BN)) {
@@ -640,3 +630,9 @@ fun whiteRooksEval(board: EngineBoard, whitePiecesInverted: Long): Int {
     return acc
 }
 
+fun linearScaleKotlin(x: Int, min: Int, max: Int, a: Int, b: Int) =
+    when {
+        x < min -> a
+        x > max -> b
+        else -> a + (x - min) * (b - a) / (max - min)
+    }

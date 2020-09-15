@@ -7,11 +7,11 @@ import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.model.Colour
 
 class MoveGenerator(
-        private val engineBitboards: EngineBitboards,
-        private val mover: Colour,
-        private val whiteKingSquare: Int,
-        private val blackKingSquare: Int,
-        private val castlePrivileges: Int
+    private val engineBitboards: EngineBitboards,
+    private val mover: Colour,
+    private val whiteKingSquare: Int,
+    private val blackKingSquare: Int,
+    private val castlePrivileges: Int
 ) {
 
     var moves = IntArray(MAX_LEGAL_MOVES)

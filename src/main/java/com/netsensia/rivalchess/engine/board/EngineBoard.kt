@@ -14,6 +14,7 @@ import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     @JvmField
     val engineBitboards = EngineBitboards()
+    fun getBitboard(bitboardType: Int) = engineBitboards.pieceBitboards[bitboardType]
 
     @JvmField
     val boardHashObject = BoardHash()
@@ -41,9 +42,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     @JvmField
     var mover = Colour.WHITE
-
-    val lastMoveMade: MoveDetail?
-        get() = moveHistory[numMovesMade]
 
     @JvmField
     var whitePieceValues = 0
@@ -156,8 +154,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         }
         engineBitboards.setPieceBitboard(BITBOARD_ALL, white or black)
     }
-
-    fun getBitboard(bitboardType: Int) = engineBitboards.pieceBitboards[bitboardType]
 
     fun previousOccurrencesOfThisPosition(): Int {
         val boardHashCode = boardHashObject.trackedHashValue
