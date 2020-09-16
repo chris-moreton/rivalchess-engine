@@ -45,7 +45,8 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     val blackPieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_ENEMY) else board.getBitboard(BITBOARD_FRIENDLY)
 
     val positionalEval = positionalEvalPart1 + (if (viableEvalForPhase2)
-        (       doubledRooksEval(board) +
+        (twoRooksTrappingKingEval(board) +
+                doubledRooksEval(board) +
                 rooksEval(board, whitePieces, blackPieces) +
                 bishopsEval(board, whitePieces, blackPieces) +
                 knightsEval(board, attacks) +
@@ -77,6 +78,9 @@ private fun rooksEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) 
 
 private fun doubledRooksEval(board: EngineBoard) =
         (doubledRooksEval(board.getBitboard(BITBOARD_WR)) - doubledRooksEval(board.getBitboard(BITBOARD_BR)))
+
+private fun twoRooksTrappingKingEval(board: EngineBoard) =
+        (twoWhiteRooksTrappingKingEval(board) - twoBlackRooksTrappingKingEval(board))
 
 fun materialDifferenceEval(board: EngineBoard) =
         board.whitePieceValues - board.blackPieceValues +
@@ -110,6 +114,14 @@ fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
             x > max -> b
             else -> a + (x - min) * (b - a) / (max - min)
         }
+
+fun twoWhiteRooksTrappingKingEval(board: EngineBoard) =
+        if (popCount(board.getBitboard(BITBOARD_WR) and RANK_7) > 1 && board.getBitboard(BITBOARD_BK) and RANK_8 != 0L)
+            VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING else 0
+
+fun twoBlackRooksTrappingKingEval(board: EngineBoard) =
+        if (popCount(board.getBitboard(BITBOARD_BR) and RANK_2) > 1 && board.getBitboard(BITBOARD_WK) and RANK_1 != 0L)
+            VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING else 0
 
 fun whiteRookOpenFilesEval(board: EngineBoard, file: Int) =
         if (FILES[file] and board.getBitboard(BITBOARD_WP) == 0L)
@@ -298,6 +310,8 @@ fun uncastledTrappedBlackRookEval(board: EngineBoard) =
             KINGSAFETY_UNCASTLED_TRAPPED_ROOK
         else 0)
 
+fun openFiles(kingShield: Long, pawnBitboard: Long) = southFill(kingShield) and southFill(pawnBitboard).inv() and RANK_1
+
 fun whiteKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
                 if (whiteKingOnFirstTwoRanks(board)) {
@@ -307,7 +321,15 @@ fun whiteKingShieldEval(board: EngineBoard) =
 fun combineWhiteKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_WP), board.getBitboard(BITBOARD_BP), kingShield, Long::shl)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
-                uncastledTrappedWhiteRookEval(board)
+                uncastledTrappedWhiteRookEval(board) -
+                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
+                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
+
+fun openFilesKingShieldEval(openFiles: Long) =
+        if (openFiles != 0L) {
+            KINGSAFTEY_HALFOPEN_MIDFILE * popCount(openFiles and MIDDLE_FILES_8_BIT) +
+                    KINGSAFTEY_HALFOPEN_NONMIDFILE * popCount(openFiles and NONMID_FILES_8_BIT)
+        } else 0
 
 fun blackKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
@@ -318,7 +340,9 @@ fun blackKingShieldEval(board: EngineBoard) =
 fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_BP), board.getBitboard(BITBOARD_WP), kingShield, Long::ushr)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
-                uncastledTrappedBlackRookEval(board)
+                uncastledTrappedBlackRookEval(board) -
+                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
+                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
 
 fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.whiteKingSquare) < 2
 
