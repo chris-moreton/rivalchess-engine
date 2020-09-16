@@ -24,11 +24,11 @@ fun EngineBoard.unMakeNullMove() {
 fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateHash: Boolean = true): Boolean {
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
-    val capturePiece = getBitboardTypeOfPieceOnSquare(moveTo, mover.opponent())
     val movePiece = getBitboardTypeOfPieceOnSquare(moveFrom, mover)
+    val targetSquarePiece = getBitboardTypeOfPieceOnSquare(moveTo, mover.opponent())
 
     val moveDetail = MoveDetail()
-    moveDetail.capturePiece = BITBOARD_NONE
+    moveDetail.capturePiece = targetSquarePiece
     moveDetail.move = compactMove
     moveDetail.hashValue = boardHashObject.trackedHashValue
     moveDetail.isOnNullMove = isOnNullMove
@@ -45,9 +45,10 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
 
     engineBitboards.movePiece(movePiece, compactMove)
 
-    updateMaterialAfterPieceCapture(capturePiece, mover.opponent())
+    updateMaterialAfterPieceCapture(targetSquarePiece, mover.opponent())
 
-    makeNonTrivialMoveTypeAdjustments(moveFrom, moveTo, compactMove, capturePiece, movePiece)
+    // moveDetail.capturePiece gets updated here
+    makeNonTrivialMoveTypeAdjustments(moveFrom, moveTo, compactMove, targetSquarePiece, movePiece)
 
     numMovesMade++
     mover = mover.opponent()
@@ -59,12 +60,13 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
         return false
     }
 
-    if (updateHash) boardHashObject.move(compactMove, movePiece, capturePiece)
+    if (updateHash) boardHashObject.move(compactMove, movePiece, targetSquarePiece)
 
     return true
 }
 
 private fun EngineBoard.updateMaterialAfterPieceCapture(capturePiece: Int, colour: Colour) {
+    if (capturePiece == BITBOARD_NONE) return
     if (colour == Colour.WHITE) {
         when (capturePiece) {
             BITBOARD_WP -> whitePawnValues -= pieceValue(BITBOARD_WP)
@@ -92,16 +94,16 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     if (updateHash) boardHashObject.unMove(this)
 
     // deal with en passants first, they are special moves as well as capture moves, so just get them out of the way
-    if (!unMakeEnPassants(fromMask, toMask)) {
+    if (!unMakeEnPassants(moveMade.enPassantBitboard, moveMade.movePiece, fromMask, toMask)) {
 
         // put capture piece back on toSquare, we don't get here if an en passant has just been unmade
-        replaceCapturedPiece(toMask, mover.opponent())
+        replaceCapturedPiece(moveMade.capturePiece, toMask, mover.opponent())
 
         // for promotions, remove promotion piece from toSquare
-        if (!removePromotionPiece(fromMask, toMask)) {
+        if (!removePromotionPiece(moveMade.move, fromMask, toMask)) {
 
             // now that promotions are out of the way, we can remove the moving piece from toSquare and put it back on fromSquare
-            val movePiece = replaceMovedPiece(fromSquare, fromMask, toMask)
+            val movePiece = replaceMovedPiece(moveMade.movePiece, fromSquare, fromMask, toMask)
 
             // for castles, replace the rook
             replaceCastledRook(fromMask, toMask, movePiece)
@@ -110,14 +112,14 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     calculateSupplementaryBitboards()
 }
 
-private fun EngineBoard.unMakeEnPassants(fromMask: Long, toMask: Long): Boolean {
-    if (toMask == moveHistory[numMovesMade]!!.enPassantBitboard) {
-        if (moveHistory[numMovesMade]!!.movePiece == BITBOARD_WP) {
+private fun EngineBoard.unMakeEnPassants(enPassantBitboard: Long, movePiece: Int, fromMask: Long, toMask: Long): Boolean {
+    if (toMask == enPassantBitboard) {
+        if (movePiece == BITBOARD_WP) {
             engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask or fromMask)
             engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask ushr 8)
             blackPawnValues += pieceValue(BITBOARD_WP)
             return true
-        } else if (moveHistory[numMovesMade]!!.movePiece == BITBOARD_BP) {
+        } else if (movePiece == BITBOARD_BP) {
             engineBitboards.xorPieceBitboard(BITBOARD_BP, toMask or fromMask)
             engineBitboards.xorPieceBitboard(BITBOARD_WP, toMask shl 8)
             whitePawnValues += pieceValue(BITBOARD_WP)
@@ -141,8 +143,7 @@ private fun EngineBoard.replaceCastledRook(fromMask: Long, toMask: Long, movePie
     }
 }
 
-private fun EngineBoard.replaceCapturedPiece(toMask: Long, colour: Colour) {
-    val capturePiece = moveHistory[numMovesMade]!!.capturePiece
+private fun EngineBoard.replaceCapturedPiece(capturePiece: Int, toMask: Long, colour: Colour) {
     if (capturePiece != BITBOARD_NONE) {
         engineBitboards.xorPieceBitboard(capturePiece, toMask)
         if (colour == Colour.WHITE) {
@@ -165,8 +166,8 @@ private fun EngineBoard.replaceCapturedPiece(toMask: Long, colour: Colour) {
     }
 }
 
-private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Boolean {
-    val promotionPiece = moveHistory[numMovesMade]!!.move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
+private fun EngineBoard.removePromotionPiece(move: Int, fromMask: Long, toMask: Long): Boolean {
+    val promotionPiece = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
     if (promotionPiece != 0) {
         if (mover == Colour.WHITE) {
             engineBitboards.xorPieceBitboard(BITBOARD_WP, fromMask)
@@ -216,8 +217,7 @@ private fun EngineBoard.removePromotionPiece(fromMask: Long, toMask: Long): Bool
     return false
 }
 
-private fun EngineBoard.replaceMovedPiece(fromSquare: Int, fromMask: Long, toMask: Long): Int {
-    val movePiece = moveHistory[numMovesMade]!!.movePiece
+private fun EngineBoard.replaceMovedPiece(movePiece: Int, fromSquare: Int, fromMask: Long, toMask: Long): Int {
     engineBitboards.xorPieceBitboard(movePiece, toMask or fromMask)
     if (movePiece == BITBOARD_WK) whiteKingSquare = fromSquare else
         if (movePiece == BITBOARD_BK) blackKingSquare = fromSquare

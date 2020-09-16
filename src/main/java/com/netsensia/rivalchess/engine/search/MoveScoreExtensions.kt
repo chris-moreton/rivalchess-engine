@@ -2,6 +2,8 @@ package com.netsensia.rivalchess.engine.search
 
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.engine.board.getScore
+import com.netsensia.rivalchess.engine.board.isCapture
 import com.netsensia.rivalchess.enums.MoveOrder
 import com.netsensia.rivalchess.model.Colour
 
@@ -108,4 +110,18 @@ fun Search.historyScore(mover: Colour, from: Int, to: Int): Int {
     val total = success + historyMovesFail[colourIndex][from][to]
 
     return if (total > 0) success * 10 / total else 0
+}
+
+fun Search.scoreQuiesceMoves(board: EngineBoard, ply: Int) {
+    var moveCount = 0
+    var i = 0
+    while (orderedMoves[ply][i] != 0) {
+        var move = orderedMoves[ply][i]
+        val isCapture = board.isCapture(move)
+        move = moveNoScore(move)
+        val score = board.getScore(move, isCapture, staticExchangeEvaluator)
+        if (score > 0) orderedMoves[ply][moveCount++] = move or (127 - score shl 24)
+        i++
+    }
+    orderedMoves[ply][moveCount] = 0
 }
