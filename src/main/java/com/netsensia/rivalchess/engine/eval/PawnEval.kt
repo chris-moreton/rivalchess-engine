@@ -9,6 +9,7 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.BITBOARD_BP
 import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.engine.board.pawnValues
 import com.netsensia.rivalchess.model.Colour
 import kotlin.math.abs
 
@@ -126,9 +127,9 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
         popCount(blackBackwardPawns) * VALUE_BACKWARD_PAWN_PENALTY -
         ((popCount(whitePawnBitboard and FILE_A) + popCount(whitePawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) +
         ((popCount(blackPawnBitboard and FILE_A) + popCount(blackPawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) -
-        VALUE_DOUBLED_PAWN_PENALTY * (board.whitePawnValues / 100 - popCount(whiteOccupiedFileMask)) -
+        VALUE_DOUBLED_PAWN_PENALTY * (board.pawnValues(BITBOARD_WP) / 100 - popCount(whiteOccupiedFileMask)) -
         popCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
-        VALUE_DOUBLED_PAWN_PENALTY * (board.blackPawnValues / 100 - popCount(blackOccupiedFileMask)) +
+        VALUE_DOUBLED_PAWN_PENALTY * (board.pawnValues(BITBOARD_BP) / 100 - popCount(blackOccupiedFileMask)) +
         popCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY
     }
 

@@ -177,7 +177,7 @@ public class EngineBoardTest {
                 + pieceValue(BITBOARD_WN) * 2
                 + pieceValue(BITBOARD_WB) * 2
                 + pieceValue(BITBOARD_WR) * 2,
-                engineBoard.whitePieceValues);
+                engineBoard.getWhitePieceValues());
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false, true);
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6").compact, false, true);
@@ -191,7 +191,7 @@ public class EngineBoardTest {
                         + pieceValue(BITBOARD_WN)
                         + pieceValue(BITBOARD_WB) * 2
                         + pieceValue(BITBOARD_WR) * 2,
-                engineBoard.whitePieceValues);
+                engineBoard.getWhitePieceValues());
 
     }
 
@@ -199,7 +199,7 @@ public class EngineBoardTest {
     public void getBlackPieceValues() throws IllegalFenException {
         EngineBoard engineBoard = new EngineBoard(FenUtils.getBoardModel(FEN_START_POS));
 
-        Assert.assertEquals(pieceValue(BITBOARD_WQ) + pieceValue(BITBOARD_WN) * 2 + pieceValue(BITBOARD_WB) * 2 + pieceValue(BITBOARD_WR) * 2, engineBoard.blackPieceValues);
+        Assert.assertEquals(pieceValue(BITBOARD_WQ) + pieceValue(BITBOARD_WN) * 2 + pieceValue(BITBOARD_WB) * 2 + pieceValue(BITBOARD_WR) * 2, engineBoard.getBlackPieceValues());
 
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("e2e4").compact, false, true);
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d7d6").compact, false, true);
@@ -208,7 +208,7 @@ public class EngineBoardTest {
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("f3e5").compact, false, true);
         makeMove(engineBoard, getEngineMoveFromSimpleAlgebraic("d6e5").compact, false, true);
 
-        Assert.assertEquals(pieceValue(BITBOARD_WQ) + pieceValue(BITBOARD_WN) * 2 + pieceValue(BITBOARD_WB) * 2 + pieceValue(BITBOARD_WR) * 2, engineBoard.blackPieceValues);
+        Assert.assertEquals(pieceValue(BITBOARD_WQ) + pieceValue(BITBOARD_WN) * 2 + pieceValue(BITBOARD_WB) * 2 + pieceValue(BITBOARD_WR) * 2, engineBoard.getBlackPieceValues());
     }
 
     @Test

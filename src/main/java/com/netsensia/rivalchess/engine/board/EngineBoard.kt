@@ -1,8 +1,10 @@
 package com.netsensia.rivalchess.engine.board
 
 import com.netsensia.rivalchess.bitboards.EngineBitboards
+import com.netsensia.rivalchess.bitboards.util.popCount
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
+import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.hash.BoardHash
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Board
@@ -10,6 +12,7 @@ import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
+import java.lang.Long
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     @JvmField
@@ -31,28 +34,31 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     var castlePrivileges = 0
 
     @JvmField
-    var whiteKingSquare = 0
-
-    @JvmField
-    var blackKingSquare = 0
-
-    @JvmField
     var isOnNullMove = false
 
     @JvmField
     var mover = Colour.WHITE
 
+    val whitePieceValues: Int
+        get() = popCount(getBitboard(BITBOARD_WN)) * pieceValue(BITBOARD_WN) +
+                popCount(getBitboard(BITBOARD_WB)) * pieceValue(BITBOARD_WB) +
+                popCount(getBitboard(BITBOARD_WR)) * pieceValue(BITBOARD_WR) +
+                popCount(getBitboard(BITBOARD_WQ)) * pieceValue(BITBOARD_WQ)
+
+    val blackPieceValues: Int
+        get() = popCount(getBitboard(BITBOARD_BN)) * pieceValue(BITBOARD_WN) +
+                popCount(getBitboard(BITBOARD_BB)) * pieceValue(BITBOARD_WB) +
+                popCount(getBitboard(BITBOARD_BR)) * pieceValue(BITBOARD_WR) +
+                popCount(getBitboard(BITBOARD_BQ)) * pieceValue(BITBOARD_WQ)
+
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
-    @JvmField
-    var whitePieceValues = 0
-    @JvmField
-    var blackPieceValues = 0
-    @JvmField
-    var whitePawnValues = 0
-    @JvmField
-    var blackPawnValues = 0
+    val whiteKingSquare: Int
+        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
+
+    val blackKingSquare: Int
+        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
 
     init {
         setBoard(board)
@@ -92,31 +98,12 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     private fun setSquareContents(board: Board) {
-        whitePawnValues = 0
-        blackPawnValues = 0
-        whitePieceValues = 0
-        blackPieceValues = 0
         for (y in 0..7) {
             for (x in 0..7) {
                 val bitNum = (63 - 8 * y - x)
                 val squareOccupant = board.getSquareOccupant(Square.fromCoords(x, y))
                 if (squareOccupant != SquareOccupant.NONE) {
                     engineBitboards.orPieceBitboard(squareOccupant.index, 1L shl bitNum)
-                    if (squareOccupant == SquareOccupant.WK) whiteKingSquare = bitNum
-                    if (squareOccupant == SquareOccupant.BK) blackKingSquare = bitNum
-                    when (squareOccupant) {
-                        SquareOccupant.WP -> whitePawnValues += VALUE_PAWN
-                        SquareOccupant.WN -> whitePieceValues += VALUE_KNIGHT
-                        SquareOccupant.WB -> whitePieceValues += VALUE_BISHOP
-                        SquareOccupant.WR -> whitePieceValues += VALUE_ROOK
-                        SquareOccupant.WQ -> whitePieceValues += VALUE_QUEEN
-                        SquareOccupant.BP -> blackPawnValues += VALUE_PAWN
-                        SquareOccupant.BN -> blackPieceValues += VALUE_KNIGHT
-                        SquareOccupant.BB -> blackPieceValues += VALUE_BISHOP
-                        SquareOccupant.BR -> blackPieceValues += VALUE_ROOK
-                        SquareOccupant.BQ -> blackPieceValues += VALUE_QUEEN
-                        else -> {}
-                    }
                 }
             }
         }

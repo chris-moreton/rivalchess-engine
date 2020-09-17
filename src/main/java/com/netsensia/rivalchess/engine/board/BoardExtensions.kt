@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
+import java.lang.Long
 
 fun EngineBoard.onlyKingsRemain() =
     exactlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_ENEMY]) &&
@@ -49,6 +50,10 @@ fun EngineBoard.getScore(move: Int, isCapture: Boolean, staticExchangeEvaluator:
     }
     return score
 }
+
+fun EngineBoard.pawnValues(pawnBitboardType: Int) = popCount(getBitboard(pawnBitboardType)) * pieceValue(BITBOARD_WP)
+
+fun EngineBoard.kingSquare(colour: Colour) = Long.numberOfTrailingZeros(getBitboard(if (colour == Colour.WHITE) BITBOARD_WK else BITBOARD_BK))
 
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int) =
     makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false).also {

@@ -4,6 +4,7 @@ import com.netsensia.rivalchess.bitboards.bitFlippedHorizontalAxis
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.engine.board.pawnValues
 import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.model.Colour
 
@@ -21,7 +22,7 @@ fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): 
                 pawnPieceSquareTable[toAdjusted] - pawnPieceSquareTable[fromAdjusted])
         BITBOARD_WR, BITBOARD_BR -> rookPieceSquareTable[toAdjusted] - rookPieceSquareTable[fromAdjusted]
         BITBOARD_WN, BITBOARD_BN -> linearScale(
-                if (board.mover == Colour.WHITE) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
+                if (board.mover == Colour.WHITE) board.blackPieceValues + board.pawnValues(BITBOARD_BP) else board.whitePieceValues + board.pawnValues(BITBOARD_WP),
                 KNIGHT_STAGE_MATERIAL_LOW,
                 KNIGHT_STAGE_MATERIAL_HIGH,
                 knightEndGamePieceSquareTable[toAdjusted] - knightEndGamePieceSquareTable[fromAdjusted],

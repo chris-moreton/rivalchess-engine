@@ -1,7 +1,10 @@
 package com.netsensia.rivalchess.engine.eval.see
 
+import com.netsensia.rivalchess.consts.BITBOARD_BP
+import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.board.makeMove
+import com.netsensia.rivalchess.engine.board.pawnValues
 import com.netsensia.rivalchess.engine.board.unMakeMove
 import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.model.Colour
@@ -31,7 +34,7 @@ class StaticExchangeEvaluator {
 
     private fun materialBalanceFromMoverPerspective(board: EngineBoard) =
             if (board.mover == Colour.WHITE)
-                (board.whitePieceValues + board.whitePawnValues - board.blackPieceValues - board.blackPawnValues) else
-                (board.blackPieceValues + board.blackPawnValues - board.whitePieceValues - board.whitePawnValues)
+                (board.whitePieceValues + board.pawnValues(BITBOARD_WP) - board.blackPieceValues - board.pawnValues(BITBOARD_BP)) else
+                (board.blackPieceValues + board.pawnValues(BITBOARD_BP) - board.whitePieceValues - board.pawnValues(BITBOARD_WP))
 
 }
