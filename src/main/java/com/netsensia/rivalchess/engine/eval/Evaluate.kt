@@ -179,17 +179,15 @@ fun tradePawnBonusWhenMoreMaterial(board: EngineBoard, materialDifference: Int) 
 fun bishopScore(board: EngineBoard, materialDifference: Int) =
         bishopPairEval(board) + oppositeColourBishopsEval(board, materialDifference) + trappedBishopEval(board)
 
-fun whiteLightBishopExists(board: EngineBoard) = board.getBitboard(BITBOARD_WB) and LIGHT_SQUARES != 0L
-fun whiteDarkBishopExists(board: EngineBoard) = board.getBitboard(BITBOARD_WB) and DARK_SQUARES != 0L
-fun blackLightBishopExists(board: EngineBoard) = board.getBitboard(BITBOARD_BB) and LIGHT_SQUARES != 0L
-fun blackDarkBishopExists(board: EngineBoard) = board.getBitboard(BITBOARD_BB) and DARK_SQUARES != 0L
-fun whiteBishopColourCount(board: EngineBoard) = (if (whiteLightBishopExists(board)) 1 else 0) + if (whiteDarkBishopExists(board)) 1 else 0
-fun blackBishopColourCount(board: EngineBoard) = (if (blackLightBishopExists(board)) 1 else 0) + if (blackDarkBishopExists(board)) 1 else 0
+fun atLeastOnePieceOnLightSquare(bitboard: Long) = bitboard and LIGHT_SQUARES != 0L
+fun atLeastOnePieceOnDarkSquare(bitboard: Long) = bitboard and DARK_SQUARES != 0L
+fun whiteBishopColourCount(board: EngineBoard) = (if (atLeastOnePieceOnLightSquare(board.getBitboard(BITBOARD_WB))) 1 else 0) + if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_WB))) 1 else 0
+fun blackBishopColourCount(board: EngineBoard) = (if (atLeastOnePieceOnLightSquare(board.getBitboard(BITBOARD_BB))) 1 else 0) + if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_BB))) 1 else 0
 
 fun oppositeColourBishopsEval(board: EngineBoard, materialDifference: Int): Int {
 
     if (whiteBishopColourCount(board) == 1 && blackBishopColourCount(board) == 1 &&
-            whiteLightBishopExists(board) != blackLightBishopExists(board) &&
+            atLeastOnePieceOnLightSquare(board.getBitboard(BITBOARD_WB)) != atLeastOnePieceOnLightSquare(board.getBitboard(BITBOARD_BB)) &&
             board.whitePieceValues == board.blackPieceValues) {
         // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
         val maxPenalty = materialDifference / WRONG_COLOUR_BISHOP_PENALTY_DIVISOR // mostly pawns as material is identical
@@ -458,7 +456,7 @@ fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: 
 
 fun blackKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
     blackShouldWinWithKnightAndBishopValue(currentScore)
-    return -if (blackDarkBishopExists(board)) enemyKingCloseToDarkCornerMateSquareValue(board.whiteKingSquare)
+    return -if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_BB))) enemyKingCloseToDarkCornerMateSquareValue(board.whiteKingSquare)
     else enemyKingCloseToLightCornerMateSquareValue(board.whiteKingSquare)
 }
 
@@ -479,7 +477,7 @@ fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: 
 
 fun whiteKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
     whiteShouldWinWithKnightAndBishopValue(currentScore)
-    return +if (whiteDarkBishopExists(board)) enemyKingCloseToDarkCornerMateSquareValue(board.blackKingSquare)
+    return +if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_WB))) enemyKingCloseToDarkCornerMateSquareValue(board.blackKingSquare)
     else enemyKingCloseToLightCornerMateSquareValue(board.blackKingSquare)
 }
 
@@ -598,7 +596,7 @@ fun whiteKnightsEval(board: EngineBoard, attacks: Attacks) : Int {
 fun blackBishopsEval(board: EngineBoard, blackPiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BB)) {
-        acc += VALUE_BISHOP_MOBILITY[popCount(bishopAttacks(board, it) and blackPiecesInverted)] +
+        acc += VALUE_BISHOP_MOBILITY[popCount(bishopAttacks(board.getBitboard(BITBOARD_ALL), it) and blackPiecesInverted)] +
                 flippedSquareTableScore(bishopPieceSquareTable, it)
     }
     return acc
@@ -607,7 +605,7 @@ fun blackBishopsEval(board: EngineBoard, blackPiecesInverted: Long): Int {
 fun whiteBishopEval(board: EngineBoard, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_WB)) {
-        acc += VALUE_BISHOP_MOBILITY[popCount(bishopAttacks(board, it) and whitePiecesInverted)] + bishopPieceSquareTable[it]
+        acc += VALUE_BISHOP_MOBILITY[popCount(bishopAttacks(board.getBitboard(BITBOARD_ALL), it) and whitePiecesInverted)] + bishopPieceSquareTable[it]
     }
     return acc
 }
@@ -615,7 +613,7 @@ fun whiteBishopEval(board: EngineBoard, whitePiecesInverted: Long): Int {
 private fun blackQueensEval(board: EngineBoard, blackPiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BQ)) {
-        acc += VALUE_QUEEN_MOBILITY[popCount(queenAttacks(board, it) and blackPiecesInverted)] + flippedSquareTableScore(queenPieceSquareTable, it)
+        acc += VALUE_QUEEN_MOBILITY[popCount(queenAttacks(board.getBitboard(BITBOARD_ALL), it) and blackPiecesInverted)] + flippedSquareTableScore(queenPieceSquareTable, it)
     }
     return acc
 }
@@ -623,7 +621,7 @@ private fun blackQueensEval(board: EngineBoard, blackPiecesInverted: Long): Int 
 private fun whiteQueensEval(board: EngineBoard, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_WQ)) {
-        acc += VALUE_QUEEN_MOBILITY[popCount(queenAttacks(board, it) and whitePiecesInverted)] + queenPieceSquareTable[it]
+        acc += VALUE_QUEEN_MOBILITY[popCount(queenAttacks(board.getBitboard(BITBOARD_ALL), it) and whitePiecesInverted)] + queenPieceSquareTable[it]
     }
     return acc
 }
@@ -632,7 +630,7 @@ private fun blackRooksEval(board: EngineBoard, blackPiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BR)) {
         acc += blackRookOpenFilesEval(board, it % 8) +
-                VALUE_ROOK_MOBILITY[popCount(rookAttacks(board, it) and blackPiecesInverted)] +
+                VALUE_ROOK_MOBILITY[popCount(rookAttacks(board.getBitboard(BITBOARD_ALL), it) and blackPiecesInverted)] +
                 flippedSquareTableScore(rookPieceSquareTable, it) * rookEnemyPawnMultiplier(board.pawnValues(BITBOARD_WP)) / 6
     }
     return acc
@@ -642,7 +640,7 @@ fun whiteRooksEval(board: EngineBoard, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_WR)) {
         acc += whiteRookOpenFilesEval(board, it % 8) +
-                VALUE_ROOK_MOBILITY[popCount(rookAttacks(board, it) and whitePiecesInverted)] +
+                VALUE_ROOK_MOBILITY[popCount(rookAttacks(board.getBitboard(BITBOARD_ALL), it) and whitePiecesInverted)] +
                 rookPieceSquareTable[it] * rookEnemyPawnMultiplier(board.pawnValues(BITBOARD_BP)) / 6
     }
     return acc

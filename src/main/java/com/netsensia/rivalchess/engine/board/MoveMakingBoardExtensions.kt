@@ -82,7 +82,7 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
         replaceCapturedPiece(moveMade.capturePiece, toMask)
 
         // for promotions, remove promotion piece from toSquare
-        if (!removePromotionPiece(moveMade.move, fromMask, toMask)) {
+        if (!removePromotionPiece(moveMade.move and PROMOTION_PIECE_TOSQUARE_MASK_FULL, fromMask, toMask)) {
 
             // now that promotions are out of the way, we can remove the moving piece from toSquare and put it back on fromSquare
             val movePiece = replaceMovedPiece(moveMade.movePiece, fromMask, toMask)
@@ -124,45 +124,26 @@ private fun EngineBoard.replaceCastledRook(fromMask: Long, toMask: Long, movePie
 }
 
 private fun EngineBoard.replaceCapturedPiece(capturePiece: Int, toMask: Long) {
-    if (capturePiece != BITBOARD_NONE) {
-        engineBitboards.xorPieceBitboard(capturePiece, toMask)
-    }
+    if (capturePiece != BITBOARD_NONE) engineBitboards.xorPieceBitboard(capturePiece, toMask)
 }
 
-private fun EngineBoard.removePromotionPiece(move: Int, fromMask: Long, toMask: Long): Boolean {
-    val promotionPiece = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
+private fun EngineBoard.removePromotionPiece(promotionPiece: Int, fromMask: Long, toMask: Long): Boolean {
     if (promotionPiece != 0) {
         if (mover == Colour.WHITE) {
             engineBitboards.xorPieceBitboard(BITBOARD_WP, fromMask)
             when (promotionPiece) {
-                PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
-                    engineBitboards.xorPieceBitboard(BITBOARD_WQ, toMask)
-                }
-                PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
-                    engineBitboards.xorPieceBitboard(BITBOARD_WB, toMask)
-                }
-                PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
-                    engineBitboards.xorPieceBitboard(BITBOARD_WN, toMask)
-                }
-                PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
-                    engineBitboards.xorPieceBitboard(BITBOARD_WR, toMask)
-                }
+                PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> engineBitboards.xorPieceBitboard(BITBOARD_WQ, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> engineBitboards.xorPieceBitboard(BITBOARD_WB, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> engineBitboards.xorPieceBitboard(BITBOARD_WN, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> engineBitboards.xorPieceBitboard(BITBOARD_WR, toMask)
             }
         } else {
             engineBitboards.xorPieceBitboard(BITBOARD_BP, fromMask)
             when (promotionPiece) {
-                PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> {
-                    engineBitboards.xorPieceBitboard(BITBOARD_BQ, toMask)
-                }
-                PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> {
-                    engineBitboards.xorPieceBitboard(BITBOARD_BB, toMask)
-                }
-                PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> {
-                    engineBitboards.xorPieceBitboard(BITBOARD_BN, toMask)
-                }
-                PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> {
-                    engineBitboards.xorPieceBitboard(BITBOARD_BR, toMask)
-                }
+                PROMOTION_PIECE_TOSQUARE_MASK_QUEEN -> engineBitboards.xorPieceBitboard(BITBOARD_BQ, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_BISHOP -> engineBitboards.xorPieceBitboard(BITBOARD_BB, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_KNIGHT -> engineBitboards.xorPieceBitboard(BITBOARD_BN, toMask)
+                PROMOTION_PIECE_TOSQUARE_MASK_ROOK -> engineBitboards.xorPieceBitboard(BITBOARD_BR, toMask)
             }
         }
         return true

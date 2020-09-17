@@ -11,22 +11,16 @@ import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 
 class Attacks(board: EngineBoard) {
-    @JvmField
     val whitePawns = whitePawnAttacks(board.getBitboard(BITBOARD_WP))
-    @JvmField
     val blackPawns = blackPawnAttacks(board.getBitboard(BITBOARD_BP))
-    @JvmField
-    val whiteRooks = attackList(board, board.getBitboard(BITBOARD_WR), ::rookAttacks, Colour.WHITE)
-    @JvmField
-    val whiteBishops = attackList(board, board.getBitboard(BITBOARD_WB), ::bishopAttacks, Colour.WHITE)
-    @JvmField
-    val whiteQueens = attackList(board, board.getBitboard(BITBOARD_WQ), ::queenAttacks, Colour.WHITE)
-    @JvmField
-    val blackRooks = attackList(board, board.getBitboard(BITBOARD_BR), ::rookAttacks, Colour.BLACK)
-    @JvmField
-    val blackBishops = attackList(board, board.getBitboard(BITBOARD_BB), ::bishopAttacks, Colour.BLACK)
-    @JvmField
-    val blackQueens = attackList(board, board.getBitboard(BITBOARD_BQ), ::queenAttacks, Colour.BLACK)
+    val allBitboard = board.getBitboard(BITBOARD_ALL)
+    val whiteRooks = attackList(allBitboard, board.getBitboard(BITBOARD_WR), ::rookAttacks, Colour.WHITE)
+    val whiteBishops = attackList(allBitboard, board.getBitboard(BITBOARD_WB), ::bishopAttacks, Colour.WHITE)
+    val whiteQueens = attackList(allBitboard, board.getBitboard(BITBOARD_WQ), ::queenAttacks, Colour.WHITE)
+    val blackRooks = attackList(allBitboard, board.getBitboard(BITBOARD_BR), ::rookAttacks, Colour.BLACK)
+    val blackBishops = attackList(allBitboard, board.getBitboard(BITBOARD_BB), ::bishopAttacks, Colour.BLACK)
+    val blackQueens = attackList(allBitboard, board.getBitboard(BITBOARD_BQ), ::queenAttacks, Colour.BLACK)
+
     @JvmField
     var blackPieceAttacks = 0L
     @JvmField
@@ -37,11 +31,11 @@ class Attacks(board: EngineBoard) {
         knightAttackList(board.getBitboard(BITBOARD_BN), Colour.BLACK)
     }
 
-    private inline fun attackList(board: EngineBoard, squaresBitboard: Long, pieceAttacksFn: (EngineBoard, Int) -> Long, colour: Colour): LongArray {
+    private inline fun attackList(allBitboard: Long, squaresBitboard: Long, pieceAttacksFn: (Long, Int) -> Long, colour: Colour): LongArray {
         var count = 0
-        val squareAttacks = longArrayOf(-1L,-1L,-1L,-1L,-1L,-1L,-1L)
+        val squareAttacks = longArrayOf(-1L,-1L,-1L,-1L)
         applyToSquares(squaresBitboard) {
-            val attacksForSquare = pieceAttacksFn(board, it)
+            val attacksForSquare = pieceAttacksFn(allBitboard, it)
             squareAttacks[count++] = attacksForSquare
             if (colour == Colour.WHITE)
                 whitePieceAttacks = whitePieceAttacks or attacksForSquare else
@@ -88,14 +82,14 @@ fun threatEval(attacks: Attacks, board: EngineBoard) =
 
 fun adjustedAttackScore(attackScore: Int) = attackScore + attackScore * (attackScore / pieceValue(BITBOARD_WQ))
 
-fun rookAttacks(board: EngineBoard, sq: Int) : Long =
+fun rookAttacks(allBitboard: Long, sq: Int) : Long =
         MagicBitboards.magicMovesRook[sq][
-                ((board.getBitboard(BITBOARD_ALL) and MagicBitboards.occupancyMaskRook[sq])
+                ((allBitboard and MagicBitboards.occupancyMaskRook[sq])
                         * MagicBitboards.magicNumberRook[sq] ushr MagicBitboards.magicNumberShiftsRook[sq]).toInt()]
 
-fun bishopAttacks(board: EngineBoard, sq: Int) =
+fun bishopAttacks(allBitboard: Long, sq: Int) =
         MagicBitboards.magicMovesBishop[sq][
-                ((board.getBitboard(BITBOARD_ALL) and MagicBitboards.occupancyMaskBishop[sq])
+                ((allBitboard and MagicBitboards.occupancyMaskBishop[sq])
                         * MagicBitboards.magicNumberBishop[sq] ushr MagicBitboards.magicNumberShiftsBishop[sq]).toInt()]
 
-fun queenAttacks(board: EngineBoard, sq: Int) = rookAttacks(board, sq) or bishopAttacks(board, sq)
+fun queenAttacks(allBitboard: Long, sq: Int) = rookAttacks(allBitboard, sq) or bishopAttacks(allBitboard, sq)

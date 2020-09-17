@@ -15,7 +15,6 @@ import java.lang.Long.numberOfTrailingZeros
 val VALUE_PAWN_PROMOTION_TO_QUEEN = pieceValue(BITBOARD_WQ) - pieceValue(BITBOARD_WP)
 
 class SeeBoard(board: EngineBoard) {
-    @JvmField
     val bitboards = EngineBitboards(board.engineBitboards)
     @JvmField
     var mover = board.mover
@@ -47,7 +46,6 @@ class SeeBoard(board: EngineBoard) {
         }
 
         bitboards.xorPieceBitboard(movedPieceBitboardType, toBit)
-
         bitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
 
         if (movedPieceBitboardType == BITBOARD_WP) {
