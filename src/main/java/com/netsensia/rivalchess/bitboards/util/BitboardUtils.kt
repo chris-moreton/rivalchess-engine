@@ -58,9 +58,7 @@ inline fun applyToSquares(bitboard: Long, fn: (Int) -> Unit) {
 }
 
 inline fun applyToFirstSquare(bitboard: Long, fn: (Int) -> Unit) {
-    if (bitboard != 0L) {
-        fn(numberOfTrailingZeros(bitboard))
-    }
+    if (bitboard != 0L) fn(numberOfTrailingZeros(bitboard))
 }
 
 fun popCount(x: Long) = java.lang.Long.bitCount(x)

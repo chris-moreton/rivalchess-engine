@@ -17,8 +17,7 @@ class EngineBitboards() {
     }
 
     fun reset() {
-        pieceBitboards = LongArray(BITBOARD_COUNT)
-        Arrays.fill(pieceBitboards, 0)
+        pieceBitboards = longArrayOf(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
     }
 
     fun xorPieceBitboard(i: Int, xorBy: Long) {
