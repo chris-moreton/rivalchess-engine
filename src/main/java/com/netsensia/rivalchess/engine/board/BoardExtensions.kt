@@ -50,6 +50,8 @@ fun EngineBoard.getScore(move: Int, isCapture: Boolean, staticExchangeEvaluator:
     return score
 }
 
+fun EngineBoard.pawnValuesCalculated(pawnBitboardType: Int) = popCount(getBitboard(pawnBitboardType)) * pieceValue(BITBOARD_WP)
+
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int) =
     makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false).also {
         if (it) unMakeMove(false)

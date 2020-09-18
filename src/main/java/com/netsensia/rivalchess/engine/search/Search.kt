@@ -414,7 +414,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun canPerformNullMove(board: EngineBoard, depthRemaining: Int, isCheck: Boolean) =
             ((USE_NULL_MOVE_PRUNING && !isCheck && !board.isOnNullMove && depthRemaining > 1) &&
                     ((if (board.mover == Colour.WHITE) board.whitePieceValues else board.blackPieceValues) >= NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES &&
-                            (if (board.mover == Colour.WHITE) board.whitePawnValues else board.blackPawnValues) > 0))
+                            (if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_WP) else board.getBitboard(BITBOARD_BP)) > 0))
 
     private fun searchNullMove(board: EngineBoard, depth: Int, nullMoveReduceDepth: Int, ply: Int, low: Int, high: Int, extensions: Int): SearchPath {
         board.makeNullMove()
