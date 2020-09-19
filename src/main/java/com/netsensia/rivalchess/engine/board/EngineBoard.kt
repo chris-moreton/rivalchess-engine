@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
+import java.lang.Long
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     @JvmField
@@ -30,11 +31,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     @JvmField
     var castlePrivileges = 0
 
-    @JvmField
-    var whiteKingSquare = 0
+    val whiteKingSquare: Int
+        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
 
-    @JvmField
-    var blackKingSquare = 0
+    val blackKingSquare: Int
+        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
 
     @JvmField
     var isOnNullMove = false
@@ -102,8 +103,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                 val squareOccupant = board.getSquareOccupant(Square.fromCoords(x, y))
                 if (squareOccupant != SquareOccupant.NONE) {
                     engineBitboards.orPieceBitboard(squareOccupant.index, 1L shl bitNum)
-                    if (squareOccupant == SquareOccupant.WK) whiteKingSquare = bitNum
-                    if (squareOccupant == SquareOccupant.BK) blackKingSquare = bitNum
                     when (squareOccupant) {
                         SquareOccupant.WP -> whitePawnValues += VALUE_PAWN
                         SquareOccupant.WN -> whitePieceValues += VALUE_KNIGHT
