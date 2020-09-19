@@ -507,7 +507,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun quiesce(board: EngineBoard, depth: Int, ply: Int, quiescePly: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
         nodes ++
-        var newPath: SearchPath
 
         searchPath[ply].height = 0
         // if evaluate doesn't look like it will reach low, then it will stop calculating early and return
@@ -521,6 +520,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         setOrderedMovesArrayForQuiesce(isCheck, ply, board)
         var move = getHighestScoringMoveFromArray(orderedMoves[ply])
         var legalMoveCount = 0
+
+        var newPath: SearchPath
+
         while (move != 0) {
 
             val movePiece = board.getBitboardTypeOfPieceOnSquare(move ushr 16, mover)
@@ -552,9 +554,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun deltaPrune(isCheck: Boolean, board: EngineBoard, movePiece: Int, move: Int, low: Int): Boolean {
         if (isCheck || (board.whitePieceValues + board.blackPieceValues) < (VALUE_ROOK * 6)) return false
 
-        val delta = (if (movePiece in arrayOf(BITBOARD_WP, BITBOARD_BP) && yCoordOfSquare(move and 63) in arrayOf(0,7))
+        val toSquare = toSquare(move)
+        val delta = (if ((movePiece == BITBOARD_WP || movePiece == BITBOARD_BP) &&
+                yCoordOfSquare(toSquare) in arrayOf(0,7))
             (VALUE_QUEEN - VALUE_PAWN) else 0) +
-            pieceValue(board.getBitboardTypeOfPieceOnSquare(move and 63, mover.opponent()))
+            pieceValue(board.getBitboardTypeOfPieceOnSquare(toSquare, mover.opponent()))
 
         return (delta + DELTA_PRUNING_MARGIN < low)
     }
