@@ -54,11 +54,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
-    val whiteKingSquare: Int
-        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
+    @JvmField
+    var whiteKingSquare = 0
 
-    val blackKingSquare: Int
-        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
+    @JvmField
+    var blackKingSquare = 0
 
     init {
         setBoard(board)
@@ -104,6 +104,8 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                 val squareOccupant = board.getSquareOccupant(Square.fromCoords(x, y))
                 if (squareOccupant != SquareOccupant.NONE) {
                     engineBitboards.orPieceBitboard(squareOccupant.index, 1L shl bitNum)
+                    if (squareOccupant == SquareOccupant.WK) whiteKingSquare = bitNum
+                    if (squareOccupant == SquareOccupant.BK) blackKingSquare = bitNum
                 }
             }
         }

@@ -85,7 +85,7 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
         if (!removePromotionPiece(moveMade.move and PROMOTION_PIECE_TOSQUARE_MASK_FULL, fromMask, toMask)) {
 
             // now that promotions are out of the way, we can remove the moving piece from toSquare and put it back on fromSquare
-            val movePiece = replaceMovedPiece(moveMade.movePiece, fromMask, toMask)
+            val movePiece = replaceMovedPiece(fromSquare, moveMade.movePiece, fromMask, toMask)
 
             // for castles, replace the rook
             replaceCastledRook(fromMask, toMask, movePiece)
@@ -151,8 +151,10 @@ private fun EngineBoard.removePromotionPiece(promotionPiece: Int, fromMask: Long
     return false
 }
 
-private fun EngineBoard.replaceMovedPiece(movePiece: Int, fromMask: Long, toMask: Long): Int {
+private fun EngineBoard.replaceMovedPiece(fromSquare: Int, movePiece: Int, fromMask: Long, toMask: Long): Int {
     engineBitboards.xorPieceBitboard(movePiece, toMask or fromMask)
+    if (movePiece == BITBOARD_WK) whiteKingSquare = fromSquare else
+        if (movePiece == BITBOARD_BK) blackKingSquare = fromSquare
     return movePiece
 }
 
@@ -185,6 +187,7 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece
 }
 
 private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
+    blackKingSquare = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl blackKingSquare
     castlePrivileges = castlePrivileges and CASTLEPRIV_BNONE
@@ -242,6 +245,7 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece
 }
 
 private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
+    whiteKingSquare = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl whiteKingSquare
     castlePrivileges = castlePrivileges and CASTLEPRIV_WNONE
