@@ -54,6 +54,12 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
+    val whiteKingSquareCalculated: Int
+        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
+
+    val blackKingSquareCalculated: Int
+        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
+
     @JvmField
     var whiteKingSquare = 0
 

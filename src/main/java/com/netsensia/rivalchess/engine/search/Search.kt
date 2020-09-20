@@ -20,6 +20,7 @@ import com.netsensia.rivalchess.openings.OpeningLibrary
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.util.*
+import kotlin.system.exitProcess
 
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
@@ -132,6 +133,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
 
             if (engineBoard.makeMove(move)) {
+                if (engineBoard.whiteKingSquare != engineBoard.whiteKingSquareCalculated || engineBoard.blackKingSquare != engineBoard.blackKingSquareCalculated) {
+                    println(engineBoard)
+                    println(move)
+                    exitProcess(1)
+                }
+
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
                 val isCheck = board.isCheck(mover)
