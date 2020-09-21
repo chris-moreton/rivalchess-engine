@@ -147,8 +147,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
                 (if (board.blackPieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.BLACK,
-                            board.whiteKingSquareTracked,
-                            board.blackKingSquareTracked,
+                            board.getWhiteKingSquareCalculated(),
+                            board.getBlackKingSquareCalculated(),
                             board,
                             whitePassedPawnsBitboard,
                             blackPassedPawnsBitboard,
@@ -157,8 +157,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
                 (if (board.whitePieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.WHITE,
-                            board.whiteKingSquareTracked,
-                            board.blackKingSquareTracked,
+                            board.getWhiteKingSquareCalculated(),
+                            board.getBlackKingSquareCalculated(),
                             board,
                             whitePassedPawnsBitboard,
                             blackPassedPawnsBitboard,
