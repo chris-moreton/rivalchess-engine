@@ -180,7 +180,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun sanityCheckKingSquares(move: Int) {
-        if (engineBoard.whiteKingSquare != engineBoard.whiteKingSquareCalculated || engineBoard.blackKingSquare != engineBoard.blackKingSquareCalculated) {
+        if (engineBoard.whiteKingSquareTracked != engineBoard.whiteKingSquareCalculated || engineBoard.blackKingSquareTracked != engineBoard.blackKingSquareCalculated) {
             println(engineBoard)
             println(move)
             exitProcess(1)

@@ -96,11 +96,11 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     val blackGuardedPassedPawns = blackPassedPawnsBitboard and attacks.blackPawns
 
     val pawnHashIndex = if (USE_PAWN_HASH) 
-        pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover) else 0
+        pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquareTracked, board.blackKingSquareTracked, board.mover) else 0
 
     val hashedScore = if (USE_PAWN_HASH && pawnHashMap.containsKey(pawnHashIndex) &&
             pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard
-                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.whiteKingSquare && pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.blackKingSquare
+                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.whiteKingSquareTracked && pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.blackKingSquareTracked
                 && pawnHashMap[pawnHashIndex]!!.mover == board.mover) {
             pawnHashMap[pawnHashIndex]!!.score
         } else -9999
@@ -134,7 +134,7 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     }
 
     if (USE_PAWN_HASH) {
-        pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover, score)
+        pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquareTracked, board.blackKingSquareTracked, board.mover, score)
     }
 
     val whitePassedPawnScore = whitePassedPawnScore(whitePassedPawnsBitboard, whiteGuardedPassedPawns)
@@ -146,8 +146,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
                 (if (board.blackPieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.BLACK,
-                            board.whiteKingSquare,
-                            board.blackKingSquare,
+                            board.whiteKingSquareTracked,
+                            board.blackKingSquareTracked,
                             board,
                             whitePassedPawnsBitboard,
                             blackPassedPawnsBitboard,
@@ -156,8 +156,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
                 (if (board.whitePieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.WHITE,
-                            board.whiteKingSquare,
-                            board.blackKingSquare,
+                            board.whiteKingSquareTracked,
+                            board.blackKingSquareTracked,
                             board,
                             whitePassedPawnsBitboard,
                             blackPassedPawnsBitboard,

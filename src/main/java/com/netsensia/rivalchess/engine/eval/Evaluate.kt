@@ -96,8 +96,8 @@ fun whiteKingSquareEval(board: EngineBoard) =
                 board.blackPieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
-                kingEndGamePieceSquareTable[board.whiteKingSquare],
-                kingPieceSquareTable[board.whiteKingSquare]
+                kingEndGamePieceSquareTable[board.whiteKingSquareTracked],
+                kingPieceSquareTable[board.whiteKingSquareTracked]
         )
 
 fun blackKingSquareEval(board: EngineBoard) =
@@ -105,8 +105,8 @@ fun blackKingSquareEval(board: EngineBoard) =
                 board.whitePieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
-                kingEndGamePieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquare]],
-                kingPieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquare]]
+                kingEndGamePieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquareTracked]],
+                kingPieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquareTracked]]
         )
 
 fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
@@ -261,8 +261,8 @@ fun kingSafetyEval(board: EngineBoard, attacks: Attacks): Int {
     val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
     if (averagePiecesPerSide <= KINGSAFETY_MIN_PIECE_BALANCE) return 0
 
-    val whiteKingAttackedCount = whiteKingAttackCount(whiteKingDangerZone[board.whiteKingSquare], attacks)
-    val blackKingAttackedCount = blackKingAttackCount(blackKingDangerZone[board.blackKingSquare], attacks)
+    val whiteKingAttackedCount = whiteKingAttackCount(whiteKingDangerZone[board.whiteKingSquareTracked], attacks)
+    val blackKingAttackedCount = blackKingAttackCount(blackKingDangerZone[board.blackKingSquareTracked], attacks)
 
     val whiteKingSafety: Int = whiteKingShieldEval(board)
     val blackKingSafety: Int = blackKingShieldEval(board)
@@ -343,13 +343,13 @@ fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
                 openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
                 openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
 
-fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.whiteKingSquare) < 2
+fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.whiteKingSquareTracked) < 2
 
-fun blackKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.blackKingSquare) >= 6
+fun blackKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.blackKingSquareTracked) >= 6
 
-fun blackKingShield(board: EngineBoard) = whiteKingShieldMask[board.blackKingSquare % 8] shl 40
+fun blackKingShield(board: EngineBoard) = whiteKingShieldMask[board.blackKingSquareTracked % 8] shl 40
 
-fun whiteKingShield(board: EngineBoard): Long = whiteKingShieldMask[board.whiteKingSquare % 8]
+fun whiteKingShield(board: EngineBoard): Long = whiteKingShieldMask[board.whiteKingSquareTracked % 8]
 
 fun whiteCastlingEval(board: EngineBoard, castlePrivileges: Int) : Int {
 
@@ -435,8 +435,8 @@ fun endGameAdjustment(board: EngineBoard, currentScore: Int) =
         }
 
 fun penaltyForKingNotBeingNearOtherKing(board: EngineBoard) =
-        (kotlin.math.abs(xCoordOfSquare(board.whiteKingSquare) - xCoordOfSquare(board.blackKingSquare)) +
-                kotlin.math.abs(yCoordOfSquare(board.whiteKingSquare) - yCoordOfSquare(board.blackKingSquare))
+        (kotlin.math.abs(xCoordOfSquare(board.whiteKingSquareTracked) - xCoordOfSquare(board.blackKingSquareTracked)) +
+                kotlin.math.abs(yCoordOfSquare(board.whiteKingSquareTracked) - yCoordOfSquare(board.blackKingSquareTracked))
                 ) * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING
 
 fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
@@ -444,7 +444,7 @@ fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (probableDrawWhenBlackIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noBlackRooksQueensOrBishops(board) && (blackBishopDrawOnFileA(board) || blackBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.getBitboard(BITBOARD_WP) == 0L) blackWinningNoWhitePawnsEndGameAdjustment(board, currentScore)
-        else currentScore) + penaltyForKingNotBeingNearOtherKing(board) - (kingInCornerPieceSquareTable[board.whiteKingSquare] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
+        else currentScore) + penaltyForKingNotBeingNearOtherKing(board) - (kingInCornerPieceSquareTable[board.whiteKingSquareTracked] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
 
 fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (blackMoreThanABishopUpInNonPawns(board)) {
@@ -467,7 +467,7 @@ fun whiteWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (probablyDrawWhenWhiteIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noWhiteRooksQueensOrKnights(board) && (whiteBishopDrawOnFileA(board) || whiteBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.getBitboard(BITBOARD_BP) == 0L) whiteWinningNoBlackPawnsEndGameAdjustment(board, currentScore)
-        else currentScore) - penaltyForKingNotBeingNearOtherKing(board) + (kingInCornerPieceSquareTable[board.blackKingSquare] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
+        else currentScore) - penaltyForKingNotBeingNearOtherKing(board) + (kingInCornerPieceSquareTable[board.blackKingSquareTracked] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
 
 fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (whiteMoreThanABishopUpInNonPawns(board)) {
@@ -479,7 +479,7 @@ fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: 
 
 fun whiteKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
     whiteShouldWinWithKnightAndBishopValue(currentScore)
-    return +if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_WB))) enemyKingCloseToDarkCornerMateSquareValue(board.blackKingSquare)
+    return +if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_WB))) enemyKingCloseToDarkCornerMateSquareValue(board.blackKingSquareTracked)
     else enemyKingCloseToLightCornerMateSquareValue(board.blackKingSquareCalculated)
 }
 

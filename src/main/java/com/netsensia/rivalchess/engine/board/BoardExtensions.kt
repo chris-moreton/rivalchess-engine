@@ -35,8 +35,8 @@ fun EngineBoard.getPiece(bitRef: Int) = when (getBitboardTypeOfPieceOnSquare(bit
 
 fun EngineBoard.isCheck(colour: Colour) =
     if (colour == Colour.WHITE)
-        this.engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK) else
-        this.engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE)
+        this.engineBitboards.isSquareAttackedBy(whiteKingSquareTracked, Colour.BLACK) else
+        this.engineBitboards.isSquareAttackedBy(blackKingSquareTracked, Colour.WHITE)
 
 fun EngineBoard.getScore(move: Int, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {
     var score = 0
