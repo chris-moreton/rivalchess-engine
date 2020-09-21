@@ -92,7 +92,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return BITBOARD_NONE
     }
 
-    fun moveGenerator() = MoveGenerator(engineBitboards, mover, whiteKingSquare, blackKingSquare, castlePrivileges)
+    fun moveGenerator() = MoveGenerator(engineBitboards, mover, whiteKingSquareCalculated, blackKingSquareCalculated, castlePrivileges)
 
     private fun setEngineBoardVars(board: Board) {
         mover = board.sideToMove
