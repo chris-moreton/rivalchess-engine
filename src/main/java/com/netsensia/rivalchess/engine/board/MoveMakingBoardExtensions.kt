@@ -189,7 +189,7 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece
 private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
     blackKingSquareTracked = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
-    val toMask = 1L shl blackKingSquareTracked
+    val toMask = 1L shl blackKingSquareCalculated
     castlePrivileges = castlePrivileges and CASTLEPRIV_BNONE
     if (toMask or fromMask == BLACKKINGSIDECASTLEMOVEMASK) engineBitboards.xorPieceBitboard(BITBOARD_BR, BLACKKINGSIDECASTLEROOKMOVE)
     else if (toMask or fromMask == BLACKQUEENSIDECASTLEMOVEMASK) engineBitboards.xorPieceBitboard(BITBOARD_BR, BLACKQUEENSIDECASTLEROOKMOVE)
@@ -247,7 +247,7 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece
 private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
     whiteKingSquareTracked = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
-    val toMask = 1L shl whiteKingSquareTracked
+    val toMask = 1L shl whiteKingSquareCalculated
     castlePrivileges = castlePrivileges and CASTLEPRIV_WNONE
     if (toMask or fromMask == WHITEKINGSIDECASTLEMOVEMASK) {
         engineBitboards.xorPieceBitboard(BITBOARD_WR, WHITEKINGSIDECASTLEROOKMOVE)
