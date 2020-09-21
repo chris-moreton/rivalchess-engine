@@ -100,7 +100,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
 
     val hashedScore = if (USE_PAWN_HASH && pawnHashMap.containsKey(pawnHashIndex) &&
             pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard
-                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.whiteKingSquareTracked && pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.blackKingSquareTracked
+                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.getWhiteKingSquareCalculated() &&
+            pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.getBlackKingSquareCalculated()
                 && pawnHashMap[pawnHashIndex]!!.mover == board.mover) {
             pawnHashMap[pawnHashIndex]!!.score
         } else -9999
