@@ -262,8 +262,8 @@ fun kingSafetyEval(board: EngineBoard, attacks: Attacks): Int {
     val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
     if (averagePiecesPerSide <= KINGSAFETY_MIN_PIECE_BALANCE) return 0
 
-    val whiteKingAttackedCount = whiteKingAttackCount(whiteKingDangerZone[board.whiteKingSquareTracked], attacks)
-    val blackKingAttackedCount = blackKingAttackCount(blackKingDangerZone[board.blackKingSquareTracked], attacks)
+    val whiteKingAttackedCount = whiteKingAttackCount(whiteKingDangerZone[board.getWhiteKingSquareCalculated()], attacks)
+    val blackKingAttackedCount = blackKingAttackCount(blackKingDangerZone[board.getBlackKingSquareCalculated()], attacks)
 
     val whiteKingSafety: Int = whiteKingShieldEval(board)
     val blackKingSafety: Int = blackKingShieldEval(board)
