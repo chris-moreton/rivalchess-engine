@@ -96,8 +96,8 @@ fun whiteKingSquareEval(board: EngineBoard) =
                 board.blackPieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
-                kingEndGamePieceSquareTable[board.whiteKingSquareTracked],
-                kingPieceSquareTable[board.whiteKingSquareTracked]
+                kingEndGamePieceSquareTable[board.whiteKingSquareCalculated],
+                kingPieceSquareTable[board.whiteKingSquareCalculated]
         )
 
 fun blackKingSquareEval(board: EngineBoard) =
@@ -105,8 +105,8 @@ fun blackKingSquareEval(board: EngineBoard) =
                 board.whitePieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
-                kingEndGamePieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquareTracked]],
-                kingPieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquareTracked]]
+                kingEndGamePieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquareCalculated]],
+                kingPieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquareCalculated]]
         )
 
 fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
