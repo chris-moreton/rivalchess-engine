@@ -456,8 +456,10 @@ fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: 
 
 fun blackKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
     blackShouldWinWithKnightAndBishopValue(currentScore)
-    return -if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_BB))) enemyKingCloseToDarkCornerMateSquareValue(board.whiteKingSquare)
-    else enemyKingCloseToLightCornerMateSquareValue(board.whiteKingSquare)
+    return -if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_BB)))
+        enemyKingCloseToDarkCornerMateSquareValue(board.whiteKingSquareCalculated)
+    else
+        enemyKingCloseToLightCornerMateSquareValue(board.whiteKingSquareCalculated)
 }
 
 fun whiteWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
