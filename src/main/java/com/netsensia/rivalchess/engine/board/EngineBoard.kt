@@ -13,6 +13,7 @@ import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import java.lang.Long
+import kotlin.system.exitProcess
 
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     @JvmField
@@ -54,11 +55,23 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
-    val whiteKingSquareCalculated: Int
-        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
+    fun getWhiteKingSquareCalculated(): Int {
+        val retVal = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
+        if (retVal != whiteKingSquareTracked) {
+            println(this)
+            exitProcess(1)
+        }
+        return retVal
+    }
 
-    val blackKingSquareCalculated: Int
-        get() = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
+    fun getBlackKingSquareCalculated(): Int {
+        val retVal = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
+        if (retVal != blackKingSquareTracked) {
+            println(this)
+            exitProcess(1)
+        }
+        return retVal
+    }
 
     @JvmField
     var whiteKingSquareTracked = 0
@@ -92,7 +105,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return BITBOARD_NONE
     }
 
-    fun moveGenerator() = MoveGenerator(engineBitboards, mover, whiteKingSquareCalculated, blackKingSquareCalculated, castlePrivileges)
+    fun moveGenerator() = MoveGenerator(engineBitboards, mover, getWhiteKingSquareCalculated(), getBlackKingSquareCalculated(), castlePrivileges)
 
     private fun setEngineBoardVars(board: Board) {
         mover = board.sideToMove

@@ -133,7 +133,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
 
             if (engineBoard.makeMove(move)) {
-                sanityCheckKingSquares(move)
 
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
@@ -147,7 +146,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 if (newPath.score >= high) {
                     board.unMakeMove()
-                    sanityCheckKingSquares(move)
                     engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depth)
                     depthZeroMoveScores[numMoves] = newPath.score
                     return bestPath.withMoveAndScore(move, newPath.score)
@@ -166,7 +164,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 depthZeroMoveScores[numMoves] = newPath.score
 
                 engineBoard.unMakeMove()
-                sanityCheckKingSquares(move)
             }
             numMoves++
         }
@@ -177,14 +174,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         engineBoard.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashEntryType, depth)
         return bestPath
-    }
-
-    private fun sanityCheckKingSquares(move: Int) {
-        if (engineBoard.whiteKingSquareTracked != engineBoard.whiteKingSquareCalculated || engineBoard.blackKingSquareTracked != engineBoard.blackKingSquareCalculated) {
-            println(engineBoard)
-            println(move)
-            exitProcess(1)
-        }
     }
 
     fun search(board: EngineBoard, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean): SearchPath {
@@ -234,7 +223,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         for (move in highScoreMoveSequence(board, ply, highRankingMove)) {
 
             if (board.makeMove(move)) {
-                sanityCheckKingSquares(move)
                 legalMoveCount ++
 
                 val wasPawnPush = wasPawnPush()
@@ -269,7 +257,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (newPath.score >= localHigh) {
                     updateHistoryMoves(board.mover.opponent(), move, depthRemaining, true)
                     board.unMakeMove()
-                    sanityCheckKingSquares(move)
                     board.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depthRemaining)
                     updateKillerMoves(board.getBitboard(BITBOARD_ENEMY), move, ply, newPath)
                     return searchPathPly.withMoveAndScore(move, newPath.score)
@@ -286,7 +273,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 }
 
                 board.unMakeMove()
-                sanityCheckKingSquares(move)
                 updateHistoryMoves(board.mover, move, depthRemaining, false)
             }
         }
@@ -530,7 +516,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
             if (!deltaPrune(isCheck, board, movePiece, move, searchPath[ply].score)) {
                 if (board.makeMove(move)) {
-                    sanityCheckKingSquares(move)
                     legalMoveCount++
 
                     newPath = quiesce(board, depth - 1, ply + 1, quiescePly + 1, -high, -newLow, board.isCheck(mover)).also {
@@ -538,7 +523,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     }
 
                     board.unMakeMove()
-                    sanityCheckKingSquares(move)
                     if (newPath.score > searchPath[ply].score) {
                         searchPath[ply].setPath(move, newPath)
                         if (newPath.score >= high) return searchPath[ply]
