@@ -135,7 +135,13 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     }
 
     if (USE_PAWN_HASH) {
-        pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquareTracked, board.blackKingSquareTracked, board.mover, score)
+        pawnHashMap[pawnHashIndex] = PawnHash(
+                whitePawnBitboard,
+                blackPawnBitboard,
+                board.getWhiteKingSquareCalculated(),
+                board.getBlackKingSquareCalculated(),
+                board.mover,
+                score)
     }
 
     val whitePassedPawnScore = whitePassedPawnScore(whitePassedPawnsBitboard, whiteGuardedPassedPawns)
