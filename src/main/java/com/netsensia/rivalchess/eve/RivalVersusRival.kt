@@ -25,7 +25,8 @@ const val GAME_TOO_LONG = 7
 
 val secureRandom = SecureRandom()
 
-fun main(args: Array<String>) {
+@kotlin.ExperimentalUnsignedTypes
+fun main() {
     val results= intArrayOf(0,0,0,0,0,0,0)
     for (i in 1..10000) {
         val result = game(i)
@@ -36,6 +37,7 @@ fun main(args: Array<String>) {
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun game(gameNumber: Int): Int {
 
     val moveList = mutableListOf<Int>()
@@ -57,6 +59,7 @@ fun game(gameNumber: Int): Int {
     return result(board, STALEMATE, gameNumber)
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
     val searcher = Search(Board.fromFen(FEN_START_POS))
     searcher.useOpeningBook = true

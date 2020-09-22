@@ -47,6 +47,7 @@ fun getSimpleAlgebraicFromBitRef(bitRef: Int): String {
     return "" + a + (7 - boardRef.yRank + 1)
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun getPgnMoveFromCompactMove(move: Int, fen: String?): String {
     val board = EngineBoard()
     board.setBoard(getBoardModel(fen!!))

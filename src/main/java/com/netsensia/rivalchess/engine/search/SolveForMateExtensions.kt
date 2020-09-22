@@ -4,6 +4,7 @@ import com.netsensia.rivalchess.config.MATE_SCORE_START
 import com.netsensia.rivalchess.config.VALUE_MATE
 import com.netsensia.rivalchess.engine.board.*
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.solveForMate(board: EngineBoard, maxPly: Int): SearchPath? {
     abortingSearch = false
     for (i in 1..maxPly) {
@@ -15,6 +16,7 @@ fun Search.solveForMate(board: EngineBoard, maxPly: Int): SearchPath? {
     return null
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.solveForMateSearcher(board: EngineBoard, ply: Int, maxPly: Int): SearchPath {
     nodes ++
     var numMoves = 0

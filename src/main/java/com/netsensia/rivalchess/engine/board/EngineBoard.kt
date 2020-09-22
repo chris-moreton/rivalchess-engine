@@ -56,26 +56,30 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
-    fun aText(fileName: String, t: String) {
-        val file = File("/home/chrismoreton/$fileName")
-        if (file.exists()) file.appendText(t) else file.writeText(t)
-        println(t)
+    fun aText() {
+        val file = File("/home/chrismoreton/bug-${System.currentTimeMillis()}.txt")
+        val s = "${this}\n" +
+                "WKBit ${getBitboard(BITBOARD_WK)}\n" +
+                "BKBit ${getBitboard(BITBOARD_BK)}\n" +
+                "WKCnt ${getBitboard(BITBOARD_WK).countTrailingZeroBits()}\n" +
+                "BKCnt ${getBitboard(BITBOARD_BK).countTrailingZeroBits()}\n" +
+                "WKTrk $whiteKingSquareTracked\n" +
+                "BKTrk $blackKingSquareTracked\n"
+
+        if (file.exists()) file.appendText(s) else file.writeText(s)
+        println(s)
         exitProcess(1)
     }
 
     fun getWhiteKingSquareCalculated(): Int {
         val retVal = getBitboard(BITBOARD_WK).countTrailingZeroBits()
-        if (retVal != whiteKingSquareTracked) {
-            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
-        }
+        if (retVal != whiteKingSquareTracked) aText()
         return retVal
     }
 
     fun getBlackKingSquareCalculated(): Int {
         val retVal = getBitboard(BITBOARD_BK).countTrailingZeroBits()
-        if (retVal != blackKingSquareTracked) {
-            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
-        }
+        if (retVal != blackKingSquareTracked) aText()
         return retVal
     }
 

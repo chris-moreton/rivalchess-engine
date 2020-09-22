@@ -33,6 +33,7 @@ object ZobristHashCalculator {
     val blackMoverHashValue = moverHashValues[1]
 
     @JvmStatic
+    @kotlin.ExperimentalUnsignedTypes
     fun calculateHash(engineBoard: EngineBoard): Long {
         var hashValue = START_HASH_VALUE
         for (bitNum in 0..63) {

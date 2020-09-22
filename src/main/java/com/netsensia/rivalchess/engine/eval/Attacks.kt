@@ -10,6 +10,7 @@ import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
 
+@kotlin.ExperimentalUnsignedTypes
 class Attacks(board: EngineBoard) {
     val whitePawns = whitePawnAttacks(board.getBitboard(BITBOARD_WP))
     val blackPawns = blackPawnAttacks(board.getBitboard(BITBOARD_BP))
@@ -56,6 +57,7 @@ class Attacks(board: EngineBoard) {
 fun whitePawnAttacks(whitePawns: Long) = whitePawns and FILE_A.inv() shl 9 or (whitePawns and FILE_H.inv() shl 7)
 fun blackPawnAttacks(blackPawns: Long) = blackPawns and FILE_A.inv() ushr 7 or (blackPawns and FILE_H.inv() ushr 9)
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteAttackScore(attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(whiteAttacksBitboard(board, attacks)) {
@@ -64,6 +66,7 @@ fun whiteAttackScore(attacks: Attacks, board: EngineBoard): Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackAttackScore(attacks: Attacks, board: EngineBoard): Int {
     var acc = 0
     applyToSquares(blackAttacksBitboard(board, attacks)) {
@@ -72,10 +75,13 @@ fun blackAttackScore(attacks: Attacks, board: EngineBoard): Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.whitePieceAttacks or attacks.whitePawns) and blackPieceBitboard(board)
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.blackPieceAttacks or attacks.blackPawns) and whitePieceBitboard(board)
 
+@kotlin.ExperimentalUnsignedTypes
 fun threatEval(attacks: Attacks, board: EngineBoard) =
         (adjustedAttackScore(whiteAttackScore(attacks, board)) -
                 adjustedAttackScore(blackAttackScore(attacks, board))) / THREAT_SCORE_DIVISOR

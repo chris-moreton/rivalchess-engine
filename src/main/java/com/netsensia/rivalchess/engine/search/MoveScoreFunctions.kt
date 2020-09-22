@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.engine.board.pawnValues
 import com.netsensia.rivalchess.engine.eval.*
 import com.netsensia.rivalchess.model.Colour
 
+@kotlin.ExperimentalUnsignedTypes
 fun scorePieceSquareValues(board: EngineBoard, fromSquare: Int, toSquare: Int): Int {
     val piece = board.getBitboardTypeOfPieceOnSquare(fromSquare, board.mover)
     val fromAdjusted = if (board.mover == Colour.WHITE) fromSquare else bitFlippedHorizontalAxis[fromSquare]

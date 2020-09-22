@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.makeNullMove() {
     boardHashObject.makeNullMove()
     mover = mover.opponent()
@@ -15,11 +16,13 @@ fun EngineBoard.makeNullMove() {
     isOnNullMove = true
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.unMakeNullMove() {
     makeNullMove()
     isOnNullMove = false
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateHash: Boolean = true): Boolean {
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
@@ -62,6 +65,7 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
     return true
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     val moveMade = moveHistory[--numMovesMade]!!
     halfMoveCount = moveMade.halfMoveCount
@@ -94,6 +98,7 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     calculateSupplementaryBitboards()
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.unMakeEnPassants(enPassantBitboard: Long, movePiece: Int, fromMask: Long, toMask: Long): Boolean {
     if (toMask == enPassantBitboard) {
         if (movePiece == BITBOARD_WP) {
@@ -109,6 +114,7 @@ private fun EngineBoard.unMakeEnPassants(enPassantBitboard: Long, movePiece: Int
     return false
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.replaceCastledRook(fromMask: Long, toMask: Long, movePiece: Int) {
     if (movePiece == BITBOARD_WK) {
         if (toMask or fromMask == WHITEKINGSIDECASTLEMOVEMASK)
@@ -123,10 +129,12 @@ private fun EngineBoard.replaceCastledRook(fromMask: Long, toMask: Long, movePie
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.replaceCapturedPiece(capturePiece: Int, toMask: Long) {
     if (capturePiece != BITBOARD_NONE) engineBitboards.xorPieceBitboard(capturePiece, toMask)
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.removePromotionPiece(promotionPiece: Int, fromMask: Long, toMask: Long): Boolean {
     if (promotionPiece != 0) {
         if (mover == Colour.WHITE) {
@@ -151,6 +159,7 @@ private fun EngineBoard.removePromotionPiece(promotionPiece: Int, fromMask: Long
     return false
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.replaceMovedPiece(fromSquare: Int, movePiece: Int, fromMask: Long, toMask: Long): Int {
     engineBitboards.xorPieceBitboard(movePiece, toMask or fromMask)
     if (movePiece == BITBOARD_WK) whiteKingSquareTracked = fromSquare else
@@ -158,6 +167,7 @@ private fun EngineBoard.replaceMovedPiece(fromSquare: Int, movePiece: Int, fromM
     return movePiece
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Int, moveTo: Int, compactMove: Int, capturePiece: Int, movePiece: Int) {
     if (mover == Colour.WHITE) {
         if (movePiece == BITBOARD_WP) makeSpecialWhitePawnMoveAdjustments(compactMove)
@@ -172,6 +182,7 @@ private fun EngineBoard.makeNonTrivialMoveTypeAdjustments(moveFrom: Int, moveTo:
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece: Int, moveTo: Int) {
 
     moveHistory[numMovesMade]!!.capturePiece = capturePiece
@@ -186,6 +197,7 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
     blackKingSquareTracked = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
@@ -195,11 +207,13 @@ private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
     else if (toMask or fromMask == BLACKQUEENSIDECASTLEMOVEMASK) engineBitboards.xorPieceBitboard(BITBOARD_BR, BLACKQUEENSIDECASTLEROOKMOVE)
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.adjustCastlePrivilegesForBlackRookMove(moveFrom: Int) {
     if (moveFrom == Square.A8.bitRef) castlePrivileges = castlePrivileges and CASTLEPRIV_BQ.inv() else
         if (moveFrom == Square.H8.bitRef) castlePrivileges = castlePrivileges and CASTLEPRIV_BK.inv()
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
     val moveFrom = (compactMove ushr 16)
     val moveTo = (compactMove and 63)
@@ -231,6 +245,7 @@ private fun EngineBoard.makeSpecialBlackPawnMoveAdjustments(compactMove: Int) {
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece: Int, moveTo: Int) {
     val toMask = 1L shl moveTo
     moveHistory[numMovesMade]!!.capturePiece = capturePiece
@@ -244,6 +259,7 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
     whiteKingSquareTracked = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
@@ -256,6 +272,7 @@ private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.adjustCastlePrivilegesForWhiteRookMove(moveFrom: Int) {
     if (moveFrom == Square.A1.bitRef)
         castlePrivileges = castlePrivileges and CASTLEPRIV_WQ.inv()
@@ -263,6 +280,7 @@ private fun EngineBoard.adjustCastlePrivilegesForWhiteRookMove(moveFrom: Int) {
         castlePrivileges = castlePrivileges and CASTLEPRIV_WK.inv()
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.makeSpecialWhitePawnMoveAdjustments(compactMove: Int) {
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl (compactMove and 63)

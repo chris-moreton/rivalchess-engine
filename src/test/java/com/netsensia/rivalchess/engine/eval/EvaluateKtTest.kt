@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.model.util.FenUtils.invertFen
 import junit.framework.TestCase
 import org.junit.Test
 
+@kotlin.ExperimentalUnsignedTypes
 class EvaluateKtTest : TestCase() {
 
     @Test

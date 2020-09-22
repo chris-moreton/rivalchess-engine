@@ -9,6 +9,7 @@ import junit.framework.TestCase
 import org.junit.Assert
 import org.junit.Test
 
+@kotlin.ExperimentalUnsignedTypes
 internal class SolveForMateExtensionsKtTest : TestCase() {
 
     @Test
@@ -21,6 +22,7 @@ internal class SolveForMateExtensionsKtTest : TestCase() {
         solveForMate(fen, listOf(expectedMove), expectedScore)
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class, InterruptedException::class)
     private fun solveForMate(fen: String, expectedMoves: List<String>, expectedScore: Int) {
         val search = Search()

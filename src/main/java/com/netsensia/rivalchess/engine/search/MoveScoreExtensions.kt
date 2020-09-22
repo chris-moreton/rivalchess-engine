@@ -7,6 +7,7 @@ import com.netsensia.rivalchess.engine.board.isCapture
 import com.netsensia.rivalchess.enums.MoveOrder
 import com.netsensia.rivalchess.model.Colour
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
     if (moveOrderStatus[ply] === MoveOrder.NONE) {
         if (hashMove != 0) {
@@ -35,6 +36,7 @@ fun Search.getHighScoreMove(board: EngineBoard, ply: Int, hashMove: Int): Int {
     } else move
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
     var movesScored = 0
     var i = -1
@@ -44,6 +46,7 @@ fun Search.scoreFullWidthCaptures(board: EngineBoard, ply: Int): Int {
     return movesScored
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
     var score = 0
     val toSquare = toSquare(orderedMoves[ply][i])
@@ -59,6 +62,7 @@ fun Search.scoreCaptureMove(ply: Int, i: Int, board: EngineBoard): Int {
     return score
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun isCapture(board: EngineBoard, move: Int): Boolean {
     val toSquare = toSquare(move)
     return board.getBitboardTypeOfPieceOnSquare(toSquare, board.mover.opponent()) != BITBOARD_NONE ||
@@ -66,11 +70,13 @@ private fun isCapture(board: EngineBoard, move: Int): Boolean {
                     board.getBitboardTypeOfPieceOnSquare(fromSquare(move), board.mover) in arrayOf(BITBOARD_WP, BITBOARD_BP))
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.scoreLosingCapturesWithWinningHistory(board: EngineBoard, ply: Int, move: Int, toSquare: Int): Int {
     val historyScore = historyScore(board.mover, fromSquare(move), toSquare)
     return if (historyScore > 5) historyScore else scoreKillerMoves(ply, move)
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
     var i = 0
     while (orderedMoves[ply][i] != 0) {
@@ -94,16 +100,19 @@ fun Search.scoreFullWidthMoves(board: EngineBoard, ply: Int) {
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun Search.hasHistorySuccess(board: EngineBoard, fromSquare: Int, toSquare: Int): Boolean {
     return historyMovesSuccess[if (board.mover == Colour.WHITE) 0 else 1][fromSquare][toSquare] > 0
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.scoreKillerMoves(ply: Int, move: Int): Int {
     if (move == killerMoves[ply][0]) return 106
     if (move == killerMoves[ply][1]) return 105
     return 0
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.historyScore(mover: Colour, from: Int, to: Int): Int {
     val colourIndex = if (mover == Colour.WHITE) 0 else 1
     val success = historyMovesSuccess[colourIndex][from][to]
@@ -112,6 +121,7 @@ fun Search.historyScore(mover: Colour, from: Int, to: Int): Int {
     return if (total > 0) success * 10 / total else 0
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun Search.scoreQuiesceMoves(board: EngineBoard, ply: Int) {
     var moveCount = 0
     var i = 0

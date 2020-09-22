@@ -12,6 +12,7 @@ import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 
+@kotlin.ExperimentalUnsignedTypes
 class EndgameTest {
 
     companion object {
@@ -19,6 +20,7 @@ class EndgameTest {
     }
 
     @Test
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun testQueenVKingEndGameWinning() {
         solveForMate("8/8/8/8/1q6/8/4k3/2K5 b - - 0 1", "e2d3", willMateIn(2))
@@ -49,6 +51,7 @@ class EndgameTest {
     @Throws(IllegalFenException::class, InterruptedException::class)
     @Test
     @Ignore
+    @kotlin.ExperimentalUnsignedTypes
     fun testMateIn8ToCheckmate_problematic_1() {
         solveForMate("8/8/8/8/5q2/8/1K2k3/8 b - - 0 1", "f4b4", willMateIn(4))
         solveForMate("8/8/8/3q4/1K4k1/8/8/8 b - - 0 1", "g4f3", willMateIn(7))
@@ -76,11 +79,13 @@ class EndgameTest {
     private fun willBeMatedIn(score: Int) = -10000+(score*2)
 
     @Throws(IllegalFenException::class, InterruptedException::class)
+    @kotlin.ExperimentalUnsignedTypes
     private fun solveForMate(fen: String, expectedMove: String, expectedScore: Int, tolerateScore: Boolean = false) {
         solveForMate(fen, listOf(expectedMove), expectedScore, tolerateScore)
     }
 
     @Throws(IllegalFenException::class, InterruptedException::class)
+    @kotlin.ExperimentalUnsignedTypes
     private fun solveForMate(fen: String, expectedMoves: List<String>, expectedScore: Int, tolerateScore: Boolean = false) {
         val search = Search()
         val board = Board.fromFen(fen)

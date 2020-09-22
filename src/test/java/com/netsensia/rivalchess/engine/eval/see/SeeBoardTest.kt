@@ -13,6 +13,7 @@ import com.netsensia.rivalchess.util.getEngineMoveFromSimpleAlgebraic
 import org.junit.Assert.*
 import org.junit.Test
 
+@kotlin.ExperimentalUnsignedTypes
 internal class SeeBoardTest {
 
     @Test

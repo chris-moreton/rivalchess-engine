@@ -18,6 +18,7 @@ class SearchTest {
     }
 
     @Test
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun testBestMoves() {
         assertBestMove("r1bq1rk1/ppp1ppbp/3p1np1/3P4/1nPQP3/2N1BP2/PP4PP/R3KBNR b - - 0 1", "b4c2", 890)
@@ -33,6 +34,7 @@ class SearchTest {
         assertBestMove("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", "e2a6", -19)  }
 
     @Test
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun testNodeCount() {
         assertNodeCount("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/8/8 b - -", 1470);
@@ -51,11 +53,13 @@ class SearchTest {
 
     @Test
     @Ignore
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class, InterruptedException::class)
     fun testNodeCountDeep() {
         assertNodeCount("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 10477423, 14);
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class, InterruptedException::class)
     private fun assertBestMove(fen: String, expectedMove: String, expectedScore: Int, searchDepth: Int = MAX_SEARCH_DEPTH, searchMillis: Int = 5000, searchNodes: Int = 500000) {
         val search = Search()
@@ -79,6 +83,7 @@ class SearchTest {
 
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class, InterruptedException::class)
     private fun assertNodeCount(fen: String, expectedNodes: Int, searchDepth: Int = 6) {
         val board = Board.fromFen(fen)

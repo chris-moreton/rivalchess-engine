@@ -8,12 +8,12 @@ import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.board.pawnValues
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
-import kotlin.system.exitProcess
 
 const val PHASE1_CUTOFF = 2500
 const val PHASE2_CUTOFF = 255
 
 @JvmOverloads
+@kotlin.ExperimentalUnsignedTypes
 fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     if (onlyKingsRemain(board)) return 0
@@ -61,37 +61,48 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     return if (board.mover == Colour.WHITE) endGameAdjustedScore else -endGameAdjustedScore
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun queensEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) =
         (whiteQueensEval(board, whitePieces.inv()) - blackQueensEval(board, blackPieces.inv()))
 
+@kotlin.ExperimentalUnsignedTypes
 private fun kingSquareEval(board: EngineBoard) =
         (whiteKingSquareEval(board) - blackKingSquareEval(board))
 
+@kotlin.ExperimentalUnsignedTypes
 private fun knightsEval(board: EngineBoard, attacks: Attacks) =
         (whiteKnightsEval(board, attacks) - blackKnightsEval(board, attacks))
 
+@kotlin.ExperimentalUnsignedTypes
 private fun bishopsEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) =
         (whiteBishopEval(board, whitePieces.inv()) - blackBishopsEval(board, blackPieces.inv()))
 
+@kotlin.ExperimentalUnsignedTypes
 private fun pawnPieceSquareEval(board: EngineBoard) = whitePawnsEval(board) - blackPawnsEval(board)
 
+@kotlin.ExperimentalUnsignedTypes
 private fun rooksEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) =
         (whiteRooksEval(board, whitePieces.inv()) - blackRooksEval(board, blackPieces.inv()))
 
+@kotlin.ExperimentalUnsignedTypes
 private fun doubledRooksEval(board: EngineBoard) =
         (doubledRooksEval(board.getBitboard(BITBOARD_WR)) - doubledRooksEval(board.getBitboard(BITBOARD_BR)))
 
+@kotlin.ExperimentalUnsignedTypes
 private fun twoRooksTrappingKingEval(board: EngineBoard) =
         (twoWhiteRooksTrappingKingEval(board) - twoBlackRooksTrappingKingEval(board))
 
+@kotlin.ExperimentalUnsignedTypes
 fun materialDifferenceEval(board: EngineBoard) =
         board.whitePieceValues - board.blackPieceValues +
                 board.pawnValues(BITBOARD_WP) - board.pawnValues(BITBOARD_BP)
 
 fun exactlyOneBitSet(bitboard: Long) = (bitboard and (bitboard - 1)) == 0L && bitboard != 0L
 
+@kotlin.ExperimentalUnsignedTypes
 fun onlyKingsRemain(board: EngineBoard) = exactlyOneBitSet(board.getBitboard(BITBOARD_ENEMY)) and exactlyOneBitSet(board.getBitboard(BITBOARD_FRIENDLY))
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteKingSquareEval(board: EngineBoard) =
         linearScale(
                 board.blackPieceValues,
@@ -101,6 +112,7 @@ fun whiteKingSquareEval(board: EngineBoard) =
                 kingPieceSquareTable[board.getWhiteKingSquareCalculated()]
         )
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackKingSquareEval(board: EngineBoard) =
         linearScale(
                 board.whitePieceValues,
@@ -117,28 +129,34 @@ fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
             else -> a + (x - min) * (b - a) / (max - min)
         }
 
+@kotlin.ExperimentalUnsignedTypes
 fun twoWhiteRooksTrappingKingEval(board: EngineBoard) =
         if (popCount(board.getBitboard(BITBOARD_WR) and RANK_7) > 1 && board.getBitboard(BITBOARD_BK) and RANK_8 != 0L)
             VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun twoBlackRooksTrappingKingEval(board: EngineBoard) =
         if (popCount(board.getBitboard(BITBOARD_BR) and RANK_2) > 1 && board.getBitboard(BITBOARD_WK) and RANK_1 != 0L)
             VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteRookOpenFilesEval(board: EngineBoard, file: Int) =
         if (FILES[file] and board.getBitboard(BITBOARD_WP) == 0L)
             if (FILES[file] and board.getBitboard(BITBOARD_BP) == 0L) VALUE_ROOK_ON_OPEN_FILE
             else VALUE_ROOK_ON_HALF_OPEN_FILE
         else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackRookOpenFilesEval(board: EngineBoard, file: Int) =
         if ((FILES[file] and board.getBitboard(BITBOARD_BP)) == 0L)
             if ((FILES[file] and board.getBitboard(BITBOARD_WP)) == 0L) VALUE_ROOK_ON_OPEN_FILE
             else VALUE_ROOK_ON_HALF_OPEN_FILE
         else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun rookEnemyPawnMultiplier(enemyPawnValues: Int) = (enemyPawnValues / VALUE_PAWN).coerceAtMost(6)
 
+@kotlin.ExperimentalUnsignedTypes
 fun doubledRooksEval(rookBitboard: Long): Int {
     val files = booleanArrayOf(false,false,false,false,false,false,false,false)
     applyToSquares(rookBitboard) { square ->
@@ -148,8 +166,10 @@ fun doubledRooksEval(rookBitboard: Long): Int {
     return 0
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun flippedSquareTableScore(table: IntArray, bit: Int) = table[bitFlippedHorizontalAxis[bit]]
 
+@kotlin.ExperimentalUnsignedTypes
 fun kingAttackCount(dangerZone: Long, attacks: LongArray): Int {
     var acc = 0
     for (it in attacks) {
@@ -159,6 +179,7 @@ fun kingAttackCount(dangerZone: Long, attacks: LongArray): Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun tradePieceBonusWhenMoreMaterial(board: EngineBoard, materialDifference: Int) =
         linearScale(
                 if (materialDifference > 0)
@@ -169,6 +190,7 @@ fun tradePieceBonusWhenMoreMaterial(board: EngineBoard, materialDifference: Int)
                 30 * materialDifference / 100,
                 0)
 
+@kotlin.ExperimentalUnsignedTypes
 fun tradePawnBonusWhenMoreMaterial(board: EngineBoard, materialDifference: Int) =
         linearScale(
                 if (materialDifference > 0) board.pawnValues(BITBOARD_WP) else board.pawnValues(BITBOARD_BP),
@@ -177,14 +199,20 @@ fun tradePawnBonusWhenMoreMaterial(board: EngineBoard, materialDifference: Int) 
                 -30 * materialDifference / 100,
                 0)
 
+@kotlin.ExperimentalUnsignedTypes
 fun bishopScore(board: EngineBoard, materialDifference: Int) =
         bishopPairEval(board) + oppositeColourBishopsEval(board, materialDifference) + trappedBishopEval(board)
 
+@kotlin.ExperimentalUnsignedTypes
 fun atLeastOnePieceOnLightSquare(bitboard: Long) = bitboard and LIGHT_SQUARES != 0L
+@kotlin.ExperimentalUnsignedTypes
 fun atLeastOnePieceOnDarkSquare(bitboard: Long) = bitboard and DARK_SQUARES != 0L
+@kotlin.ExperimentalUnsignedTypes
 fun whiteBishopColourCount(board: EngineBoard) = (if (atLeastOnePieceOnLightSquare(board.getBitboard(BITBOARD_WB))) 1 else 0) + if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_WB))) 1 else 0
+@kotlin.ExperimentalUnsignedTypes
 fun blackBishopColourCount(board: EngineBoard) = (if (atLeastOnePieceOnLightSquare(board.getBitboard(BITBOARD_BB))) 1 else 0) + if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_BB))) 1 else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun oppositeColourBishopsEval(board: EngineBoard, materialDifference: Int): Int {
 
     if (whiteBishopColourCount(board) == 1 && blackBishopColourCount(board) == 1 &&
@@ -204,19 +232,23 @@ fun oppositeColourBishopsEval(board: EngineBoard, materialDifference: Int): Int 
     return 0
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun bishopPairEval(board: EngineBoard) =
         bishopPairEvalForColour(board, ::whiteBishopColourCount, popCount(board.getBitboard(BITBOARD_WP))) -
         bishopPairEvalForColour(board, ::blackBishopColourCount, popCount(board.getBitboard(BITBOARD_BP)))
 
+@kotlin.ExperimentalUnsignedTypes
 inline fun bishopPairEvalForColour(board: EngineBoard, fn: (EngineBoard) -> Int, pawnCount: Int) =
         (if (fn(board) == 2) VALUE_BISHOP_PAIR + (8 - pawnCount) * VALUE_BISHOP_PAIR_FEWER_PAWNS_BONUS else 0)
 
+@kotlin.ExperimentalUnsignedTypes
 fun trappedBishopEval(board: EngineBoard) =
         if ((board.getBitboard(BITBOARD_WB) or board.getBitboard(BITBOARD_BB)) and A2A7H2H7 != 0L)
             blackA2TrappedBishopEval(board) + blackH2TrappedBishopEval(board) -
                     whiteA7TrappedBishopEval(board) - whiteH7TrappedBishopEval(board)
         else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackH2TrappedBishopEval(board: EngineBoard) =
         if (board.getBitboard(BITBOARD_BB) and (1L shl Square.H2.bitRef) != 0L &&
                 board.getBitboard(BITBOARD_WP) and (1L shl Square.G3.bitRef) != 0L &&
@@ -225,6 +257,7 @@ fun blackH2TrappedBishopEval(board: EngineBoard) =
             else VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY
         else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackA2TrappedBishopEval(board: EngineBoard) =
         if (board.getBitboard(BITBOARD_BB) and (1L shl Square.A2.bitRef) != 0L &&
                 board.getBitboard(BITBOARD_WP) and (1L shl Square.B3.bitRef) != 0L &&
@@ -232,6 +265,7 @@ fun blackA2TrappedBishopEval(board: EngineBoard) =
             VALUE_TRAPPED_BISHOP_PENALTY
         else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteH7TrappedBishopEval(board: EngineBoard) =
         if (board.getBitboard(BITBOARD_WB) and (1L shl Square.H7.bitRef) != 0L &&
                 board.getBitboard(BITBOARD_BP) and (1L shl Square.G6.bitRef) != 0L &&
@@ -240,6 +274,7 @@ fun whiteH7TrappedBishopEval(board: EngineBoard) =
             else VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY
         else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteA7TrappedBishopEval(board: EngineBoard) =
         if (board.getBitboard(BITBOARD_WB) and (1L shl Square.A7.bitRef) != 0L &&
                 board.getBitboard(BITBOARD_BP) and (1L shl Square.B6.bitRef) != 0L &&
@@ -247,16 +282,20 @@ fun whiteA7TrappedBishopEval(board: EngineBoard) =
             VALUE_TRAPPED_BISHOP_PENALTY
         else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackPieceBitboard(board: EngineBoard) = (board.getBitboard(BITBOARD_BN) or board.getBitboard(BITBOARD_BR) or board.getBitboard(BITBOARD_BQ) or board.getBitboard(BITBOARD_BB))
 
+@kotlin.ExperimentalUnsignedTypes
 fun whitePieceBitboard(board: EngineBoard) = (board.getBitboard(BITBOARD_WN) or board.getBitboard(BITBOARD_WR) or board.getBitboard(BITBOARD_WQ) or board.getBitboard(BITBOARD_WB))
 
+@kotlin.ExperimentalUnsignedTypes
 fun isEndGame(board: EngineBoard) =
         (board.whitePieceValues +
                 board.pawnValues(BITBOARD_WP) +
                 board.blackPieceValues +
                 board.pawnValues(BITBOARD_BP)) <= EVAL_ENDGAME_TOTAL_PIECES
 
+@kotlin.ExperimentalUnsignedTypes
 fun kingSafetyEval(board: EngineBoard, attacks: Attacks): Int {
 
     val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
@@ -276,18 +315,21 @@ fun kingSafetyEval(board: EngineBoard, attacks: Attacks): Int {
             whiteKingSafety - blackKingSafety + (blackKingAttackedCount - whiteKingAttackedCount) * KINGSAFETY_ATTACK_MULTIPLIER)
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun whiteKingAttackCount(whiteKingDangerZone: Long, attacks: Attacks): Int {
     return kingAttackCount(whiteKingDangerZone, attacks.blackRooks) +
             kingAttackCount(whiteKingDangerZone, attacks.blackQueens) * 2 +
             kingAttackCount(whiteKingDangerZone, attacks.blackBishops)
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun blackKingAttackCount(blackKingDangerZone: Long, attacks: Attacks): Int {
     return kingAttackCount(blackKingDangerZone, attacks.whiteRooks) +
             kingAttackCount(blackKingDangerZone, attacks.whiteQueens) * 2 +
             kingAttackCount(blackKingDangerZone, attacks.whiteBishops)
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun uncastledTrappedWhiteRookEval(board: EngineBoard) =
         if (board.getBitboard(BITBOARD_WK) and F1G1 != 0L &&
                 board.getBitboard(BITBOARD_WR) and G1H1 != 0L &&
@@ -301,6 +343,7 @@ fun uncastledTrappedWhiteRookEval(board: EngineBoard) =
             KINGSAFETY_UNCASTLED_TRAPPED_ROOK
         else 0)
 
+@kotlin.ExperimentalUnsignedTypes
 fun uncastledTrappedBlackRookEval(board: EngineBoard) =
         if (board.getBitboard(BITBOARD_BK) and F8G8 != 0L && board.getBitboard(BITBOARD_BR) and G8H8 != 0L &&
                 board.getBitboard(BITBOARD_BP) and FILE_G != 0L && board.getBitboard(BITBOARD_BP) and FILE_H != 0L)
@@ -310,14 +353,17 @@ fun uncastledTrappedBlackRookEval(board: EngineBoard) =
             KINGSAFETY_UNCASTLED_TRAPPED_ROOK
         else 0)
 
+@kotlin.ExperimentalUnsignedTypes
 fun openFiles(kingShield: Long, pawnBitboard: Long) = southFill(kingShield) and southFill(pawnBitboard).inv() and RANK_1
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
                 if (whiteKingOnFirstTwoRanks(board)) {
                     combineWhiteKingShieldEval(board, whiteKingShield(board))
                 } else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun combineWhiteKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_WP), board.getBitboard(BITBOARD_BP), kingShield, Long::shl)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
@@ -325,18 +371,21 @@ fun combineWhiteKingShieldEval(board: EngineBoard, kingShield: Long) =
                 openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
                 openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
 
+@kotlin.ExperimentalUnsignedTypes
 fun openFilesKingShieldEval(openFiles: Long) =
         if (openFiles != 0L) {
             KINGSAFTEY_HALFOPEN_MIDFILE * popCount(openFiles and MIDDLE_FILES_8_BIT) +
                     KINGSAFTEY_HALFOPEN_NONMIDFILE * popCount(openFiles and NONMID_FILES_8_BIT)
         } else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackKingShieldEval(board: EngineBoard) =
         KINGSAFETY_SHIELD_BASE +
                 if (blackKingOnFirstTwoRanks(board)) {
                     combineBlackKingShieldEval(board, blackKingShield(board))
                 } else 0
 
+@kotlin.ExperimentalUnsignedTypes
 fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_BP), board.getBitboard(BITBOARD_WP), kingShield, Long::ushr)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
@@ -344,14 +393,19 @@ fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
                 openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
                 openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.getWhiteKingSquareCalculated()) < 2
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.getBlackKingSquareCalculated()) >= 6
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackKingShield(board: EngineBoard) = whiteKingShieldMask[board.getBlackKingSquareCalculated() % 8] shl 40
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteKingShield(board: EngineBoard): Long = whiteKingShieldMask[board.getWhiteKingSquareCalculated() % 8]
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteCastlingEval(board: EngineBoard, castlePrivileges: Int) : Int {
 
     val whiteCastleValue = maxCastleValue(board.blackPieceValues)
@@ -362,6 +416,7 @@ fun whiteCastlingEval(board: EngineBoard, castlePrivileges: Int) : Int {
     } else 0
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteTimeToCastleQueenSide(castlePrivileges: Int, board: EngineBoard) =
         if (castlePrivileges and CASTLEPRIV_WQ != 0) {
             2 +
@@ -371,6 +426,7 @@ fun whiteTimeToCastleQueenSide(castlePrivileges: Int, board: EngineBoard) =
         } else 100
 
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteTimeToCastleKingSide(castlePrivileges: Int, board: EngineBoard) =
         if (castlePrivileges and CASTLEPRIV_WK != 0) {
             2 +
@@ -378,6 +434,7 @@ fun whiteTimeToCastleKingSide(castlePrivileges: Int, board: EngineBoard) =
                     (if (board.getBitboard(BITBOARD_ALL) and (1L shl 2) != 0L) 1 else 0)
         } else 100
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackTimeToCastleQueenSide(castlePrivileges: Int, board: EngineBoard) =
         if (castlePrivileges and CASTLEPRIV_BQ != 0) {
             2 +
@@ -386,6 +443,7 @@ fun blackTimeToCastleQueenSide(castlePrivileges: Int, board: EngineBoard) =
                     (if (board.getBitboard(BITBOARD_ALL) and (1L shl 62) != 0L) 1 else 0)
         } else 100
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackTimeToCastleKingSide(castlePrivileges: Int, board: EngineBoard) =
         if (castlePrivileges and CASTLEPRIV_BK != 0) {
             2 +
@@ -393,6 +451,7 @@ fun blackTimeToCastleKingSide(castlePrivileges: Int, board: EngineBoard) =
                     (if (board.getBitboard(BITBOARD_ALL) and (1L shl 58) != 0L) 1 else 0)
         } else 100
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackCastlingEval(board: EngineBoard, castlePrivileges: Int) : Int {
     // Value of moving King to its queenside castle destination in the middle game
     val blackCastleValue = maxCastleValue(board.whitePieceValues)
@@ -403,12 +462,16 @@ fun blackCastlingEval(board: EngineBoard, castlePrivileges: Int) : Int {
     } else 0
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun rookSquareBonus() = rookPieceSquareTable[3] - rookPieceSquareTable[0]
 
+@kotlin.ExperimentalUnsignedTypes
 fun kingSquareBonusEndGame() = kingEndGamePieceSquareTable[1] - kingEndGamePieceSquareTable[3]
 
+@kotlin.ExperimentalUnsignedTypes
 fun kingSquareBonusMiddleGame() = kingPieceSquareTable[1] - kingPieceSquareTable[3]
 
+@kotlin.ExperimentalUnsignedTypes
 fun castlingEval(board: EngineBoard, castlePrivileges: Int) =
         if (castlePrivileges != 0) {
             whiteCastlingEval(board, castlePrivileges) - blackCastlingEval(board, castlePrivileges)
@@ -416,9 +479,11 @@ fun castlingEval(board: EngineBoard, castlePrivileges: Int) =
 
 // don't want to exceed this value because otherwise castling would be discouraged due to the bonuses
 // given by still having castling rights.
+@kotlin.ExperimentalUnsignedTypes
 fun maxCastleValue(pieceValues: Int) =
         kingSquareBonusScaled(pieceValues, kingSquareBonusEndGame(), kingSquareBonusMiddleGame()) + rookSquareBonus()
 
+@kotlin.ExperimentalUnsignedTypes
 fun kingSquareBonusScaled(pieceValues: Int, kingSquareBonusEndGame: Int, kingSquareBonusMiddleGame: Int) =
         linearScale(
                 pieceValues,
@@ -427,6 +492,7 @@ fun kingSquareBonusScaled(pieceValues: Int, kingSquareBonusEndGame: Int, kingSqu
                 kingSquareBonusEndGame,
                 kingSquareBonusMiddleGame)
 
+@kotlin.ExperimentalUnsignedTypes
 fun endGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (bothSidesHaveOnlyOneKnightOrBishopEach(board)) currentScore / ENDGAME_DRAW_DIVISOR
         else when (currentScore) {
@@ -435,11 +501,13 @@ fun endGameAdjustment(board: EngineBoard, currentScore: Int) =
             else -> blackWinningEndGameAdjustment(board, currentScore)
         }
 
+@kotlin.ExperimentalUnsignedTypes
 fun penaltyForKingNotBeingNearOtherKing(board: EngineBoard) =
         (kotlin.math.abs(xCoordOfSquare(board.getWhiteKingSquareCalculated()) - xCoordOfSquare(board.getBlackKingSquareCalculated())) +
                 kotlin.math.abs(yCoordOfSquare(board.getWhiteKingSquareCalculated()) - yCoordOfSquare(board.getBlackKingSquareCalculated()))
                 ) * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         (if (blackHasInsufficientMaterial(board)) currentScore + (board.blackPieceValues * endgameSubtractInsufficientMaterialMultiplier).toInt()
         else if (probableDrawWhenBlackIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
@@ -447,6 +515,7 @@ fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (board.getBitboard(BITBOARD_WP) == 0L) blackWinningNoWhitePawnsEndGameAdjustment(board, currentScore)
         else currentScore) + penaltyForKingNotBeingNearOtherKing(board) - (kingInCornerPieceSquareTable[board.getWhiteKingSquareCalculated()] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (blackMoreThanABishopUpInNonPawns(board)) {
             if (blackHasOnlyTwoKnights(board) && board.whitePieceValues == 0) currentScore / ENDGAME_DRAW_DIVISOR
@@ -455,6 +524,7 @@ fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: 
             } else currentScore - VALUE_SHOULD_WIN
         } else currentScore
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
     blackShouldWinWithKnightAndBishopValue(currentScore)
     return -if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_BB)))
@@ -463,6 +533,7 @@ fun blackKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
         enemyKingCloseToLightCornerMateSquareValue(board.getWhiteKingSquareCalculated())
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         (if (whiteHasInsufficientMaterial(board)) currentScore - (board.whitePieceValues * endgameSubtractInsufficientMaterialMultiplier).toInt()
         else if (probablyDrawWhenWhiteIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
@@ -470,6 +541,7 @@ fun whiteWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (board.getBitboard(BITBOARD_BP) == 0L) whiteWinningNoBlackPawnsEndGameAdjustment(board, currentScore)
         else currentScore) - penaltyForKingNotBeingNearOtherKing(board) + (kingInCornerPieceSquareTable[board.getBlackKingSquareCalculated()] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         if (whiteMoreThanABishopUpInNonPawns(board)) {
             if (whiteHasOnlyTwoKnights(board) && board.blackPieceValues == 0) currentScore / ENDGAME_DRAW_DIVISOR
@@ -478,96 +550,122 @@ fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: 
             else currentScore + VALUE_SHOULD_WIN
         } else currentScore
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
     whiteShouldWinWithKnightAndBishopValue(currentScore)
     return +if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_WB))) enemyKingCloseToDarkCornerMateSquareValue(board.getBlackKingSquareCalculated())
     else enemyKingCloseToLightCornerMateSquareValue(board.getBlackKingSquareCalculated())
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun enemyKingCloseToDarkCornerMateSquareValue(kingSquare: Int) = enemyKingCloseToLightCornerMateSquareValue(bitFlippedHorizontalAxis[kingSquare])
 
+@kotlin.ExperimentalUnsignedTypes
 fun enemyKingCloseToLightCornerMateSquareValue(kingSquare: Int) = (7 - distanceToH1OrA8[kingSquare]) * ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackShouldWinWithKnightAndBishopValue(eval: Int) =
         -(VALUE_KNIGHT + VALUE_BISHOP + VALUE_SHOULD_WIN) +
                 eval / ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteShouldWinWithKnightAndBishopValue(eval: Int) =
         VALUE_KNIGHT + VALUE_BISHOP + VALUE_SHOULD_WIN + eval / ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteHasOnlyAKnightAndBishop(board: EngineBoard) =
         exactlyOneBitSet(board.getBitboard(BITBOARD_WN)) && (board.whitePieceValues == VALUE_KNIGHT + VALUE_BISHOP)
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackHasOnlyAKnightAndBishop(board: EngineBoard) =
         exactlyOneBitSet(board.getBitboard(BITBOARD_BN)) && (board.blackPieceValues == VALUE_KNIGHT + VALUE_BISHOP)
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteHasOnlyTwoKnights(board: EngineBoard) =
         popCount(board.getBitboard(BITBOARD_WN)) == 2 && (board.whitePieceValues == 2 * VALUE_KNIGHT)
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackHasOnlyTwoKnights(board: EngineBoard) =
         popCount(board.getBitboard(BITBOARD_BN)) == 2 && (board.blackPieceValues == 2 * VALUE_KNIGHT)
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackMoreThanABishopUpInNonPawns(board: EngineBoard) =
         board.blackPieceValues - board.whitePieceValues > VALUE_BISHOP
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteMoreThanABishopUpInNonPawns(board: EngineBoard) =
         board.whitePieceValues - board.blackPieceValues > VALUE_BISHOP
 
+@kotlin.ExperimentalUnsignedTypes
 fun noBlackRooksQueensOrBishops(board: EngineBoard) =
         board.getBitboard(BITBOARD_BR) or board.getBitboard(BITBOARD_BN) or board.getBitboard(BITBOARD_BQ) == 0L
 
+@kotlin.ExperimentalUnsignedTypes
 fun bothSidesHaveOnlyOneKnightOrBishopEach(board: EngineBoard) =
         noPawnsRemain(board) && board.whitePieceValues < VALUE_ROOK && board.blackPieceValues < VALUE_ROOK
 
+@kotlin.ExperimentalUnsignedTypes
 fun noPawnsRemain(board: EngineBoard) = board.getBitboard(BITBOARD_WP) + board.getBitboard(BITBOARD_BP) == 0L
 
+@kotlin.ExperimentalUnsignedTypes
 fun noWhiteRooksQueensOrKnights(board: EngineBoard) =
         board.getBitboard(BITBOARD_WR) or board.getBitboard(BITBOARD_WN) or board.getBitboard(BITBOARD_WQ) == 0L
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackBishopDrawOnFileH(board: EngineBoard): Boolean {
     return board.getBitboard(BITBOARD_BP) and FILE_H.inv() == 0L &&
             board.getBitboard(BITBOARD_BB) and LIGHT_SQUARES == 0L &&
             board.getBitboard(BITBOARD_WK) and H1H2G1G2 != 0L
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackBishopDrawOnFileA(board: EngineBoard): Boolean {
     return board.getBitboard(BITBOARD_BP) and FILE_A.inv() == 0L &&
             board.getBitboard(BITBOARD_BB) and DARK_SQUARES == 0L &&
             board.getBitboard(BITBOARD_WK) and A1A2B1B2 != 0L
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteBishopDrawOnFileA(board: EngineBoard): Boolean {
     return board.getBitboard(BITBOARD_WP) and FILE_A.inv() == 0L &&
             board.getBitboard(BITBOARD_WB) and LIGHT_SQUARES == 0L &&
             board.getBitboard(BITBOARD_BK) and A8A7B8B7 != 0L
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteBishopDrawOnFileH(board: EngineBoard): Boolean {
     return board.getBitboard(BITBOARD_WP) and FILE_H.inv() == 0L &&
             board.getBitboard(BITBOARD_WB) and DARK_SQUARES == 0L &&
             board.getBitboard(BITBOARD_BK) and H8H7G8G7 != 0L
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun probableDrawWhenBlackIsWinning(board: EngineBoard) =
         board.pawnValues(BITBOARD_BP) == 0 && board.blackPieceValues - VALUE_BISHOP <= board.whitePieceValues
 
+@kotlin.ExperimentalUnsignedTypes
 fun probablyDrawWhenWhiteIsWinning(board: EngineBoard) =
         board.pawnValues(BITBOARD_WP) == 0 && board.whitePieceValues - VALUE_BISHOP <= board.blackPieceValues
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackHasInsufficientMaterial(board: EngineBoard) =
         board.getBitboard(BITBOARD_BP) == 0L && (board.blackPieceValues == VALUE_KNIGHT || board.blackPieceValues == VALUE_BISHOP)
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteHasInsufficientMaterial(board: EngineBoard) =
         board.getBitboard(BITBOARD_WP) == 0L && (board.whitePieceValues == VALUE_KNIGHT || board.whitePieceValues == VALUE_BISHOP)
 
+@kotlin.ExperimentalUnsignedTypes
 fun blockedKnightPenaltyEval(square: Int, enemyPawnAttacks: Long, friendlyPawns: Long) =
         popCount(blockedKnightLandingSquares(square, enemyPawnAttacks, friendlyPawns)) * KNIGHT_LANDING_SQ_PAWN_ATK_PENALTY
 
+@kotlin.ExperimentalUnsignedTypes
 fun blockedKnightLandingSquares(square: Int, enemyPawnAttacks: Long, friendlyPawns: Long) =
         knightMoves[square] and (enemyPawnAttacks or friendlyPawns)
 
 
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackKnightsEval(board: EngineBoard, attacks: Attacks) : Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BN)) {
@@ -582,6 +680,7 @@ fun blackKnightsEval(board: EngineBoard, attacks: Attacks) : Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteKnightsEval(board: EngineBoard, attacks: Attacks) : Int {
 
     var acc = 0
@@ -596,6 +695,7 @@ fun whiteKnightsEval(board: EngineBoard, attacks: Attacks) : Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackBishopsEval(board: EngineBoard, blackPiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BB)) {
@@ -605,6 +705,7 @@ fun blackBishopsEval(board: EngineBoard, blackPiecesInverted: Long): Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteBishopEval(board: EngineBoard, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_WB)) {
@@ -613,6 +714,7 @@ fun whiteBishopEval(board: EngineBoard, whitePiecesInverted: Long): Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun blackQueensEval(board: EngineBoard, blackPiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BQ)) {
@@ -621,6 +723,7 @@ private fun blackQueensEval(board: EngineBoard, blackPiecesInverted: Long): Int 
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun whiteQueensEval(board: EngineBoard, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_WQ)) {
@@ -629,6 +732,7 @@ private fun whiteQueensEval(board: EngineBoard, whitePiecesInverted: Long): Int 
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun blackRooksEval(board: EngineBoard, blackPiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_BR)) {
@@ -639,6 +743,7 @@ private fun blackRooksEval(board: EngineBoard, blackPiecesInverted: Long): Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whiteRooksEval(board: EngineBoard, whitePiecesInverted: Long): Int {
     var acc = 0
     applyToSquares(board.getBitboard(BITBOARD_WR)) {

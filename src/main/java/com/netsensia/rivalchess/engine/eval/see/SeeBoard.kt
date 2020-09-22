@@ -14,6 +14,7 @@ import java.lang.Long.numberOfTrailingZeros
 
 val VALUE_PAWN_PROMOTION_TO_QUEEN = pieceValue(BITBOARD_WQ) - pieceValue(BITBOARD_WP)
 
+@kotlin.ExperimentalUnsignedTypes
 class SeeBoard(board: EngineBoard) {
     val bitboards = EngineBitboards(board.engineBitboards)
     @JvmField

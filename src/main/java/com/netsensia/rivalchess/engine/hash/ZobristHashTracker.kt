@@ -8,6 +8,7 @@ import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator.whiteMoverHash
 import com.netsensia.rivalchess.engine.search.*
 import com.netsensia.rivalchess.engine.type.MoveDetail
 
+@kotlin.ExperimentalUnsignedTypes
 class ZobristHashTracker {
     @JvmField
     var trackedBoardHashValue: Long = 0
@@ -23,10 +24,12 @@ class ZobristHashTracker {
 
     private val switchMoverHashValue = whiteMoverHashValue xor blackMoverHashValue
 
+    @kotlin.ExperimentalUnsignedTypes
     fun initHash(engineBoard: EngineBoard) {
         trackedBoardHashValue = calculateHash(engineBoard)
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     private fun replaceWithAnotherPiece(movedPiece: Int, capturedPiece: Int, bitRef: Int) {
         trackedBoardHashValue = trackedBoardHashValue xor
             ZobristHashCalculator.pieceHashValues[capturedPiece][bitRef] xor
@@ -47,12 +50,14 @@ class ZobristHashTracker {
             trackedBoardHashValue = trackedBoardHashValue xor ZobristHashCalculator.pieceHashValues[BITBOARD_WP][to + 8]
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     private fun processCapture(movedPiece: Int, capturedPiece: Int, bitRefTo: Int) {
         if (capturedPiece == BITBOARD_NONE)
             trackedBoardHashValue = trackedBoardHashValue xor ZobristHashCalculator.pieceHashValues[movedPiece][bitRefTo]
         else replaceWithAnotherPiece(movedPiece, capturedPiece, bitRefTo)
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     private fun switchMover() {
         trackedBoardHashValue = trackedBoardHashValue xor switchMoverHashValue
     }
@@ -68,6 +73,7 @@ class ZobristHashTracker {
         }
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     private fun processSpecialPawnMoves(compactMove: Int, movedPiece: Int, bitRefTo: Int, capturedPiece: Int) {
         if (movedPiece == BITBOARD_WP) {
             processPossibleWhitePawnEnPassantCapture(compactMove, capturedPiece)
@@ -81,6 +87,7 @@ class ZobristHashTracker {
         }
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     fun nullMove() = switchMover()
 
     fun makeMove(compactMove: Int, movedPiece: Int, capturedPiece: Int) {

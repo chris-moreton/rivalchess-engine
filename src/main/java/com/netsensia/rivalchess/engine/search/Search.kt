@@ -22,6 +22,7 @@ import java.io.PrintStream
 import java.util.*
 import kotlin.system.exitProcess
 
+@kotlin.ExperimentalUnsignedTypes
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
     private val printStream: PrintStream
     val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluator()
