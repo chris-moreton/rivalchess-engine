@@ -62,19 +62,21 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         exitProcess(1)
     }
     fun getWhiteKingSquareCalculated(): Int {
-        val retVal = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
-        if (retVal != whiteKingSquareTracked) {
-            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
-        }
-        return retVal
+        return whiteKingSquareTracked
+//        val retVal = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
+//        if (retVal != whiteKingSquareTracked) {
+//            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
+//        }
+//        return retVal
     }
 
     fun getBlackKingSquareCalculated(): Int {
-        val retVal = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
-        if (retVal != blackKingSquareTracked) {
-            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
-        }
-        return retVal
+        return blackKingSquareTracked
+//        val retVal = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
+//        if (retVal != blackKingSquareTracked) {
+//            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
+//        }
+//        return retVal
     }
 
     @JvmField
