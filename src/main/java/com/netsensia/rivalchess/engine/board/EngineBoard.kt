@@ -13,9 +13,9 @@ import com.netsensia.rivalchess.model.Square
 import com.netsensia.rivalchess.model.SquareOccupant
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import java.io.File
-import java.lang.Long
 import kotlin.system.exitProcess
 
+@ExperimentalUnsignedTypes
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     @JvmField
     val engineBitboards = EngineBitboards()
@@ -57,26 +57,26 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         get() = moveHistory[numMovesMade]
 
     fun aText(fileName: String, t: String) {
-        val file = File(fileName)
+        val file = File("/home/chrismoreton/$fileName")
         if (file.exists()) file.appendText(t) else file.writeText(t)
+        println(t)
         exitProcess(1)
     }
+
     fun getWhiteKingSquareCalculated(): Int {
-        return whiteKingSquareTracked
-//        val retVal = Long.numberOfTrailingZeros(getBitboard(BITBOARD_WK))
-//        if (retVal != whiteKingSquareTracked) {
-//            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
-//        }
-//        return retVal
+        val retVal = getBitboard(BITBOARD_WK).countTrailingZeroBits()
+        if (retVal != whiteKingSquareTracked) {
+            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
+        }
+        return retVal
     }
 
     fun getBlackKingSquareCalculated(): Int {
-        return blackKingSquareTracked
-//        val retVal = Long.numberOfTrailingZeros(getBitboard(BITBOARD_BK))
-//        if (retVal != blackKingSquareTracked) {
-//            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
-//        }
-//        return retVal
+        val retVal = getBitboard(BITBOARD_BK).countTrailingZeroBits()
+        if (retVal != blackKingSquareTracked) {
+            aText("bug-${System.currentTimeMillis()}.txt", this.toString())
+        }
+        return retVal
     }
 
     @JvmField
