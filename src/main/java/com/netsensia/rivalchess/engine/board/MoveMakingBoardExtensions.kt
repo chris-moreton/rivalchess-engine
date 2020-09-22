@@ -153,6 +153,8 @@ private fun EngineBoard.removePromotionPiece(promotionPiece: Int, fromMask: Long
 
 private fun EngineBoard.replaceMovedPiece(fromSquare: Int, movePiece: Int, fromMask: Long, toMask: Long): Int {
     engineBitboards.xorPieceBitboard(movePiece, toMask or fromMask)
+    if (movePiece == BITBOARD_WK) whiteKingSquareTracked = fromSquare else
+        if (movePiece == BITBOARD_BK) blackKingSquareTracked = fromSquare
     return movePiece
 }
 
@@ -185,6 +187,7 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece
 }
 
 private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
+    blackKingSquareTracked = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl (compactMove and 63)
     castlePrivileges = castlePrivileges and CASTLEPRIV_BNONE
@@ -242,6 +245,7 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece
 }
 
 private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
+    whiteKingSquareTracked = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl (compactMove and 63)
     castlePrivileges = castlePrivileges and CASTLEPRIV_WNONE
