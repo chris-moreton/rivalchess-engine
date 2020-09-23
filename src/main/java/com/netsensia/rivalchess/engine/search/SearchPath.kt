@@ -5,7 +5,7 @@ import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 
 class SearchPath {
     @JvmField
-	val move: IntArray = IntArray(MAX_TREE_DEPTH)
+	val move = IntArray(MAX_TREE_DEPTH)
 
     @JvmField
     var score = 0

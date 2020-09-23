@@ -19,6 +19,7 @@ import com.netsensia.rivalchess.model.Move
 import com.netsensia.rivalchess.model.util.BoardUtils.getLegalMoves
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
+import com.netsensia.rivalchess.util.getEngineMoveFromSimpleAlgebraic
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.util.*
@@ -377,6 +378,15 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 //        return (legalMoves.contains(algebraicMove))
     }
 
+    private fun setCurrentMoveToRandomMoveIfCurrentMoveIllegal() {
+        val board = Board.fromFen(getFen())
+        val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(currentMove))
+        val legalMoves: List<Move> = board.getLegalMoves()
+        if (!legalMoves.contains(algebraicMove)) {
+            currentPath.move[0] = EngineMove(legalMoves[0]).compact
+        }
+    }
+
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
         val boardHash = board.boardHashObject
         var hashMove = 0
@@ -669,6 +679,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     fun stopSearch() {
+        setCurrentMoveToRandomMoveIfCurrentMoveIllegal()
         abortingSearch = true
     }
 
@@ -678,6 +689,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     fun quit() {
+        setCurrentMoveToRandomMoveIfCurrentMoveIllegal()
         quit = true
     }
 
