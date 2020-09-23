@@ -683,6 +683,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun getFinalMove(): Int {
+        return currentMove
         if (currentMove == 0) {
             orderedMoves[0].forEach {
                 if (it == 0) return 0

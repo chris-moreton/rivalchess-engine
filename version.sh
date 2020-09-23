@@ -11,8 +11,8 @@ function gittag() {
     git add -A
     git commit -m "Tagging as $1"
     git tag $1
-    git push
-    git push --tags
+    #git push
+    #git push --tags
     #./gradlew uploadArchives
   fi
 }
