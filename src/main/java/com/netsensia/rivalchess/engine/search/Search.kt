@@ -370,10 +370,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun verifyMove(move: Int): Boolean {
-        val board = Board.fromFen(getFen())
-        val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(move))
-        val legalMoves: List<Move> = board.getLegalMoves()
-        return (legalMoves.contains(algebraicMove))
+        return true
+//        val board = Board.fromFen(getFen())
+//        val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(move))
+//        val legalMoves: List<Move> = board.getLegalMoves()
+//        return (legalMoves.contains(algebraicMove))
     }
 
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
