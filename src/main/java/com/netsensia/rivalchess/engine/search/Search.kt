@@ -23,6 +23,7 @@ import com.netsensia.rivalchess.util.getEngineMoveFromSimpleAlgebraic
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.util.*
+import kotlin.system.exitProcess
 
 @kotlin.ExperimentalUnsignedTypes
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
@@ -371,11 +372,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         currentDepthZeroMoveNumber = arrayIndex
     }
 
-    private fun verifyMove(move: Int): Boolean {
-        val board = Board.fromFen(getFen())
+    private fun verifyMove(eBoard: EngineBoard, move: Int): Boolean {
+        val board = Board.fromFen(eBoard.getFen())
         val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(move))
         val legalMoves: List<Move> = board.getLegalMoves()
-        return (legalMoves.contains(algebraicMove))
+        val legal = legalMoves.contains(algebraicMove)
+        return legal
     }
 
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
@@ -386,7 +388,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
             hashMove = boardHash.useHeight(hashIndex + HASHENTRY_MOVE)
-            if (hashMove != 0 && !verifyMove(hashMove)) return HashProbeResult(0, window, null)
+            if (hashMove != 0 && !verifyMove(board, hashMove)) hashMove = 0
             val flag = boardHash.useHeight(hashIndex + HASHENTRY_FLAG)
             val score = boardHash.useHeight(hashIndex + HASHENTRY_SCORE)
 
@@ -395,7 +397,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         if (USE_ALWAYS_REPLACE_HASH && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             hashMove = boardHash.ignoreHeight(hashIndex + HASHENTRY_MOVE)
-            if (hashMove != 0 && !verifyMove(hashMove)) return HashProbeResult(0, window, null)
+            if (hashMove != 0 && !verifyMove(board, hashMove)) hashMove = 0
             val flag = boardHash.ignoreHeight(hashIndex + HASHENTRY_FLAG)
             val score = boardHash.ignoreHeight(hashIndex + HASHENTRY_SCORE)
             if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
