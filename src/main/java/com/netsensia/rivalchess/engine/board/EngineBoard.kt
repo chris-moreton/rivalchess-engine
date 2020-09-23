@@ -73,7 +73,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
         if (file.exists()) file.appendText(s) else file.writeText(s)
         println(s)
-        exitProcess(1)
     }
 
     fun getWhiteKingSquareCalculated(): Int {
