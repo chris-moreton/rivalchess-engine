@@ -11,6 +11,7 @@ import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
+import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -66,7 +67,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                 "BKTrk $blackKingSquareTracked\n"
 
         moveHistory.forEach {
-            if (it != null) s += fromSquare(it.move).toString() + "-" + toSquare(it.move).toString() + " "
+            if (it != null) s += getSimpleAlgebraicMoveFromCompactMove(it.move) + " " else s += "null "
         }
 
         if (file.exists()) file.appendText(s) else file.writeText(s)
