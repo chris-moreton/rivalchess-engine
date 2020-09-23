@@ -693,6 +693,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                             if (engineBoard.makeMove(it)) {
                                 currentPath.move[0] = it
                             }
+                            engineBoard.unMakeMove()
                         }
                     }
                     printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(currentMove))
