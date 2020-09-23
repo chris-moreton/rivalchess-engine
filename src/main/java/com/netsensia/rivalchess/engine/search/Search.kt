@@ -682,21 +682,25 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         quit = true
     }
 
+    private fun getFinalMove(): Int {
+        if (currentMove == 0) {
+            orderedMoves[0].forEach {
+                if (engineBoard.makeMove(it)) {
+                    return it
+                }
+                engineBoard.unMakeMove()
+            }
+        }
+        return currentMove
+    }
+
     override fun run() {
         while (!quit) {
             Thread.yield()
             if (engineState === SearchState.REQUESTED) {
                 go()
                 if (isUciMode) {
-                    if (currentMove == 0) {
-                        orderedMoves[0].forEach {
-                            if (engineBoard.makeMove(it)) {
-                                currentPath.move[0] = it
-                            }
-                            engineBoard.unMakeMove()
-                        }
-                    }
-                    printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(currentMove))
+                    printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(getFinalMove()))
                 }
             }
         }
