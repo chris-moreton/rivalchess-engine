@@ -128,6 +128,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var useScoutSearch = false
         val bestPath = searchPath[0].reset()
 
+        if (abortingSearch) return SearchPath()
+
         moveSequence(orderedMoves[0]).forEach {
             val move = moveNoScore(it)
 
@@ -165,8 +167,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 depthZeroMoveScores[numMoves] = newPath.score
 
                 engineBoard.unMakeMove()
-
-                if (abortingSearch) return SearchPath()
 
             }
             numMoves++
