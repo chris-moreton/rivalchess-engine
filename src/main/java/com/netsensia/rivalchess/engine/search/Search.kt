@@ -373,12 +373,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun verifyMove(eBoard: EngineBoard, move: Int): Boolean {
-        return true
-//        val board = Board.fromFen(eBoard.getFen())
-//        val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(move))
-//        val legalMoves: List<Move> = board.getLegalMoves()
-//        val legal = legalMoves.contains(algebraicMove)
-//        return legal
+        val to = toSquare(move)
+        val legal = to != eBoard.getWhiteKingSquareCalculated() && to != eBoard.getBlackKingSquareCalculated()
+        return legal
     }
 
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {

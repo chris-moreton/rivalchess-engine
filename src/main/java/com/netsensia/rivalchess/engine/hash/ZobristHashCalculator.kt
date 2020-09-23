@@ -27,6 +27,9 @@ object ZobristHashCalculator {
     private val moverHashValues = longArrayOf(6612194290785701391L, 7796428774704130372L)
 
     @JvmStatic
+    val enPassantOnValue = 6687912736785776762L
+
+    @JvmStatic
     val whiteMoverHashValue = moverHashValues[0]
 
     @JvmStatic

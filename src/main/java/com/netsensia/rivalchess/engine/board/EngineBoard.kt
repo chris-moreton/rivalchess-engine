@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.hash.BoardHash
+import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator
 import com.netsensia.rivalchess.engine.search.fromSquare
 import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.engine.type.MoveDetail
@@ -194,7 +195,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return occurrences
     }
 
-    fun boardHashCode() = boardHashObject.trackedHashValue
+    fun boardHashCode() =
+        if (getBitboard(BITBOARD_ENPASSANTSQUARE) == 0L)
+            boardHashObject.trackedHashValue
+        else
+            boardHashObject.trackedHashValue xor ZobristHashCalculator.enPassantOnValue
 
     override fun toString() = this.getFen()
 }

@@ -2,6 +2,7 @@ package com.netsensia.rivalchess.engine.hash
 
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
+import com.netsensia.rivalchess.engine.eval.yCoordOfSquare
 import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator.blackMoverHashValue
 import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator.calculateHash
 import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator.whiteMoverHashValue
