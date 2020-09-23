@@ -6,11 +6,10 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.hash.BoardHash
+import com.netsensia.rivalchess.engine.search.fromSquare
+import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.engine.type.MoveDetail
-import com.netsensia.rivalchess.model.Board
-import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.Square
-import com.netsensia.rivalchess.model.SquareOccupant
+import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import java.io.File
 import kotlin.system.exitProcess
@@ -58,13 +57,17 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
 
     fun aText() {
         val file = File("/home/chrismoreton/bug-${System.currentTimeMillis()}.txt")
-        val s = "${this}\n" +
+        var s = "${this}\n" +
                 "WKBit ${getBitboard(BITBOARD_WK)}\n" +
                 "BKBit ${getBitboard(BITBOARD_BK)}\n" +
                 "WKCnt ${getBitboard(BITBOARD_WK).countTrailingZeroBits()}\n" +
                 "BKCnt ${getBitboard(BITBOARD_BK).countTrailingZeroBits()}\n" +
                 "WKTrk $whiteKingSquareTracked\n" +
                 "BKTrk $blackKingSquareTracked\n"
+
+        moveHistory.forEach {
+            if (it != null) s += fromSquare(it.move).toString() + "-" + toSquare(it.move).toString() + " "
+        }
 
         if (file.exists()) file.appendText(s) else file.writeText(s)
         println(s)
