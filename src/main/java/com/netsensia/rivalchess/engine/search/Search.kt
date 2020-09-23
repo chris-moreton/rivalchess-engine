@@ -15,12 +15,13 @@ import com.netsensia.rivalchess.enums.MoveOrder
 import com.netsensia.rivalchess.enums.SearchState
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
+import com.netsensia.rivalchess.model.Move
+import com.netsensia.rivalchess.model.util.BoardUtils.getLegalMoves
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.util.*
-import kotlin.system.exitProcess
 
 @kotlin.ExperimentalUnsignedTypes
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
@@ -29,7 +30,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     val moveOrderStatus = arrayOfNulls<MoveOrder>(MAX_TREE_DEPTH)
     private val drawnPositionsAtRoot: MutableList<MutableList<Long>>
-    private val drawnPositionsAtRootCount = mutableListOf(0,0)
+    private val drawnPositionsAtRootCount = mutableListOf(0, 0)
     val mateKiller = IntArray(MAX_TREE_DEPTH)
     val killerMoves: Array<IntArray>
     val historyMovesSuccess = Array(2) { Array(64) { IntArray(64) } }
@@ -295,13 +296,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5) 0 else 1
 
     private fun wasPawnPush(): Boolean {
-        val lastMove = engineBoard.moveHistory[engineBoard.numMovesMade-1]!!
+        val lastMove = engineBoard.moveHistory[engineBoard.numMovesMade - 1]!!
         val lastMoveTo = toSquare(lastMove.move)
         return (engineBoard.mover == Colour.WHITE && lastMove.movePiece == BITBOARD_BP && lastMoveTo <= 15) ||
                 (engineBoard.mover == Colour.BLACK && lastMove.movePiece == BITBOARD_WP && lastMoveTo >= 48)
     }
 
-    private fun wasCapture() = engineBoard.moveHistory[engineBoard.numMovesMade-1]!!.capturePiece != BITBOARD_NONE
+    private fun wasCapture() = engineBoard.moveHistory[engineBoard.numMovesMade - 1]!!.capturePiece != BITBOARD_NONE
 
     private fun isDraw() = engineBoard.previousOccurrencesOfThisPosition() == 2 || engineBoard.halfMoveCount >= 100 || engineBoard.onlyKingsRemain()
 
@@ -325,7 +326,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun scoutSearch(useScoutSearch: Boolean, depth: Int, ply: Int, low: Int, high: Int, newExtensions: Int, isCheck: Boolean) =
         if (useScoutSearch) {
-            val scoutPath = search(engineBoard, (depth - 1), ply, -low-1, -low, newExtensions, isCheck)
+            val scoutPath = search(engineBoard, (depth - 1), ply, -low - 1, -low, newExtensions, isCheck)
             if (!abortingSearch && -scoutPath.score > low) {
                 search(engineBoard, (depth - 1), ply, -high, -low, newExtensions, isCheck)
             } else scoutPath
@@ -368,6 +369,13 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         currentDepthZeroMoveNumber = arrayIndex
     }
 
+    private fun verifyMove(move: Int): Boolean {
+        val board = Board.fromFen(getFen())
+        val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(move))
+        val legalMoves: List<Move> = board.getLegalMoves()
+        return (legalMoves.contains(algebraicMove))
+    }
+
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
         val boardHash = board.boardHashObject
         var hashMove = 0
@@ -376,6 +384,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
             hashMove = boardHash.useHeight(hashIndex + HASHENTRY_MOVE)
+            if (hashMove != 0 && !verifyMove(hashMove)) return HashProbeResult(0, window, null)
             val flag = boardHash.useHeight(hashIndex + HASHENTRY_FLAG)
             val score = boardHash.useHeight(hashIndex + HASHENTRY_SCORE)
 
@@ -384,6 +393,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         if (USE_ALWAYS_REPLACE_HASH && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             hashMove = boardHash.ignoreHeight(hashIndex + HASHENTRY_MOVE)
+            if (hashMove != 0 && !verifyMove(hashMove)) return HashProbeResult(0, window, null)
             val flag = boardHash.ignoreHeight(hashIndex + HASHENTRY_FLAG)
             val score = boardHash.ignoreHeight(hashIndex + HASHENTRY_SCORE)
             if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
@@ -404,7 +414,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun finalPath(board: EngineBoard, ply: Int, low: Int, high: Int, isCheck: Boolean): SearchPath {
         val bestPath = quiesce(board, MAX_QUIESCE_DEPTH - 1, ply, 0, low, high, isCheck)
         val hashFlag = if (bestPath.score < low) UPPER else if (bestPath.score > high) LOWER else EXACT
-        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag,0)
+        board.boardHashObject.storeHashMove(0, board, bestPath.score, hashFlag, 0)
         return bestPath
     }
 
@@ -544,7 +554,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val toSquare = toSquare(move)
         val delta = (if ((movePiece == BITBOARD_WP || movePiece == BITBOARD_BP) &&
-                yCoordOfSquare(toSquare) in arrayOf(0,7))
+                yCoordOfSquare(toSquare) in arrayOf(0, 7))
             (VALUE_QUEEN - VALUE_PAWN) else 0) +
             pieceValue(board.getBitboardTypeOfPieceOnSquare(toSquare, mover.opponent()))
 
