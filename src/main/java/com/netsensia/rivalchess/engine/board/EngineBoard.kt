@@ -7,14 +7,11 @@ import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.hash.BoardHash
 import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator
-import com.netsensia.rivalchess.engine.search.fromSquare
-import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.File
-import kotlin.system.exitProcess
 
 @ExperimentalUnsignedTypes
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
@@ -57,41 +54,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
-    fun aText() {
-        val file = File("/home/chrismoreton/bug-${System.currentTimeMillis()}.txt")
-        var s = "${this}\n" +
-                "WKBit ${getBitboard(BITBOARD_WK)}\n" +
-                "BKBit ${getBitboard(BITBOARD_BK)}\n" +
-                "WKCnt ${getBitboard(BITBOARD_WK).countTrailingZeroBits()}\n" +
-                "BKCnt ${getBitboard(BITBOARD_BK).countTrailingZeroBits()}\n" +
-                "WKTrk $whiteKingSquareTracked\n" +
-                "BKTrk $blackKingSquareTracked\n"
+    val whiteKingSquareCalculated
+        get() = getBitboard(BITBOARD_WK).countTrailingZeroBits()
 
-        moveHistory.forEach {
-            if (it != null) s += getSimpleAlgebraicMoveFromCompactMove(it.move) + " " else s += "null "
-        }
-
-        if (file.exists()) file.appendText(s) else file.writeText(s)
-        println(s)
-    }
-
-    fun getWhiteKingSquareCalculated(): Int {
-        val retVal = getBitboard(BITBOARD_WK).countTrailingZeroBits()
-        if (retVal != whiteKingSquareTracked) aText()
-        return retVal
-    }
-
-    fun getBlackKingSquareCalculated(): Int {
-        val retVal = getBitboard(BITBOARD_BK).countTrailingZeroBits()
-        if (retVal != blackKingSquareTracked) aText()
-        return retVal
-    }
-
-    @JvmField
-    var whiteKingSquareTracked = 0
-
-    @JvmField
-    var blackKingSquareTracked = 0
+    val blackKingSquareCalculated
+        get() = getBitboard(BITBOARD_BK).countTrailingZeroBits()
 
     init {
         setBoard(board)
@@ -119,7 +86,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return BITBOARD_NONE
     }
 
-    fun moveGenerator() = MoveGenerator(engineBitboards, mover, getWhiteKingSquareCalculated(), getBlackKingSquareCalculated(), castlePrivileges)
+    fun moveGenerator() = MoveGenerator(engineBitboards, mover, whiteKingSquareCalculated, blackKingSquareCalculated, castlePrivileges)
 
     private fun setEngineBoardVars(board: Board) {
         mover = board.sideToMove
@@ -137,8 +104,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                 val squareOccupant = board.getSquareOccupant(Square.fromCoords(x, y))
                 if (squareOccupant != SquareOccupant.NONE) {
                     engineBitboards.orPieceBitboard(squareOccupant.index, 1L shl bitNum)
-                    if (squareOccupant == SquareOccupant.WK) whiteKingSquareTracked = bitNum
-                    if (squareOccupant == SquareOccupant.BK) blackKingSquareTracked = bitNum
                 }
             }
         }

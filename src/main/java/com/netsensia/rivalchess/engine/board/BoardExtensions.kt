@@ -39,8 +39,8 @@ fun EngineBoard.getPiece(bitRef: Int) = when (getBitboardTypeOfPieceOnSquare(bit
 @kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.isCheck(colour: Colour) =
     if (colour == Colour.WHITE)
-        this.engineBitboards.isSquareAttackedBy(getWhiteKingSquareCalculated(), Colour.BLACK) else
-        this.engineBitboards.isSquareAttackedBy(getBlackKingSquareCalculated(), Colour.WHITE)
+        this.engineBitboards.isSquareAttackedBy(whiteKingSquareCalculated, Colour.BLACK) else
+        this.engineBitboards.isSquareAttackedBy(blackKingSquareCalculated, Colour.WHITE)
 
 @kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.getScore(move: Int, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {

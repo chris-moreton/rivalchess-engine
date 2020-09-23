@@ -6,19 +6,23 @@ import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 
-@kotlin.ExperimentalUnsignedTypes
-fun EngineBoard.makeNullMove() {
+private fun EngineBoard.nullMoveCore() {
     boardHashObject.makeNullMove()
     mover = mover.opponent()
     val friendlyHolder = engineBitboards.pieceBitboards[BITBOARD_FRIENDLY]
     engineBitboards.setPieceBitboard(BITBOARD_FRIENDLY, engineBitboards.pieceBitboards[BITBOARD_ENEMY])
     engineBitboards.setPieceBitboard(BITBOARD_ENEMY, friendlyHolder)
+}
+
+@kotlin.ExperimentalUnsignedTypes
+fun EngineBoard.makeNullMove() {
+    nullMoveCore()
     isOnNullMove = true
 }
 
 @kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.unMakeNullMove() {
-    makeNullMove()
+    nullMoveCore()
     isOnNullMove = false
 }
 
@@ -41,7 +45,6 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
 
     moveHistory[numMovesMade] = moveDetail
 
-    isOnNullMove = false
     halfMoveCount++
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, 0)
 
@@ -50,6 +53,9 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
     // moveDetail.capturePiece gets updated here
     makeNonTrivialMoveTypeAdjustments(moveFrom, moveTo, compactMove, targetSquarePiece, movePiece)
 
+    if (getBitboard(BITBOARD_WK) == 0L || getBitboard(BITBOARD_BK) == 0L) {
+        numMovesMade++
+    }
     numMovesMade++
     mover = mover.opponent()
 
@@ -162,8 +168,6 @@ private fun EngineBoard.removePromotionPiece(promotionPiece: Int, fromMask: Long
 @kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.replaceMovedPiece(fromSquare: Int, movePiece: Int, fromMask: Long, toMask: Long): Int {
     engineBitboards.xorPieceBitboard(movePiece, toMask or fromMask)
-    if (movePiece == BITBOARD_WK) whiteKingSquareTracked = fromSquare else
-        if (movePiece == BITBOARD_BK) blackKingSquareTracked = fromSquare
     return movePiece
 }
 
@@ -199,7 +203,6 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfWhitePiece(capturePiece
 
 @kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.adjustKingVariablesForBlackKingMove(compactMove: Int) {
-    blackKingSquareTracked = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl (compactMove and 63)
     castlePrivileges = castlePrivileges and CASTLEPRIV_BNONE
@@ -261,7 +264,6 @@ private fun EngineBoard.makeAdjustmentsFollowingCaptureOfBlackPiece(capturePiece
 
 @kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.adjustKingVariablesForWhiteKingMove(compactMove: Int) {
-    whiteKingSquareTracked = (compactMove and 63)
     val fromMask = 1L shl (compactMove ushr 16)
     val toMask = 1L shl (compactMove and 63)
     castlePrivileges = castlePrivileges and CASTLEPRIV_WNONE

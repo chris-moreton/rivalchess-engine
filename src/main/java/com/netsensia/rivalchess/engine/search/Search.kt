@@ -374,12 +374,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun verifyMove(eBoard: EngineBoard, move: Int): Boolean {
         val to = toSquare(move)
-        val legal = to != eBoard.getWhiteKingSquareCalculated() && to != eBoard.getBlackKingSquareCalculated()
+        val legal = to != eBoard.whiteKingSquareCalculated && to != eBoard.blackKingSquareCalculated
         return legal
     }
 
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
-        return HashProbeResult(0, window, null)
         val boardHash = board.boardHashObject
         var hashMove = 0
         val hashIndex = board.boardHashObject.getHashIndex(board)

@@ -108,8 +108,8 @@ fun whiteKingSquareEval(board: EngineBoard) =
                 board.blackPieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
-                kingEndGamePieceSquareTable[board.getWhiteKingSquareCalculated()],
-                kingPieceSquareTable[board.getWhiteKingSquareCalculated()]
+                kingEndGamePieceSquareTable[board.whiteKingSquareCalculated],
+                kingPieceSquareTable[board.whiteKingSquareCalculated]
         )
 
 @kotlin.ExperimentalUnsignedTypes
@@ -118,8 +118,8 @@ fun blackKingSquareEval(board: EngineBoard) =
                 board.whitePieceValues,
                 VALUE_ROOK,
                 OPENING_PHASE_MATERIAL,
-                kingEndGamePieceSquareTable[bitFlippedHorizontalAxis[board.getBlackKingSquareCalculated()]],
-                kingPieceSquareTable[bitFlippedHorizontalAxis[board.getBlackKingSquareCalculated()]]
+                kingEndGamePieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquareCalculated]],
+                kingPieceSquareTable[bitFlippedHorizontalAxis[board.blackKingSquareCalculated]]
         )
 
 fun linearScale(x: Int, min: Int, max: Int, a: Int, b: Int) =
@@ -301,8 +301,8 @@ fun kingSafetyEval(board: EngineBoard, attacks: Attacks): Int {
     val averagePiecesPerSide = (board.whitePieceValues + board.blackPieceValues) / 2
     if (averagePiecesPerSide <= KINGSAFETY_MIN_PIECE_BALANCE) return 0
 
-    val whiteKingAttackedCount = whiteKingAttackCount(whiteKingDangerZone[board.getWhiteKingSquareCalculated()], attacks)
-    val blackKingAttackedCount = blackKingAttackCount(blackKingDangerZone[board.getBlackKingSquareCalculated()], attacks)
+    val whiteKingAttackedCount = whiteKingAttackCount(whiteKingDangerZone[board.whiteKingSquareCalculated], attacks)
+    val blackKingAttackedCount = blackKingAttackCount(blackKingDangerZone[board.blackKingSquareCalculated], attacks)
 
     val whiteKingSafety: Int = whiteKingShieldEval(board)
     val blackKingSafety: Int = blackKingShieldEval(board)
@@ -394,16 +394,16 @@ fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
                 openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
 
 @kotlin.ExperimentalUnsignedTypes
-fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.getWhiteKingSquareCalculated()) < 2
+fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.whiteKingSquareCalculated) < 2
 
 @kotlin.ExperimentalUnsignedTypes
-fun blackKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.getBlackKingSquareCalculated()) >= 6
+fun blackKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.blackKingSquareCalculated) >= 6
 
 @kotlin.ExperimentalUnsignedTypes
-fun blackKingShield(board: EngineBoard) = whiteKingShieldMask[board.getBlackKingSquareCalculated() % 8] shl 40
+fun blackKingShield(board: EngineBoard) = whiteKingShieldMask[board.blackKingSquareCalculated % 8] shl 40
 
 @kotlin.ExperimentalUnsignedTypes
-fun whiteKingShield(board: EngineBoard): Long = whiteKingShieldMask[board.getWhiteKingSquareCalculated() % 8]
+fun whiteKingShield(board: EngineBoard): Long = whiteKingShieldMask[board.whiteKingSquareCalculated % 8]
 
 @kotlin.ExperimentalUnsignedTypes
 fun whiteCastlingEval(board: EngineBoard, castlePrivileges: Int) : Int {
@@ -503,8 +503,8 @@ fun endGameAdjustment(board: EngineBoard, currentScore: Int) =
 
 @kotlin.ExperimentalUnsignedTypes
 fun penaltyForKingNotBeingNearOtherKing(board: EngineBoard) =
-        (kotlin.math.abs(xCoordOfSquare(board.getWhiteKingSquareCalculated()) - xCoordOfSquare(board.getBlackKingSquareCalculated())) +
-                kotlin.math.abs(yCoordOfSquare(board.getWhiteKingSquareCalculated()) - yCoordOfSquare(board.getBlackKingSquareCalculated()))
+        (kotlin.math.abs(xCoordOfSquare(board.whiteKingSquareCalculated) - xCoordOfSquare(board.blackKingSquareCalculated)) +
+                kotlin.math.abs(yCoordOfSquare(board.whiteKingSquareCalculated) - yCoordOfSquare(board.blackKingSquareCalculated))
                 ) * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING
 
 @kotlin.ExperimentalUnsignedTypes
@@ -513,7 +513,7 @@ fun blackWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (probableDrawWhenBlackIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noBlackRooksQueensOrBishops(board) && (blackBishopDrawOnFileA(board) || blackBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.getBitboard(BITBOARD_WP) == 0L) blackWinningNoWhitePawnsEndGameAdjustment(board, currentScore)
-        else currentScore) + penaltyForKingNotBeingNearOtherKing(board) - (kingInCornerPieceSquareTable[board.getWhiteKingSquareCalculated()] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
+        else currentScore) + penaltyForKingNotBeingNearOtherKing(board) - (kingInCornerPieceSquareTable[board.whiteKingSquareCalculated] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
 
 @kotlin.ExperimentalUnsignedTypes
 fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
@@ -528,9 +528,9 @@ fun blackWinningNoWhitePawnsEndGameAdjustment(board: EngineBoard, currentScore: 
 fun blackKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
     blackShouldWinWithKnightAndBishopValue(currentScore)
     return -if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_BB)))
-        enemyKingCloseToDarkCornerMateSquareValue(board.getWhiteKingSquareCalculated())
+        enemyKingCloseToDarkCornerMateSquareValue(board.whiteKingSquareCalculated)
     else
-        enemyKingCloseToLightCornerMateSquareValue(board.getWhiteKingSquareCalculated())
+        enemyKingCloseToLightCornerMateSquareValue(board.whiteKingSquareCalculated)
 }
 
 @kotlin.ExperimentalUnsignedTypes
@@ -539,7 +539,7 @@ fun whiteWinningEndGameAdjustment(board: EngineBoard, currentScore: Int) =
         else if (probablyDrawWhenWhiteIsWinning(board)) currentScore / ENDGAME_PROBABLE_DRAW_DIVISOR
         else if (noWhiteRooksQueensOrKnights(board) && (whiteBishopDrawOnFileA(board) || whiteBishopDrawOnFileH(board))) currentScore / ENDGAME_DRAW_DIVISOR
         else if (board.getBitboard(BITBOARD_BP) == 0L) whiteWinningNoBlackPawnsEndGameAdjustment(board, currentScore)
-        else currentScore) - penaltyForKingNotBeingNearOtherKing(board) + (kingInCornerPieceSquareTable[board.getBlackKingSquareCalculated()] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
+        else currentScore) - penaltyForKingNotBeingNearOtherKing(board) + (kingInCornerPieceSquareTable[board.blackKingSquareCalculated] * KING_PENALTY_FOR_DISTANCE_PER_SQUARE_WHEN_WINNING)
 
 @kotlin.ExperimentalUnsignedTypes
 fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: Int) =
@@ -553,8 +553,8 @@ fun whiteWinningNoBlackPawnsEndGameAdjustment(board: EngineBoard, currentScore: 
 @kotlin.ExperimentalUnsignedTypes
 fun whiteKnightAndBishopVKingEval(currentScore: Int, board: EngineBoard): Int {
     whiteShouldWinWithKnightAndBishopValue(currentScore)
-    return +if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_WB))) enemyKingCloseToDarkCornerMateSquareValue(board.getBlackKingSquareCalculated())
-    else enemyKingCloseToLightCornerMateSquareValue(board.getBlackKingSquareCalculated())
+    return +if (atLeastOnePieceOnDarkSquare(board.getBitboard(BITBOARD_WB))) enemyKingCloseToDarkCornerMateSquareValue(board.blackKingSquareCalculated)
+    else enemyKingCloseToLightCornerMateSquareValue(board.blackKingSquareCalculated)
 }
 
 @kotlin.ExperimentalUnsignedTypes

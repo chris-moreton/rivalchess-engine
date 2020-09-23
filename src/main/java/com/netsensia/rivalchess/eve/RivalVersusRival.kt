@@ -21,7 +21,6 @@ const val FIFTY_MOVE = 3
 const val STALEMATE = 4
 const val CHAMPION_WIN = 5
 const val CHALLENGER_WIN = 6
-const val GAME_TOO_LONG = 7
 
 val secureRandom = SecureRandom()
 
@@ -33,7 +32,7 @@ fun main() {
         results[result] ++
         if (result == WHITE_WIN) results[if (i % 2 == 0) CHAMPION_WIN else CHALLENGER_WIN] ++
         if (result == BLACK_WIN) results[if (i % 2 == 0) CHALLENGER_WIN else CHAMPION_WIN] ++
-        println(Arrays.toString(results))
+        println(results.contentToString())
     }
 }
 
@@ -66,7 +65,7 @@ fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
     searcher.setMillisToThink(MAX_SEARCH_MILLIS)
     searcher.setSearchDepth(MAX_SEARCH_DEPTH)
     val isChampionsMove = (gameNumber % 2 == moveNumber % 2)
-    searcher.setNodesToSearch(10000 + secureRandom.nextInt(5000))
+    searcher.setNodesToSearch(1000000 + secureRandom.nextInt(500000))
     if (isChampionsMove) {
         pieceValues = intArrayOf(100,550,600,1000,2000,30000)
     } else {
