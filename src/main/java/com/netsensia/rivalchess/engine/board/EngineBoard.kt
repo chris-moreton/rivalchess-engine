@@ -77,16 +77,14 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     }
 
     fun getWhiteKingSquareCalculated(): Int {
-        val retVal = whiteKingSquareTracked
-        //val retVal = getBitboard(BITBOARD_WK).countTrailingZeroBits()
-        //if (retVal != whiteKingSquareTracked) aText()
+        val retVal = getBitboard(BITBOARD_WK).countTrailingZeroBits()
+        if (retVal != whiteKingSquareTracked) aText()
         return retVal
     }
 
     fun getBlackKingSquareCalculated(): Int {
-        val retVal = blackKingSquareTracked
-        //val retVal = getBitboard(BITBOARD_BK).countTrailingZeroBits()
-        //if (retVal != blackKingSquareTracked) aText()
+        val retVal = getBitboard(BITBOARD_BK).countTrailingZeroBits()
+        if (retVal != blackKingSquareTracked) aText()
         return retVal
     }
 
