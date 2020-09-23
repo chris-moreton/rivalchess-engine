@@ -379,6 +379,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
+        return HashProbeResult(0, window, null)
         val boardHash = board.boardHashObject
         var hashMove = 0
         val hashIndex = board.boardHashObject.getHashIndex(board)
