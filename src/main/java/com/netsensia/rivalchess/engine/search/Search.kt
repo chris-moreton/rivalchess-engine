@@ -683,13 +683,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun getFinalMove(): Int {
-        return currentMove
         if (currentMove == 0) {
-            orderedMoves[0].forEach {
-                if (it == 0) return 0
-                if (engineBoard.makeMove(it)) return it
-                engineBoard.unMakeMove()
-            }
+            val board = Board.fromFen(getFen())
+            val moves = board.getLegalMoves()
+            return EngineMove(moves.get(0)).compact
         }
         return currentMove
     }
