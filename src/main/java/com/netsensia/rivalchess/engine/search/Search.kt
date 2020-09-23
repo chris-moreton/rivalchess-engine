@@ -378,14 +378,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 //        return (legalMoves.contains(algebraicMove))
     }
 
-    private fun setCurrentMoveToRandomMoveIfCurrentMoveIllegal() {
-        val board = Board.fromFen(getFen())
-        val legalMoves: List<Move> = board.getLegalMoves()
-        if (currentMove == 0 || !legalMoves.contains( Move(getSimpleAlgebraicMoveFromCompactMove(currentMove)))) {
-            currentPath.move[0] = EngineMove(legalMoves[0]).compact
-        }
-    }
-
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
         val boardHash = board.boardHashObject
         var hashMove = 0
@@ -678,7 +670,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     fun stopSearch() {
-        setCurrentMoveToRandomMoveIfCurrentMoveIllegal()
         abortingSearch = true
     }
 
@@ -688,7 +679,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     fun quit() {
-        setCurrentMoveToRandomMoveIfCurrentMoveIllegal()
         quit = true
     }
 
@@ -698,6 +688,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             if (engineState === SearchState.REQUESTED) {
                 go()
                 if (isUciMode) {
+                    val board = Board.fromFen(getFen())
+                    val legalMoves: List<Move> = board.getLegalMoves()
+                    if (currentMove == 0 || !legalMoves.contains( Move(getSimpleAlgebraicMoveFromCompactMove(currentMove)))) {
+                        currentPath.move[0] = EngineMove(legalMoves[0]).compact
+                    }
                     printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(currentMove))
                 }
             }
