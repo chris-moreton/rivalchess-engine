@@ -689,7 +689,11 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 go()
                 if (isUciMode) {
                     if (currentMove == 0) {
-                        currentPath.move[0] = orderedMoves[0][0]
+                        orderedMoves[0].forEach {
+                            if (engineBoard.makeMove(it)) {
+                                currentPath.move[0] = it
+                            }
+                        }
                     }
                     printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(currentMove))
                 }
