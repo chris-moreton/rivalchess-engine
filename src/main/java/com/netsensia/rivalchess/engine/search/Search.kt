@@ -685,9 +685,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun getFinalMove(): Int {
         if (currentMove == 0) {
             orderedMoves[0].forEach {
-                if (engineBoard.makeMove(it)) {
-                    return it
-                }
+                if (it == 0) return 0
+                if (engineBoard.makeMove(it)) return it
                 engineBoard.unMakeMove()
             }
         }
@@ -699,9 +698,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             Thread.yield()
             if (engineState === SearchState.REQUESTED) {
                 go()
-                if (isUciMode) {
-                    printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(getFinalMove()))
-                }
+                if (isUciMode) printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(getFinalMove()))
             }
         }
     }
