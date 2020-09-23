@@ -1,6 +1,6 @@
-./version.sh 31.0.$1
+./version.sh $2
 cd ../rivalchess-uci
-./publish.sh 31.0.$1 1
+./publish.sh $2 1
 cd ../rivalchess-engine
-chessmatch0.25 31.0.4-1 31.0.$1-1 100001
+cutechess-cli -engine cmd="java -jar /home/chrismoreton/Chess/rivalchess-$1.jar" -engine cmd="java -jar /home/chrismoreton/Chess/rivalchess-$2.jar" -each proto=uci book="/home/chrismoreton/Chess/ProDeo.bin" timemargin=50 st=0.25 -resign movecount=10 score=600 -rounds $3 -pgnout /home/chrismoreton/Chess/Rival$1-v-Rival$2-$3-rounds.pgn -epdout /home/chrismoreton/Chess/Rival$1-v-Rival$2-$3-rounds.epd $4
 
