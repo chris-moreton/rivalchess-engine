@@ -380,9 +380,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun setCurrentMoveToRandomMoveIfCurrentMoveIllegal() {
         val board = Board.fromFen(getFen())
-        val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(currentMove))
         val legalMoves: List<Move> = board.getLegalMoves()
-        if (!legalMoves.contains(algebraicMove)) {
+        if (currentMove == 0 || !legalMoves.contains( Move(getSimpleAlgebraicMoveFromCompactMove(currentMove)))) {
             currentPath.move[0] = EngineMove(legalMoves[0]).compact
         }
     }
