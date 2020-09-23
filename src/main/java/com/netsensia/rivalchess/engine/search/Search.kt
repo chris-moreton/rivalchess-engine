@@ -165,6 +165,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 depthZeroMoveScores[numMoves] = newPath.score
 
                 engineBoard.unMakeMove()
+
+                if (abortingSearch) return SearchPath()
+
             }
             numMoves++
         }
