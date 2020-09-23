@@ -690,8 +690,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (isUciMode) {
                     val board = Board.fromFen(getFen())
                     val legalMoves: List<Move> = board.getLegalMoves()
-                    if (currentMove == 0 || !legalMoves.contains( Move(getSimpleAlgebraicMoveFromCompactMove(currentMove)))) {
-                        currentPath.move[0] = EngineMove(legalMoves[0]).compact
+                    if (currentMove == 0 || !legalMoves.contains(Move(getSimpleAlgebraicMoveFromCompactMove(currentMove)))) {
+                        currentPath.move[0] = orderedMoves[0][0]
                     }
                     printStream.println("bestmove " + getSimpleAlgebraicMoveFromCompactMove(currentMove))
                 }
