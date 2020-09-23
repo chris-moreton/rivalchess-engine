@@ -131,8 +131,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         moveSequence(orderedMoves[0]).forEach {
             val move = moveNoScore(it)
 
-            if (abortingSearch) return SearchPath()
-
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
 
             if (engineBoard.makeMove(move)) {
@@ -371,11 +369,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun verifyMove(move: Int): Boolean {
-        return true
-//        val board = Board.fromFen(getFen())
-//        val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(move))
-//        val legalMoves: List<Move> = board.getLegalMoves()
-//        return (legalMoves.contains(algebraicMove))
+        val board = Board.fromFen(getFen())
+        val algebraicMove = Move(getSimpleAlgebraicMoveFromCompactMove(move))
+        val legalMoves: List<Move> = board.getLegalMoves()
+        return (legalMoves.contains(algebraicMove))
     }
 
     private fun hashProbe(board: EngineBoard, depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
