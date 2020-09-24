@@ -5,7 +5,6 @@ import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
-import com.netsensia.rivalchess.util.getSimpleAlgebraicFromBitRef
 
 @kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.nullMoveCore() {
@@ -58,14 +57,6 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
     numMovesMade++
     mover = mover.opponent()
 
-    if (getBitboard(BITBOARD_WK) == 0L || getBitboard(BITBOARD_BK) == 0L) {
-        println(this)
-        for (i in (0..numMovesMade+1)) {
-            println(getSimpleAlgebraicFromBitRef(moveHistory[i]!!.move))
-        }
-        println(Thread.currentThread().getStackTrace())
-    }
-
     calculateSupplementaryBitboards()
 
     if (!ignoreCheck && isCheck(mover.opponent())) {
@@ -102,7 +93,7 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
         if (!removePromotionPiece(moveMade.move and PROMOTION_PIECE_TOSQUARE_MASK_FULL, fromMask, toMask)) {
 
             // now that promotions are out of the way, we can remove the moving piece from toSquare and put it back on fromSquare
-            val movePiece = replaceMovedPiece(fromSquare, moveMade.movePiece, fromMask, toMask)
+            val movePiece = replaceMovedPiece(moveMade.movePiece, fromMask, toMask)
 
             // for castles, replace the rook
             replaceCastledRook(fromMask, toMask, movePiece)
@@ -173,7 +164,7 @@ private fun EngineBoard.removePromotionPiece(promotionPiece: Int, fromMask: Long
 }
 
 @kotlin.ExperimentalUnsignedTypes
-private fun EngineBoard.replaceMovedPiece(fromSquare: Int, movePiece: Int, fromMask: Long, toMask: Long): Int {
+private fun EngineBoard.replaceMovedPiece(movePiece: Int, fromMask: Long, toMask: Long): Int {
     engineBitboards.xorPieceBitboard(movePiece, toMask or fromMask)
     return movePiece
 }

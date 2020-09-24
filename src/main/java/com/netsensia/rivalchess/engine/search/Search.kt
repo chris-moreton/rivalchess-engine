@@ -100,9 +100,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun iterativeDeepening(depth: Int, aspirationWindow: Window) {
         iterativeDeepeningDepth = depth
-        if (iterativeDeepeningDepth == 10 && engineBoard.numMovesMade == 77) {
-            iterativeDeepeningDepth = depth
-        }
         val newWindow = aspirationSearch(depth, aspirationWindow.low, aspirationWindow.high, 1)
         reorderDepthZeroMoves()
         if (currentPath.score >= MATE_SCORE_START) {
@@ -138,9 +135,6 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (abortingSearch) return SearchPath()
 
         moveSequence(orderedMoves[0]).forEach {
-            if (nodes >= 80255 && it == 1293221908 && engineBoard.toString().equals("8/1R4p1/5p1p/4k3/b7/P1rPKBPP/8/8 b - - 2 39")) {
-                nodes = nodes
-            }
             val move = moveNoScore(it)
 
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
@@ -194,12 +188,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         nodes++
 
-        if (nodes == 123267 && engineBoard.toString().equals("8/1R4p1/5p1p/4k3/b7/P2rKBPP/8/8 w - - 0 40")) {
-            nodes = 123267
-        }
-
-        if (abortIfTimeIsUp())
-            return SearchPath()
+        if (abortIfTimeIsUp()) return SearchPath()
         val searchPathPly = searchPath[ply].reset()
 
         if (isDraw()) return searchPathPly.withScore(0)
@@ -218,6 +207,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (depthRemaining <= 0) return finalPath(ply, localLow, localHigh, isCheck)
 
         val highRankingMove = highRankingMove(hashProbeResult.move, depthRemaining, depth, ply, localLow, localHigh, extensions, isCheck)
+
+        if (abortingSearch) return SearchPath()
+
         searchPathPly.reset()
 
         var bestMoveForHash = 0
@@ -268,6 +260,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     scoutSearch(useScoutSearch, adjustedDepth, ply + 1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
                         it.score = adjustedMateScore(-it.score)
                     }
+
+                if (abortingSearch) return SearchPath()
 
                 // If we used LMR and it didn't fail low, research
                 val newPath = if (lmr > 0 && firstPath.score > localLow)

@@ -39,7 +39,7 @@ fun main() {
 @kotlin.ExperimentalUnsignedTypes
 fun game(gameNumber: Int): Int {
 
-    val randomSeed = 51
+    val randomSeed = gameNumber
     random = Random(randomSeed)
     println("Random seed is $randomSeed")
     val moveList = mutableListOf<Int>()
