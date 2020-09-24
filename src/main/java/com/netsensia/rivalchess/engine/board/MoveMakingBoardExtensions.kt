@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
+import com.netsensia.rivalchess.util.getSimpleAlgebraicFromBitRef
 
 @kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.nullMoveCore() {
@@ -59,7 +60,10 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
 
     if (getBitboard(BITBOARD_WK) == 0L || getBitboard(BITBOARD_BK) == 0L) {
         println(this)
-        println(moveDetail.move)
+        for (i in (0..numMovesMade+1)) {
+            println(getSimpleAlgebraicFromBitRef(moveHistory[i]!!.move))
+        }
+        println(Thread.currentThread().getStackTrace())
     }
 
     calculateSupplementaryBitboards()

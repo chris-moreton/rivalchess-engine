@@ -22,7 +22,7 @@ const val STALEMATE = 4
 const val CHAMPION_WIN = 5
 const val CHALLENGER_WIN = 6
 
-val random = Random(1)
+var random = Random(1)
 
 @kotlin.ExperimentalUnsignedTypes
 fun main() {
@@ -39,6 +39,8 @@ fun main() {
 @kotlin.ExperimentalUnsignedTypes
 fun game(gameNumber: Int): Int {
 
+    random = Random(gameNumber)
+    println("Random seed is $gameNumber")
     val moveList = mutableListOf<Int>()
     var board = Board.fromFen(FEN_START_POS)
 
