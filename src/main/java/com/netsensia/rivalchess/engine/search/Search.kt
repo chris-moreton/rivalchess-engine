@@ -70,7 +70,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             field = USE_INTERNAL_OPENING_BOOK && useOpeningBook
         }
 
-    constructor(board: Board) : this(System.out, board) {}
+    constructor(board: Board) : this(System.out, board)
 
     init {
         drawnPositionsAtRoot = ArrayList()
@@ -108,7 +108,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun aspirationSearch(depth: Int, low: Int, high: Int, attempt: Int): Window {
-        val path = searchZero(engineBoard, depth, low, high)
+        val path = searchZero(depth, low, high)
 
         val newLow = if (path.score <= low) low - widenAspiration(attempt) else low
         val newHigh = if (path.score >= high) high + widenAspiration(attempt) else high
@@ -119,7 +119,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     }
 
-    private fun searchZero(board: EngineBoard, depth: Int, low: Int, high: Int): SearchPath {
+    private fun searchZero(depth: Int, low: Int, high: Int): SearchPath {
         nodes ++
         var myLow = low
         var numMoves = 0
@@ -140,7 +140,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
                 updateCurrentDepthZeroMove(move, ++numLegalMoves)
 
-                val isCheck = board.isCheck(mover)
+                val isCheck = engineBoard.isCheck(mover)
                 val extensions = checkExtension(isCheck)
                 val newPath = pathForDepthZeroMove(move, useScoutSearch, depth, myLow, high, extensions, isCheck).also { path ->
                     path.score = adjustedMateScore(-path.score)
@@ -149,8 +149,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (abortingSearch) return SearchPath()
 
                 if (newPath.score >= high) {
-                    board.unMakeMove()
-                    engineBoard.boardHashObject.storeHashMove(move, board, newPath.score, LOWER, depth)
+                    engineBoard.unMakeMove()
+                    engineBoard.boardHashObject.storeHashMove(move, engineBoard, newPath.score, LOWER, depth)
                     depthZeroMoveScores[numMoves] = newPath.score
                     return bestPath.withMoveAndScore(move, newPath.score)
                 }
@@ -177,7 +177,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         abortingSearch = onlyOneMoveAndNotOnFixedTime(numLegalMoves)
 
-        engineBoard.boardHashObject.storeHashMove(bestMoveForHash, board, bestPath.score, hashEntryType, depth)
+        engineBoard.boardHashObject.storeHashMove(bestMoveForHash, engineBoard, bestPath.score, hashEntryType, depth)
         return bestPath
     }
 

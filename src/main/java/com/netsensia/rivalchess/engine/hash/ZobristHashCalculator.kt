@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.hash
 
 import com.netsensia.rivalchess.consts.BITBOARD_BR
+import com.netsensia.rivalchess.consts.BITBOARD_ENPASSANTSQUARE
 import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
@@ -46,7 +47,10 @@ object ZobristHashCalculator {
                 }
             }
         }
-        return hashValue xor moverHashValues[if (engineBoard.mover == Colour.WHITE) 0 else 1]
+        val hashWithoutEnpassant = hashValue xor moverHashValues[if (engineBoard.mover == Colour.WHITE) 0 else 1]
+        return if (engineBoard.getBitboard(BITBOARD_ENPASSANTSQUARE) == 0L) hashWithoutEnpassant else
+            hashWithoutEnpassant xor enPassantOnValue
+
     }
 
 }

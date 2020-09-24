@@ -6,6 +6,7 @@ import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.nullMoveCore() {
     boardHashObject.makeNullMove()
     mover = mover.opponent()
@@ -53,11 +54,13 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
     // moveDetail.capturePiece gets updated here
     makeNonTrivialMoveTypeAdjustments(moveFrom, moveTo, compactMove, targetSquarePiece, movePiece)
 
-    if (getBitboard(BITBOARD_WK) == 0L || getBitboard(BITBOARD_BK) == 0L) {
-        numMovesMade++
-    }
     numMovesMade++
     mover = mover.opponent()
+
+    if (getBitboard(BITBOARD_WK) == 0L || getBitboard(BITBOARD_BK) == 0L) {
+        println(this)
+        println(moveDetail.move)
+    }
 
     calculateSupplementaryBitboards()
 

@@ -12,7 +12,7 @@ import com.netsensia.rivalchess.model.util.BoardUtils.isCheck
 import com.netsensia.rivalchess.model.util.FenUtils.getFen
 import com.netsensia.rivalchess.util.getMoveRefFromCompactMove
 import java.security.SecureRandom
-import java.util.*
+import kotlin.random.Random
 
 const val WHITE_WIN = 0
 const val BLACK_WIN = 1
@@ -22,7 +22,7 @@ const val STALEMATE = 4
 const val CHAMPION_WIN = 5
 const val CHALLENGER_WIN = 6
 
-val secureRandom = SecureRandom()
+val random = Random(1)
 
 @kotlin.ExperimentalUnsignedTypes
 fun main() {
@@ -65,7 +65,7 @@ fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
     searcher.setMillisToThink(MAX_SEARCH_MILLIS)
     searcher.setSearchDepth(MAX_SEARCH_DEPTH)
     val isChampionsMove = (gameNumber % 2 == moveNumber % 2)
-    searcher.setNodesToSearch(1000000 + secureRandom.nextInt(500000))
+    searcher.setNodesToSearch(1000000 + random.nextInt(500000))
     if (isChampionsMove) {
         pieceValues = intArrayOf(100,550,600,1000,2000,30000)
     } else {
