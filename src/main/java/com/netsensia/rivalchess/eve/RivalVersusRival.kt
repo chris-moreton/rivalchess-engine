@@ -65,7 +65,7 @@ fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
     searcher.setMillisToThink(MAX_SEARCH_MILLIS)
     searcher.setSearchDepth(MAX_SEARCH_DEPTH)
     val isChampionsMove = (gameNumber % 2 == moveNumber % 2)
-    searcher.setNodesToSearch(1000000 + random.nextInt(500000))
+    searcher.setNodesToSearch(100000 + random.nextInt(50000))
     if (isChampionsMove) {
         pieceValues = intArrayOf(100,550,600,1000,2000,30000)
     } else {
