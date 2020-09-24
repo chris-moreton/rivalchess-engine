@@ -39,14 +39,15 @@ fun main() {
 @kotlin.ExperimentalUnsignedTypes
 fun game(gameNumber: Int): Int {
 
-    random = Random(gameNumber)
-    println("Random seed is $gameNumber")
+    val randomSeed = 51
+    random = Random(randomSeed)
+    println("Random seed is $randomSeed")
     val moveList = mutableListOf<Int>()
     var board = Board.fromFen(FEN_START_POS)
 
     var moveNumber = 0
     while (board.getLegalMoves().isNotEmpty()) {
-        val searcher = getSearcher(gameNumber, moveNumber)
+        val searcher = getSearcher(gameNumber, moveNumber, randomSeed)
         moveList.forEach { searcher.makeMove(it) }
         if (searcher.engineBoard.halfMoveCount > 50) return result(board, FIFTY_MOVE, gameNumber)
         if (searcher.engineBoard.previousOccurrencesOfThisPosition() > 2) return result(board, THREE_FOLD, gameNumber)
@@ -61,11 +62,12 @@ fun game(gameNumber: Int): Int {
 }
 
 @kotlin.ExperimentalUnsignedTypes
-fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
+fun getSearcher(gameNumber: Int, moveNumber: Int, randomSeed: Int): Search {
     val searcher = Search(Board.fromFen(FEN_START_POS))
     searcher.useOpeningBook = true
     searcher.setMillisToThink(MAX_SEARCH_MILLIS)
     searcher.setSearchDepth(MAX_SEARCH_DEPTH)
+    searcher.randomSeed = randomSeed
     val isChampionsMove = (gameNumber % 2 == moveNumber % 2)
     searcher.setNodesToSearch(100000 + random.nextInt(50000))
     if (isChampionsMove) {

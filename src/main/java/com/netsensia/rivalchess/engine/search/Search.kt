@@ -13,6 +13,7 @@ import com.netsensia.rivalchess.engine.hash.isHeightHashTableEntryValid
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.enums.MoveOrder
 import com.netsensia.rivalchess.enums.SearchState
+import com.netsensia.rivalchess.eve.random
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Move
@@ -70,6 +71,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             field = USE_INTERNAL_OPENING_BOOK && useOpeningBook
         }
 
+    var randomSeed: Int = Random().nextInt()
+
     constructor(board: Board) : this(System.out, board)
 
     init {
@@ -97,6 +100,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun iterativeDeepening(depth: Int, aspirationWindow: Window) {
         iterativeDeepeningDepth = depth
+        if (iterativeDeepeningDepth == 10 && engineBoard.numMovesMade == 77) {
+            iterativeDeepeningDepth = depth
+        }
         val newWindow = aspirationSearch(depth, aspirationWindow.low, aspirationWindow.high, 1)
         reorderDepthZeroMoves()
         if (currentPath.score >= MATE_SCORE_START) {
@@ -132,6 +138,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (abortingSearch) return SearchPath()
 
         moveSequence(orderedMoves[0]).forEach {
+            if (nodes >= 80255 && it == 1293221908 && engineBoard.toString().equals("8/1R4p1/5p1p/4k3/b7/P1rPKBPP/8/8 b - - 2 39")) {
+                nodes = nodes
+            }
             val move = moveNoScore(it)
 
             depthZeroMoveScores[numMoves] = -Int.MAX_VALUE
@@ -185,7 +194,12 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         nodes++
 
-        if (abortIfTimeIsUp()) return SearchPath()
+        if (nodes == 123267 && engineBoard.toString().equals("8/1R4p1/5p1p/4k3/b7/P2rKBPP/8/8 w - - 0 40")) {
+            nodes = 123267
+        }
+
+        if (abortIfTimeIsUp())
+            return SearchPath()
         val searchPathPly = searchPath[ply].reset()
 
         if (isDraw()) return searchPathPly.withScore(0)
@@ -220,6 +234,10 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         val canFutilityPrune = canFutilityPrune(depthRemaining, localLow)
         val plyExtensions = checkExtend + threatExtend
+
+        if (ply == 1 && depth == 9 && low == 85 && high == 86 && extensions == 6 && isCheck && depthRemaining == 9 && checkExtend == 6) {
+            useScoutSearch = false
+        }
 
         orderedMoves[ply] = engineBoard.moveGenerator().generateLegalMoves().moves
         moveOrderStatus[ply] = MoveOrder.NONE
@@ -374,8 +392,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun verifyMove(move: Int): Boolean {
         val to = toSquare(move)
-        val legal = to != engineBoard.whiteKingSquareCalculated && to != engineBoard.blackKingSquareCalculated
-        return legal
+        val noKingCapture = to != engineBoard.whiteKingSquareCalculated && to != engineBoard.blackKingSquareCalculated
+        val correctSideToMove = (1L shl fromSquare(move)) and engineBoard.getBitboard(BITBOARD_FRIENDLY) != 0L
+        return noKingCapture && correctSideToMove
     }
 
     private fun hashProbe(depthRemaining: Int, window: Window, bestPath: SearchPath): HashProbeResult {
@@ -477,7 +496,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun isBookMoveAvailable(): Boolean {
         if (useOpeningBook) {
-            val libraryMove = OpeningLibrary.getMove(getFen())
+            val libraryMove = OpeningLibrary.getMove(randomSeed, getFen())
             if (libraryMove != null) {
                 currentPath = SearchPath().withPath(EngineMove(libraryMove).compact)
                 setSearchComplete()
