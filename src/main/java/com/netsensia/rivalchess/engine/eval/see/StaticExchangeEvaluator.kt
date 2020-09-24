@@ -9,6 +9,7 @@ import com.netsensia.rivalchess.engine.board.unMakeMove
 import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.model.Colour
 
+@kotlin.ExperimentalUnsignedTypes
 class StaticExchangeEvaluator {
 
     fun staticExchangeEvaluation(board: EngineBoard, compactMove: Int): Int {

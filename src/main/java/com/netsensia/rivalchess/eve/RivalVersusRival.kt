@@ -12,7 +12,7 @@ import com.netsensia.rivalchess.model.util.BoardUtils.isCheck
 import com.netsensia.rivalchess.model.util.FenUtils.getFen
 import com.netsensia.rivalchess.util.getMoveRefFromCompactMove
 import java.security.SecureRandom
-import java.util.*
+import kotlin.random.Random
 
 const val WHITE_WIN = 0
 const val BLACK_WIN = 1
@@ -21,29 +21,33 @@ const val FIFTY_MOVE = 3
 const val STALEMATE = 4
 const val CHAMPION_WIN = 5
 const val CHALLENGER_WIN = 6
-const val GAME_TOO_LONG = 7
 
-val secureRandom = SecureRandom()
+var random = Random(1)
 
-fun main(args: Array<String>) {
+@kotlin.ExperimentalUnsignedTypes
+fun main() {
     val results= intArrayOf(0,0,0,0,0,0,0)
     for (i in 1..10000) {
         val result = game(i)
         results[result] ++
         if (result == WHITE_WIN) results[if (i % 2 == 0) CHAMPION_WIN else CHALLENGER_WIN] ++
         if (result == BLACK_WIN) results[if (i % 2 == 0) CHALLENGER_WIN else CHAMPION_WIN] ++
-        println(Arrays.toString(results))
+        println(results.contentToString())
     }
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun game(gameNumber: Int): Int {
 
+    val randomSeed = gameNumber
+    random = Random(randomSeed)
+    println("Random seed is $randomSeed")
     val moveList = mutableListOf<Int>()
     var board = Board.fromFen(FEN_START_POS)
 
     var moveNumber = 0
     while (board.getLegalMoves().isNotEmpty()) {
-        val searcher = getSearcher(gameNumber, moveNumber)
+        val searcher = getSearcher(gameNumber, moveNumber, randomSeed)
         moveList.forEach { searcher.makeMove(it) }
         if (searcher.engineBoard.halfMoveCount > 50) return result(board, FIFTY_MOVE, gameNumber)
         if (searcher.engineBoard.previousOccurrencesOfThisPosition() > 2) return result(board, THREE_FOLD, gameNumber)
@@ -57,13 +61,15 @@ fun game(gameNumber: Int): Int {
     return result(board, STALEMATE, gameNumber)
 }
 
-fun getSearcher(gameNumber: Int, moveNumber: Int): Search {
+@kotlin.ExperimentalUnsignedTypes
+fun getSearcher(gameNumber: Int, moveNumber: Int, randomSeed: Int): Search {
     val searcher = Search(Board.fromFen(FEN_START_POS))
     searcher.useOpeningBook = true
     searcher.setMillisToThink(MAX_SEARCH_MILLIS)
     searcher.setSearchDepth(MAX_SEARCH_DEPTH)
+    searcher.randomSeed = randomSeed
     val isChampionsMove = (gameNumber % 2 == moveNumber % 2)
-    searcher.setNodesToSearch(10000 + secureRandom.nextInt(5000))
+    searcher.setNodesToSearch(100000 + random.nextInt(50000))
     if (isChampionsMove) {
         pieceValues = intArrayOf(100,550,600,1000,2000,30000)
     } else {

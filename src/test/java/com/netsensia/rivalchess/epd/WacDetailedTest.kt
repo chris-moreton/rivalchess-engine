@@ -26,6 +26,7 @@ class WacDetailedTest {
 
     private val epdStats = mutableMapOf<String, Int>()
 
+    @kotlin.ExperimentalUnsignedTypes
     companion object {
         private const val RATIO_MAX = 10
         private const val RECALCULATE = true
@@ -35,17 +36,20 @@ class WacDetailedTest {
     }
 
     @Before
+    @kotlin.ExperimentalUnsignedTypes
     fun setup() {
         search = Search()
         Thread(search).start()
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     @Test
     @Throws(IOException::class, IllegalEpdItemException::class, IllegalFenException::class, InterruptedException::class)
     fun winAtChess2018() {
         runEpdSuite("winAtChessDetailed.epd")
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class)
     private fun testPosition(epdItem: EpdItem, nodesToSearch: Int, tryFewerNodes: Boolean = true, tryMoreNodes: Boolean = true) {
         val board = Board.fromFen(epdItem.fen)
@@ -91,6 +95,7 @@ class WacDetailedTest {
         }
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IOException::class, IllegalEpdItemException::class, IllegalFenException::class, InterruptedException::class)
     fun runEpdSuite(filename: String) {
         val classLoader = javaClass.classLoader
@@ -99,6 +104,7 @@ class WacDetailedTest {
         runEpdSuite(epdReader)
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     @Throws(IllegalFenException::class, InterruptedException::class)
     private fun runEpdSuite(epdReader: EpdReader) {
 

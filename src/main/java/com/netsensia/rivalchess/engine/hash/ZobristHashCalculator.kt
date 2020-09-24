@@ -1,6 +1,7 @@
 package com.netsensia.rivalchess.engine.hash
 
 import com.netsensia.rivalchess.consts.BITBOARD_BR
+import com.netsensia.rivalchess.consts.BITBOARD_ENPASSANTSQUARE
 import com.netsensia.rivalchess.consts.BITBOARD_WP
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.model.Colour
@@ -27,12 +28,16 @@ object ZobristHashCalculator {
     private val moverHashValues = longArrayOf(6612194290785701391L, 7796428774704130372L)
 
     @JvmStatic
+    val enPassantOnValue = 6687912736785776762L
+
+    @JvmStatic
     val whiteMoverHashValue = moverHashValues[0]
 
     @JvmStatic
     val blackMoverHashValue = moverHashValues[1]
 
     @JvmStatic
+    @kotlin.ExperimentalUnsignedTypes
     fun calculateHash(engineBoard: EngineBoard): Long {
         var hashValue = START_HASH_VALUE
         for (bitNum in 0..63) {
@@ -42,7 +47,10 @@ object ZobristHashCalculator {
                 }
             }
         }
-        return hashValue xor moverHashValues[if (engineBoard.mover == Colour.WHITE) 0 else 1]
+        val hashWithoutEnpassant = hashValue xor moverHashValues[if (engineBoard.mover == Colour.WHITE) 0 else 1]
+        return if (engineBoard.getBitboard(BITBOARD_ENPASSANTSQUARE) == 0L) hashWithoutEnpassant else
+            hashWithoutEnpassant xor enPassantOnValue
+
     }
 
 }

@@ -6,14 +6,14 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.hash.BoardHash
+import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator
 import com.netsensia.rivalchess.engine.type.MoveDetail
-import com.netsensia.rivalchess.model.Board
-import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.Square
-import com.netsensia.rivalchess.model.SquareOccupant
+import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
-import java.lang.Long
+import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
+import java.io.File
 
+@ExperimentalUnsignedTypes
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {
     @JvmField
     val engineBitboards = EngineBitboards()
@@ -54,11 +54,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]
 
-    @JvmField
-    var whiteKingSquare = 0
+    val whiteKingSquareCalculated
+        get() = getBitboard(BITBOARD_WK).countTrailingZeroBits()
 
-    @JvmField
-    var blackKingSquare = 0
+    val blackKingSquareCalculated
+        get() = getBitboard(BITBOARD_BK).countTrailingZeroBits()
 
     init {
         setBoard(board)
@@ -86,7 +86,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return BITBOARD_NONE
     }
 
-    fun moveGenerator() = MoveGenerator(engineBitboards, mover, whiteKingSquare, blackKingSquare, castlePrivileges)
+    fun moveGenerator() = MoveGenerator(engineBitboards, mover, whiteKingSquareCalculated, blackKingSquareCalculated, castlePrivileges)
 
     private fun setEngineBoardVars(board: Board) {
         mover = board.sideToMove
@@ -104,8 +104,6 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
                 val squareOccupant = board.getSquareOccupant(Square.fromCoords(x, y))
                 if (squareOccupant != SquareOccupant.NONE) {
                     engineBitboards.orPieceBitboard(squareOccupant.index, 1L shl bitNum)
-                    if (squareOccupant == SquareOccupant.WK) whiteKingSquare = bitNum
-                    if (squareOccupant == SquareOccupant.BK) blackKingSquare = bitNum
                 }
             }
         }
@@ -159,7 +157,11 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
         return occurrences
     }
 
-    fun boardHashCode() = boardHashObject.trackedHashValue
+    fun boardHashCode() =
+        if (getBitboard(BITBOARD_ENPASSANTSQUARE) == 0L)
+            boardHashObject.trackedHashValue
+        else
+            boardHashObject.trackedHashValue xor ZobristHashCalculator.enPassantOnValue
 
     override fun toString() = this.getFen()
 }

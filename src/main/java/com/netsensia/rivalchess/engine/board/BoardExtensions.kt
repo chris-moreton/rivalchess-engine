@@ -8,14 +8,16 @@ import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Piece
-import java.lang.Long
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.onlyKingsRemain() =
     exactlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_ENEMY]) &&
             exactlyOneBitSet(this.engineBitboards.pieceBitboards[BITBOARD_FRIENDLY])
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.isSquareEmpty(bitRef: Int) = engineBitboards.pieceBitboards[BITBOARD_ALL] and (1L shl bitRef) == 0L
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.isCapture(move: Int): Boolean {
     val toSquare = move and 63
     return !isSquareEmpty(toSquare) ||
@@ -23,6 +25,7 @@ fun EngineBoard.isCapture(move: Int): Boolean {
             getBitboardTypeOfPieceOnSquare(move ushr 16 and 63, mover) in intArrayOf(BITBOARD_WP, BITBOARD_BP))
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.getPiece(bitRef: Int) = when (getBitboardTypeOfPieceOnSquare(bitRef)) {
         BITBOARD_WP, BITBOARD_BP -> Piece.PAWN
         BITBOARD_WB, BITBOARD_BB -> Piece.BISHOP
@@ -33,11 +36,13 @@ fun EngineBoard.getPiece(bitRef: Int) = when (getBitboardTypeOfPieceOnSquare(bit
         else -> Piece.NONE
     }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.isCheck(colour: Colour) =
     if (colour == Colour.WHITE)
-        this.engineBitboards.isSquareAttackedBy(whiteKingSquare, Colour.BLACK) else
-        this.engineBitboards.isSquareAttackedBy(blackKingSquare, Colour.WHITE)
+        this.engineBitboards.isSquareAttackedBy(whiteKingSquareCalculated, Colour.BLACK) else
+        this.engineBitboards.isSquareAttackedBy(blackKingSquareCalculated, Colour.WHITE)
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.getScore(move: Int, isCapture: Boolean, staticExchangeEvaluator: StaticExchangeEvaluator): Int {
     var score = 0
     val promotionMask = move and PROMOTION_PIECE_TOSQUARE_MASK_FULL
@@ -51,15 +56,19 @@ fun EngineBoard.getScore(move: Int, isCapture: Boolean, staticExchangeEvaluator:
     return score
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.pawnValues(pawnBitboardType: Int) = popCount(getBitboard(pawnBitboardType)) * pieceValue(BITBOARD_WP)
 
-fun EngineBoard.kingSquare(colour: Colour) = Long.numberOfTrailingZeros(getBitboard(if (colour == Colour.WHITE) BITBOARD_WK else BITBOARD_BK))
+@kotlin.ExperimentalUnsignedTypes
+fun EngineBoard.kingSquare(colour: Colour) = getBitboard(if (colour == Colour.WHITE) BITBOARD_WK else BITBOARD_BK).countTrailingZeroBits()
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.moveDoesNotLeaveMoverInCheck(moveToVerify: Int) =
     makeMove(moveToVerify and 0x00FFFFFF, false, updateHash = false).also {
         if (it) unMakeMove(false)
     }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.getCharBoard(): CharArray {
         val board = CharArray(64){'0'}
         val pieces = charArrayOf('P', 'N', 'B', 'Q', 'K', 'R', 'p', 'n', 'b', 'q', 'k', 'r')
@@ -70,6 +79,7 @@ fun EngineBoard.getCharBoard(): CharArray {
         return board
     }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.getFenBoard(): StringBuilder {
         val board = getCharBoard()
         val fen = StringBuilder()
@@ -97,6 +107,7 @@ fun EngineBoard.getFenBoard(): StringBuilder {
         return fen
     }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.getFen(): String {
         val fen = getFenBoard()
         fen.append(' ')
@@ -138,6 +149,7 @@ fun EngineBoard.getFen(): String {
         return fen.toString()
     }
 
+@kotlin.ExperimentalUnsignedTypes
 private fun EngineBoard.anyLegalMoves(moves: IntArray, moveIndex: Int): Boolean =
     when {
         moves[moveIndex] == 0 -> false
@@ -145,4 +157,5 @@ private fun EngineBoard.anyLegalMoves(moves: IntArray, moveIndex: Int): Boolean 
         else -> anyLegalMoves(moves, moveIndex+1)
     }
 
+@kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.isGameOver() = !anyLegalMoves(moveGenerator().generateLegalMoves().moves, 0)

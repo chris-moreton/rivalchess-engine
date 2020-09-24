@@ -13,14 +13,17 @@ import com.netsensia.rivalchess.engine.board.pawnValues
 import com.netsensia.rivalchess.model.Colour
 import kotlin.math.abs
 
+@kotlin.ExperimentalUnsignedTypes
 private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour == Colour.WHITE) yCoordOfSquare(square) else 7 - yCoordOfSquare(square)
 
+@kotlin.ExperimentalUnsignedTypes
 inline fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShield: Long, shifter: Long.(Int) -> Long) =
         (KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * popCount(friendlyPawns and friendlyPawnShield)
                 - KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * popCount(enemyPawns and (friendlyPawnShield or shifter(friendlyPawnShield, 8)))
                 + KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * popCount(friendlyPawns and shifter(friendlyPawnShield, 8))
                 - KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * popCount(enemyPawns and shifter(friendlyPawnShield, 16)))
 
+@kotlin.ExperimentalUnsignedTypes
 fun whitePawnsEval(board: EngineBoard): Int {
     var acc = 0
     val blackPieceValues = board.blackPieceValues
@@ -36,6 +39,7 @@ fun whitePawnsEval(board: EngineBoard): Int {
     return acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackPawnsEval(board: EngineBoard): Int {
     var acc = 0
     val whitePieceValues = board.whitePieceValues
@@ -73,18 +77,21 @@ private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long, whit
     return (Math.abs(hash) % PAWN_HASH_INDEX_MAX).toInt()
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun whitePassedPawnScore(whitePassedPawnsBitboard: Long, whiteGuardedPassedPawns: Long): Int {
     var acc = 0
     applyToSquares(whitePassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[yCoordOfSquare(it)] }
     return popCount(whiteGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun blackPassedPawnScore(blackPassedPawnsBitboard: Long, blackGuardedPassedPawns: Long): Int {
     var acc = 0
     applyToSquares(blackPassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[7 - yCoordOfSquare(it)] }
     return popCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
 
     val whitePawnBitboard = board.getBitboard(BITBOARD_WP)
@@ -96,11 +103,12 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     val blackGuardedPassedPawns = blackPassedPawnsBitboard and attacks.blackPawns
 
     val pawnHashIndex = if (USE_PAWN_HASH) 
-        pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover) else 0
+        pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquareCalculated, board.blackKingSquareCalculated, board.mover) else 0
 
     val hashedScore = if (USE_PAWN_HASH && pawnHashMap.containsKey(pawnHashIndex) &&
             pawnHashMap[pawnHashIndex]!!.whitePawns == whitePawnBitboard && pawnHashMap[pawnHashIndex]!!.blackPawns == blackPawnBitboard
-                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.whiteKingSquare && pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.blackKingSquare
+                && pawnHashMap[pawnHashIndex]!!.whiteKingSquare == board.whiteKingSquareCalculated &&
+            pawnHashMap[pawnHashIndex]!!.blackKingSquare == board.blackKingSquareCalculated
                 && pawnHashMap[pawnHashIndex]!!.mover == board.mover) {
             pawnHashMap[pawnHashIndex]!!.score
         } else -9999
@@ -134,7 +142,13 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     }
 
     if (USE_PAWN_HASH) {
-        pawnHashMap[pawnHashIndex] = PawnHash(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquare, board.blackKingSquare, board.mover, score)
+        pawnHashMap[pawnHashIndex] = PawnHash(
+                whitePawnBitboard,
+                blackPawnBitboard,
+                board.whiteKingSquareCalculated,
+                board.blackKingSquareCalculated,
+                board.mover,
+                score)
     }
 
     val whitePassedPawnScore = whitePassedPawnScore(whitePassedPawnsBitboard, whiteGuardedPassedPawns)
@@ -146,8 +160,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
                 (if (board.blackPieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.BLACK,
-                            board.whiteKingSquare,
-                            board.blackKingSquare,
+                            board.whiteKingSquareCalculated,
+                            board.blackKingSquareCalculated,
                             board,
                             whitePassedPawnsBitboard,
                             blackPassedPawnsBitboard,
@@ -156,8 +170,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
                 (if (board.whitePieceValues < PAWN_ADJUST_MAX_MATERIAL)
                     calculateLowMaterialPawnBonus(
                             Colour.WHITE,
-                            board.whiteKingSquare,
-                            board.blackKingSquare,
+                            board.whiteKingSquareCalculated,
+                            board.blackKingSquareCalculated,
                             board,
                             whitePassedPawnsBitboard,
                             blackPassedPawnsBitboard,
@@ -167,6 +181,7 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
     return score + impureScore
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun calculateLowMaterialPawnBonus(
         lowMaterialColour: Colour,
         whiteKingSquare: Int,
@@ -208,22 +223,30 @@ fun calculateLowMaterialPawnBonus(
 
 }
 
+@kotlin.ExperimentalUnsignedTypes
 fun colourAdjustedYRank(colour: Colour, yRank: Int) = if (colour == Colour.WHITE) yRank else abs(yRank - 7)
 
+@kotlin.ExperimentalUnsignedTypes
 fun difference(kingX: Int, it: Int) = abs(kingX - xCoordOfSquare(it))
 
+@kotlin.ExperimentalUnsignedTypes
 fun xCoordOfSquare(square: Int) = square % 8
 
+@kotlin.ExperimentalUnsignedTypes
 fun yCoordOfSquare(square: Int) = square / 8
 
+@kotlin.ExperimentalUnsignedTypes
 fun getPawnFiles(pawns: Long) = southFill(pawns) and RANK_1
 
+@kotlin.ExperimentalUnsignedTypes
 fun getBlackPassedPawns(whitePawns: Long, blackPawns: Long) =
         blackPawns and northFill(whitePawns or whitePawnAttacks(whitePawns) or (blackPawns shl 8)).inv()
 
+@kotlin.ExperimentalUnsignedTypes
 fun getWhitePassedPawns(whitePawns: Long, blackPawns: Long) =
         whitePawns and southFill(blackPawns or blackPawnAttacks(blackPawns) or (whitePawns ushr 8)).inv()
 
+@kotlin.ExperimentalUnsignedTypes
 fun getWhiteBackwardPawns(whitePawnBitboard: Long, blackPawnBitboard: Long, whitePawnAttacks: Long, blackPawnAttacks: Long, blackPawnFiles: Long) =
         whitePawnBitboard and
                 (whitePawnBitboard or blackPawnBitboard ushr 8).inv() and
@@ -232,6 +255,7 @@ fun getWhiteBackwardPawns(whitePawnBitboard: Long, blackPawnBitboard: Long, whit
                 blackPawnAttacks(whitePawnBitboard) and
                 northFill(blackPawnFiles).inv()
 
+@kotlin.ExperimentalUnsignedTypes
 fun getBlackBackwardPawns(blackPawnBitboard: Long, whitePawnBitboard: Long, blackPawnAttacks: Long, whitePawnAttacks: Long, whitePawnFiles: Long) =
         blackPawnBitboard and
                 (blackPawnBitboard or whitePawnBitboard shl 8).inv() and

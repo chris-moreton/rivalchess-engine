@@ -34,7 +34,7 @@ public class ZobristHashTrackerTest {
         assertEquals(5824754335603279097L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("3r2k1/1p3qp1/p6p/5p2/3N1P2/2PQ3P/PP6/7K b - - 0 6"))));
         assertEquals(7155541581696875541L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("2r3k1/1p3pp1/p6p/8/1P1NP3/2q4P/P5P1/1Q4K1 w - - 0 5"))));
         assertEquals(4332303940081334316L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("3r2k1/1p3pp1/p6p/q7/2PNb3/1P1Q3P/P4PP1/6K1 w - - 0 3"))));
-        assertEquals(1983338724879014299L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("r2q2k1/pp1rbppp/4pn2/2P5/1P3B1P/5PP1/P3Q1B1/1R3RK1 b - h3 0 2"))));
+        assertEquals(5140297385412254177L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("r2q2k1/pp1rbppp/4pn2/2P5/1P3B1P/5PP1/P3Q1B1/1R3RK1 b - h3 0 2"))));
         assertEquals(2598232094144017073L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("1r6/5rkp/b1QR4/5pp1/pP6/6P1/P3qPBP/5RK1 w - - 0 5"))));
         assertEquals(2711610657820992228L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("5qk1/2Q2ppp/3Rp3/p7/1r6/1P3N1P/1P3PP1/6K1 b - - 3 5"))));
         assertEquals(6130013692976895541L, ZobristHashCalculator.calculateHash(new EngineBoard(FenUtils.getBoardModel("2Q5/p2R1p1p/7k/6p1/P7/1q4P1/5P1P/6K1 b - - 4 6"))));

@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.config.DEFAULT_SEARCH_HASH_HEIGHT
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 
+@kotlin.ExperimentalUnsignedTypes
 class BoardHash {
 
     private val hashTracker = ZobristHashTracker()
@@ -48,6 +49,7 @@ class BoardHash {
         }
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     fun storeHashMove(move: Int, board: EngineBoard, score: Int, flag: Int, height: Int) {
         val hashIndex = (board.boardHashCode() % maxHashEntries).toInt() * NUM_HASH_FIELDS
         if (height >= hashTableUseHeight[hashIndex + HASHENTRY_HEIGHT] || hashTableVersion > hashTableUseHeight[hashIndex + HASHENTRY_VERSION]) {
@@ -69,6 +71,7 @@ class BoardHash {
         hashTableIgnoreHeight[hashIndex + HASHENTRY_VERSION] = hashTableUseHeight[hashIndex + HASHENTRY_VERSION]
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     private fun storeMoveInHashTable(move: Int, board: EngineBoard, score: Int, flag: Int, height: Int, hashIndex: Int, hashTableUseHeight: IntArray) {
         hashTableUseHeight[hashIndex + HASHENTRY_MOVE] = move
         hashTableUseHeight[hashIndex + HASHENTRY_SCORE] = score
@@ -89,24 +92,30 @@ class BoardHash {
         setHashTable()
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     fun initialiseHashCode(engineBoard: EngineBoard) {
         hashTracker.initHash(engineBoard)
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     fun getHashIndex(engineBoard: EngineBoard): Int {
         return getHashIndex(engineBoard.boardHashCode())
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     fun getHashIndex(hashValue: Long): Int {
         return (hashValue % maxHashEntries).toInt() * NUM_HASH_FIELDS
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     fun move(compactMove: Int, movePiece: Int, capturePiece: Int) {
         hashTracker.makeMove(compactMove, movePiece, capturePiece)
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     fun unMove(engineBoard: EngineBoard) = hashTracker.unMakeMove(engineBoard.lastMoveMade!!)
 
+    @kotlin.ExperimentalUnsignedTypes
     fun makeNullMove() = hashTracker.nullMove()
 
     val trackedHashValue: Long

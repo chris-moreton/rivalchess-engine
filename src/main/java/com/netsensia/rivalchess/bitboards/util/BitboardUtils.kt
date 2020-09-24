@@ -4,7 +4,6 @@ import com.netsensia.rivalchess.bitboards.MagicBitboards
 import com.netsensia.rivalchess.bitboards.blackPawnMovesCapture
 import com.netsensia.rivalchess.bitboards.whitePawnMovesCapture
 import com.netsensia.rivalchess.model.Colour
-import java.lang.Long.numberOfTrailingZeros
 
 fun southFill(bitboard: Long): Long {
     val a = bitboard or (bitboard ushr 8)
@@ -41,7 +40,7 @@ fun squareList(bitboard: Long): List<Int> {
     val squares = mutableListOf<Int>()
     var bitboardCopy = bitboard
     while (bitboardCopy != 0L) {
-        val square = numberOfTrailingZeros(bitboardCopy)
+        val square = bitboardCopy.countTrailingZeroBits()
         squares.add(square)
         bitboardCopy = bitboardCopy xor (1L shl square)
     }
@@ -51,14 +50,14 @@ fun squareList(bitboard: Long): List<Int> {
 inline fun applyToSquares(bitboard: Long, fn: (Int) -> Unit) {
     var bitboardCopy = bitboard
     while (bitboardCopy != 0L) {
-        val square = numberOfTrailingZeros(bitboardCopy)
+        val square = bitboardCopy.countTrailingZeroBits()
         fn(square)
         bitboardCopy = bitboardCopy xor (1L shl square)
     }
 }
 
 inline fun applyToFirstSquare(bitboard: Long, fn: (Int) -> Unit) {
-    if (bitboard != 0L) fn(numberOfTrailingZeros(bitboard))
+    if (bitboard != 0L) fn(bitboard.countTrailingZeroBits())
 }
 
-fun popCount(x: Long) = java.lang.Long.bitCount(x)
+fun popCount(x: Long) = x.countOneBits()
