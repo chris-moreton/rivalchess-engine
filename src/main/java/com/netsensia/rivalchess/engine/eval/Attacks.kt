@@ -12,20 +12,20 @@ import com.netsensia.rivalchess.model.Colour
 
 @kotlin.ExperimentalUnsignedTypes
 class Attacks(board: EngineBoard) {
-    val whitePawns = whitePawnAttacks(board.getBitboard(BITBOARD_WP))
-    val blackPawns = blackPawnAttacks(board.getBitboard(BITBOARD_BP))
+    val whitePawnsAttackBitboard = whitePawnAttacks(board.getBitboard(BITBOARD_WP))
+    val blackPawnsAttackBitboard = blackPawnAttacks(board.getBitboard(BITBOARD_BP))
     val allBitboard = board.getBitboard(BITBOARD_ALL)
-    val whiteRooks = attackList(allBitboard, board.getBitboard(BITBOARD_WR), ::rookAttacks, Colour.WHITE)
-    val whiteBishops = attackList(allBitboard, board.getBitboard(BITBOARD_WB), ::bishopAttacks, Colour.WHITE)
-    val whiteQueens = attackList(allBitboard, board.getBitboard(BITBOARD_WQ), ::queenAttacks, Colour.WHITE)
-    val blackRooks = attackList(allBitboard, board.getBitboard(BITBOARD_BR), ::rookAttacks, Colour.BLACK)
-    val blackBishops = attackList(allBitboard, board.getBitboard(BITBOARD_BB), ::bishopAttacks, Colour.BLACK)
-    val blackQueens = attackList(allBitboard, board.getBitboard(BITBOARD_BQ), ::queenAttacks, Colour.BLACK)
+    val whiteRooksAttackArray = attackList(allBitboard, board.getBitboard(BITBOARD_WR), ::rookAttacks, Colour.WHITE)
+    val whiteBishopsAttackArray = attackList(allBitboard, board.getBitboard(BITBOARD_WB), ::bishopAttacks, Colour.WHITE)
+    val whiteQueensAttackArray = attackList(allBitboard, board.getBitboard(BITBOARD_WQ), ::queenAttacks, Colour.WHITE)
+    val blackRooksAttackArray = attackList(allBitboard, board.getBitboard(BITBOARD_BR), ::rookAttacks, Colour.BLACK)
+    val blackBishopsAttackArray = attackList(allBitboard, board.getBitboard(BITBOARD_BB), ::bishopAttacks, Colour.BLACK)
+    val blackQueensAttackArray = attackList(allBitboard, board.getBitboard(BITBOARD_BQ), ::queenAttacks, Colour.BLACK)
 
     @JvmField
-    var blackPieceAttacks = 0L
+    var blackPieceAttacksBitboard = 0L
     @JvmField
-    var whitePieceAttacks = 0L
+    var whitePieceAttacksBitboard = 0L
 
     init {
         knightAttackList(board.getBitboard(BITBOARD_WN), Colour.WHITE)
@@ -39,8 +39,8 @@ class Attacks(board: EngineBoard) {
             val attacksForSquare = pieceAttacksFn(allBitboard, it)
             squareAttacks[count++] = attacksForSquare
             if (colour == Colour.WHITE)
-                whitePieceAttacks = whitePieceAttacks or attacksForSquare else
-                blackPieceAttacks = blackPieceAttacks or attacksForSquare
+                whitePieceAttacksBitboard = whitePieceAttacksBitboard or attacksForSquare else
+                blackPieceAttacksBitboard = blackPieceAttacksBitboard or attacksForSquare
             if (count == 4) return@applyToSquares
         }
         return squareAttacks
@@ -48,8 +48,8 @@ class Attacks(board: EngineBoard) {
 
     private fun knightAttackList(squaresBitboard: Long, colour: Colour) {
         applyToSquares(squaresBitboard) {
-            if (colour == Colour.WHITE) whitePieceAttacks = whitePieceAttacks or knightMoves[it] else
-                blackPieceAttacks = blackPieceAttacks or knightMoves[it]
+            if (colour == Colour.WHITE) whitePieceAttacksBitboard = whitePieceAttacksBitboard or knightMoves[it] else
+                blackPieceAttacksBitboard = blackPieceAttacksBitboard or knightMoves[it]
         }
     }
 }
@@ -76,10 +76,10 @@ fun blackAttackScore(attacks: Attacks, board: EngineBoard): Int {
 }
 
 @kotlin.ExperimentalUnsignedTypes
-fun whiteAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.whitePieceAttacks or attacks.whitePawns) and blackPieceBitboard(board)
+fun whiteAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.whitePieceAttacksBitboard or attacks.whitePawnsAttackBitboard) and blackPieceBitboard(board)
 
 @kotlin.ExperimentalUnsignedTypes
-fun blackAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.blackPieceAttacks or attacks.blackPawns) and whitePieceBitboard(board)
+fun blackAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.blackPieceAttacksBitboard or attacks.blackPawnsAttackBitboard) and whitePieceBitboard(board)
 
 @kotlin.ExperimentalUnsignedTypes
 fun threatEval(attacks: Attacks, board: EngineBoard) =

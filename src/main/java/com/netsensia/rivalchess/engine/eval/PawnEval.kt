@@ -98,8 +98,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
 
     val whitePassedPawnsBitboard = getWhitePassedPawns(whitePawnBitboard, blackPawnBitboard)
     val blackPassedPawnsBitboard = getBlackPassedPawns(whitePawnBitboard, blackPawnBitboard)
-    val whiteGuardedPassedPawns = whitePassedPawnsBitboard and attacks.whitePawns
-    val blackGuardedPassedPawns = blackPassedPawnsBitboard and attacks.blackPawns
+    val whiteGuardedPassedPawns = whitePassedPawnsBitboard and attacks.whitePawnsAttackBitboard
+    val blackGuardedPassedPawns = blackPassedPawnsBitboard and attacks.blackPawnsAttackBitboard
 
     val pawnHashIndex = if (USE_PAWN_HASH) 
         pawnHashIndex(whitePawnBitboard, blackPawnBitboard, board.whiteKingSquareCalculated, board.blackKingSquareCalculated, board.mover) else 0
@@ -118,8 +118,8 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
         val whitePawnFiles = getPawnFiles(whitePawnBitboard)
         val blackPawnFiles = getPawnFiles(blackPawnBitboard)
 
-        val whiteBackwardPawns = getWhiteBackwardPawns(whitePawnBitboard, blackPawnBitboard, attacks.whitePawns, attacks.blackPawns, blackPawnFiles)
-        val blackBackwardPawns = getBlackBackwardPawns(blackPawnBitboard, whitePawnBitboard, attacks.blackPawns, attacks.whitePawns, whitePawnFiles)
+        val whiteBackwardPawns = getWhiteBackwardPawns(whitePawnBitboard, blackPawnBitboard, attacks.whitePawnsAttackBitboard, attacks.blackPawnsAttackBitboard, blackPawnFiles)
+        val blackBackwardPawns = getBlackBackwardPawns(blackPawnBitboard, whitePawnBitboard, attacks.blackPawnsAttackBitboard, attacks.whitePawnsAttackBitboard, whitePawnFiles)
         val whiteIsolatedPawns = whitePawnFiles and (whitePawnFiles shl 1).inv() and (whitePawnFiles ushr 1).inv()
         val blackIsolatedPawns = blackPawnFiles and (blackPawnFiles shl 1).inv() and (blackPawnFiles ushr 1).inv()
 
