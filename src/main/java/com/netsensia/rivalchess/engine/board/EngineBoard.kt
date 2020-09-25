@@ -10,8 +10,6 @@ import com.netsensia.rivalchess.engine.hash.ZobristHashCalculator
 import com.netsensia.rivalchess.engine.type.MoveDetail
 import com.netsensia.rivalchess.model.*
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
-import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
-import java.io.File
 
 @ExperimentalUnsignedTypes
 class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_START_POS)) {

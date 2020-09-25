@@ -28,6 +28,7 @@ import kotlin.system.exitProcess
 
 @kotlin.ExperimentalUnsignedTypes
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
+
     private val printStream: PrintStream
     val staticExchangeEvaluator: StaticExchangeEvaluator = StaticExchangeEvaluator()
 
@@ -399,7 +400,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         if (USE_HEIGHT_REPLACE_HASH && isHeightHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             boardHash.setHashTableUseHeightVersion(hashIndex, boardHash.hashTableVersion)
             hashMove = boardHash.useHeight(hashIndex + HASHENTRY_MOVE)
-            if (hashMove != 0 && !verifyMove(hashMove)) hashMove = 0
+            if (ADDITIONAL_HASHENTRY_VERIFICATION && hashMove != 0 && !verifyMove(hashMove)) hashMove = 0
             val flag = boardHash.useHeight(hashIndex + HASHENTRY_FLAG)
             val score = boardHash.useHeight(hashIndex + HASHENTRY_SCORE)
 
@@ -408,7 +409,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
         if (USE_ALWAYS_REPLACE_HASH && hashMove == 0 && isAlwaysReplaceHashTableEntryValid(depthRemaining, boardHash, hashIndex)) {
             hashMove = boardHash.ignoreHeight(hashIndex + HASHENTRY_MOVE)
-            if (hashMove != 0 && !verifyMove(hashMove)) hashMove = 0
+            if (ADDITIONAL_HASHENTRY_VERIFICATION && hashMove != 0 && !verifyMove(hashMove)) hashMove = 0
             val flag = boardHash.ignoreHeight(hashIndex + HASHENTRY_FLAG)
             val score = boardHash.ignoreHeight(hashIndex + HASHENTRY_SCORE)
             if (hashProbeResult(flag, score, window)) return HashProbeResult(hashMove, window, bestPath.withScore(score).withPath(hashMove))
