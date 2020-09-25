@@ -31,8 +31,6 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     val positionalEvalPart1 =
             materialDifference +
             pawnScore(attacks, board) +
-            tradePawnBonusWhenMoreMaterial(board, materialDifference) +
-            tradePieceBonusWhenMoreMaterial(board, materialDifference) +
             pawnPieceSquareEval(board) +
             kingSafetyEval(board, attacks) +
             kingSquareEval(board) +

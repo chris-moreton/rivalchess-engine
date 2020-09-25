@@ -1,7 +1,6 @@
 package com.netsensia.rivalchess.engine.board
 
 import com.netsensia.rivalchess.bitboards.EngineBitboards
-import com.netsensia.rivalchess.bitboards.util.popCount
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.eval.pieceValue
@@ -38,16 +37,16 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     var mover = Colour.WHITE
 
     val whitePieceValues: Int
-        get() = popCount(getBitboard(BITBOARD_WN)) * pieceValue(BITBOARD_WN) +
-                popCount(getBitboard(BITBOARD_WB)) * pieceValue(BITBOARD_WB) +
-                popCount(getBitboard(BITBOARD_WR)) * pieceValue(BITBOARD_WR) +
-                popCount(getBitboard(BITBOARD_WQ)) * pieceValue(BITBOARD_WQ)
+        get() = (getBitboard(BITBOARD_WN)).countOneBits() * pieceValue(BITBOARD_WN) +
+                (getBitboard(BITBOARD_WB)).countOneBits() * pieceValue(BITBOARD_WB) +
+                (getBitboard(BITBOARD_WR)).countOneBits() * pieceValue(BITBOARD_WR) +
+                (getBitboard(BITBOARD_WQ)).countOneBits() * pieceValue(BITBOARD_WQ)
 
     val blackPieceValues: Int
-        get() = popCount(getBitboard(BITBOARD_BN)) * pieceValue(BITBOARD_WN) +
-                popCount(getBitboard(BITBOARD_BB)) * pieceValue(BITBOARD_WB) +
-                popCount(getBitboard(BITBOARD_BR)) * pieceValue(BITBOARD_WR) +
-                popCount(getBitboard(BITBOARD_BQ)) * pieceValue(BITBOARD_WQ)
+        get() = (getBitboard(BITBOARD_BN)).countOneBits() * pieceValue(BITBOARD_WN) +
+                (getBitboard(BITBOARD_BB)).countOneBits() * pieceValue(BITBOARD_WB) +
+                (getBitboard(BITBOARD_BR)).countOneBits() * pieceValue(BITBOARD_WR) +
+                (getBitboard(BITBOARD_BQ)).countOneBits() * pieceValue(BITBOARD_WQ)
 
     val lastMoveMade: MoveDetail?
         get() = moveHistory[numMovesMade]

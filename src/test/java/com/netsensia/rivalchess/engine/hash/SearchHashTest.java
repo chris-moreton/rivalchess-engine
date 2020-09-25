@@ -1,12 +1,11 @@
 package com.netsensia.rivalchess.engine.hash;
 
-import com.netsensia.rivalchess.consts.BitboardsKt;
 import com.netsensia.rivalchess.engine.board.EngineBoard;
 import com.netsensia.rivalchess.model.util.FenUtils;
 import com.netsensia.rivalchess.util.ChessBoardConversionKt;
 import junit.framework.TestCase;
 
-import static com.netsensia.rivalchess.config.SearchConfigKt.MAXIMUM_HASH_AGE;
+import static com.netsensia.rivalchess.config.SearchKt.MAXIMUM_HASH_AGE;
 import static com.netsensia.rivalchess.consts.GameKt.FEN_START_POS;
 import static com.netsensia.rivalchess.engine.board.MoveMakingBoardExtensionsKt.makeMove;
 import static com.netsensia.rivalchess.engine.board.MoveMakingBoardExtensionsKt.unMakeMove;
