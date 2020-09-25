@@ -64,6 +64,8 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
         return false
     }
 
+    isOnNullMove = false
+
     if (updateHash) boardHashObject.move(compactMove, movePiece, targetSquarePiece)
 
     return true
