@@ -31,6 +31,8 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     val positionalEvalPart1 =
             materialDifference +
             pawnScore(attacks, board) +
+            tradePawnBonusWhenMoreMaterial(board, materialDifference) +
+            tradePieceBonusWhenMoreMaterial(board, materialDifference) +
             pawnPieceSquareEval(board) +
             kingSafetyEval(board, attacks) +
             kingSquareEval(board) +
@@ -45,8 +47,7 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     val blackPieces = if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_ENEMY) else board.getBitboard(BITBOARD_FRIENDLY)
 
     val positionalEval = positionalEvalPart1 + (if (viableEvalForPhase2)
-        (twoRooksTrappingKingEval(board) +
-                doubledRooksEval(board) +
+        (       doubledRooksEval(board) +
                 rooksEval(board, whitePieces, blackPieces) +
                 bishopsEval(board, whitePieces, blackPieces) +
                 knightsEval(board, attacks) +
@@ -85,10 +86,6 @@ private fun rooksEval(board: EngineBoard, whitePieces: Long, blackPieces: Long) 
 @kotlin.ExperimentalUnsignedTypes
 private fun doubledRooksEval(board: EngineBoard) =
         (doubledRooksEval(board.getBitboard(BITBOARD_WR)) - doubledRooksEval(board.getBitboard(BITBOARD_BR)))
-
-@kotlin.ExperimentalUnsignedTypes
-private fun twoRooksTrappingKingEval(board: EngineBoard) =
-        (twoWhiteRooksTrappingKingEval(board) - twoBlackRooksTrappingKingEval(board))
 
 @kotlin.ExperimentalUnsignedTypes
 fun materialDifferenceEval(board: EngineBoard) =
