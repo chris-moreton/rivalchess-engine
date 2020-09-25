@@ -369,8 +369,8 @@ fun combineWhiteKingShieldEval(board: EngineBoard, kingShield: Long) =
 @kotlin.ExperimentalUnsignedTypes
 fun openFilesKingShieldEval(openFiles: Long) =
         if (openFiles != 0L) {
-            KINGSAFTEY_HALFOPEN_MIDFILE * popCount(openFiles and MIDDLE_FILES_8_BIT) +
-                    KINGSAFTEY_HALFOPEN_NONMIDFILE * popCount(openFiles and NONMID_FILES_8_BIT)
+            KINGSAFTEY_HALFOPEN_MIDFILE * (openFiles and MIDDLE_FILES_8_BIT).countOneBits() +
+                    KINGSAFTEY_HALFOPEN_NONMIDFILE * (openFiles and NONMID_FILES_8_BIT).countOneBits()
         } else 0
 
 @kotlin.ExperimentalUnsignedTypes

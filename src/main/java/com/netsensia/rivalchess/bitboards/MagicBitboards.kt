@@ -60,7 +60,7 @@ object MagicBitboards {
         while (bitRef <= 63) {
             mask = if (isRook) occupancyMaskRook[bitRef] else occupancyMaskBishop[bitRef]
             setBitsInMask = squareList(mask)
-            bitCount = popCount(mask)
+            bitCount = mask.countOneBits()
             calculateOccupancyAttackSets(isRook, bitRef, setBitsInMask, bitCount)
             setMagicMoves(isRook, bitRef, bitCount)
             bitRef++

@@ -3,7 +3,6 @@ package com.netsensia.rivalchess.engine.eval
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.bitboards.util.northFill
-import com.netsensia.rivalchess.bitboards.util.popCount
 import com.netsensia.rivalchess.bitboards.util.southFill
 import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.BITBOARD_BP
@@ -18,10 +17,10 @@ private fun pawnDistanceFromPromotion(colour: Colour, square: Int) = if (colour 
 
 @kotlin.ExperimentalUnsignedTypes
 inline fun pawnShieldEval(friendlyPawns: Long, enemyPawns: Long, friendlyPawnShield: Long, shifter: Long.(Int) -> Long) =
-        (KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * popCount(friendlyPawns and friendlyPawnShield)
-                - KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * popCount(enemyPawns and (friendlyPawnShield or shifter(friendlyPawnShield, 8)))
-                + KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * popCount(friendlyPawns and shifter(friendlyPawnShield, 8))
-                - KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * popCount(enemyPawns and shifter(friendlyPawnShield, 16)))
+        (KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * (friendlyPawns and friendlyPawnShield).countOneBits()
+                - KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * (enemyPawns and (friendlyPawnShield or shifter(friendlyPawnShield, 8))).countOneBits()
+                + KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * (friendlyPawns and shifter(friendlyPawnShield, 8)).countOneBits()
+                - KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * (enemyPawns and shifter(friendlyPawnShield, 16)).countOneBits())
 
 @kotlin.ExperimentalUnsignedTypes
 fun whitePawnsEval(board: EngineBoard): Int {
@@ -81,14 +80,14 @@ private fun pawnHashIndex(whitePawnBitboard: Long, blackPawnBitboard: Long, whit
 fun whitePassedPawnScore(whitePassedPawnsBitboard: Long, whiteGuardedPassedPawns: Long): Int {
     var acc = 0
     applyToSquares(whitePassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[yCoordOfSquare(it)] }
-    return popCount(whiteGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
+    return whiteGuardedPassedPawns.countOneBits() * VALUE_GUARDED_PASSED_PAWN + acc
 }
 
 @kotlin.ExperimentalUnsignedTypes
 fun blackPassedPawnScore(blackPassedPawnsBitboard: Long, blackGuardedPassedPawns: Long): Int {
     var acc = 0
     applyToSquares(blackPassedPawnsBitboard) { acc += VALUE_PASSED_PAWN_BONUS[7 - yCoordOfSquare(it)] }
-    return popCount(blackGuardedPassedPawns) * VALUE_GUARDED_PASSED_PAWN + acc
+    return blackGuardedPassedPawns.countOneBits() * VALUE_GUARDED_PASSED_PAWN + acc
 }
 
 @kotlin.ExperimentalUnsignedTypes
@@ -127,18 +126,18 @@ fun pawnScore(attacks: Attacks, board: EngineBoard): Int {
         val whiteOccupiedFileMask = southFill(whitePawnBitboard) and RANK_1
         val blackOccupiedFileMask = southFill(blackPawnBitboard) and RANK_1
 
-        popCount(blackIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
-        popCount(whiteIsolatedPawns) * VALUE_ISOLATED_PAWN_PENALTY -
+        (blackIsolatedPawns).countOneBits() * VALUE_ISOLATED_PAWN_PENALTY -
+        (whiteIsolatedPawns).countOneBits() * VALUE_ISOLATED_PAWN_PENALTY -
         (if (whiteIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) +
         (if (blackIsolatedPawns and FILE_D != 0L) VALUE_ISOLATED_DPAWN_PENALTY else 0) -
-        popCount(whiteBackwardPawns) * VALUE_BACKWARD_PAWN_PENALTY +
-        popCount(blackBackwardPawns) * VALUE_BACKWARD_PAWN_PENALTY -
-        ((popCount(whitePawnBitboard and FILE_A) + popCount(whitePawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) +
-        ((popCount(blackPawnBitboard and FILE_A) + popCount(blackPawnBitboard and FILE_H)) * VALUE_SIDE_PAWN_PENALTY) -
-        VALUE_DOUBLED_PAWN_PENALTY * (board.pawnValues(BITBOARD_WP) / 100 - popCount(whiteOccupiedFileMask)) -
-        popCount(whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY +
-        VALUE_DOUBLED_PAWN_PENALTY * (board.pawnValues(BITBOARD_BP) / 100 - popCount(blackOccupiedFileMask)) +
-        popCount(blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask) * VALUE_PAWN_ISLAND_PENALTY
+        (whiteBackwardPawns).countOneBits() * VALUE_BACKWARD_PAWN_PENALTY +
+        (blackBackwardPawns).countOneBits() * VALUE_BACKWARD_PAWN_PENALTY -
+        (((whitePawnBitboard and FILE_A).countOneBits() + (whitePawnBitboard and FILE_H).countOneBits()) * VALUE_SIDE_PAWN_PENALTY) +
+        (((blackPawnBitboard and FILE_A).countOneBits() + (blackPawnBitboard and FILE_H).countOneBits()) * VALUE_SIDE_PAWN_PENALTY) -
+        VALUE_DOUBLED_PAWN_PENALTY * (board.pawnValues(BITBOARD_WP) / 100 - (whiteOccupiedFileMask).countOneBits()) -
+        (whiteOccupiedFileMask.inv() ushr 1 and whiteOccupiedFileMask).countOneBits() * VALUE_PAWN_ISLAND_PENALTY +
+        VALUE_DOUBLED_PAWN_PENALTY * (board.pawnValues(BITBOARD_BP) / 100 - (blackOccupiedFileMask).countOneBits()) +
+        (blackOccupiedFileMask.inv() ushr 1 and blackOccupiedFileMask).countOneBits() * VALUE_PAWN_ISLAND_PENALTY
     }
 
     if (USE_PAWN_HASH) {

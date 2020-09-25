@@ -133,7 +133,7 @@ fun EngineBoard.getFen(): String {
         if (noPrivs) fen.append('-')
         fen.append(' ')
         val bitboard = this.engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
-        if (popCount(bitboard) > 0) {
+        if (bitboard > 0L) {
             val epSquare = java.lang.Long.numberOfTrailingZeros(bitboard)
             val file = (7 - epSquare % 8).toChar()
             val rank = (if (epSquare <= 23) 2 else 5).toChar()
