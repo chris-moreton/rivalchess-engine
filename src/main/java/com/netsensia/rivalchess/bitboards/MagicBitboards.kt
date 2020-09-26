@@ -1,6 +1,5 @@
 package com.netsensia.rivalchess.bitboards
 
-import com.netsensia.rivalchess.bitboards.util.popCount
 import com.netsensia.rivalchess.bitboards.util.squareList
 
 object MagicBitboards {

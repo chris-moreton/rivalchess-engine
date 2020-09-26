@@ -1,4 +1,4 @@
-package com.netsensia.rivalchess.eve
+package com.netsensia.rivalchess.exe
 
 import com.netsensia.rivalchess.config.MAX_SEARCH_DEPTH
 import com.netsensia.rivalchess.config.MAX_SEARCH_MILLIS
@@ -11,7 +11,6 @@ import com.netsensia.rivalchess.model.util.BoardUtils.getLegalMoves
 import com.netsensia.rivalchess.model.util.BoardUtils.isCheck
 import com.netsensia.rivalchess.model.util.FenUtils.getFen
 import com.netsensia.rivalchess.util.getMoveRefFromCompactMove
-import java.security.SecureRandom
 import kotlin.random.Random
 
 const val WHITE_WIN = 0

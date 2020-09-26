@@ -18,8 +18,8 @@ const val FILE_F = 1L shl 2 or (1L shl 10) or (1L shl 18) or (1L shl 26) or (1L 
 const val FILE_G = 1L shl 1 or (1L shl 9) or (1L shl 17) or (1L shl 25) or (1L shl 33) or (1L shl 41) or (1L shl 49) or (1L shl 57)
 const val FILE_H = 1L or (1L shl 8) or (1L shl 16) or (1L shl 24) or (1L shl 32) or (1L shl 40) or (1L shl 48) or (1L shl 56)
 
-const val MIDDLE_FILES_8_BIT: Long = 0xE7
-const val NONMID_FILES_8_BIT: Long = 0x18
+const val MIDDLE_FILES_8_BIT: Long = 0x18
+const val NONMID_FILES_8_BIT: Long = 0xE7
 
 const val F1G1 = 1L shl 1 or (1L shl 2)
 const val G1H1 = 1L or (1L shl 1)

@@ -13,18 +13,14 @@ import com.netsensia.rivalchess.engine.hash.isHeightHashTableEntryValid
 import com.netsensia.rivalchess.engine.type.EngineMove
 import com.netsensia.rivalchess.enums.MoveOrder
 import com.netsensia.rivalchess.enums.SearchState
-import com.netsensia.rivalchess.eve.random
 import com.netsensia.rivalchess.model.Board
 import com.netsensia.rivalchess.model.Colour
-import com.netsensia.rivalchess.model.Move
 import com.netsensia.rivalchess.model.util.BoardUtils.getLegalMoves
 import com.netsensia.rivalchess.model.util.FenUtils.getBoardModel
 import com.netsensia.rivalchess.openings.OpeningLibrary
-import com.netsensia.rivalchess.util.getEngineMoveFromSimpleAlgebraic
 import com.netsensia.rivalchess.util.getSimpleAlgebraicMoveFromCompactMove
 import java.io.PrintStream
 import java.util.*
-import kotlin.system.exitProcess
 
 @kotlin.ExperimentalUnsignedTypes
 class Search @JvmOverloads constructor(printStream: PrintStream = System.out, board: Board = getBoardModel(FEN_START_POS)) : Runnable {
