@@ -350,16 +350,7 @@ fun whiteKingShieldEval(board: EngineBoard) =
 fun combineWhiteKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_WP), board.getBitboard(BITBOARD_BP), kingShield, Long::shl)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
-                uncastledTrappedWhiteRookEval(board) -
-                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
-                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
-
-@kotlin.ExperimentalUnsignedTypes
-fun openFilesKingShieldEval(openFiles: Long) =
-        if (openFiles != 0L) {
-            KINGSAFTEY_HALFOPEN_MIDFILE * (openFiles and MIDDLE_FILES_8_BIT).countOneBits() +
-                    KINGSAFTEY_HALFOPEN_NONMIDFILE * (openFiles and NONMID_FILES_8_BIT).countOneBits()
-        } else 0
+                uncastledTrappedWhiteRookEval(board)
 
 @kotlin.ExperimentalUnsignedTypes
 fun blackKingShieldEval(board: EngineBoard) =
@@ -372,9 +363,7 @@ fun blackKingShieldEval(board: EngineBoard) =
 fun combineBlackKingShieldEval(board: EngineBoard, kingShield: Long) =
         pawnShieldEval(board.getBitboard(BITBOARD_BP), board.getBitboard(BITBOARD_WP), kingShield, Long::ushr)
                 .coerceAtMost(KINGSAFTEY_MAXIMUM_SHIELD_BONUS) -
-                uncastledTrappedBlackRookEval(board) -
-                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_WP))) -
-                openFilesKingShieldEval(openFiles(kingShield, board.getBitboard(BITBOARD_BP)))
+                uncastledTrappedBlackRookEval(board)
 
 @kotlin.ExperimentalUnsignedTypes
 fun whiteKingOnFirstTwoRanks(board: EngineBoard) = yCoordOfSquare(board.whiteKingSquareCalculated) < 2
