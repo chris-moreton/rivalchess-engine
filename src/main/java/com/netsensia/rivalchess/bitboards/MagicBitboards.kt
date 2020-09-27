@@ -145,7 +145,7 @@ object MagicBitboards {
 
     private fun setMagicMovesForRooks(bitRef: Int, i: Int, validMoves: Long) {
         var validMovesShadow = validMoves
-        val magicIndex: Int = (occupancyVariation!![i] * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()
+        val magicIndex = (occupancyVariation!![i] * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()
         var j: Int = bitRef + 8
         while (j <= 63) {
             validMovesShadow = validMovesShadow or (1L shl j)
@@ -179,31 +179,33 @@ object MagicBitboards {
         // How many possibilities are there for occupancy patterns for this piece on this square
         // e.g. For a bishop on a8, there are 7 squares to move to, 7^2 = 64 possible variations of
         // how those squares could be occupied.
-        val variationCount: Int = (1L shl bitCount).toInt()
+        val variationCount = (1L shl bitCount).toInt()
         var i = 0
         while (i < variationCount) {
+            // convert each occupancy variation indicated by the bits set in 'i' into an occupancy variation
+            // represented by a 64 bit number representing the chess board:
+            // If the 1st and 3rd bits are set in 'i' (e.g. when i=5) then occupancyVariation[i] will be the
+            // 64 bit number represented by the 1st and 3rd bits of the occupancy mask
             occupancyVariation!![i] = 0
             // find bits set in index "i" and map them to bits in the 64 bit "occupancyVariation"
             setBitsInIndex = squareList(i.toLong())
             for (setBitInIndex in setBitsInIndex) {
                 occupancyVariation!![i] = occupancyVariation!![i] or (1L shl setBitsInMask[setBitInIndex])
-                // e.g. if setBitsInIndex[0] == 3 then the third bit (position 4) is set in counter "i"
+                // e.g. if setBitsInIndex[0] == 3 then the third bit (position 4) must be set in counter "i"
                 // so we add the third relevant bit in the mask to this occupancyVariation
                 // the third relevant bit in the mask is found by setBitsInMask[3]
             }
 
-            // multiple variations can share the same attack set (possible moves),
-            // so find this here because we can use it to allow clashes for hash keys
+            // multiple variations can share the same attack set (possible moves), due to blocking pieces making
+            // some bits irrelevant, so find this here because we can use it to allow clashes for hash keys
             val j = if (isRook) calculateOccupancyAttackSetsRook(bitRef, i) else calculateOccupancyAttackSetsBishop(bitRef, i)
-            if (j in 0..63) {
-                occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
-            }
+            if (j in 0..63) occupancyAttackSet!![i] = occupancyAttackSet!![i] or (1L shl j)
             i++
         }
     }
 
     private fun calculateOccupancyAttackSetsBishop(bitRef: Int, i: Int): Int {
-        var j: Int = bitRef + 9
+        var j = bitRef + 9
         while (j % 8 != 7 && j % 8 != 0 && j <= 55 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j += 9
         }
@@ -226,7 +228,8 @@ object MagicBitboards {
     }
 
     private fun calculateOccupancyAttackSetsRook(bitRef: Int, i: Int): Int {
-        var j: Int = bitRef + 8
+        // For occupancy variation 'i' - work out which bits can be ignore because the are behind blocking pieces
+        var j = bitRef + 8
         while (j <= 55 && occupancyVariation!![i] and (1L shl j) == 0L) {
             j += 8
         }
