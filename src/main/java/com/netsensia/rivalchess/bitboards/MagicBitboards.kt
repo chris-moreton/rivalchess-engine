@@ -1,6 +1,6 @@
 package com.netsensia.rivalchess.bitboards
 
-import com.netsensia.rivalchess.bitboards.util.squareList
+import kotlin.streams.toList
 
 object MagicBitboards {
     @JvmField
@@ -13,8 +13,6 @@ object MagicBitboards {
     val bishopVars: MagicVars
     @JvmField
     val rookVars: MagicVars
-
-    private var occupancyVariation: LongArray? = LongArray(4096)
 
     @JvmField
     val occupancyMaskRook = longArrayOf(
@@ -42,151 +40,16 @@ object MagicBitboards {
     )
 
     init {
-        generateOccupancyVariationsAndDatabase(false)
-        generateOccupancyVariationsAndDatabase(true)
-        occupancyVariation = null
+        generateOccupancyVariationsAndDatabase("Bishop", magicMovesBishop)
+        generateOccupancyVariationsAndDatabase("Rook", magicMovesRook)
         rookVars = MagicVars(magicMovesRook, occupancyMaskRook, magicNumberRook, magicNumberShiftsRook)
         bishopVars = MagicVars(magicMovesBishop, occupancyMaskBishop, magicNumberBishop, magicNumberShiftsBishop)
     }
 
-    private fun generateOccupancyVariationsAndDatabase(isRook: Boolean) {
-        var mask: Long
-        var setBitsInMask: List<Int>
-        var bitCount: Int
-        var bitRef = 0
-        while (bitRef <= 63) {
-            mask = if (isRook) occupancyMaskRook[bitRef] else occupancyMaskBishop[bitRef]
-            setBitsInMask = squareList(mask)
-            bitCount = mask.countOneBits()
-            calculateOccupantVariations(setBitsInMask, bitCount)
-            setMagicMoves(isRook, bitRef, bitCount)
-            bitRef++
-        }
-    }
-
-    private fun setMagicMoves(isRook: Boolean, bitRef: Int, bitCount: Int) {
-        var validMoves: Long
-        val variations: Int = (1L shl bitCount).toInt()
-        var i = 0
-        while (i < variations) {
-            validMoves = 0
-            if (isRook) {
-                setMagicMovesForRooks(bitRef, i++, validMoves)
-            } else {
-                setMagicMovesForBishop(bitRef, i++, validMoves)
-            }
-        }
-    }
-
-    private fun setMagicMovesForBishop(bitRef: Int, i: Int, validMoves: Long) {
-        var validMovesShadow = validMoves
-        val magicIndex: Int = (occupancyVariation!![i] * magicNumberBishop[bitRef] ushr magicNumberShiftsBishop[bitRef]).toInt()
-        validMovesShadow = setMagicMovesForNorthWestDiagonal(bitRef, i, validMovesShadow)
-        validMovesShadow = setMagicMovesForSouthEastDiagonal(bitRef, i, validMovesShadow)
-        validMovesShadow = setMagicMovesForNorthEastDiagonal(bitRef, i, validMovesShadow)
-        validMovesShadow = setMagicMovesForSouthWestDiagonal(bitRef, i, validMovesShadow)
-        magicMovesBishop[bitRef][magicIndex] = validMovesShadow
-    }
-
-    private fun setMagicMovesForSouthWestDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMovesShadow = validMoves
-        var j: Int = bitRef - 7
-        while (j % 8 != 0 && j >= 0) {
-            validMovesShadow = validMovesShadow or (1L shl j)
-            if (occupancyVariation!![i] and (1L shl j) != 0L) {
-                break
-            }
-            j -= 7
-        }
-        return validMovesShadow
-    }
-
-    private fun setMagicMovesForNorthEastDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMovesShadow = validMoves
-        var j: Int = bitRef + 7
-        while (j % 8 != 7 && j <= 63) {
-            validMovesShadow = validMovesShadow or (1L shl j)
-            if (occupancyVariation!![i] and (1L shl j) != 0L) {
-                break
-            }
-            j += 7
-        }
-        return validMovesShadow
-    }
-
-    private fun setMagicMovesForSouthEastDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMovesShadow = validMoves
-        var j: Int = bitRef - 9
-        while (j % 8 != 7 && j >= 0) {
-            validMovesShadow = validMovesShadow or (1L shl j)
-            if (occupancyVariation!![i] and (1L shl j) != 0L) {
-                break
-            }
-            j -= 9
-        }
-        return validMovesShadow
-    }
-
-    private fun setMagicMovesForNorthWestDiagonal(bitRef: Int, i: Int, validMoves: Long): Long {
-        var validMovesShadow = validMoves
-        var j: Int = bitRef + 9
-        while (j % 8 != 0 && j <= 63) {
-            validMovesShadow = validMovesShadow or (1L shl j)
-            if (occupancyVariation!![i] and (1L shl j) != 0L) {
-                break
-            }
-            j += 9
-        }
-        return validMovesShadow
-    }
-
-    private fun setMagicMovesForRooks(bitRef: Int, i: Int, validMoves: Long) {
-        var validMovesShadow = validMoves
-        val magicIndex = (occupancyVariation!![i] * magicNumberRook[bitRef] ushr magicNumberShiftsRook[bitRef]).toInt()
-        var j = bitRef + 8
-        while (j <= 63) {
-            validMovesShadow = validMovesShadow or (1L shl j)
-            if (occupancyVariation!![i] and (1L shl j) != 0L) break
-            j += 8
-        }
-        j = bitRef - 8
-        while (j >= 0) {
-            validMovesShadow = validMovesShadow or (1L shl j)
-            if (occupancyVariation!![i] and (1L shl j) != 0L) break
-            j -= 8
-        }
-        j = bitRef + 1
-        while (j % 8 != 0) {
-            validMovesShadow = validMovesShadow or (1L shl j)
-            if (occupancyVariation!![i] and (1L shl j) != 0L) break
-            j++
-        }
-        j = bitRef - 1
-        while (j % 8 != 7 && j >= 0) {
-            validMovesShadow = validMovesShadow or (1L shl j)
-            if (occupancyVariation!![i] and (1L shl j) != 0L) break
-            j--
-        }
-        magicMovesRook[bitRef][magicIndex] = validMovesShadow
-    }
-
-    private fun calculateOccupantVariations(setBitsInMask: List<Int>, bitCount: Int) {
-        // How many possibilities are there for occupancy patterns for this piece on this square
-        // e.g. For a bishop on a8, there are 7 squares to move to, 7^2 = 64 possible variations of
-        // how those squares could be occupied.
-        for (i in (0..(1L shl bitCount).toInt()-1)) {
-            // convert each occupancy variation indicated by the bits set in 'i' into an occupancy variation
-            // represented by a 64 bit number representing the chess board:
-            // If the 1st and 3rd bits are set in 'i' (e.g. when i=5) then occupancyVariation[i] will be the
-            // 64 bit number represented by the 1st and 3rd bits of the occupancy mask
-            occupancyVariation!![i] = 0
-            // find bits set in index "i" and map them to bits in the 64 bit "occupancyVariation"
-            for (setBitInIndex in squareList(i.toLong())) {
-                occupancyVariation!![i] = occupancyVariation!![i] or (1L shl setBitsInMask[setBitInIndex])
-                // e.g. if setBitsInIndex[0] == 3 then the third bit (position 4) must be set in counter "i"
-                // so we add the third relevant bit in the mask to this occupancyVariation
-                // the third relevant bit in the mask is found by setBitsInMask[3]
-            }
+    private fun generateOccupancyVariationsAndDatabase(piece: String, magicMovesArray: Array<LongArray>) {
+        MagicBitboards::class.java.getResource("/magicMoves${piece}.txt").readText().split("\n").forEachIndexed { bitRef, bitRefLine ->
+            if (!bitRefLine.trim().equals(""))
+                magicMovesArray[bitRef] = bitRefLine.split(",").stream().map { it.toLong() }.toList().toLongArray()
         }
     }
 }
