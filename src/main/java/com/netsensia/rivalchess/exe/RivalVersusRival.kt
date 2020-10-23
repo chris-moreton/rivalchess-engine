@@ -25,7 +25,7 @@ var random = Random(1)
 
 @kotlin.ExperimentalUnsignedTypes
 fun main() {
-    val results= intArrayOf(0,0,0,0,0,0,0)
+    val results = intArrayOf(0,0,0,0,0,0,0)
     for (i in 1..10000) {
         val result = game(i)
         results[result] ++
