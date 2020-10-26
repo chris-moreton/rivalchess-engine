@@ -1,5 +1,6 @@
 package com.netsensia.rivalchess.engine.eval
 
+import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 
 private const val INDEX_PAWN = 0
@@ -9,11 +10,11 @@ private const val INDEX_ROOK = 3
 private const val INDEX_QUEEN = 4
 private const val INDEX_KING = 5
 
-const val DEFAULT_VALUE_PAWN = 100
-const val DEFAULT_VALUE_KNIGHT = 390
-const val DEFAULT_VALUE_BISHOP = 400
-const val DEFAULT_VALUE_ROOK = 595
-const val DEFAULT_VALUE_QUEEN = 1175
+const val DEFAULT_VALUE_PAWN = VALUE_PAWN
+const val DEFAULT_VALUE_KNIGHT = VALUE_KNIGHT
+const val DEFAULT_VALUE_BISHOP = VALUE_BISHOP
+const val DEFAULT_VALUE_ROOK = VALUE_ROOK
+const val DEFAULT_VALUE_QUEEN = VALUE_QUEEN
 const val DEFAULT_VALUE_KING = 30000
 
 var pieceValues = intArrayOf(
