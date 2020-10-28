@@ -16,15 +16,15 @@ private fun EngineBoard.nullMoveCore() {
 }
 
 @kotlin.ExperimentalUnsignedTypes
-fun EngineBoard.makeNullMove() {
+fun EngineBoard.makeNullMove(ply: Int) {
     nullMoveCore()
-    isOnNullMove = true
+    isOnNullMove[ply] = true
 }
 
 @kotlin.ExperimentalUnsignedTypes
-fun EngineBoard.unMakeNullMove() {
+fun EngineBoard.unMakeNullMove(ply: Int) {
     nullMoveCore()
-    isOnNullMove = false
+    isOnNullMove[ply] = false
 }
 
 @kotlin.ExperimentalUnsignedTypes
@@ -38,7 +38,6 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
     moveDetail.capturePiece = targetSquarePiece
     moveDetail.move = compactMove
     moveDetail.hashValue = boardHashObject.trackedHashValue
-    moveDetail.isOnNullMove = isOnNullMove
     moveDetail.halfMoveCount = halfMoveCount
     moveDetail.enPassantBitboard = engineBitboards.pieceBitboards[BITBOARD_ENPASSANTSQUARE]
     moveDetail.castlePrivileges = castlePrivileges
@@ -64,8 +63,6 @@ fun EngineBoard.makeMove(compactMove: Int, ignoreCheck: Boolean = false, updateH
         return false
     }
 
-    isOnNullMove = false
-
     if (updateHash) boardHashObject.move(compactMove, movePiece, targetSquarePiece)
 
     return true
@@ -78,7 +75,6 @@ fun EngineBoard.unMakeMove(updateHash: Boolean = true) {
     mover = mover.opponent()
     engineBitboards.setPieceBitboard(BITBOARD_ENPASSANTSQUARE, moveMade.enPassantBitboard)
     castlePrivileges = moveMade.castlePrivileges
-    isOnNullMove = moveMade.isOnNullMove
     val fromSquare = moveMade.move ushr 16 and 63
     val toSquare = moveMade.move and 63
     val fromMask = 1L shl fromSquare

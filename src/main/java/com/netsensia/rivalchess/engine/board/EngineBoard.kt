@@ -31,7 +31,7 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     var castlePrivileges = 0
 
     @JvmField
-    var isOnNullMove = false
+    var isOnNullMove = BooleanArray(MAX_TREE_DEPTH) { false }
 
     @JvmField
     var mover = Colour.WHITE

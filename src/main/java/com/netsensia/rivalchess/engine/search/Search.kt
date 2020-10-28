@@ -213,7 +213,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         var useScoutSearch = false
         var threatExtend = 0
 
-        if (canPerformNullMove(depthRemaining, isCheck)) {
+        if (canPerformNullMove(depthRemaining, isCheck, ply)) {
             searchNullMove(depth, nullMoveReduceDepth(depthRemaining), ply + 1, localLow, localHigh, extensions).also {
                 if (abortingSearch) return SearchPath()
                 if (-it.score >= localHigh) return searchPathPly.withScore(-it.score).withHeight(0)
@@ -351,7 +351,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
             scoutSearch(scoutSearch, depth, 1, low, high, extensions, isCheck)
 
     private fun highRankingMove(hashMove: Int, depthRemaining: Int, depth: Int, ply: Int, low: Int, high: Int, extensions: Int, isCheck: Boolean): Int {
-        if (hashMove == 0 && !engineBoard.isOnNullMove && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
+        if (hashMove == 0 && !engineBoard.isOnNullMove[ply-1] && USE_INTERNAL_ITERATIVE_DEEPENING && depthRemaining >= IID_MIN_DEPTH) {
             val iidDepth = depth - IID_REDUCE_DEPTH
             if (iidDepth > 0) search(iidDepth, ply, low, high, extensions, isCheck).also {
                 if (it.height > 0) return it.move[0]
@@ -435,15 +435,15 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return abortingSearch
     }
 
-    private fun canPerformNullMove(depthRemaining: Int, isCheck: Boolean) =
-            ((USE_NULL_MOVE_PRUNING && !isCheck && !engineBoard.isOnNullMove && depthRemaining > 1) &&
+    private fun canPerformNullMove(depthRemaining: Int, isCheck: Boolean, ply: Int) =
+            ((USE_NULL_MOVE_PRUNING && !isCheck && !engineBoard.isOnNullMove[ply-1] && depthRemaining > 1) &&
                     ((if (engineBoard.mover == Colour.WHITE) engineBoard.whitePieceValues else engineBoard.blackPieceValues) >= NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES &&
                             (if (engineBoard.mover == Colour.WHITE) engineBoard.getBitboard(BITBOARD_WP) else engineBoard.getBitboard(BITBOARD_BP)) > 0))
 
     private fun searchNullMove(depth: Int, nullMoveReduceDepth: Int, ply: Int, low: Int, high: Int, extensions: Int): SearchPath {
-        engineBoard.makeNullMove()
+        engineBoard.makeNullMove(ply)
         val newPath = search((depth - nullMoveReduceDepth - 1), ply, -high, -low, extensions, false)
-        engineBoard.unMakeNullMove()
+        engineBoard.unMakeNullMove(ply)
         return newPath
     }
 

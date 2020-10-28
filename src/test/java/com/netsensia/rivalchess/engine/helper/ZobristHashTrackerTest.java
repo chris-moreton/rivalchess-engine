@@ -71,17 +71,17 @@ public class ZobristHashTrackerTest {
 
     private void compareCalculatedHashWithTrackedHashOnNullMove(EngineBoard ecb) {
 
-        makeNullMove(ecb);
+        makeNullMove(ecb, 0);
         final long originalTrackedHashCode = ecb.boardHashCode();
         final long originalCalculatedHashCode = ZobristHashCalculator.calculateHash(ecb);
         assertEquals(originalCalculatedHashCode, originalTrackedHashCode);
 
-        makeNullMove(ecb);
+        makeNullMove(ecb, 0);
         final long unmadeTrackedHashCode = ecb.boardHashCode();
         final long unmadeCalculatedHashCode = ZobristHashCalculator.calculateHash(ecb);
         assertEquals(unmadeCalculatedHashCode, unmadeTrackedHashCode);
 
-        makeNullMove(ecb);
+        makeNullMove(ecb, 0);
         assertEquals(ecb.boardHashCode(), originalTrackedHashCode);
         assertEquals(ZobristHashCalculator.calculateHash(ecb), originalCalculatedHashCode);
 

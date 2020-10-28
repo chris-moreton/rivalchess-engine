@@ -23,7 +23,4 @@ class MoveDetail {
 
 	@JvmField
 	var hashValue: Long = 0
-
-	@JvmField
-	var isOnNullMove = false
 }
