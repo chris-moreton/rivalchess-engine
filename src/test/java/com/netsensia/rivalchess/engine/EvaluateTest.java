@@ -29,6 +29,10 @@ public class EvaluateTest {
 
     @Test
     public void testEvaluationScores() throws IllegalFenException {
+        assertEvaluationScore("8/7p/5k2/5p2/pPp2P2/3pP1K1/3r3P/8 b - - 1 3", 2657, true);
+        assertEvaluationScore("3R1Q2/7k/6pp/8/2P1p3/P3P3/1P2P1K1/8 w - - 1 5", 4142, true);
+        assertEvaluationScore("1k6/8/1P6/p4pP1/P1P5/2P5/5K1P/8 w - - 1 7", 2857, true);
+        assertEvaluationScore("2kr1r2/B1pq1Npp/1p1p1n2/b2Pp3/4P3/1P5P/NPP2PP1/2KR3R b - - 0 6", 802, true);
         assertEvaluationScore("3r2k1/ppp2ppp/6q1/b4n2/3nQB2/2p5/P4PPP/RN3RK1 b - -", 227, true);
         assertEvaluationScore("r3k2r/p1ppqpb1/Bn2Pnp1/4N3/1p2P3/2N2Q2/PPPB1P1P/R3K2r w Qkq - 0 3", -670, true);
         assertEvaluationScore("5k2/5p1p/p3B1p1/P5P1/3K1P1P/8/1R6/1R6 b - -", -2048, true);
