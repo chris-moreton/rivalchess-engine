@@ -34,6 +34,9 @@ class EngineBoard @JvmOverloads constructor(board: Board = getBoardModel(FEN_STA
     var isOnNullMove = BooleanArray(MAX_TREE_DEPTH) { false }
 
     @JvmField
+    var nullMovesMade = 0
+
+    @JvmField
     var mover = Colour.WHITE
 
     val whitePieceValues: Int

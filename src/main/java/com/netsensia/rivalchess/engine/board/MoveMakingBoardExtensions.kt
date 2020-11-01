@@ -18,12 +18,14 @@ private fun EngineBoard.nullMoveCore() {
 @kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.makeNullMove(ply: Int) {
     nullMoveCore()
+    nullMovesMade ++
     isOnNullMove[ply] = true
 }
 
 @kotlin.ExperimentalUnsignedTypes
 fun EngineBoard.unMakeNullMove(ply: Int) {
     nullMoveCore()
+    nullMovesMade --
     isOnNullMove[ply] = false
 }
 
