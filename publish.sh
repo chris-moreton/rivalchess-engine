@@ -1,5 +1,5 @@
-./version.sh $2
+./version.sh $1
 cd ../rivalchess-uci
-./publish.sh $2 1
+./publish.sh $1 1
 cd ../rivalchess-engine
 
