@@ -15,6 +15,14 @@ const val PHASE2_CUTOFF = 255
 @JvmOverloads
 @kotlin.ExperimentalUnsignedTypes
 fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
+    if (onlyKingsRemain(board)) return 0
+    val materialDifference = materialDifferenceEval(board)
+    return if (board.mover == Colour.WHITE) materialDifference else -materialDifference
+}
+
+@JvmOverloads
+@kotlin.ExperimentalUnsignedTypes
+fun evaluateClassic(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
     if (onlyKingsRemain(board)) return 0
 
