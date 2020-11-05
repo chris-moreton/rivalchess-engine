@@ -17,7 +17,12 @@ const val PHASE2_CUTOFF = 255
 fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
     if (onlyKingsRemain(board)) return 0
     val materialDifference = materialDifferenceEval(board)
-    return if (board.mover == Colour.WHITE) materialDifference else -materialDifference
+    val attacks = Attacks(board)
+
+    val positionalEval = pawnScore(attacks, board)
+    val totalScore = materialDifference + positionalEval
+
+    return if (board.mover == Colour.WHITE) totalScore else -totalScore
 }
 
 @JvmOverloads
