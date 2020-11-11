@@ -300,8 +300,8 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         return searchPathPly
     }
 
-    private fun canFutilityPrune(depthRemaining: Int, localLow: Int) = false
-        //depthRemaining in (1..3) && (evaluate(engineBoard, localLow) + FUTILITY_MARGIN[depthRemaining - 1] < localLow)
+    private fun canFutilityPrune(depthRemaining: Int, localLow: Int) =
+        depthRemaining in (1..3) && (evaluate(engineBoard, localLow) + FUTILITY_MARGIN[depthRemaining - 1] < localLow)
 
     private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int) =
         if (moveGivesCheck || extended || legalMoveCount < 4 ||
