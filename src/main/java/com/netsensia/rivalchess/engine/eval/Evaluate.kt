@@ -9,9 +9,6 @@ import com.netsensia.rivalchess.engine.board.pawnValues
 import com.netsensia.rivalchess.model.Colour
 import com.netsensia.rivalchess.model.Square
 
-const val PHASE1_CUTOFF = 10000
-const val PHASE2_CUTOFF = 10000
-
 @JvmOverloads
 @kotlin.ExperimentalUnsignedTypes
 fun evaluateSmall(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
@@ -27,17 +24,12 @@ fun evaluateSmall(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
 
 @JvmOverloads
 @kotlin.ExperimentalUnsignedTypes
-fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
+fun evaluate(board: EngineBoard): Int {
 
     if (onlyKingsRemain(board)) return 0
 
     val materialDifference = materialDifferenceEval(board)
     val isEndGame = isEndGame(board)
-
-    val adjustedMaterialDifference = if (board.mover == Colour.WHITE) materialDifference else -materialDifference
-
-    val viableEvalForPhase1 = isEndGame || (adjustedMaterialDifference + PHASE1_CUTOFF >= minScore)
-    if (!viableEvalForPhase1) return adjustedMaterialDifference
 
     val attacks = Attacks(board)
 
@@ -51,21 +43,16 @@ fun evaluate(board: EngineBoard, minScore: Int = -Int.MAX_VALUE): Int {
             kingSquareEval(board) +
             threatEval(attacks, board)
 
-    val adjustedEval = if (board.mover == Colour.WHITE) positionalEvalPart1 else -positionalEvalPart1
-    val viableEvalForPhase2 = isEndGame || (adjustedEval + PHASE2_CUTOFF >= minScore)
-
-    if (!viableEvalForPhase2) return adjustedEval
-
     val whitePiecesInverted = (if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_FRIENDLY) else board.getBitboard(BITBOARD_ENEMY)).inv()
     val blackPiecesInverted = (if (board.mover == Colour.WHITE) board.getBitboard(BITBOARD_ENEMY) else board.getBitboard(BITBOARD_FRIENDLY)).inv()
 
-    val positionalEval = positionalEvalPart1 + (if (viableEvalForPhase2)
-        (       doubledRooksEval(board) +
+    val positionalEval = positionalEvalPart1 +
+                doubledRooksEval(board) +
                 rooksEval(board, whitePiecesInverted, blackPiecesInverted) +
                 bishopsEval(board, whitePiecesInverted, blackPiecesInverted) +
                 knightsEval(board, attacks) +
                 queensEval(board, whitePiecesInverted, blackPiecesInverted) +
-                bishopScore(board, materialDifference)) else 0)
+                bishopScore(board, materialDifference)
 
     val endGameAdjustedScore = if (isEndGame) endGameAdjustment(board, positionalEval) else positionalEval
 

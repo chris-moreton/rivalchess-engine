@@ -301,7 +301,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun canFutilityPrune(depthRemaining: Int, localLow: Int) =
-        depthRemaining in (1..3) && (evaluate(engineBoard, localLow) + FUTILITY_MARGIN[depthRemaining - 1] < localLow)
+        depthRemaining in (1..3) && (evaluate(engineBoard) + FUTILITY_MARGIN[depthRemaining - 1] < localLow)
 
     private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int) =
         if (moveGivesCheck || extended || legalMoveCount < 4 ||
@@ -521,7 +521,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
         searchPath[ply].height = 0
         // if evaluate doesn't look like it will reach low, then it will stop calculating early and return
         // am incomplete value. Doesn't matter, because the score will become 'low' in a moment
-        searchPath[ply].score = if (isCheck) low else evaluate(engineBoard, low)
+        searchPath[ply].score = if (isCheck) low else evaluate(engineBoard)
 
         if (depth == 0 || searchPath[ply].score >= high) return searchPath[ply]
 
