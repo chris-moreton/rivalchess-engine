@@ -6,7 +6,6 @@ import com.netsensia.rivalchess.bitboards.util.applyToSquares
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.eval.pieceValue
-import com.netsensia.rivalchess.engine.eval.whiteWinningNoBlackPawnsEndGameAdjustment
 import com.netsensia.rivalchess.engine.search.fromSquare
 import com.netsensia.rivalchess.engine.search.toSquare
 import com.netsensia.rivalchess.model.Colour

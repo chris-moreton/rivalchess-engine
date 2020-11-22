@@ -47,14 +47,11 @@ fun getHighestScoringMoveFromArray(theseMoves: IntArray): Int {
     var c = -1
     while (theseMoves[++c] != 0) {
         if (theseMoves[c] != -1 && theseMoves[c] < best && moveHasScore(theseMoves[c])) {
-            // update best move found so far, but don't consider moves with no score
             best = theseMoves[c]
             bestIndex = c
         }
     }
-    return if (best == Int.MAX_VALUE) {
-        0
-    } else {
+    return if (best == Int.MAX_VALUE) 0 else {
         theseMoves[bestIndex] = -1
         moveNoScore(best)
     }

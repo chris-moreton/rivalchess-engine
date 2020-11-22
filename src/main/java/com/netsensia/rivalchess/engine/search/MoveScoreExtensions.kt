@@ -29,7 +29,7 @@ fun Search.getHighScoreMove(ply: Int, hashMove: Int): Int {
     }
     val move = getHighestScoringMoveFromArray(orderedMoves[ply])
     return if (move == 0 && moveOrderStatus[ply] === MoveOrder.CAPTURES) {
-        // we move into here if we had some captures but they are now used up
+        // if we had some captures but they are now used up...
         scoreFullWidthMoves(ply)
         moveOrderStatus[ply] = MoveOrder.ALL
         getHighestScoringMoveFromArray(orderedMoves[ply])
@@ -91,8 +91,8 @@ fun Search.scoreFullWidthMoves(ply: Int) {
                 90 + historyScore(engineBoard.mover, fromSquare, toSquare) else killerScore
 
             val finalScore =
-                    (if (historyScore == 0) 50 + scorePieceSquareValues(fromSquare, toSquare) / 2
-                    else historyScore)
+                    if (historyScore == 0) 50 + scorePieceSquareValues(fromSquare, toSquare) / 2
+                    else historyScore
 
             orderedMoves[ply][i] = move or ((127 - finalScore).coerceAtLeast(0) shl 24)
         }

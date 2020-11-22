@@ -76,10 +76,12 @@ fun blackAttackScore(attacks: Attacks, board: EngineBoard): Int {
 }
 
 @kotlin.ExperimentalUnsignedTypes
-fun whiteAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.whitePieceAttacksBitboard or attacks.whitePawnsAttackBitboard) and blackPieceBitboard(board)
+fun whiteAttacksBitboard(board: EngineBoard, attacks: Attacks) =
+        (attacks.whitePieceAttacksBitboard or attacks.whitePawnsAttackBitboard) and blackPieceBitboard(board)
 
 @kotlin.ExperimentalUnsignedTypes
-fun blackAttacksBitboard(board: EngineBoard, attacks: Attacks) = (attacks.blackPieceAttacksBitboard or attacks.blackPawnsAttackBitboard) and whitePieceBitboard(board)
+fun blackAttacksBitboard(board: EngineBoard, attacks: Attacks) =
+        (attacks.blackPieceAttacksBitboard or attacks.blackPawnsAttackBitboard) and whitePieceBitboard(board)
 
 @kotlin.ExperimentalUnsignedTypes
 fun threatEval(attacks: Attacks, board: EngineBoard) =

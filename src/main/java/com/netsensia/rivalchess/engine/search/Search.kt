@@ -250,7 +250,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     continue
                 }
 
-                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move)
+                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move, localLow)
                 val adjustedDepth = depth - lmr
 
                 val firstPath =
@@ -303,9 +303,30 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun canFutilityPrune(depthRemaining: Int, localLow: Int) =
         depthRemaining in (1..3) && (evaluate(engineBoard) + FUTILITY_MARGIN[depthRemaining - 1] < localLow)
 
-    private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int) =
+    //                var lateMoveReduction = 0
+//                if (RivalConstants.USE_LATE_MOVE_REDUCTIONS && newExtensions == 0 && legalMoveCount > RivalConstants.LMR_LEGALMOVES_BEFORE_ATTEMPT && depthRemaining - verifyingNullMoveDepthReduction > 1 && move != hashMove &&
+//                        !wasCheckBeforeMove && historyPruneMoves.get(if (board.m_isWhiteToMove) 1 else 0).get(move ushr 16 and 63).get(move and 63) <= RivalConstants.LMR_THRESHOLD &&
+//                        !board.wasCapture() &&
+//                        (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0 || !board.wasPawnPush())) {
+//                    if (-evaluate(board) <= low + RivalConstants.LMR_CUT_MARGIN) {
+//                        lateMoveReduction = 1
+//                        lateMoveReductions++
+//                        historyPruneMoves.get(if (board.m_isWhiteToMove) 1 else 0).get(move ushr 16 and 63).get(move and 63) = RivalConstants.LMR_REPLACE_VALUE_AFTER_CUT
+//                    }
+//                }
+//
+//                if (RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION > -1) {
+//                    lateMoveReductionsMade += lateMoveReduction
+//                    if (lateMoveReductionsMade > RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION && depthRemaining > 3) {
+//                        lateMoveDoubleReductions++
+//                        lateMoveReduction = 2
+//                    }
+//                }
+
+    private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int, low: Int) =
         if (moveGivesCheck || extended || legalMoveCount < 4 ||
-                historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5) 0 else 1
+                historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5 || -evaluate(engineBoard) > low)
+            0 else 1
 
     private fun wasPawnPush(): Boolean {
         val lastMove = engineBoard.moveHistory[engineBoard.numMovesMade - 1]!!
@@ -436,7 +457,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     }
 
     private fun canPerformNullMove(depthRemaining: Int, isCheck: Boolean, ply: Int) =
-            ((USE_NULL_MOVE_PRUNING && !isCheck && !engineBoard.isOnNullMove[ply-1] && engineBoard.nullMovesMade < 2 && depthRemaining > 1) &&
+            ((USE_NULL_MOVE_PRUNING && !isCheck && !engineBoard.isOnNullMove[ply - 1] && engineBoard.nullMovesMade < 2 && depthRemaining > 1) &&
                     ((if (engineBoard.mover == Colour.WHITE) engineBoard.whitePieceValues else engineBoard.blackPieceValues) >= NULLMOVE_MINIMUM_FRIENDLY_PIECEVALUES &&
                             (if (engineBoard.mover == Colour.WHITE) engineBoard.getBitboard(BITBOARD_WP) else engineBoard.getBitboard(BITBOARD_BP)) > 0))
 
@@ -541,7 +562,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                 if (engineBoard.makeMove(move)) {
                     legalMoveCount++
 
-                    newPath = quiesce( depth - 1, ply + 1, quiescePly + 1, -high, -newLow, engineBoard.isCheck(mover)).also {
+                    newPath = quiesce(depth - 1, ply + 1, quiescePly + 1, -high, -newLow, engineBoard.isCheck(mover)).also {
                         it.score = adjustedMateScore(-it.score)
                     }
 
