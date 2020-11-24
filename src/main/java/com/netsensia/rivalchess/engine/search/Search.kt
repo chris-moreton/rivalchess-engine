@@ -5,6 +5,7 @@ import com.netsensia.rivalchess.config.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.*
 import com.netsensia.rivalchess.engine.eval.evaluate
+import com.netsensia.rivalchess.engine.eval.materialDifferenceEval
 import com.netsensia.rivalchess.engine.eval.pieceValue
 import com.netsensia.rivalchess.engine.eval.see.StaticExchangeEvaluator
 import com.netsensia.rivalchess.engine.eval.yCoordOfSquare
@@ -325,7 +326,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
 
     private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int, low: Int) =
         if (moveGivesCheck || extended || legalMoveCount < 4 ||
-                historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5 || -evaluate(engineBoard) > low)
+                historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5 || -materialDifferenceEval(engineBoard) > low)
             0 else 1
 
     private fun wasPawnPush(): Boolean {
