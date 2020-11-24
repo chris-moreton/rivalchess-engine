@@ -251,8 +251,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     continue
                 }
 
-                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move, localLow)
-                val adjustedDepth = depth - lmr
+                val lmr = 0
+//                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move, localLow)
+//                val adjustedDepth = depth - lmr
 
                 val firstPath =
                     scoutSearch(useScoutSearch, adjustedDepth, ply + 1, localLow, localHigh, updatedExtensions, moveGivesCheck).also {
