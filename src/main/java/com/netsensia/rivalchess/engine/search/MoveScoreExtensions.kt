@@ -118,7 +118,7 @@ fun Search.historyScore(mover: Colour, from: Int, to: Int): Int {
     val success = historyMovesSuccess[colourIndex][from][to]
     val total = success + historyMovesFail[colourIndex][from][to]
 
-    return if (total > 0) success * 10 / total else 0
+    return if (total > 0) ((success.toDouble() / total.toDouble()) * 10).toInt() else 0
 }
 
 @kotlin.ExperimentalUnsignedTypes

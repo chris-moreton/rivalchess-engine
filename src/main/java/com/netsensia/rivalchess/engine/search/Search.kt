@@ -251,7 +251,7 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
                     continue
                 }
 
-                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move, localLow)
+                val lmr = lateMoveReductions(legalMoveCount, moveGivesCheck, extensions != updatedExtensions, move)
                 val adjustedDepth = depth - lmr
 
                 val firstPath =
@@ -304,30 +304,9 @@ class Search @JvmOverloads constructor(printStream: PrintStream = System.out, bo
     private fun canFutilityPrune(depthRemaining: Int, localLow: Int) =
         depthRemaining in (1..3) && (evaluate(engineBoard) + FUTILITY_MARGIN[depthRemaining - 1] < localLow)
 
-    //                var lateMoveReduction = 0
-//                if (RivalConstants.USE_LATE_MOVE_REDUCTIONS && newExtensions == 0 && legalMoveCount > RivalConstants.LMR_LEGALMOVES_BEFORE_ATTEMPT && depthRemaining - verifyingNullMoveDepthReduction > 1 && move != hashMove &&
-//                        !wasCheckBeforeMove && historyPruneMoves.get(if (board.m_isWhiteToMove) 1 else 0).get(move ushr 16 and 63).get(move and 63) <= RivalConstants.LMR_THRESHOLD &&
-//                        !board.wasCapture() &&
-//                        (RivalConstants.FRACTIONAL_EXTENSION_PAWN > 0 || !board.wasPawnPush())) {
-//                    if (-evaluate(board) <= low + RivalConstants.LMR_CUT_MARGIN) {
-//                        lateMoveReduction = 1
-//                        lateMoveReductions++
-//                        historyPruneMoves.get(if (board.m_isWhiteToMove) 1 else 0).get(move ushr 16 and 63).get(move and 63) = RivalConstants.LMR_REPLACE_VALUE_AFTER_CUT
-//                    }
-//                }
-//
-//                if (RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION > -1) {
-//                    lateMoveReductionsMade += lateMoveReduction
-//                    if (lateMoveReductionsMade > RivalConstants.NUM_LMR_FINDS_BEFORE_EXTRA_REDUCTION && depthRemaining > 3) {
-//                        lateMoveDoubleReductions++
-//                        lateMoveReduction = 2
-//                    }
-//                }
-
-    private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int, low: Int) =
+    private fun lateMoveReductions(legalMoveCount: Int, moveGivesCheck: Boolean, extended: Boolean, move: Int) =
         if (moveGivesCheck || extended || legalMoveCount < 4 ||
-                historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5 || wasCapture())
-            0 else 1
+                historyScore(engineBoard.mover.opponent(), fromSquare(move), toSquare(move)) > 5) 0 else 1
 
     private fun wasPawnPush(): Boolean {
         val lastMove = engineBoard.moveHistory[engineBoard.numMovesMade - 1]!!

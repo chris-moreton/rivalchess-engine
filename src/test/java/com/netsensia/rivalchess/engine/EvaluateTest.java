@@ -48,16 +48,12 @@ public class EvaluateTest {
     }
 
     private void assertEvaluationScore(String fen, int expectedScore, boolean flip) throws IllegalFenException {
-            assertEvaluationScore(fen, expectedScore, flip, -Integer.MAX_VALUE);
-    }
-
-    private void assertEvaluationScore(String fen, int expectedScore, boolean flip, int minScore) throws IllegalFenException {
 
         Board board = Board.fromFen(fen);
         EngineBoard engineBoard = new EngineBoard();
         engineBoard.setBoard(board);
 
-        int actualScore = com.netsensia.rivalchess.engine.eval.EvaluateKt.evaluate(engineBoard, minScore);
+        int actualScore = com.netsensia.rivalchess.engine.eval.EvaluateKt.evaluate(engineBoard);
 
         if (RECALCULATE) {
             System.out.println("assertEvaluationScore(\"" + fen + "\", " + actualScore + ", true);");
