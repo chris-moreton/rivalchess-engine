@@ -87,12 +87,17 @@ fun Search.scoreFullWidthMoves(ply: Int) {
             val toSquare = toSquare(move)
 
             val killerScore = scoreKillerMoves(ply, move)
-            val historyScore = if (killerScore == 0 && hasHistorySuccess(fromSquare, toSquare))
-                90 + historyScore(engineBoard.mover, fromSquare, toSquare) else killerScore
-
             val finalScore =
-                    if (historyScore == 0) 50 + scorePieceSquareValues(fromSquare, toSquare) / 2
-                    else historyScore
+                if (killerScore > 0) {
+                    killerScore
+                } else {
+                    val historyScore = if (killerScore == 0) historyScore(engineBoard.mover, fromSquare, toSquare) else 0
+                    if (historyScore > 0) {
+                        historyScore
+                    } else {
+                        50 + scorePieceSquareValues(fromSquare, toSquare) / 2
+                    }
+                }
 
             orderedMoves[ply][i] = move or ((127 - finalScore).coerceAtLeast(0) shl 24)
         }
