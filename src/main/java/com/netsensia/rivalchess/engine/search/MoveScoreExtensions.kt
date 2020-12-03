@@ -91,9 +91,9 @@ fun Search.scoreFullWidthMoves(ply: Int) {
                 if (killerScore > 0) {
                     killerScore
                 } else {
-                    val historyScore = if (killerScore == 0) historyScore(engineBoard.mover, fromSquare, toSquare) else 0
+                    val historyScore = historyScore(engineBoard.mover, fromSquare, toSquare)
                     if (historyScore > 0) {
-                        historyScore
+                        90 + historyScore
                     } else {
                         50 + scorePieceSquareValues(fromSquare, toSquare) / 2
                     }
