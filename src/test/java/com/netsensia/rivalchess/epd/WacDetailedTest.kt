@@ -21,7 +21,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
-@Ignore
 class WacDetailedTest {
 
     private val epdStats = mutableMapOf<String, Int>()
@@ -29,7 +28,7 @@ class WacDetailedTest {
     @kotlin.ExperimentalUnsignedTypes
     companion object {
         private const val RATIO_MAX = 10
-        private const val RECALCULATE = true
+        private const val RECALCULATE = false
         private const val REWRITE_EPD_FILE = true
         private const val MAX_SEARCH_SECONDS = 1000
         private var search: Search? = null
@@ -46,7 +45,7 @@ class WacDetailedTest {
     @Test
     @Throws(IOException::class, IllegalEpdItemException::class, IllegalFenException::class, InterruptedException::class)
     fun winAtChess2018() {
-        runEpdSuite("winAtChessDetailed.epd")
+        runEpdSuite("RivalMistakes.epd")
     }
 
     @kotlin.ExperimentalUnsignedTypes

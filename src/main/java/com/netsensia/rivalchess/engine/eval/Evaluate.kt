@@ -364,12 +364,12 @@ fun whiteKingShield(board: EngineBoard): Long = whiteKingShieldMask[board.whiteK
 
 @kotlin.ExperimentalUnsignedTypes
 fun endGameAdjustment(board: EngineBoard, currentScore: Int) =
-        if (bothSidesHaveOnlyOneKnightOrBishopEach(board)) currentScore / ENDGAME_DRAW_DIVISOR
-        else when (currentScore) {
-            0 -> 0
-            in 0..Int.MAX_VALUE -> whiteWinningEndGameAdjustment(board, currentScore)
-            else -> blackWinningEndGameAdjustment(board, currentScore)
-        }
+    if (bothSidesHaveOnlyOneKnightOrBishopEach(board)) currentScore / ENDGAME_DRAW_DIVISOR
+    else when (currentScore) {
+        0 -> 0
+        in 0..Int.MAX_VALUE -> whiteWinningEndGameAdjustment(board, currentScore)
+        else -> blackWinningEndGameAdjustment(board, currentScore)
+    }
 
 @kotlin.ExperimentalUnsignedTypes
 fun penaltyForKingNotBeingNearOtherKing(board: EngineBoard) =
