@@ -1,8 +1,10 @@
 package com.netsensia.rivalchess.engine.eval
 
+import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.board.pawnValues
+import com.netsensia.rivalchess.model.Colour
 
 fun evaluateRival103(board: EngineBoard): Int {
     if (board.whitePieceValues + board.blackPieceValues + board.pawnValues(BITBOARD_WP) + board.pawnValues(BITBOARD_BP) === 0) return 0
@@ -13,58 +15,48 @@ fun evaluateRival103(board: EngineBoard): Int {
     var whiteAttacksBitboard: Long = 0
     var blackAttacksBitboard: Long = 0
     val whitePawnAttacks: Long =
-        board.getBitboard(BITBOARD_WP) and Bitboards.FILE_A.inv() shl 9 or (board.m_pieceBitboards.get(
-            RivalConstants.WP
-        ) and Bitboards.FILE_H.inv() shl 7)
-    val blackPawnAttacks: Long =
-        board.getBitboard(BITBOARD_BP) and Bitboards.FILE_A.inv() ushr 7 or (board.m_pieceBitboards.get(
-            RivalConstants.BP
-        ) and Bitboards.FILE_H.inv() ushr 9)
-    val whitePieces: Long =
-        board.m_pieceBitboards.get(if (board.m_isWhiteToMove) RivalConstants.FRIENDLY else RivalConstants.ENEMY)
-    val blackPieces: Long =
-        board.m_pieceBitboards.get(if (board.m_isWhiteToMove) RivalConstants.ENEMY else RivalConstants.FRIENDLY)
-    val whiteKingDangerZone: Long =
-        Bitboards.kingMoves.get(board.m_whiteKingSquare) or (Bitboards.kingMoves.get(board.m_whiteKingSquare) shl 8)
-    val blackKingDangerZone: Long =
-        Bitboards.kingMoves.get(board.m_blackKingSquare) or (Bitboards.kingMoves.get(board.m_blackKingSquare) ushr 8)
-    val materialDifference: Int =
-        board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
+        board.getBitboard(BITBOARD_WP) and FILE_A.inv() shl 9 or (board.getBitboard(BITBOARD_WP) and FILE_H.inv() shl 7)
+    val blackPawnAttacks: Long = board.getBitboard(BITBOARD_BP) and FILE_A.inv() ushr 7 or (board.getBitboard(BITBOARD_BP) and FILE_H.inv() ushr 9)
+    val whitePieces: Long = board.getBitboard(if (board.mover == Colour.WHITE) BITBOARD_FRIENDLY else BITBOARD_ENEMY)
+    val blackPieces: Long = board.getBitboard(if (board.mover == Colour.WHITE) BITBOARD_ENEMY else BITBOARD_FRIENDLY)
+    val whiteKingDangerZone: Long = Bitboards.kingMoves.get(board.m_whiteKingSquare) or (Bitboards.kingMoves.get(board.m_whiteKingSquare) shl 8)
+    val blackKingDangerZone: Long = Bitboards.kingMoves.get(board.m_blackKingSquare) or (Bitboards.kingMoves.get(board.m_blackKingSquare) ushr 8)
+    val materialDifference: Int = board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
     var eval = if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) materialDifference
-    +Numbers.linearScale(
-        board.blackPieceValues,
-        RivalConstants.PAWN_STAGE_MATERIAL_LOW,
-        RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
-        board.pieceSquareValuesEndGame.get(RivalConstants.WP),
-        board.pieceSquareValues.get(RivalConstants.WP)
-    )
-    -Numbers.linearScale(
-        board.whitePieceValues,
-        RivalConstants.PAWN_STAGE_MATERIAL_LOW,
-        RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
-        board.pieceSquareValuesEndGame.get(RivalConstants.BP),
-        board.pieceSquareValues.get(RivalConstants.BP)
-    )
-    +board.pieceSquareValues.get(RivalConstants.WR) * Math.min(board.blackPawnValues / RivalConstants.VALUE_PAWN, 6) / 6
-    -board.pieceSquareValues.get(RivalConstants.BR) * Math.min(board.whitePawnValues / RivalConstants.VALUE_PAWN, 6) / 6
-    +board.pieceSquareValues.get(RivalConstants.WB)
-    -board.pieceSquareValues.get(RivalConstants.BB)
+        +Numbers.linearScale(
+            board.blackPieceValues,
+            RivalConstants.PAWN_STAGE_MATERIAL_LOW,
+            RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
+            board.pieceSquareValuesEndGame.get(BITBOARD_WP),
+            board.pieceSquareValues.get(BITBOARD_WP)
+        )
+        -Numbers.linearScale(
+            board.whitePieceValues,
+            RivalConstants.PAWN_STAGE_MATERIAL_LOW,
+            RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
+            board.pieceSquareValuesEndGame.get(BITBOARD_BP),
+            board.pieceSquareValues.get(BITBOARD_BP)
+        )
+    +board.pieceSquareValues.get(BITBOARD_WR) * Math.min(board.blackPawnValues / RivalConstants.VALUE_PAWN, 6) / 6
+    -board.pieceSquareValues.get(BITBOARD_BR) * Math.min(board.whitePawnValues / RivalConstants.VALUE_PAWN, 6) / 6
+    +board.pieceSquareValues.get(BITBOARD_WB)
+    -board.pieceSquareValues.get(BITBOARD_BB)
     +Numbers.linearScale(
         board.blackPieceValues + board.blackPawnValues,
         RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
         RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
-        board.pieceSquareValuesEndGame.get(RivalConstants.WN),
-        board.pieceSquareValues.get(RivalConstants.WN)
+        board.pieceSquareValuesEndGame.get(BITBOARD_WN),
+        board.pieceSquareValues.get(BITBOARD_WN)
     )
     -Numbers.linearScale(
         board.whitePieceValues + board.whitePawnValues,
         RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
         RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
-        board.pieceSquareValuesEndGame.get(RivalConstants.BN),
-        board.pieceSquareValues.get(RivalConstants.BN)
+        board.pieceSquareValuesEndGame.get(BITBOARD_BN),
+        board.pieceSquareValues.get(BITBOARD_BN)
     )
-    +board.pieceSquareValues.get(RivalConstants.WQ)
-    -board.pieceSquareValues.get(RivalConstants.BQ)
+    +board.pieceSquareValues.get(BITBOARD_WQ)
+    -board.pieceSquareValues.get(BITBOARD_BQ)
     +Numbers.linearScale(
         board.blackPieceValues,
         RivalConstants.VALUE_ROOK,
@@ -156,8 +148,8 @@ fun evaluateRival103(board: EngineBoard): Int {
         board.blackPawnValues / RivalConstants.VALUE_PAWN,
         6
     ) / 6
-    if (java.lang.Long.bitCount(board.getBitboard(BITBOARD_WR) and Bitboards.RANK_7) > 1 && board.m_pieceBitboards.get(
-            RivalConstants.BK
+    if (java.lang.Long.bitCount(board.getBitboard(BITBOARD_WR) and Bitboards.RANK_7) > 1 && board.getBitboard(
+            BITBOARD_BK
         ) and Bitboards.RANK_8 !== 0
     ) eval += RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING
     bitboard = board.getBitboard(BITBOARD_BR)
@@ -190,8 +182,8 @@ fun evaluateRival103(board: EngineBoard): Int {
         board.whitePawnValues / RivalConstants.VALUE_PAWN,
         6
     ) / 6
-    if (java.lang.Long.bitCount(board.getBitboard(BITBOARD_BR) and Bitboards.RANK_2) > 1 && board.m_pieceBitboards.get(
-            RivalConstants.WK
+    if (java.lang.Long.bitCount(board.getBitboard(BITBOARD_BR) and Bitboards.RANK_2) > 1 && board.getBitboard(
+            BITBOARD_WK
         ) and Bitboards.RANK_1 !== 0
     ) eval -= RivalConstants.VALUE_TWO_ROOKS_ON_SEVENTH_TRAPPING_KING
     bitboard = board.getBitboard(BITBOARD_WN)
@@ -402,32 +394,32 @@ fun evaluateRival103(board: EngineBoard): Int {
     if (whiteBishopColourCount == 1 && blackBishopColourCount == 1 && whiteLightBishopExists != blackLightBishopExists && board.whitePieceValues === board.blackPieceValues) {
         // as material becomes less, penalise the winning side for having a single bishop of the opposite colour to the opponent's single bishop
         val maxPenalty: Int =
-            (eval + bishopScore) / RivalConstants.WRONG_COLOUR_BISHOP_PENALTY_DIVISOR // mostly pawns as material is identical
+            (eval + bishopScore) / BITBOARD_WRONG_COLOUR_BISHOP_PENALTY_DIVISOR // mostly pawns as material is identical
 
         // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
         bishopScore -= Numbers.linearScale(
             board.whitePieceValues + board.blackPieceValues,
-            RivalConstants.WRONG_COLOUR_BISHOP_MATERIAL_LOW,
-            RivalConstants.WRONG_COLOUR_BISHOP_MATERIAL_HIGH,
+            BITBOARD_WRONG_COLOUR_BISHOP_MATERIAL_LOW,
+            BITBOARD_WRONG_COLOUR_BISHOP_MATERIAL_HIGH,
             maxPenalty,
             0
         )
     }
     if (board.getBitboard(BITBOARD_WB) or board.getBitboard(BITBOARD_BB) and Bitboards.A2A7H2H7 !== 0) {
-        if (board.getBitboard(BITBOARD_WB) and (1L shl Bitboards.A7) !== 0 && board.m_pieceBitboards.get(
-                RivalConstants.BP
+        if (board.getBitboard(BITBOARD_WB) and (1L shl Bitboards.A7) !== 0 && board.getBitboard(
+                BITBOARD_BP
             ) and (1L shl Bitboards.B6) !== 0 && board.getBitboard(BITBOARD_BP) and (1L shl Bitboards.C7) !== 0
         ) bishopScore -= RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY
-        if (board.getBitboard(BITBOARD_WB) and (1L shl Bitboards.H7) !== 0 && board.m_pieceBitboards.get(
-                RivalConstants.BP
+        if (board.getBitboard(BITBOARD_WB) and (1L shl Bitboards.H7) !== 0 && board.getBitboard(
+                BITBOARD_BP
             ) and (1L shl Bitboards.G6) !== 0 && board.getBitboard(BITBOARD_BP) and (1L shl Bitboards.F7) !== 0
         ) bishopScore -= if (board.getBitboard(BITBOARD_WQ) === 0) RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY else RivalConstants.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY
-        if (board.getBitboard(BITBOARD_BB) and (1L shl Bitboards.A2) !== 0 && board.m_pieceBitboards.get(
-                RivalConstants.WP
+        if (board.getBitboard(BITBOARD_BB) and (1L shl Bitboards.A2) !== 0 && board.getBitboard(
+                BITBOARD_WP
             ) and (1L shl Bitboards.B3) !== 0 && board.getBitboard(BITBOARD_WP) and (1L shl Bitboards.C2) !== 0
         ) bishopScore += RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY
-        if (board.getBitboard(BITBOARD_BB) and (1L shl Bitboards.H2) !== 0 && board.m_pieceBitboards.get(
-                RivalConstants.WP
+        if (board.getBitboard(BITBOARD_BB) and (1L shl Bitboards.H2) !== 0 && board.getBitboard(
+                BITBOARD_WP
             ) and (1L shl Bitboards.G3) !== 0 && board.getBitboard(BITBOARD_WP) and (1L shl Bitboards.F2) !== 0
         ) bishopScore += if (board.getBitboard(BITBOARD_BQ) === 0) RivalConstants.VALUE_TRAPPED_BISHOP_PENALTY else RivalConstants.VALUE_TRAPPED_BISHOP_KINGSIDE_WITH_QUEEN_PENALTY
     }
@@ -435,46 +427,46 @@ fun evaluateRival103(board: EngineBoard): Int {
 
     // Everything white attacks with pieces.  Does not include attacked pawns.
     whiteAttacksBitboard =
-        whiteAttacksBitboard and (board.getBitboard(BITBOARD_BN) or board.m_pieceBitboards.get(
-            RivalConstants.BR
+        whiteAttacksBitboard and (board.getBitboard(BITBOARD_BN) or board.getBitboard(
+            BITBOARD_BR
         ) or board.getBitboard(BITBOARD_BQ) or board.getBitboard(BITBOARD_BB))
     // Plus anything white attacks with pawns.
     whiteAttacksBitboard =
-        whiteAttacksBitboard or (board.getBitboard(BITBOARD_WP) and Bitboards.FILE_A.inv() shl 9 or (board.m_pieceBitboards.get(
-            RivalConstants.WP
-        ) and Bitboards.FILE_H.inv() shl 7))
+        whiteAttacksBitboard or (board.getBitboard(BITBOARD_WP) and FILE_A.inv() shl 9 or (board.getBitboard(
+            BITBOARD_WP
+        ) and FILE_H.inv() shl 7))
     var temp = 0
     bitboard = whiteAttacksBitboard and blackPieces and board.getBitboard(BITBOARD_BK).inv()
     while (bitboard != 0L) {
         bitboard = bitboard xor (1L shl java.lang.Long.numberOfTrailingZeros(bitboard).also { sq = it })
-        if (board.squareContents.get(sq) === RivalConstants.BP) temp += RivalConstants.VALUE_PAWN else if (board.squareContents.get(
+        if (board.squareContents.get(sq) === BITBOARD_BP) temp += RivalConstants.VALUE_PAWN else if (board.squareContents.get(
                 sq
-            ) === RivalConstants.BN
-        ) temp += RivalConstants.VALUE_KNIGHT else if (board.squareContents.get(sq) === RivalConstants.BR) temp += RivalConstants.VALUE_ROOK else if (board.squareContents.get(
+            ) === BITBOARD_BN
+        ) temp += RivalConstants.VALUE_KNIGHT else if (board.squareContents.get(sq) === BITBOARD_BR) temp += RivalConstants.VALUE_ROOK else if (board.squareContents.get(
                 sq
-            ) === RivalConstants.BQ
-        ) temp += RivalConstants.VALUE_QUEEN else if (board.squareContents.get(sq) === RivalConstants.BB) temp += RivalConstants.VALUE_BISHOP
+            ) === BITBOARD_BQ
+        ) temp += RivalConstants.VALUE_QUEEN else if (board.squareContents.get(sq) === BITBOARD_BB) temp += RivalConstants.VALUE_BISHOP
     }
     var threatScore: Int = temp + temp * (temp / RivalConstants.VALUE_QUEEN)
     blackAttacksBitboard =
-        blackAttacksBitboard and (board.getBitboard(BITBOARD_WN) or board.m_pieceBitboards.get(
-            RivalConstants.WR
+        blackAttacksBitboard and (board.getBitboard(BITBOARD_WN) or board.getBitboard(
+            BITBOARD_WR
         ) or board.getBitboard(BITBOARD_WQ) or board.getBitboard(BITBOARD_WB))
     blackAttacksBitboard =
-        blackAttacksBitboard or (board.getBitboard(BITBOARD_BP) and Bitboards.FILE_A.inv() ushr 7 or (board.m_pieceBitboards.get(
-            RivalConstants.BP
-        ) and Bitboards.FILE_H.inv() ushr 9))
+        blackAttacksBitboard or (board.getBitboard(BITBOARD_BP) and FILE_A.inv() ushr 7 or (board.getBitboard(
+            BITBOARD_BP
+        ) and FILE_H.inv() ushr 9))
     temp = 0
     bitboard = blackAttacksBitboard and whitePieces and board.getBitboard(BITBOARD_WK).inv()
     while (bitboard != 0L) {
         bitboard = bitboard xor (1L shl java.lang.Long.numberOfTrailingZeros(bitboard).also { sq = it })
-        if (board.squareContents.get(sq) === RivalConstants.WP) temp += RivalConstants.VALUE_PAWN else if (board.squareContents.get(
+        if (board.squareContents.get(sq) === BITBOARD_WP) temp += RivalConstants.VALUE_PAWN else if (board.squareContents.get(
                 sq
-            ) === RivalConstants.WN
-        ) temp += RivalConstants.VALUE_KNIGHT else if (board.squareContents.get(sq) === RivalConstants.WR) temp += RivalConstants.VALUE_ROOK else if (board.squareContents.get(
+            ) === BITBOARD_WN
+        ) temp += RivalConstants.VALUE_KNIGHT else if (board.squareContents.get(sq) === BITBOARD_WR) temp += RivalConstants.VALUE_ROOK else if (board.squareContents.get(
                 sq
-            ) === RivalConstants.WQ
-        ) temp += RivalConstants.VALUE_QUEEN else if (board.squareContents.get(sq) === RivalConstants.WB) temp += RivalConstants.VALUE_BISHOP
+            ) === BITBOARD_WQ
+        ) temp += RivalConstants.VALUE_QUEEN else if (board.squareContents.get(sq) === BITBOARD_WB) temp += RivalConstants.VALUE_BISHOP
     }
     threatScore -= temp + temp * (temp / RivalConstants.VALUE_QUEEN)
     threatScore /= RivalConstants.THREAT_SCORE_DIVISOR
@@ -517,36 +509,36 @@ fun evaluateRival103(board: EngineBoard): Int {
         if (board.m_whiteKingSquare / 8 < 2) {
             val kingShield: Long = Bitboards.whiteKingShieldMask.get(board.m_whiteKingSquare % 8)
             shieldValue += (RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * java.lang.Long.bitCount(
-                board.m_pieceBitboards.get(
-                    RivalConstants.WP
+                board.getBitboard(
+                    BITBOARD_WP
                 ) and kingShield
             )
                     - RivalConstants.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * java.lang.Long.bitCount(
-                board.m_pieceBitboards.get(
-                    RivalConstants.BP
+                board.getBitboard(
+                    BITBOARD_BP
                 ) and (kingShield or (kingShield shl 8))
             )
                     + RivalConstants.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * java.lang.Long.bitCount(
-                board.m_pieceBitboards.get(
-                    RivalConstants.WP
+                board.getBitboard(
+                    BITBOARD_WP
                 ) and (kingShield shl 8)
             )
                     - RivalConstants.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * java.lang.Long.bitCount(
-                board.m_pieceBitboards.get(
-                    RivalConstants.BP
+                board.getBitboard(
+                    BITBOARD_BP
                 ) and (kingShield shl 16)
             ))
             shieldValue = Math.min(shieldValue, RivalConstants.KINGSAFTEY_MAXIMUM_SHIELD_BONUS)
             if (board.getBitboard(BITBOARD_WK) and Bitboards.F1G1 !== 0 &&
                 board.getBitboard(BITBOARD_WR) and Bitboards.G1H1 !== 0 &&
-                board.getBitboard(BITBOARD_WP) and Bitboards.FILE_G !== 0 &&
-                board.getBitboard(BITBOARD_WP) and Bitboards.FILE_H !== 0
+                board.getBitboard(BITBOARD_WP) and FILE_G !== 0 &&
+                board.getBitboard(BITBOARD_WP) and FILE_H !== 0
             ) {
                 shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK
             } else if (board.getBitboard(BITBOARD_WK) and Bitboards.B1C1 !== 0 &&
                 board.getBitboard(BITBOARD_WR) and Bitboards.A1B1 !== 0 &&
-                board.getBitboard(BITBOARD_WP) and Bitboards.FILE_A !== 0 &&
-                board.getBitboard(BITBOARD_WP) and Bitboards.FILE_B !== 0
+                board.getBitboard(BITBOARD_WP) and FILE_A !== 0 &&
+                board.getBitboard(BITBOARD_WP) and FILE_B !== 0
             ) {
                 shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK
             }
@@ -571,36 +563,36 @@ fun evaluateRival103(board: EngineBoard): Int {
         if (board.m_blackKingSquare / 8 >= 6) {
             val kingShield: Long = Bitboards.whiteKingShieldMask.get(board.m_blackKingSquare % 8) shl 40
             shieldValue += (RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * java.lang.Long.bitCount(
-                board.m_pieceBitboards.get(
-                    RivalConstants.BP
+                board.getBitboard(
+                    BITBOARD_BP
                 ) and kingShield
             )
                     - RivalConstants.KINGSAFTEY_ENEMY_PAWN_IN_VICINITY_UNIT * java.lang.Long.bitCount(
-                board.m_pieceBitboards.get(
-                    RivalConstants.WP
+                board.getBitboard(
+                    BITBOARD_WP
                 ) and (kingShield or (kingShield ushr 8))
             )
                     + RivalConstants.KINGSAFTEY_LESSER_PAWN_SHIELD_UNIT * java.lang.Long.bitCount(
-                board.m_pieceBitboards.get(
-                    RivalConstants.BP
+                board.getBitboard(
+                    BITBOARD_BP
                 ) and (kingShield ushr 8)
             )
                     - RivalConstants.KINGSAFTEY_CLOSING_ENEMY_PAWN_UNIT * java.lang.Long.bitCount(
-                board.m_pieceBitboards.get(
-                    RivalConstants.WP
+                board.getBitboard(
+                    BITBOARD_WP
                 ) and (kingShield ushr 16)
             ))
             shieldValue = Math.min(shieldValue, RivalConstants.KINGSAFTEY_MAXIMUM_SHIELD_BONUS)
             if (board.getBitboard(BITBOARD_BK) and Bitboards.F8G8 !== 0 &&
                 board.getBitboard(BITBOARD_BR) and Bitboards.G8H8 !== 0 &&
-                board.getBitboard(BITBOARD_BP) and Bitboards.FILE_G !== 0 &&
-                board.getBitboard(BITBOARD_BP) and Bitboards.FILE_H !== 0
+                board.getBitboard(BITBOARD_BP) and FILE_G !== 0 &&
+                board.getBitboard(BITBOARD_BP) and FILE_H !== 0
             ) {
                 shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK
             } else if (board.getBitboard(BITBOARD_BK) and Bitboards.B8C8 !== 0 &&
                 board.getBitboard(BITBOARD_BR) and Bitboards.A8B8 !== 0 &&
-                board.getBitboard(BITBOARD_BP) and Bitboards.FILE_A !== 0 &&
-                board.getBitboard(BITBOARD_BP) and Bitboards.FILE_B !== 0
+                board.getBitboard(BITBOARD_BP) and FILE_A !== 0 &&
+                board.getBitboard(BITBOARD_BP) and FILE_B !== 0
             ) {
                 shieldValue -= RivalConstants.KINGSAFETY_UNCASTLED_TRAPPED_ROOK
             }
@@ -632,7 +624,7 @@ fun evaluateRival103(board: EngineBoard): Int {
     if (board.whitePieceValues + board.whitePawnValues + board.blackPieceValues + board.blackPawnValues <= RivalConstants.EVAL_ENDGAME_TOTAL_PIECES) {
         eval = endGameAdjustmentRival103(board, eval)
     }
-    eval = if (board.m_isWhiteToMove) eval else -eval
+    eval = if (board.mover == Colour.WHITE) eval else -eval
     return eval
 }
 
@@ -644,7 +636,7 @@ fun endGameAdjustmentRival103(board: EngineBoard, currentScore: Int): Int {
                 board.m_whiteKingSquare,
                 board.m_blackKingSquare,
                 java.lang.Long.numberOfTrailingZeros(board.getBitboard(BITBOARD_WP)),
-                board.m_isWhiteToMove
+                board.mover == Colour.WHITE
             )
         } else {
             // flip the position so that the black pawn becomes white, and negate the result
@@ -653,12 +645,12 @@ fun endGameAdjustmentRival103(board: EngineBoard, currentScore: Int): Int {
                 Bitboards.bitFlippedHorizontalAxis.get(board.m_whiteKingSquare),
                 Bitboards.bitFlippedHorizontalAxis.get(
                     java.lang.Long.numberOfTrailingZeros(
-                        board.m_pieceBitboards.get(
-                            RivalConstants.BP
+                        board.getBitboard(
+                            BITBOARD_BP
                         )
                     )
                 ),
-                !board.m_isWhiteToMove
+                !board.mover == Colour.WHITE
             )
         }
     }
@@ -666,15 +658,15 @@ fun endGameAdjustmentRival103(board: EngineBoard, currentScore: Int): Int {
     if (eval > 0) {
         if (board.whitePawnValues === 0 && (board.whitePieceValues === RivalConstants.VALUE_KNIGHT || board.whitePieceValues === RivalConstants.VALUE_BISHOP)) return eval - (board.whitePieceValues * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER) as Int else if (board.whitePawnValues === 0 && board.whitePieceValues - RivalConstants.VALUE_BISHOP <= board.blackPieceValues) return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR else if (java.lang.Long.bitCount(
                 board.getBitboard(BITBOARD_ALL)
-            ) > 3 && board.getBitboard(BITBOARD_WR) or board.getBitboard(BITBOARD_WN) or board.m_pieceBitboards.get(
-                RivalConstants.WQ
+            ) > 3 && board.getBitboard(BITBOARD_WR) or board.getBitboard(BITBOARD_WN) or board.getBitboard(
+                BITBOARD_WQ
             ) === 0
         ) {
             // if this is not yet a KPK ending, and if white has only A pawns and has no dark bishop and the black king is on a8/a7/b8/b7 then this is probably a draw
-            if (board.getBitboard(BITBOARD_WP) and Bitboards.FILE_A.inv() === 0 &&
+            if (board.getBitboard(BITBOARD_WP) and FILE_A.inv() === 0 &&
                 board.getBitboard(BITBOARD_WB) and Bitboards.LIGHT_SQUARES === 0 &&
                 board.getBitboard(BITBOARD_BK) and Bitboards.A8A7B8B7 !== 0
-            ) return eval / RivalConstants.ENDGAME_DRAW_DIVISOR else if (board.getBitboard(BITBOARD_WP) and Bitboards.FILE_H.inv() === 0 &&
+            ) return eval / RivalConstants.ENDGAME_DRAW_DIVISOR else if (board.getBitboard(BITBOARD_WP) and FILE_H.inv() === 0 &&
                 board.getBitboard(BITBOARD_WB) and Bitboards.DARK_SQUARES === 0 &&
                 board.getBitboard(BITBOARD_BK) and Bitboards.H8H7G8G7 !== 0
             ) return eval / RivalConstants.ENDGAME_DRAW_DIVISOR
@@ -700,14 +692,14 @@ fun endGameAdjustmentRival103(board: EngineBoard, currentScore: Int): Int {
     if (eval < 0) {
         if (board.blackPawnValues === 0 && (board.blackPieceValues === RivalConstants.VALUE_KNIGHT || board.blackPieceValues === RivalConstants.VALUE_BISHOP)) return eval + (board.blackPieceValues * RivalConstants.ENDGAME_SUBTRACT_INSUFFICIENT_MATERIAL_MULTIPLIER) as Int else if (board.blackPawnValues === 0 && board.blackPieceValues - RivalConstants.VALUE_BISHOP <= board.whitePieceValues) return eval / RivalConstants.ENDGAME_PROBABLE_DRAW_DIVISOR else if (java.lang.Long.bitCount(
                 board.getBitboard(BITBOARD_ALL)
-            ) > 3 && board.getBitboard(BITBOARD_BR) or board.getBitboard(BITBOARD_BN) or board.m_pieceBitboards.get(
-                RivalConstants.BQ
+            ) > 3 && board.getBitboard(BITBOARD_BR) or board.getBitboard(BITBOARD_BN) or board.getBitboard(
+                BITBOARD_BQ
             ) === 0
         ) {
-            if (board.getBitboard(BITBOARD_BP) and Bitboards.FILE_A.inv() === 0 &&
+            if (board.getBitboard(BITBOARD_BP) and FILE_A.inv() === 0 &&
                 board.getBitboard(BITBOARD_BB) and Bitboards.DARK_SQUARES === 0 &&
                 board.getBitboard(BITBOARD_WK) and Bitboards.A1A2B1B2 !== 0
-            ) return eval / RivalConstants.ENDGAME_DRAW_DIVISOR else if (board.getBitboard(BITBOARD_BP) and Bitboards.FILE_H.inv() === 0 &&
+            ) return eval / RivalConstants.ENDGAME_DRAW_DIVISOR else if (board.getBitboard(BITBOARD_BP) and FILE_H.inv() === 0 &&
                 board.getBitboard(BITBOARD_BB) and Bitboards.LIGHT_SQUARES === 0 &&
                 board.getBitboard(BITBOARD_WK) and Bitboards.H1H2G1G2 !== 0
             ) return eval / RivalConstants.ENDGAME_DRAW_DIVISOR
