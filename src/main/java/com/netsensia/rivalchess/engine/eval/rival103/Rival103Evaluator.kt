@@ -1,9 +1,10 @@
-package com.netsensia.rivalchess.engine.eval
+package com.netsensia.rivalchess.engine.eval.rival103
 
 import com.netsensia.rivalchess.bitboards.*
 import com.netsensia.rivalchess.consts.*
 import com.netsensia.rivalchess.engine.board.EngineBoard
 import com.netsensia.rivalchess.engine.board.pawnValues
+import com.netsensia.rivalchess.engine.eval.linearScale
 import com.netsensia.rivalchess.model.Colour
 
 fun evaluateRival103(board: EngineBoard): Int {
@@ -19,18 +20,18 @@ fun evaluateRival103(board: EngineBoard): Int {
     val blackPawnAttacks: Long = board.getBitboard(BITBOARD_BP) and FILE_A.inv() ushr 7 or (board.getBitboard(BITBOARD_BP) and FILE_H.inv() ushr 9)
     val whitePieces: Long = board.getBitboard(if (board.mover == Colour.WHITE) BITBOARD_FRIENDLY else BITBOARD_ENEMY)
     val blackPieces: Long = board.getBitboard(if (board.mover == Colour.WHITE) BITBOARD_ENEMY else BITBOARD_FRIENDLY)
-    val whiteKingDangerZone: Long = Bitboards.kingMoves.get(board.m_whiteKingSquare) or (Bitboards.kingMoves.get(board.m_whiteKingSquare) shl 8)
-    val blackKingDangerZone: Long = Bitboards.kingMoves.get(board.m_blackKingSquare) or (Bitboards.kingMoves.get(board.m_blackKingSquare) ushr 8)
+    val whiteKingDangerZone: Long = kingMoves.get(board.whiteKingSquareCalculated) or (kingMoves.get(board.whiteKingSquareCalculated) shl 8)
+    val blackKingDangerZone: Long = kingMoves.get(board.blackKingSquareCalculated) or (kingMoves.get(board.blackKingSquareCalculated) ushr 8)
     val materialDifference: Int = board.whitePieceValues - board.blackPieceValues + board.whitePawnValues - board.blackPawnValues
     var eval = if (RivalConstants.TRACK_PIECE_SQUARE_VALUES) materialDifference
-        +Numbers.linearScale(
+        +linearScale(
             board.blackPieceValues,
             RivalConstants.PAWN_STAGE_MATERIAL_LOW,
             RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
             board.pieceSquareValuesEndGame.get(BITBOARD_WP),
             board.pieceSquareValues.get(BITBOARD_WP)
         )
-        -Numbers.linearScale(
+        -linearScale(
             board.whitePieceValues,
             RivalConstants.PAWN_STAGE_MATERIAL_LOW,
             RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
@@ -41,14 +42,14 @@ fun evaluateRival103(board: EngineBoard): Int {
     -board.pieceSquareValues.get(BITBOARD_BR) * Math.min(board.whitePawnValues / RivalConstants.VALUE_PAWN, 6) / 6
     +board.pieceSquareValues.get(BITBOARD_WB)
     -board.pieceSquareValues.get(BITBOARD_BB)
-    +Numbers.linearScale(
+    +linearScale(
         board.blackPieceValues + board.blackPawnValues,
         RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
         RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
         board.pieceSquareValuesEndGame.get(BITBOARD_WN),
         board.pieceSquareValues.get(BITBOARD_WN)
     )
-    -Numbers.linearScale(
+    -linearScale(
         board.whitePieceValues + board.whitePawnValues,
         RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
         RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
@@ -57,20 +58,21 @@ fun evaluateRival103(board: EngineBoard): Int {
     )
     +board.pieceSquareValues.get(BITBOARD_WQ)
     -board.pieceSquareValues.get(BITBOARD_BQ)
-    +Numbers.linearScale(
+    +linearScale(
         board.blackPieceValues,
         RivalConstants.VALUE_ROOK,
         RivalConstants.OPENING_PHASE_MATERIAL,
-        Bitboards.pieceSquareTableKingEndGame.get(board.m_whiteKingSquare),
-        Bitboards.pieceSquareTableKing.get(board.m_whiteKingSquare)
+        Bitboards.pieceSquareTableKingEndGame.get(board.whiteKingSquareCalculated),
+        Bitboards.pieceSquareTableKing.get(board.whiteKingSquareCalculated)
     )
-    -Numbers.linearScale(
+    -linearScale(
         board.whitePieceValues,
         RivalConstants.VALUE_ROOK,
         RivalConstants.OPENING_PHASE_MATERIAL,
-        Bitboards.pieceSquareTableKingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare)),
-        Bitboards.pieceSquareTableKing.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare))
+        Bitboards.pieceSquareTableKingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.blackKingSquareCalculated)),
+        Bitboards.pieceSquareTableKing.get(Bitboards.bitFlippedHorizontalAxis.get(board.blackKingSquareCalculated))
     ) else materialDifference
+
     var pieceSquareTemp = 0
     var pieceSquareTempEndGame = 0
     if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) {
@@ -80,7 +82,7 @@ fun evaluateRival103(board: EngineBoard): Int {
             pieceSquareTemp += Bitboards.pieceSquareTablePawn.get(sq)
             pieceSquareTempEndGame += Bitboards.pieceSquareTablePawnEndGame.get(sq)
         }
-        eval += Numbers.linearScale(
+        eval += linearScale(
             board.blackPieceValues,
             RivalConstants.PAWN_STAGE_MATERIAL_LOW,
             RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
@@ -99,26 +101,26 @@ fun evaluateRival103(board: EngineBoard): Int {
                 )
             )
         }
-        eval -= Numbers.linearScale(
+        eval -= linearScale(
             board.whitePieceValues,
             RivalConstants.PAWN_STAGE_MATERIAL_LOW,
             RivalConstants.PAWN_STAGE_MATERIAL_HIGH,
             pieceSquareTempEndGame,
             pieceSquareTemp
         )
-        eval += (Numbers.linearScale(
+        eval += (linearScale(
             board.blackPieceValues,
             RivalConstants.VALUE_ROOK,
             RivalConstants.OPENING_PHASE_MATERIAL,
-            Bitboards.pieceSquareTableKingEndGame.get(board.m_whiteKingSquare),
-            Bitboards.pieceSquareTableKing.get(board.m_whiteKingSquare)
+            Bitboards.pieceSquareTableKingEndGame.get(board.whiteKingSquareCalculated),
+            Bitboards.pieceSquareTableKing.get(board.whiteKingSquareCalculated)
         )
-                - Numbers.linearScale(
+                - linearScale(
             board.whitePieceValues,
             RivalConstants.VALUE_ROOK,
             RivalConstants.OPENING_PHASE_MATERIAL,
-            Bitboards.pieceSquareTableKingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare)),
-            Bitboards.pieceSquareTableKing.get(Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare))
+            Bitboards.pieceSquareTableKingEndGame.get(Bitboards.bitFlippedHorizontalAxis.get(board.blackKingSquareCalculated)),
+            Bitboards.pieceSquareTableKing.get(Bitboards.bitFlippedHorizontalAxis.get(board.blackKingSquareCalculated))
         ))
     }
     var lastSq = -1
@@ -201,7 +203,7 @@ fun evaluateRival103(board: EngineBoard): Int {
         whiteAttacksBitboard = whiteAttacksBitboard or knightAttacks
         eval -= java.lang.Long.bitCount(knightAttacks and (blackPawnAttacks or board.getBitboard(BITBOARD_WP))) * RivalConstants.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY
     }
-    if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) eval += Numbers.linearScale(
+    if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) eval += linearScale(
         board.blackPieceValues + board.blackPawnValues,
         RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
         RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
@@ -227,7 +229,7 @@ fun evaluateRival103(board: EngineBoard): Int {
         blackAttacksBitboard = blackAttacksBitboard or knightAttacks
         eval += java.lang.Long.bitCount(knightAttacks and (whitePawnAttacks or board.getBitboard(BITBOARD_BP))) * RivalConstants.VALUE_KNIGHT_LANDING_SQUARE_ATTACKED_BY_PAWN_PENALTY
     }
-    if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) eval -= Numbers.linearScale(
+    if (!RivalConstants.TRACK_PIECE_SQUARE_VALUES) eval -= linearScale(
         board.whitePieceValues + board.whitePawnValues,
         RivalConstants.KNIGHT_STAGE_MATERIAL_LOW,
         RivalConstants.KNIGHT_STAGE_MATERIAL_HIGH,
@@ -275,14 +277,14 @@ fun evaluateRival103(board: EngineBoard): Int {
         eval -= RivalConstants.VALUE_QUEEN_MOBILITY.get(java.lang.Long.bitCount(allAttacks and blackPieces.inv()))
     }
     eval += getPawnScore(board, board.whitePieceValues + board.blackPieceValues)
-    eval += Numbers.linearScale(
+    eval += linearScale(
         if (materialDifference > 0) board.whitePawnValues else board.blackPawnValues,
         0,
         RivalConstants.TRADE_BONUS_UPPER_PAWNS,
         -30 * materialDifference / 100,
         0
     ) +
-            Numbers.linearScale(
+            linearScale(
                 if (materialDifference > 0) board.blackPieceValues + board.blackPawnValues else board.whitePieceValues + board.whitePawnValues,
                 0,
                 RivalConstants.TOTAL_PIECE_VALUE_PER_SIDE_AT_START,
@@ -300,7 +302,7 @@ fun evaluateRival103(board: EngineBoard): Int {
         val kingSquareBonusEndGame: Int =
             Bitboards.pieceSquareTableKingEndGame.get(1) - Bitboards.pieceSquareTableKingEndGame.get(3)
         val rookSquareBonus: Int = Bitboards.pieceSquareTableRook.get(3) - Bitboards.pieceSquareTableRook.get(0)
-        var kingSquareBonusScaled: Int = Numbers.linearScale(
+        var kingSquareBonusScaled: Int = linearScale(
             board.blackPieceValues,
             RivalConstants.CASTLE_BONUS_LOW_MATERIAL,
             RivalConstants.CASTLE_BONUS_HIGH_MATERIAL,
@@ -327,7 +329,7 @@ fun evaluateRival103(board: EngineBoard): Int {
             }
             eval += castleValue / Math.min(timeToCastleKingSide, timeToCastleQueenSide)
         }
-        kingSquareBonusScaled = Numbers.linearScale(
+        kingSquareBonusScaled = linearScale(
             board.whitePieceValues,
             RivalConstants.CASTLE_BONUS_LOW_MATERIAL,
             RivalConstants.CASTLE_BONUS_HIGH_MATERIAL,
@@ -397,7 +399,7 @@ fun evaluateRival103(board: EngineBoard): Int {
             (eval + bishopScore) / BITBOARD_WRONG_COLOUR_BISHOP_PENALTY_DIVISOR // mostly pawns as material is identical
 
         // if score is positive (white winning) then the score will be reduced, if black winning, it will be increased
-        bishopScore -= Numbers.linearScale(
+        bishopScore -= linearScale(
             board.whitePieceValues + board.blackPieceValues,
             BITBOARD_WRONG_COLOUR_BISHOP_MATERIAL_LOW,
             BITBOARD_WRONG_COLOUR_BISHOP_MATERIAL_HIGH,
@@ -486,11 +488,11 @@ fun evaluateRival103(board: EngineBoard): Int {
         var f2 = 10
         var f3 = 18
         var f4 = 26
-        if (board.m_whiteKingSquare === 1 || board.m_whiteKingSquare === 8) {
+        if (board.whiteKingSquareCalculated === 1 || board.whiteKingSquareCalculated === 8) {
             whiteKingSafety =
                 scoreRightWayPositions(board, h1, h2, h3, g1, g2, g3, f1, f2, f3, f4, 0, RivalConstants.WHITE)
         }
-        if (board.m_blackKingSquare === 57 || board.m_blackKingSquare === 48) {
+        if (board.blackKingSquareCalculated === 57 || board.blackKingSquareCalculated === 48) {
             h1 = 56
             h2 = 48
             h3 = 40
@@ -506,8 +508,8 @@ fun evaluateRival103(board: EngineBoard): Int {
         }
         var halfOpenFilePenalty = 0
         var shieldValue = 0
-        if (board.m_whiteKingSquare / 8 < 2) {
-            val kingShield: Long = Bitboards.whiteKingShieldMask.get(board.m_whiteKingSquare % 8)
+        if (board.whiteKingSquareCalculated / 8 < 2) {
+            val kingShield: Long = Bitboards.whiteKingShieldMask.get(board.whiteKingSquareCalculated % 8)
             shieldValue += (RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * java.lang.Long.bitCount(
                 board.getBitboard(
                     BITBOARD_WP
@@ -560,8 +562,8 @@ fun evaluateRival103(board: EngineBoard): Int {
         whiteKingSafety += RivalConstants.KINGSAFETY_SHIELD_BASE + shieldValue - halfOpenFilePenalty
         shieldValue = 0
         halfOpenFilePenalty = 0
-        if (board.m_blackKingSquare / 8 >= 6) {
-            val kingShield: Long = Bitboards.whiteKingShieldMask.get(board.m_blackKingSquare % 8) shl 40
+        if (board.blackKingSquareCalculated / 8 >= 6) {
+            val kingShield: Long = Bitboards.whiteKingShieldMask.get(board.blackKingSquareCalculated % 8) shl 40
             shieldValue += (RivalConstants.KINGSAFTEY_IMMEDIATE_PAWN_SHIELD_UNIT * java.lang.Long.bitCount(
                 board.getBitboard(
                     BITBOARD_BP
@@ -612,7 +614,7 @@ fun evaluateRival103(board: EngineBoard): Int {
             }
         }
         blackKingSafety += RivalConstants.KINGSAFETY_SHIELD_BASE + shieldValue - halfOpenFilePenalty
-        kingSafety = Numbers.linearScale(
+        kingSafety = linearScale(
             averagePiecesPerSide,
             RivalConstants.KINGSAFETY_MIN_PIECE_BALANCE,
             RivalConstants.KINGSAFETY_MAX_PIECE_BALANCE,
@@ -633,16 +635,16 @@ fun endGameAdjustmentRival103(board: EngineBoard, currentScore: Int): Int {
     if (com.netsensia.rivalchess.engine.core.RivalSearch.rivalKPKBitbase != null && board.whitePieceValues + board.blackPieceValues === 0 && board.whitePawnValues + board.blackPawnValues === RivalConstants.VALUE_PAWN) {
         return if (board.whitePawnValues === RivalConstants.VALUE_PAWN) {
             kpkLookup(
-                board.m_whiteKingSquare,
-                board.m_blackKingSquare,
+                board.whiteKingSquareCalculated,
+                board.blackKingSquareCalculated,
                 java.lang.Long.numberOfTrailingZeros(board.getBitboard(BITBOARD_WP)),
                 board.mover == Colour.WHITE
             )
         } else {
             // flip the position so that the black pawn becomes white, and negate the result
             -kpkLookup(
-                Bitboards.bitFlippedHorizontalAxis.get(board.m_blackKingSquare),
-                Bitboards.bitFlippedHorizontalAxis.get(board.m_whiteKingSquare),
+                Bitboards.bitFlippedHorizontalAxis.get(board.blackKingSquareCalculated),
+                Bitboards.bitFlippedHorizontalAxis.get(board.whiteKingSquareCalculated),
                 Bitboards.bitFlippedHorizontalAxis.get(
                     java.lang.Long.numberOfTrailingZeros(
                         board.getBitboard(
@@ -678,7 +680,7 @@ fun endGameAdjustmentRival103(board: EngineBoard, currentScore: Int): Int {
                 return if (whiteKnightCount == 2 && board.whitePieceValues === 2 * RivalConstants.VALUE_KNIGHT && board.blackPieceValues === 0) eval / RivalConstants.ENDGAME_DRAW_DIVISOR else if (whiteKnightCount == 1 && whiteBishopCount == 1 && board.whitePieceValues === RivalConstants.VALUE_KNIGHT + RivalConstants.VALUE_BISHOP && board.blackPieceValues === 0) {
                     eval =
                         RivalConstants.VALUE_KNIGHT + RivalConstants.VALUE_BISHOP + RivalConstants.VALUE_SHOULD_WIN + eval / RivalConstants.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR
-                    val kingSquare: Int = board.m_blackKingSquare
+                    val kingSquare: Int = board.blackKingSquareCalculated
                     if (board.getBitboard(BITBOARD_WB) and Bitboards.DARK_SQUARES !== 0) eval += (7 - Bitboards.distanceToH1OrA8.get(
                         Bitboards.bitFlippedHorizontalAxis.get(kingSquare)
                     )) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE else eval += (7 - Bitboards.distanceToH1OrA8.get(
@@ -711,7 +713,7 @@ fun endGameAdjustmentRival103(board: EngineBoard, currentScore: Int): Int {
                 return if (blackKnightCount == 2 && board.blackPieceValues === 2 * RivalConstants.VALUE_KNIGHT && board.whitePieceValues === 0) eval / RivalConstants.ENDGAME_DRAW_DIVISOR else if (blackKnightCount == 1 && blackBishopCount == 1 && board.blackPieceValues === RivalConstants.VALUE_KNIGHT + RivalConstants.VALUE_BISHOP && board.whitePieceValues === 0) {
                     eval =
                         -(RivalConstants.VALUE_KNIGHT + RivalConstants.VALUE_BISHOP + RivalConstants.VALUE_SHOULD_WIN) + eval / RivalConstants.ENDGAME_KNIGHT_BISHOP_SCORE_DIVISOR
-                    val kingSquare: Int = board.m_whiteKingSquare
+                    val kingSquare: Int = board.whiteKingSquareCalculated
                     if (board.getBitboard(BITBOARD_BB) and Bitboards.DARK_SQUARES !== 0) {
                         eval -= (7 - Bitboards.distanceToH1OrA8.get(Bitboards.bitFlippedHorizontalAxis.get(kingSquare))) * RivalConstants.ENDGAME_DISTANCE_FROM_MATING_BISHOP_CORNER_PER_SQUARE
                     } else {
