@@ -12,12 +12,12 @@ This is the main library used by the [Rival Chess UCI program](https://github.co
     <dependency>
         <groupId>com.netsensia.rivalchess</groupId>
         <artifactId>rivalchess-engine</artifactId>
-        <version>'43.0.3'</version>
+        <version>'43.0.4'</version>
     </dependency>
     
 #### Gradle
 
-    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '43.0.3'
+    compile group: 'com.netsensia.rivalchess', name: 'rivalchess-model', version: '43.0.4'
     
 ### Testing
     
