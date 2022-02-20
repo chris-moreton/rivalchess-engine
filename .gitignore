@@ -5,3 +5,8 @@
 .classpath
 *.log
 /bin/
+.gradle/
+build/
+dist/
+
+
