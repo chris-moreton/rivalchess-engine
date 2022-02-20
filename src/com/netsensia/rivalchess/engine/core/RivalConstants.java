@@ -217,7 +217,7 @@ public final class RivalConstants
 	 */
 	public static final int MAXIMUM_HASH_AGE = 3;
 	public static final boolean USE_HEIGHT_REPLACE_HASH = true;
-	public static final boolean USE_ALWAYS_REPLACE_HASH = true;
+	public static final boolean USE_ALWAYS_REPLACE_HASH = false;
 
 	public static final boolean USE_PAWN_HASH = true;
 	public static final boolean USE_QUICK_PAWN_HASH_RETURN = true;
