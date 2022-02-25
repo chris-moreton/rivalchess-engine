@@ -86,7 +86,7 @@ public class UCIController implements Runnable {
 					{
 						if (parts[0].equals("uci"))
 						{
-							EngineMonitor.sendUCI("id name Rival 1.0.3 |No-Replace-Hash|");
+							EngineMonitor.sendUCI("id name Rival 1.0.3 |No-Aspiration|");
 							EngineMonitor.sendUCI("id author Chris Moreton");
 							EngineMonitor.sendUCI("option name Hash type spin default 1 min 1 max 256");
 							EngineMonitor.sendUCI("uciok");

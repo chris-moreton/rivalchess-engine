@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.netsensia'
-version '1.0.3-No-Replace-Hash'
+version '1.0.3-No-Aspiration'
 
 jar {
     manifest {

@@ -2390,7 +2390,7 @@ public final class RivalSearch implements Runnable
 				
 				if (!research)
 				{
-					storeHashMove(bestMoveForHash, board, bestPath.score, (byte)flag, depthRemaining);
+					storeHashMove(bestMoveForHash, board, bestPath.score, flag, depthRemaining);
 					return bestPath;
 				}
 			}

@@ -217,14 +217,14 @@ public final class RivalConstants
 	 */
 	public static final int MAXIMUM_HASH_AGE = 3;
 	public static final boolean USE_HEIGHT_REPLACE_HASH = true;
-	public static final boolean USE_ALWAYS_REPLACE_HASH = false;
+	public static final boolean USE_ALWAYS_REPLACE_HASH = true;
 
 	public static final boolean USE_PAWN_HASH = true;
 	public static final boolean USE_QUICK_PAWN_HASH_RETURN = true;
 	
 	public static final boolean USE_EVAL_FUTILITY_TEST = false;
 	public static final int EVAL_FUTILITY_WINDOW = 500;
-	public static final boolean USE_ASPIRATION_WINDOW = true;
+	public static final boolean USE_ASPIRATION_WINDOW = false;
 	public static final int ASPIRATION_RADIUS = 40;
 	
 	public static boolean USE_INTERNAL_OPENING_BOOK = true;
